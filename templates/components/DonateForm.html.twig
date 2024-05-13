@@ -1,0 +1,18 @@
+<div {{ attributes }}>
+    {{ form_start(form) }}
+        {{ form_errors(form) }}
+        {{ form_row(form.amount) }}
+        {{ form_row(form.taxReturn) }}
+        {% if form.taxReturn is same as true %}
+            {{ form_row(form.familyName) }}
+            {{ form_row(form.givenName) }}
+            {{ form_row(form.nationalIdCode) }}
+        {% endif %}
+        
+        <div class="flex space-x-4 mb-6 text-sm font-medium">
+            <div class="flex-auto flex space-x-4">
+                {{ form_row(form.submit, { 'label': 'Submit me' }) }}
+            </div>
+        </div>
+    {{ form_end(form) }}
+</div>
