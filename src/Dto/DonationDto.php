@@ -1,9 +1,13 @@
 <?php
 
-namespace ErgoSarapu\DonationBundle\Entity;
+namespace ErgoSarapu\DonationBundle\Dto;
 
-class Payment
+use ErgoSarapu\DonationBundle\Enum\DonationInterval;
+
+class DonationDto
 {
+
+    private DonationInterval $type = DonationInterval::Single;
 
     private ?string $givenName = null;
 
@@ -11,9 +15,19 @@ class Payment
 
     private ?string $nationalIdCode = null;
 
-    private ?int $amount = null;
+    private ?MoneyDto $amount = null;
+
+    private ?MoneyDto $chosenAmount = null;
 
     private bool $taxReturn = false;
+
+    public function getType():DonationInterval{
+        return $this->type;
+    }
+
+    public function setType(DonationInterval $type):void{
+        $this->type = $type;
+    }
 
     public function getGivenName():?string{
         return $this->givenName;
@@ -39,13 +53,22 @@ class Payment
         $this->nationalIdCode = $nationalIdCode;
     }
 
-    public function getAmount():?int{
+    public function getAmount():?MoneyDto{
         return $this->amount;
     }
 
-    public function setAmount(?int $amount):void{
+    public function setAmount(?MoneyDto $amount):void{
         $this->amount = $amount;
     }
+
+    public function getChosenAmount():?MoneyDto{
+        return $this->chosenAmount;
+    }
+
+    public function setChosenAmount(?MoneyDto $chosenAmount):void{
+        $this->chosenAmount = $chosenAmount;
+    }
+
 
     public function isTaxReturn():bool{
         return $this->taxReturn;

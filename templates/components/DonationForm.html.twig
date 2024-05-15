@@ -1,7 +1,9 @@
 <div {{ attributes }}>
     {{ form_start(form) }}
         {{ form_errors(form) }}
+        {{ form_row(form.type) }}
         {{ form_row(form.amount) }}
+        {{ form_row(form.chosenAmount) }}
         {{ form_row(form.taxReturn) }}
         {% if form.taxReturn is same as true %}
             {{ form_row(form.givenName) }}

@@ -62,21 +62,21 @@ twig:
         'vendor/ergosarapu/donation-bundle/templates/': 'DonationBundle'
 ```
 
-Step 7: Register DonateForm
+Step 7: Register DonationForm
 ---------------------------
 
-Create file `src/Twig/Components/DonateForm.php`:
+Create file `src/Twig/Components/DonationForm.php`:
 
 ```php
 namespace App\Twig\Components;
 
-use ErgoSarapu\DonationBundle\Traits\DonateFormTrait;
+use ErgoSarapu\DonationBundle\Traits\DonationFormTrait;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 
-#[AsLiveComponent(template:'@DonationBundle/components/DonateForm.html.twig')]
+#[AsLiveComponent(template:'@DonationBundle/components/DonationForm.html.twig')]
 class DonateForm extends AbstractController
 {
-    use DonateFormTrait;
+    use DonationFormTrait;
 }
 ```

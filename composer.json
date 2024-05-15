@@ -23,7 +23,8 @@
         "symfony/ux-twig-component": "^2.17",
         "symfony/ux-live-component": "^2.17",
         "symfonycasts/dynamic-forms": "^0.1.2",
-        "tales-from-a-dev/flowbite-bundle": "^0.6.0"
+        "tales-from-a-dev/flowbite-bundle": "^0.6.0",
+        "moneyphp/money": "^4.5"
     },
     "require-dev": {
         "symfony/maker-bundle": "^1.59"

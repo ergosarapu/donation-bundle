@@ -2,7 +2,7 @@
 
 namespace ErgoSarapu\DonationBundle\Controller;
 
-use ErgoSarapu\DonationBundle\Entity\Payment;
+use ErgoSarapu\DonationBundle\Dto\DonationDto;
 use ErgoSarapu\DonationBundle\Form\DonationType;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -13,13 +13,13 @@ abstract class AbstractDonationController extends AbstractController
 
     public function handle(Request $request): Response
     {
-        $payment = new Payment();
+        $donation = new DonationDto();
 
-        $form = $this->createForm(DonationType::class, $payment);
+        $form = $this->createForm(DonationType::class, $donation);
 
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
-            $payment = $form->getData();
+            $donation = $form->getData();
 
             // ... perform some action, such as saving the task to the database
 
@@ -28,7 +28,7 @@ abstract class AbstractDonationController extends AbstractController
 
         return $this->render($this->getTemplate(), [
             'form' => $form,
-            'payment' => $payment
+            'donation' => $donation
         ]);
     }
 
