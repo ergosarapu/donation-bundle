@@ -62,6 +62,7 @@ class DonationType extends AbstractType
                     $field->add(TextType::class);
                 }
             })
+            ->add('paymentMethod', ChoiceType::class, ['choices' => ['SEB' => 'seb', 'LHV' => 'lhv']])
             ->add('submit', SubmitType::class);
         
         $builder->get('amount')->addModelTransformer(
