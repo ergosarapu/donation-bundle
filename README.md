@@ -39,7 +39,7 @@ Add following to `config/routes.yaml`:
 ```yaml
 donation_bundle_routes:
     # loads routes from the given routing file stored in bundle
-    resource: '@DonationBundle/config/routes.yaml'
+    resource: '@DonationBundle/config/routes.php'
 ```
 
 Step 5: Register bundle services
@@ -51,32 +51,29 @@ Add following to `config/services.yaml`:
 ErgoSarapu\DonationBundle\Controller\AdminDashboardController:
 ```
 
-Step 6: Register bundle templates
+Step 6: Register Payum gateway factories
+---------------------------
+
+Add following to `config/services.yaml`:
+
+```yaml
+app.montonio_gateway_factory:
+    class: Payum\Core\Bridge\Symfony\Builder\GatewayFactoryBuilder
+    arguments: [ErgoSarapu\PayumMontonio\MontonioGatewayFactory]
+    tags:
+        - { name: payum.gateway_factory_builder, factory: montonio }
+```
+
+Step 7: Configure Twig
 ---------------------------
 
 Add following to `config/packages/twig.yaml`:
 
 ```yaml
-twig:
-    paths:
-        'vendor/ergosarapu/donation-bundle/templates/': 'DonationBundle'
+twig_component:
+    ...
+    defaults:
+        ...
+        ErgoSarapu\DonationBundle\Twig\Components\: '@Donation/templates/components/'
 ```
 
-Step 7: Register DonationForm
----------------------------
-
-Create file `src/Twig/Components/DonationForm.php`:
-
-```php
-namespace App\Twig\Components;
-
-use ErgoSarapu\DonationBundle\Traits\DonationFormTrait;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
-
-#[AsLiveComponent(template:'@DonationBundle/components/DonationForm.html.twig')]
-class DonateForm extends AbstractController
-{
-    use DonationFormTrait;
-}
-```

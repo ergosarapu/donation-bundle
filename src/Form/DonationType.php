@@ -5,6 +5,7 @@ namespace ErgoSarapu\DonationBundle\Form;
 use ErgoSarapu\DonationBundle\Dto\MoneyDto;
 use ErgoSarapu\DonationBundle\Dto\DonationDto;
 use ErgoSarapu\DonationBundle\Enum\DonationInterval;
+use InvalidArgumentException;
 use Money\Currencies\ISOCurrencies;
 use Money\Formatter\IntlMoneyFormatter;
 use Symfony\Component\Form\AbstractType;
@@ -16,6 +17,7 @@ use Symfony\Component\Form\Extension\Core\Type\MoneyType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfonycasts\DynamicForms\DependentField;
 use Symfonycasts\DynamicForms\DynamicFormBuilder;
@@ -62,7 +64,7 @@ class DonationType extends AbstractType
                     $field->add(TextType::class);
                 }
             })
-            ->add('paymentMethod', ChoiceType::class, ['choices' => ['SEB' => 'seb', 'LHV' => 'lhv']])
+            ->add('paymentMethod', ChoiceType::class, ['choices' => $options['payment_methods']])
             ->add('submit', SubmitType::class);
         
         $builder->get('amount')->addModelTransformer(
@@ -85,5 +87,20 @@ class DonationType extends AbstractType
         $resolver->setDefaults([
             'data_class' => DonationDto::class,
         ]);
+
+        $resolver->setRequired(['payment_methods']);
+
+        $resolver->setAllowedTypes('payment_methods', 'array');
+
+        $resolver->setNormalizer('payment_methods', function (Options $options, array $value): array {
+            array_walk($value, function(&$val){
+                $val = $val['label'];
+            });
+            $flipped = array_flip($value);
+            if (count($flipped) !== count($value)){
+                throw new InvalidArgumentException('Payment methods do not have unique labels');
+            }
+            return $flipped;
+        });
     }
 }

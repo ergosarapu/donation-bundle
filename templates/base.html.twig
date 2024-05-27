@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>{% block title %}Welcome!{% endblock %}</title>
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
+        {% block stylesheets %}
+        {% endblock %}
+
+        {% block javascripts %}
+            {% block importmap %}{{ importmap('app') }}{% endblock %}
+        {% endblock %}
+    </head>
+    <body>
+        <div class="container mx-auto px-4 border-solid border-4">
+        {% block body %}
+            <div class="grid grid-cols-2 m-8">
+                <div class="border-solid rounded-lg border-4 p-8 m-8">
+                    {% block leftContent %}{% endblock %}
+                </div>
+                <div class="border-solid rounded-lg border-4 p-8 m-8">
+                    {% block rightContent %}{% endblock %}
+                </div>
+            </div>
+        {% endblock %}
+        </div>
+    </body>
+</html>

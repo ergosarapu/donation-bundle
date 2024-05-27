@@ -1,0 +1,17 @@
+{% extends '@Donation/base.html.twig' %}
+
+{% block leftContent %}
+    <div class="aspect-video">
+        <iframe
+            class="w-full h-full"
+            src="https://www.youtube.com/embed/rs0GDMImzjA?si=vqTdWXhD7vN8kprh"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen>
+        </iframe>
+    </div>
+{% endblock %}
+
+{% block rightContent %}
+    <twig:DonationForm :form="form" :initialFormData="donation" />
+{% endblock %}

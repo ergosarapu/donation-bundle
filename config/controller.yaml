@@ -1,0 +1,19 @@
+services:
+  _defaults:
+    autowire: false
+    autoconfigure: false
+
+  ErgoSarapu\DonationBundle\Controller\IndexController:
+    autoconfigure: true
+    calls:
+      - ['setContainer', ['@Psr\Container\ContainerInterface']]
+
+  ErgoSarapu\DonationBundle\Controller\PaymentDoneController:
+    autoconfigure: true
+    calls:
+      - ['setContainer', ['@Psr\Container\ContainerInterface']]
+
+  ErgoSarapu\DonationBundle\Twig\Components\DonationForm:
+    autoconfigure: true
+    calls:
+      - ['setContainer', ['@Psr\Container\ContainerInterface']]
