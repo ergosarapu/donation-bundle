@@ -17,6 +17,7 @@ use Symfony\Component\Form\Extension\Core\Type\MoneyType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Intl\Countries;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfonycasts\DynamicForms\DependentField;
@@ -64,7 +65,16 @@ class DonationType extends AbstractType
                     $field->add(TextType::class);
                 }
             })
-            ->add('paymentMethod', ChoiceType::class, ['choices' => $options['payment_methods']])
+            ->add('paymentCountry', ChoiceType::class, ['choices' => $options['payment_methods']['countries']])
+            ->addDependent('paymentMethod', ['paymentCountry'], function(DependentField $field, ?string $paymentCountry) use ($options) {
+                if ($paymentCountry === null) {
+                    $paymentCountry = reset($options['payment_methods']['countries']);
+                }
+                if (!isset($options['payment_methods']['methods'][$paymentCountry])) {
+                    return;
+                }
+                $field->add(ChoiceType::class, ['choices' => $options['payment_methods']['methods'][$paymentCountry], 'required' => true, 'placeholder' => 'Choose payment method']);
+            })
             ->add('submit', SubmitType::class);
         
         $builder->get('amount')->addModelTransformer(
@@ -92,15 +102,20 @@ class DonationType extends AbstractType
 
         $resolver->setAllowedTypes('payment_methods', 'array');
 
-        $resolver->setNormalizer('payment_methods', function (Options $options, array $value): array {
-            array_walk($value, function(&$val){
-                $val = $val['label'];
-            });
-            $flipped = array_flip($value);
-            if (count($flipped) !== count($value)){
-                throw new InvalidArgumentException('Payment methods do not have unique labels');
+        $resolver->setNormalizer('payment_methods', function (Options $options, array $paymentMethods): array {
+            $countries = [];
+            $countryMethods = [];
+            
+            foreach($paymentMethods as $method => $methodConfig) {
+                $countryCode = $methodConfig['country_code'];
+                if (!isset($countryMethods[$countryCode])) {
+                    $countryMethods[$countryCode] = [];
+                }
+                $countryMethods[$countryCode][$methodConfig['label']] = $method;
+                $countries[Countries::getName($countryCode)] = $countryCode;
             }
-            return $flipped;
+
+            return ['countries' => $countries, 'methods' => $countryMethods];
         });
     }
 }

@@ -12,7 +12,10 @@
                 {{ form_row(form.nationalIdCode) }}
             {% endif %}
             <div class="order-last">
-            {{ form_row(form.paymentMethod) }}
+            {{ form_row(form.paymentCountry) }}
+            {% if form.paymentMethod is defined %}
+                {{ form_row(form.paymentMethod) }}
+            {% endif %}
             {{ form_row(form.submit, { 'label': 'Donate' }) }}
             </class>
         </div>

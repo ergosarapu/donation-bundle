@@ -21,6 +21,8 @@ class DonationDto
 
     private bool $taxReturn = false;
 
+    private ?string $paymentCountry = null;
+
     private ?string $paymentMethod = null;
 
     public function getType():DonationInterval{
@@ -77,6 +79,14 @@ class DonationDto
 
     public function setTaxReturn(bool $taxReturn):void{
         $this->taxReturn = $taxReturn;
+    }
+
+    public function getPaymentCountry():?string{
+        return $this->paymentCountry;
+    }
+
+    public function setPaymentCountry(?string $paymentCountry):void{
+        $this->paymentCountry = $paymentCountry;
     }
 
     public function getPaymentMethod():?string{

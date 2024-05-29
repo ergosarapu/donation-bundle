@@ -25,6 +25,7 @@ class DonationBundle extends AbstractBundle
                     ->useAttributeAsKey('name')
                     ->arrayPrototype()
                         ->children()
+                            ->scalarNode('country_code')->isRequired()->cannotBeEmpty()->info('Country code under which this payment method should be shown')->end()
                             ->scalarNode('label')->isRequired()->cannotBeEmpty()->info('Payment method label as shown to the end user')->end()
                         ->end()
                     ->end()
