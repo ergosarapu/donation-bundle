@@ -3,6 +3,10 @@ services:
     autowire: false
     autoconfigure: false
 
+  ErgoSarapu\DonationBundle\Controller\AdminDashboardController:
+    autoconfigure: true
+    autowire: true
+
   ErgoSarapu\DonationBundle\Controller\IndexController:
     autoconfigure: true
     calls:
