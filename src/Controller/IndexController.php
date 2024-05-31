@@ -3,9 +3,11 @@
 namespace ErgoSarapu\DonationBundle\Controller;
 
 use ErgoSarapu\DonationBundle\Dto\DonationDto;
+use ErgoSarapu\DonationBundle\Dto\MoneyDto;
 use ErgoSarapu\DonationBundle\Entity\Payment;
 use ErgoSarapu\DonationBundle\Entity\Payment\Status;
 use ErgoSarapu\DonationBundle\Form\DonationType;
+use Money\Money;
 use Payum\Core\Payum;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,6 +18,9 @@ class IndexController extends AbstractPaymentController
     {
         $donation = new DonationDto();
 
+        // Set initial default value
+        $donation->setAmount(MoneyDto::fromMoney(Money::EUR(2500)));
+        
         $form = $this->createForm(DonationType::class, $donation, ['payment_methods' => $this->paymentMethods]);
 
         $form->handleRequest($request);
@@ -47,6 +52,7 @@ class IndexController extends AbstractPaymentController
             return $this->redirect($captureToken->getTargetUrl());    
 
         }
+
 
         return $this->render('@Donation/landing.html.twig', [
             'form' => $form,

@@ -9,6 +9,8 @@ class DonationDto
 
     private DonationInterval $type = DonationInterval::Single;
 
+    private ?string $email = null;
+
     private ?string $givenName = null;
 
     private ?string $familyName = null;
@@ -31,6 +33,14 @@ class DonationDto
 
     public function setType(DonationInterval $type):void{
         $this->type = $type;
+    }
+
+    public function getEmail():?string{
+        return $this->email;
+    }
+
+    public function setEmail(?string $email):void{
+        $this->email = $email;
     }
 
     public function getGivenName():?string{

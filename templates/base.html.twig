@@ -1,28 +1,36 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-    <head>
-        <meta charset="UTF-8">
-        <title>{% block title %}Welcome!{% endblock %}</title>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
-        {% block stylesheets %}
-        {% endblock %}
-
-        {% block javascripts %}
-            {% block importmap %}{{ importmap('app') }}{% endblock %}
-        {% endblock %}
-    </head>
-    <body>
-        <div class="container mx-auto px-4 border-solid border-4">
-        {% block body %}
-            <div class="grid grid-cols-2 m-8">
-                <div class="border-solid rounded-lg border-4 p-8 m-8">
-                    {% block leftContent %}{% endblock %}
-                </div>
-                <div class="border-solid rounded-lg border-4 p-8 m-8">
-                    {% block rightContent %}{% endblock %}
-                </div>
-            </div>
-        {% endblock %}
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Welcome!{% endblock %}</title>
+    {% block stylesheets %}
+      {# <link rel="stylesheet" href="{{ asset('styles/app.css') }}"> #}
+    {% endblock %}
+    {% block javascripts %}
+        {% block importmap %}{{ importmap('app') }}{% endblock %}
+    {% endblock %}
+</head>
+<body>
+  {% block body %}
+    <div class="container mx-auto border-solid border-2 rounded-lg">
+      <div class="grid grid-cols-4">
+        <div class="border-solid rounded-lg border-2 p-8 m-8 prose prose-slate md:col-span-2 col-span-4">
+          <h1>
+            Hello Donation Bundle!
+          </h1>
+          <p class="lead">Override this template and create a nice looking landing page for your donation campaign!</p>
+          To add donation form, use
+          <blockquote class="not-italic">
+            <code>&lt;twig:DonationForm :form=&quot;form&quot; :initialFormData=&quot;donation&quot; /&gt;</code>
+          </blockquote>
+          in your twig template.
         </div>
-    </body>
+        <div class="border-solid rounded-lg border-2 p-8 m-8 md:col-span-2 col-span-4">
+            <twig:DonationForm :form="form" :initialFormData="donation" />
+        </div>
+      </div>
+    </div>
+  {% endblock %}
+</body>
 </html>
