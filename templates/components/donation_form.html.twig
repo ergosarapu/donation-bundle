@@ -22,26 +22,24 @@
                 <h1 class="font-medium text-xl text-center mb-3">Vali pank</h1>
                 {{ form_row(form.paymentCountry) }}
                 <div class="mb-3">
-                    {% if form.paymentMethod is defined %}
-                        {# {{ form_row(form.paymentMethod) }} #}
-                        {{ form_errors(form.paymentMethod) }}
+                    {{ form_errors(form.paymentMethod) }}
+                    {% if form.paymentMethod is defined %}                        
                         <ul class="grid w-full gap-3 md:grid-cols-2">
                             {% for label, value in field_choices(form.paymentMethod) %}
                                 <li>
-                                <input
-                                    type="radio"
-                                    id="donation_paymentMethod_{{ loop.index0 }}"
-                                    name="{{ field_name(form.paymentMethod) }}"
-                                    value="{{ value }}"
-                                    placeholder="{{ field_label(form.paymentMethod) }}"
-                                    class="hidden peer"
-                                    required
-                                >
-                                <label for="donation_paymentMethod_{{ loop.index0 }}" class="inline-flex items-center justify-between w-full p-3 text-gray-500 bg-white border border-gray-200 rounded-lg cursor-pointer dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-blue-500 peer-checked:border-blue-600 peer-checked:text-blue-600 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700">                           
-                                    <div class="block">
-                                        <div class="w-full text-lg font-semibold">{{ label }}</div>
-                                    </div>
-                                </label>
+                                    <input
+                                        type="radio"
+                                        id="donation_paymentMethod_{{ loop.index0 }}"
+                                        name="{{ field_name(form.paymentMethod) }}"
+                                        value="{{ value }}"
+                                        placeholder="{{ field_label(form.paymentMethod) }}"
+                                        class="hidden peer"
+                                        required>
+                                    <label for="donation_paymentMethod_{{ loop.index0 }}" class="inline-flex items-center justify-between w-full p-3 text-gray-500 bg-white border border-gray-200 rounded-lg cursor-pointer dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-blue-500 peer-checked:border-blue-600 peer-checked:text-blue-600 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700">                           
+                                        <div class="block">
+                                            <div class="w-full text-lg font-semibold">{{ label }}</div>
+                                        </div>
+                                    </label>
                                 </li>
                             {% endfor %}
                         </ul>
