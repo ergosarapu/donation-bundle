@@ -19,7 +19,7 @@
                 {{ form_row(form.nationalIdCode) }}
             {% endif %}
             <div class="order-last">
-                <h1 class="font-medium text-xl text-center mb-3">Maksmine</h1>
+                <h1 class="font-medium text-xl text-center mb-3">Vali pank</h1>
                 {{ form_row(form.paymentCountry) }}
                 <div class="mb-3">
                     {% if form.paymentMethod is defined %}
@@ -47,7 +47,7 @@
                         </ul>
                     {% endif %}
                 </div>
-                {{ form_row(form.submit, { 'label': 'Anneta', 'attr': {'class': 'w-full px-6 py-3.5 text-base font-medium text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800'} }) }}
+                {{ form_row(form.submit, { 'label': 'Anneta', 'attr': {'class': 'w-full px-6 py-3.5 text-base font-medium text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 rounded-lg text-center dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800'} }) }}
             </class>
         </div>
     {{ form_end(form) }}
