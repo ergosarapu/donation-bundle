@@ -2,9 +2,12 @@
 
 namespace ErgoSarapu\DonationBundle;
 
+use ErgoSarapu\DonationBundle\Command\AddUserCommand;
 use ErgoSarapu\DonationBundle\Controller\IndexController;
 use ErgoSarapu\DonationBundle\Payum\UpdatePaymentStatusExtension;
+use ErgoSarapu\DonationBundle\Repository\UserRepository;
 use ErgoSarapu\DonationBundle\Twig\Components\DonationForm;
+use ErgoSarapu\DonationBundle\Utils\UserValidator;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
@@ -40,5 +43,9 @@ class DonationBundle extends AbstractBundle
         $container->services()->set(UpdatePaymentStatusExtension::class, class: UpdatePaymentStatusExtension::class)->public()->tag('payum.extension', ['all' => true]);
         $container->services()->get(IndexController::class)->call('setPaymentMethods', [$config['payment_methods']]);
         $container->services()->get(DonationForm::class)->call('setPaymentMethods', [$config['payment_methods']]);
+
+        $container->services()->set(AddUserCommand::class, AddUserCommand::class)->autoconfigure()->autowire();
+        $container->services()->set(UserValidator::class, UserValidator::class);
+        $container->services()->set(UserRepository::class, UserRepository::class)->autowire()->tag('doctrine.repository_service');
     }
 }

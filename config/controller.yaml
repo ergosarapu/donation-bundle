@@ -7,6 +7,10 @@ services:
     autoconfigure: true
     autowire: true
 
+  ErgoSarapu\DonationBundle\Controller\Admin\LoginController:
+    autoconfigure: true
+    autowire: true
+
   ErgoSarapu\DonationBundle\Controller\IndexController:
     autoconfigure: true
     calls:
