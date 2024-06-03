@@ -8,4 +8,5 @@ enum Status: string
     case Pending = 'pending';   // Payment is being processed
     case Captured = 'captured'; // Payment is captured
     case Failed = 'failed';     // Payment is failed
+    case Expired = 'expired';   // Payment is expired
 }
