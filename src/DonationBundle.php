@@ -19,7 +19,7 @@ class DonationBundle extends AbstractBundle
     {
         $definition->rootNode()
             ->children()
-                ->scalarNode('campaing_public_id')
+                ->scalarNode('campaign_public_id')
                     ->info('Campaign public Id, will be encoded into payment description')
                     ->validate()
                         ->ifEmpty()

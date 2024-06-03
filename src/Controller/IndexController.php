@@ -37,7 +37,7 @@ class IndexController extends AbstractPaymentController
             $payment->setNumber(uniqid());
             $payment->setCurrencyCode($donation->getAmount()->currency);
             $payment->setTotalAmount($donation->getAmount()->amount);
-            $payment->setDescription('A description');
+            $payment->setDescription(sprintf('%s;%s', $payment->getNumber(), $this->campaignPublicId));
             $payment->setClientId(null);
             $payment->setClientEmail($donation->getEmail());
             $payment->setGivenName($donation->getGivenName());
