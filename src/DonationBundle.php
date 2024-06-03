@@ -19,6 +19,13 @@ class DonationBundle extends AbstractBundle
     {
         $definition->rootNode()
             ->children()
+                ->scalarNode('campaing_public_id')
+                    ->info('Campaign public Id, will be encoded into payment description')
+                    ->validate()
+                        ->ifEmpty()
+                        ->thenInvalid('Campaign public Id must be configured')
+                    ->end()
+                ->end()
                 ->arrayNode('payment_methods')
                     ->info('Payment methods configuration. Use configuraed Payum gateway as the name.')
                     ->validate()
@@ -41,8 +48,12 @@ class DonationBundle extends AbstractBundle
         $container->import(__DIR__ . '/../config/controller.yaml');
 
         $container->services()->set(UpdatePaymentStatusExtension::class, class: UpdatePaymentStatusExtension::class)->public()->tag('payum.extension', ['all' => true]);
-        $container->services()->get(IndexController::class)->call('setPaymentMethods', [$config['payment_methods']]);
-        $container->services()->get(DonationForm::class)->call('setPaymentMethods', [$config['payment_methods']]);
+        $container->services()->get(IndexController::class)
+            ->call('setPaymentMethods', [$config['payment_methods']])
+            ->call('setCampaignPublicId', [$config['campaign_public_id']]);
+        $container->services()->get(DonationForm::class)
+            ->call('setPaymentMethods', [$config['payment_methods']])
+            ->call('setCampaignPublicId', [$config['campaign_public_id']]);
 
         $container->services()->set(AddUserCommand::class, AddUserCommand::class)->autoconfigure()->autowire();
         $container->services()->set(UserValidator::class, UserValidator::class);
