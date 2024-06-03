@@ -38,8 +38,11 @@ class IndexController extends AbstractPaymentController
             $payment->setCurrencyCode($donation->getAmount()->currency);
             $payment->setTotalAmount($donation->getAmount()->amount);
             $payment->setDescription('A description');
-            $payment->setClientId('anId');
-            $payment->setClientEmail('foo@example.com');
+            $payment->setClientId(null);
+            $payment->setClientEmail($donation->getEmail());
+            $payment->setGivenName($donation->getGivenName());
+            $payment->setFamilyName($donation->getFamilyName());
+            $payment->setNationalIdCode($donation->getNationalIdCode());
             
             $storage->update($payment);
                         

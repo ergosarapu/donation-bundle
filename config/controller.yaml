@@ -11,6 +11,10 @@ services:
     autoconfigure: true
     autowire: true
 
+  ErgoSarapu\DonationBundle\Controller\Admin\PaymentCrudController:
+    autoconfigure: true
+    autowire: true
+
   ErgoSarapu\DonationBundle\Controller\IndexController:
     autoconfigure: true
     calls:
