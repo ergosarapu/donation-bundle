@@ -12,11 +12,13 @@
             </div>
             {{ form_row(form.email) }}
             {# {{ form_row(form.chosenAmount) }} #}
-            {{ form_row(form.taxReturn) }}
-            {% if form.taxReturn is same as true %}
-                {{ form_row(form.givenName) }}
-                {{ form_row(form.familyName) }}
-                {{ form_row(form.nationalIdCode) }}
+            {% if form.taxReturn is defined %}
+                {{ form_row(form.taxReturn) }}
+                {% if form.taxReturn is same as true %}
+                    {{ form_row(form.givenName) }}
+                    {{ form_row(form.familyName) }}
+                    {{ form_row(form.nationalIdCode) }}
+                {% endif %}
             {% endif %}
             <div class="order-last">
                 <h1 class="font-medium text-xl text-center mb-3">Vali pank</h1>
