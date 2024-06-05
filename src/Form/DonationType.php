@@ -46,22 +46,22 @@ class DonationType extends AbstractType
             //             return $moneyFormatter->format($moneyDto->toMoney());
             //         }
             //     ])
-            // ->add('taxReturn', SwitchType::class, ['required' => false, 'label' => 'Soovin tulumaksutagastust'])
-            // ->addDependent('givenName', ['taxReturn'], function(DependentField $field, bool $taxReturn){
-            //     if ($taxReturn === true){
-            //         $field->add(TextType::class, ['label' => 'Eesnimi']);
-            //     }
-            // })
-            // ->addDependent('familyName', ['taxReturn'], function(DependentField $field, bool $taxReturn){
-            //     if ($taxReturn === true){
-            //         $field->add(TextType::class, ['label' => 'Perekonnanimi']);
-            //     }
-            // })
-            // ->addDependent('nationalIdCode', ['taxReturn'], function(DependentField $field, bool $taxReturn){
-            //     if ($taxReturn === true){
-            //         $field->add(TextType::class, ['label' => 'Isikukood']);
-            //     }
-            // })
+            ->add('taxReturn', SwitchType::class, ['required' => false, 'label' => 'Soovin tulumaksutagastust'])
+            ->addDependent('givenName', ['taxReturn'], function(DependentField $field, bool $taxReturn){
+                if ($taxReturn === true){
+                    $field->add(TextType::class, ['label' => 'Eesnimi']);
+                }
+            })
+            ->addDependent('familyName', ['taxReturn'], function(DependentField $field, bool $taxReturn){
+                if ($taxReturn === true){
+                    $field->add(TextType::class, ['label' => 'Perekonnanimi']);
+                }
+            })
+            ->addDependent('nationalIdCode', ['taxReturn'], function(DependentField $field, bool $taxReturn){
+                if ($taxReturn === true){
+                    $field->add(TextType::class, ['label' => 'Isikukood']);
+                }
+            })
             ->add('paymentCountry', ChoiceType::class, ['choices' => $options['payment_methods']['countries'], 'label' => false])
             ->addDependent('paymentMethod', ['paymentCountry'], function(DependentField $field, ?string $paymentCountry) use ($options) {
                 if ($paymentCountry === null) {
