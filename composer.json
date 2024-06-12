@@ -25,6 +25,7 @@
         "symfonycasts/dynamic-forms": "^0.1.2",
         "tales-from-a-dev/flowbite-bundle": "^0.6.0",
         "moneyphp/money": "^4.5",
-        "stof/doctrine-extensions-bundle": "^1.10"
+        "stof/doctrine-extensions-bundle": "^1.10",
+        "symfony/expression-language": "^6.4"
     }
 }

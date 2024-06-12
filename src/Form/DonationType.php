@@ -12,9 +12,11 @@ use Symfony\Component\Form\Extension\Core\Type\MoneyType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\FormInterface;
+use Symfony\Component\Form\FormView;
 use Symfony\Component\Intl\Countries;
-use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\Choice;
 use Symfonycasts\DynamicForms\DependentField;
 use Symfonycasts\DynamicForms\DynamicFormBuilder;
 use TalesFromADev\FlowbiteBundle\Form\Type\SwitchType;
@@ -61,18 +63,28 @@ class DonationType extends AbstractType
                 if ($taxReturn === true){
                     $field->add(TextType::class, ['label' => 'Isikukood']);
                 }
-            })
-            ->add('paymentCountry', ChoiceType::class, ['choices' => $options['payment_methods']['countries'], 'label' => false])
-            ->addDependent('paymentMethod', ['paymentCountry'], function(DependentField $field, ?string $paymentCountry) use ($options) {
-                if ($paymentCountry === null) {
-                    $paymentCountry = reset($options['payment_methods']['countries']);
-                }
-                if (!isset($options['payment_methods']['methods'][$paymentCountry])) {
-                    return;
-                }
-                $field->add(ChoiceType::class, ['expanded' => true, 'choices' => $options['payment_methods']['methods'][$paymentCountry], 'required' => true, 'placeholder' => 'Choose payment method']);
-            })
-            ->add('submit', SubmitType::class);
+            });
+
+        // Bank payment
+        $choices = $this->getCountryChoices($this->getBankCountryCodes($options));
+        $builder->add('bankCountry', ChoiceType::class, ['choices' => $choices, 'label' => false]);
+        $builder->addDependent('gateway', ['bankCountry'], function(DependentField $field, ?string $bankCountry) use ($options) {
+            if ($bankCountry === null) {
+                $bankCountry = $this->getDefaultBankCountry($options);
+            }
+            $gateways = $this->getBankGateways($options, $bankCountry);
+            $field->add(ChoiceType::class, [
+                'expanded' => true, 
+                'required' => true, 
+                'choices' => $gateways, 
+                'placeholder' => 'Choose bank',
+                'constraints' => [
+                    new Choice(choices: array_values($gateways))
+                ],
+            ]);
+        });
+
+        $builder->add('submit', SubmitType::class);
         
         $builder->get('amount')->addModelTransformer(
             new CallbackTransformer(
@@ -89,30 +101,77 @@ class DonationType extends AbstractType
         );
     }
 
+    public function finishView(FormView $view, FormInterface $form, array $options): void
+    {
+        $countryCode = $this->getSelectedBankCountry($view, $options);
+        foreach ($view['gateway']->children as $child){
+            $child->vars['image'] = $this->getBankImage($countryCode, $child->vars['value'], $options);
+        }
+    }
+
+    private function getBankImage(string $countryCode, string $gatewayName, array $options) : string {
+        return $options['payments_config']['onetime']['bank'][$countryCode]['gateways'][$gatewayName]['image'];
+    }
+
+    private function getSelectedBankCountry(FormView $view, array $options) : string {
+        $selected = $view['bankCountry']->vars['value'];
+        if (empty($selected)) {
+            $selected = $this->getDefaultBankCountry($options);
+        }
+        return $selected;
+    }
+
+    private function getDefaultBankCountry(array $options) : string {
+        $countryCodes = $this->getBankCountryCodes($options);
+        return reset($countryCodes);
+    }
+    
+    private function getBankCountryCodes(array $options): array {
+        return array_keys($options['payments_config']['onetime']['bank']);
+    }
+
+    private function getCountryChoices(array $countryCodes): array {
+        $choicesWithLabels = [];
+        foreach($countryCodes as $countryCode) {
+            $choicesWithLabels[Countries::getName($countryCode)] = $countryCode;
+        }
+        return $choicesWithLabels;
+    }
+    
+    private function getBankGateways(array $options, string $countryCode): array {
+        $gateways = [];
+        foreach ($options['payments_config']['onetime']['bank'][$countryCode]['gateways'] as $gatewayName => $gatewayProperties) {
+            $gateways[$gatewayProperties['label']] = $gatewayName;
+        }
+        return $gateways;
+    }
+
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'data_class' => DonationDto::class,
+            // This prevents displaying the 'This form should not contain extra fields.' message when fields are getting hidden using Dependent Form Fields
+            'allow_extra_fields' => true,
         ]);
 
-        $resolver->setRequired(['payment_methods']);
-
-        $resolver->setAllowedTypes('payment_methods', 'array');
-
-        $resolver->setNormalizer('payment_methods', function (Options $options, array $paymentMethods): array {
-            $countries = [];
-            $countryMethods = [];
-            
-            foreach($paymentMethods as $method => $methodConfig) {
-                $countryCode = $methodConfig['country_code'];
-                if (!isset($countryMethods[$countryCode])) {
-                    $countryMethods[$countryCode] = [];
-                }
-                $countryMethods[$countryCode][$methodConfig['label']] = $method;
-                $countries[Countries::getName($countryCode)] = $countryCode;
-            }
-
-            return ['countries' => $countries, 'methods' => $countryMethods];
+        $resolver->setDefault('payments_config', function (OptionsResolver $paymentsResolver): void {
+            $paymentsResolver->setRequired(['onetime']);
+            $paymentsResolver->setDefault('onetime', function (OptionsResolver $onetimeResolver): void {
+                $onetimeResolver->setRequired(['bank']);
+                $onetimeResolver->setDefault('bank', function (OptionsResolver $bankResolver): void {
+                    $bankResolver
+                        ->setPrototype(true)
+                        ->setRequired(['gateways']);
+                    $bankResolver->setDefault('gateways', function (OptionsResolver $gatewaysResolver): void {
+                        $gatewaysResolver
+                            ->setPrototype(true)
+                            ->setRequired('label')
+                            ->setDefault('image', '');
+                    });
+                });
+            });
         });
+        $resolver->setRequired(['payments_config']);
+        $resolver->setAllowedTypes('payments_config', 'array');
     }
 }

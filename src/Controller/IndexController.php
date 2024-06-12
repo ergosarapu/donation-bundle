@@ -21,14 +21,14 @@ class IndexController extends AbstractPaymentController
         // Set initial default value
         $donation->setAmount(MoneyDto::fromMoney(Money::EUR(2500)));
         
-        $form = $this->createForm(DonationType::class, $donation, ['payment_methods' => $this->paymentMethods]);
+        $form = $this->createForm(DonationType::class, $donation, ['payments_config' => $this->paymentsConfig]);
 
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             /** @var DonationDto $donation */
             $donation = $form->getData();
 
-            $gatewayName = $donation->getPaymentMethod();
+            $gatewayName = $donation->getGateway();
             $storage = $payum->getStorage(Payment::class);
             
             /** @var Payment $payment */

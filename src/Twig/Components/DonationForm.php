@@ -23,6 +23,6 @@ final class DonationForm extends AbstractPaymentController
     protected function instantiateForm(): FormInterface {
         $payment = $this->initialFormData ?? new DonationDto();
 
-        return $this->createForm(DonationType::class, $payment, ['payment_methods' => $this->paymentMethods]);
+        return $this->createForm(DonationType::class, $payment, ['payments_config' => $this->paymentsConfig]);
     }
 }

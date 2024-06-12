@@ -6,12 +6,12 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 class AbstractPaymentController extends AbstractController
 {
-    protected array $paymentMethods;
+    protected array $paymentsConfig;
 
     protected string $campaignPublicId;
 
-    public function setPaymentMethods(array $paymentMethods){
-        $this->paymentMethods = $paymentMethods;
+    public function setPaymentsConfig(array $paymentsConfig){
+        $this->paymentsConfig = $paymentsConfig;
     }
 
     public function setCampaignPublicId(string $campaignPublicId){

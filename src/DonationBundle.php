@@ -8,6 +8,8 @@ use ErgoSarapu\DonationBundle\Payum\UpdatePaymentStatusExtension;
 use ErgoSarapu\DonationBundle\Repository\UserRepository;
 use ErgoSarapu\DonationBundle\Twig\Components\DonationForm;
 use ErgoSarapu\DonationBundle\Utils\UserValidator;
+use Symfony\Component\Config\Definition\Builder\NodeDefinition;
+use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
@@ -26,21 +28,48 @@ class DonationBundle extends AbstractBundle
                         ->thenInvalid('Campaign public Id must be configured')
                     ->end()
                 ->end()
-                ->arrayNode('payment_methods')
-                    ->info('Payment methods configuration. Use configuraed Payum gateway as the name.')
+
+                ->arrayNode('payments')
+                    ->info('Payments configuration.')
                     ->validate()
                         ->ifEmpty()
-                        ->thenInvalid('Configure at least one payment method')
+                        ->thenInvalid('Configure at least one payment frequency type.')
                     ->end()
-                    ->useAttributeAsKey('name')
-                    ->arrayPrototype()
-                        ->children()
-                            ->scalarNode('country_code')->isRequired()->cannotBeEmpty()->info('Country code under which this payment method should be shown')->end()
-                            ->scalarNode('label')->isRequired()->cannotBeEmpty()->info('Payment method label as shown to the end user')->end()
+
+                    ->children()
+                        ->arrayNode('onetime')
+                            ->children()
+                                ->append($this->addBankNode())
+                            ->end()
+                        ->end()
+                        ->arrayNode('monthly')
+                            ->children()
+                                ->append($this->addBankNode())
+                            ->end()
                         ->end()
                     ->end()
                 ->end()
             ->end();
+    }
+
+    private function addBankNode(): NodeDefinition {
+
+        $treeBuilder = new TreeBuilder('bank');
+        return $treeBuilder->getRootNode()
+            ->useAttributeAsKey('country_code')
+                ->arrayPrototype()
+                    ->children()
+                        ->arrayNode('gateways')
+                            ->useAttributeAsKey('name')
+                            ->arrayPrototype()
+                                ->children()
+                                    ->scalarNode('label')->isRequired()->cannotBeEmpty()->info('Payment method label as shown to the end user')->end()
+                                    ->scalarNode('image')->cannotBeEmpty()->info('Payment method icon shown to the end user')->end()
+                                ->end()
+                            ->end()
+                        ->end()
+                    ->end()
+                ->end();
     }
 
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
@@ -48,11 +77,12 @@ class DonationBundle extends AbstractBundle
         $container->import(__DIR__ . '/../config/controller.yaml');
 
         $container->services()->set(UpdatePaymentStatusExtension::class, class: UpdatePaymentStatusExtension::class)->public()->tag('payum.extension', ['all' => true]);
+
         $container->services()->get(IndexController::class)
-            ->call('setPaymentMethods', [$config['payment_methods']])
+            ->call('setPaymentsConfig', [$config['payments']])
             ->call('setCampaignPublicId', [$config['campaign_public_id']]);
         $container->services()->get(DonationForm::class)
-            ->call('setPaymentMethods', [$config['payment_methods']])
+            ->call('setPaymentsConfig', [$config['payments']])
             ->call('setCampaignPublicId', [$config['campaign_public_id']]);
 
         $container->services()->set(AddUserCommand::class, AddUserCommand::class)->autoconfigure()->autowire();
