@@ -40,11 +40,13 @@ class DonationBundle extends AbstractBundle
                         ->arrayNode('onetime')
                             ->children()
                                 ->append($this->addBankNode())
+                                ->append($this->addCardNode())
                             ->end()
                         ->end()
                         ->arrayNode('monthly')
                             ->children()
                                 ->append($this->addBankNode())
+                                ->append($this->addCardNode())
                             ->end()
                         ->end()
                     ->end()
@@ -57,19 +59,27 @@ class DonationBundle extends AbstractBundle
         $treeBuilder = new TreeBuilder('bank');
         return $treeBuilder->getRootNode()
             ->useAttributeAsKey('country_code')
-                ->arrayPrototype()
-                    ->children()
-                        ->arrayNode('gateways')
-                            ->useAttributeAsKey('name')
-                            ->arrayPrototype()
-                                ->children()
-                                    ->scalarNode('label')->isRequired()->cannotBeEmpty()->info('Payment method label as shown to the end user')->end()
-                                    ->scalarNode('image')->cannotBeEmpty()->info('Payment method icon shown to the end user')->end()
-                                ->end()
-                            ->end()
-                        ->end()
-                    ->end()
-                ->end();
+            ->arrayPrototype()
+                ->children()
+                    ->append($this->addGatewaysNode())
+                ->end()
+            ->end();
+    }
+
+    private function addGatewaysNode(): NodeDefinition {
+        $treeBuilder = new TreeBuilder('gateways');
+        return $treeBuilder->getRootNode()
+            ->useAttributeAsKey('name')
+            ->arrayPrototype()
+                ->children()
+                    ->scalarNode('label')->isRequired()->cannotBeEmpty()->info('Payment method label as shown to the end user')->end()
+                    ->scalarNode('image')->cannotBeEmpty()->info('Payment method icon shown to the end user')->end()
+                ->end()
+            ->end();
+    }
+
+    private function addCardNode(): NodeDefinition {
+        return (new TreeBuilder('card'))->getRootNode()->append($this->addGatewaysNode());
     }
 
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void

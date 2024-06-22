@@ -155,23 +155,36 @@ class DonationType extends AbstractType
         ]);
 
         $resolver->setDefault('payments_config', function (OptionsResolver $paymentsResolver): void {
-            $paymentsResolver->setRequired(['onetime']);
             $paymentsResolver->setDefault('onetime', function (OptionsResolver $onetimeResolver): void {
-                $onetimeResolver->setRequired(['bank']);
-                $onetimeResolver->setDefault('bank', function (OptionsResolver $bankResolver): void {
-                    $bankResolver
-                        ->setPrototype(true)
-                        ->setRequired(['gateways']);
-                    $bankResolver->setDefault('gateways', function (OptionsResolver $gatewaysResolver): void {
-                        $gatewaysResolver
-                            ->setPrototype(true)
-                            ->setRequired('label')
-                            ->setDefault('image', '');
-                    });
-                });
+                $this->resolveBank($onetimeResolver);
+                $this->resolveCard($onetimeResolver);    
             });
         });
         $resolver->setRequired(['payments_config']);
         $resolver->setAllowedTypes('payments_config', 'array');
+    }
+
+    private function resolveGateways(OptionsResolver $resolver): void{
+        $resolver
+            ->setRequired(['gateways'])
+            ->setDefault('gateways', function (OptionsResolver $resolver): void {
+                $resolver
+                    ->setPrototype(true) // Marks gateway name
+                    ->setRequired('label')
+                    ->setDefault('image', '');
+        });
+    }
+
+    private function resolveBank(OptionsResolver $resolver): void{
+        $resolver->setDefault('bank', function (OptionsResolver $resolver): void {
+            $resolver->setPrototype(true); // Marks country code
+            $this->resolveGateways($resolver);
+        });
+    }
+
+    private function resolveCard(OptionsResolver $resolver): void{
+        $resolver->setDefault('card', function (OptionsResolver $resolver): void {
+            $this->resolveGateways($resolver);
+        });
     }
 }
