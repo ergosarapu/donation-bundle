@@ -4,6 +4,7 @@ namespace ErgoSarapu\DonationBundle\Controller\Admin;
 
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\EmailField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
@@ -25,7 +26,7 @@ class PaymentCrudController extends AbstractCrudController
             FormField::addColumn(6),
             FormField::addFieldset('Details'),
             IdField::new('id')->setDisabled()->setColumns(4),
-            TextField::new('clientId')->setDisabled()->setColumns(4),
+            DateTimeField::new('createdAt')->setDisabled()->setColumns(4),
             TextField::new('number')->setDisabled()->setColumns(4),
             EmailField::new('clientEmail')->setDisabled()->setColumns(4),
             TextField::new('givenName')->setDisabled()->setColumns(4),
