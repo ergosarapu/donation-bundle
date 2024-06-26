@@ -14,7 +14,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class IndexController extends AbstractPaymentController
 {
-    public function __invoke(Request $request, Payum $payum): Response
+
+    public function __invoke(Request $request): Response
     {
         $donation = new DonationDto();
 
@@ -29,7 +30,7 @@ class IndexController extends AbstractPaymentController
             $donation = $form->getData();
 
             $gatewayName = $donation->getGateway();
-            $storage = $payum->getStorage(Payment::class);
+            $storage = $this->payum->getStorage(Payment::class);
             
             /** @var Payment $payment */
             $payment = $storage->create();
@@ -46,7 +47,7 @@ class IndexController extends AbstractPaymentController
             
             $storage->update($payment);
                         
-            $captureToken = $payum->getTokenFactory()->createCaptureToken(
+            $captureToken = $this->payum->getTokenFactory()->createCaptureToken(
                 $gatewayName, 
                 $payment,
                 'payment_done' // the route to redirect after capture

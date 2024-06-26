@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<routes xmlns="http://symfony.com/schema/routing"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://symfony.com/schema/routing
+        https://symfony.com/schema/routing/routing-1.0.xsd">
+
+    <import resource="@PayumBundle/Resources/config/routing/all.xml"/>
+
+    <route id="dashboard" path="/admin" controller="ErgoSarapu\DonationBundle\Controller\AdminDashboardController::index"/>
+    <route id="admin_login" path="/login" controller="donation_bundle.controller.admin.login_controller"/>
+    <route id="index" path="/" controller="donation_bundle.controller.index_controller"/>
+    <route id="payment_done" path="/done" controller="donation_bundle.controller.payment_done_controller"/>
+
+</routes>

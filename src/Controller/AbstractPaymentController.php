@@ -2,19 +2,15 @@
 
 namespace ErgoSarapu\DonationBundle\Controller;
 
+use Payum\Core\Payum;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 class AbstractPaymentController extends AbstractController
 {
-    protected array $paymentsConfig;
-
-    protected string $campaignPublicId;
-
-    public function setPaymentsConfig(array $paymentsConfig){
-        $this->paymentsConfig = $paymentsConfig;
-    }
-
-    public function setCampaignPublicId(string $campaignPublicId){
-        $this->campaignPublicId = $campaignPublicId;
+    public function __construct(
+        protected array $paymentsConfig,
+        protected string $campaignPublicId,
+        protected Payum $payum)
+    {
     }
 }

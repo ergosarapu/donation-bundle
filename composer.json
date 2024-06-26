@@ -2,13 +2,26 @@
     "name": "ergosarapu/donation-bundle",
     "description": "Donation Bundle allows creating developer friendly donation websites easily",
     "type": "symfony-bundle",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Ergo Sarapu",
+            "email": "ergosarapu@gmail.com"
+        }
+    ],
     "autoload": {
         "psr-4": {
             "ErgoSarapu\\DonationBundle\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "ErgoSarapu\\DonationBundle\\Tests\\": "tests/"
+        }
+    },
     "minimum-stability": "stable",
     "require": {
+        "php": "^8.2.15",
         "payum/payum-bundle": "^2.5",
         "symfony/http-client": "^6.4",
         "easycorp/easyadmin-bundle": "^4.10",
@@ -27,5 +40,8 @@
         "moneyphp/money": "^4.5",
         "stof/doctrine-extensions-bundle": "^1.10",
         "symfony/expression-language": "^6.4"
+    },
+    "require-dev": {
+        "symfony/phpunit-bridge": "^7.1"
     }
 }
