@@ -73,7 +73,6 @@ final class AddUserCommand extends Command
     private SymfonyStyle $io;
 
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
         private readonly UserValidator $validator,
         private readonly UserRepository $users
     ) {

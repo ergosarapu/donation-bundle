@@ -8,6 +8,7 @@ use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
+use Symfony\Component\Intl\Countries;
 
 class DonationBundle extends AbstractBundle
 {
@@ -16,7 +17,6 @@ class DonationBundle extends AbstractBundle
         $definition->rootNode()
             ->children()
                 ->scalarNode('campaign_public_id')
-                    ->isRequired()
                     ->info('Campaign public Id, will be encoded into payment description')
                     ->validate()
                         ->ifEmpty()
@@ -25,7 +25,6 @@ class DonationBundle extends AbstractBundle
                 ->end()
 
                 ->arrayNode('payments')
-                    ->isRequired()
                     ->info('Payments configuration.')
                     ->validate()
                         ->ifEmpty()
@@ -55,6 +54,17 @@ class DonationBundle extends AbstractBundle
         $treeBuilder = new TreeBuilder('bank');
         return $treeBuilder->getRootNode()
             ->useAttributeAsKey('country_code')
+                ->validate()
+                    ->ifTrue(function (array $values): bool{
+                        foreach($values as $key => $value) {
+                            if (!Countries::exists($key)){
+                                return true;
+                            }
+                        }
+                        return false;
+                    })
+                    ->thenInvalid('Not a valid alpha-2 country code')
+                ->end()
             ->arrayPrototype()
                 ->children()
                     ->append($this->addGatewaysNode())
@@ -82,12 +92,7 @@ class DonationBundle extends AbstractBundle
     {
         $container->import(__DIR__ . '/../config/services.xml');
 
-        $builder->getDefinition('donation_bundle.controller.index_controller')
-            ->setArgument(0, $config['payments'])
-            ->setArgument(1, $config['campaign_public_id']);
-
-        $builder->getDefinition('donation_bundle.twig.components.donation_form')
-            ->setArgument(0, $config['payments'])
-            ->setArgument(1, $config['campaign_public_id']);
+        $builder->getDefinition('donation_bundle.payum.payum_payment_provider')
+            ->setArgument(1, $config['payments'] ?? null);
     }    
 }

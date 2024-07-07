@@ -42,6 +42,7 @@
         "symfony/expression-language": "^6.4"
     },
     "require-dev": {
-        "symfony/phpunit-bridge": "^7.1"
+        "symfony/phpunit-bridge": "^7.1",
+        "symfony/yaml": "^7.1"
     }
 }

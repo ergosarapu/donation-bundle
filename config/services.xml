@@ -14,15 +14,13 @@
         <service id="ErgoSarapu\DonationBundle\Controller\Admin\PaymentCrudController" autoconfigure="true" autowire="true"/>
         <service id="ErgoSarapu\DonationBundle\Controller\Admin\CampaignCrudController" autoconfigure="true" autowire="true"/>
 
-        <service id="donation_bundle.controller.index_controller" class="ErgoSarapu\DonationBundle\Controller\IndexController" autoconfigure="true">
-            <argument key="$payum" type="service" id="payum"/>
+        <service id="donation_bundle.controller.index_controller" class="ErgoSarapu\DonationBundle\Controller\IndexController" autoconfigure="true" autowire="true">
             <call method="setContainer">
                 <argument type="service" id="Psr\Container\ContainerInterface"/>
             </call>
         </service>
 
-        <service id="donation_bundle.twig.components.donation_form" class="ErgoSarapu\DonationBundle\Twig\Components\DonationForm" autoconfigure="true">
-            <argument key="$payum" type="service" id="payum"/>
+        <service id="donation_bundle.twig.components.donation_form" class="ErgoSarapu\DonationBundle\Twig\Components\DonationForm" autoconfigure="true" autowire="true">
             <call method="setContainer">
                 <argument type="service" id="Psr\Container\ContainerInterface"/>
             </call>
@@ -35,6 +33,9 @@
         </service>
 
         <!-- Payum -->
+        <service id="donation_bundle.payum.payum_payment_provider" class="ErgoSarapu\DonationBundle\Payum\PayumPaymentProvider" public="true" autowire="true" />
+        <service id="ErgoSarapu\DonationBundle\Payum\PayumPaymentProvider" alias="donation_bundle.payum.payum_payment_provider"/>
+
         <service id="donation_bundle.payum.payment_status_extension" class="ErgoSarapu\DonationBundle\Payum\UpdatePaymentStatusExtension" autoconfigure="true" public="true">
             <tag name="payum.extension" all="true"/>
         </service>
