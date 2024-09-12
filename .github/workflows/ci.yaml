@@ -1,0 +1,36 @@
+name: Build
+
+on:
+  push:
+    branches: 
+      - master
+      - 'feature/**'
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  phpunit:
+    strategy: 
+      fail-fast: false
+      matrix:
+        - os: macos-latest
+          php_version: "8.2"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP, with composer and extensions
+        uses: shivammathur/setup-php@v2
+        with:
+            php-version: ${{ matrix.php_version }}
+            coverage: none
+            extensions: mbstring, intl, pdo, pdo_sqlite, sqlite3
+            ini-values: date.timezone=UTC
+
+      - name: Install dependencies
+        run: |
+            composer update
+
+      - name: Run tests
+        run: vendor/bin/simple-phpunit
