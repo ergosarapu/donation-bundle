@@ -35,7 +35,7 @@ jobs:
 
       - name: Create database
         run: |
-          mkdir var
+          mkdir var && mkdir migrations
           touch var/testdb.sqlite
           ./vendor/bin/doctrine-migrations migrations:diff
           ./vendor/bin/doctrine-migrations migrations:migrate
