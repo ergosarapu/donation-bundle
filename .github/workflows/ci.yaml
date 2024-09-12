@@ -35,6 +35,7 @@ jobs:
 
       - name: Create database
         run: |
+          touch var/testdb.sqlite
           ./vendor/bin/doctrine-migrations migrations:diff
           ./vendor/bin/doctrine-migrations migrations:migrate
 
