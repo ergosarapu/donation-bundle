@@ -20,6 +20,7 @@ use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigura
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 use Symfony\UX\LiveComponent\LiveComponentBundle;
+use Symfony\UX\StimulusBundle\StimulusBundle;
 use Symfony\UX\TwigComponent\TwigComponentBundle;
 
 class IndexControllerTest extends TestCase
@@ -108,6 +109,7 @@ class DonationBundleControllerKernel extends Kernel
             new TwigBundle(),
             new TwigComponentBundle(),
             new LiveComponentBundle(),
+            new StimulusBundle(),
             new DoctrineBundle(),
             new DAMADoctrineTestBundle(),
         ];
