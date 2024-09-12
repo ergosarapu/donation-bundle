@@ -24,6 +24,14 @@ $ composer require ergosarapu/donation-bundle @dev
 
 ## Step 3: Initialize database
 
+Add following to `config/packages/doctrine_migrations.yaml`:
+
+```json
+doctrine_migrations:
+    migrations_paths:
+        'DonationBundle\Migrations': '@DonationBundle/migrations'
+```
+
 The Docker configuration of symfony/doctrine-bundle repository is extensible thanks to Flex recipes. By default, the recipe installs PostgreSQL.
 If you prefer to work with MySQL, update the project configuration accordingly. In case you are using [symfony-docker](https://github.com/dunglas/symfony-docker) for your app, you can follow [these instructions](https://github.com/dunglas/symfony-docker/blob/main/docs/mysql.md).
 
@@ -49,15 +57,29 @@ app.montonio_gateway_factory:
         - { name: payum.gateway_factory_builder, factory: montonio }
 ```
 
-## Step 6: Configure Twig
+# Development
 
-Add following to `config/packages/twig_component.yaml`:
-
-```yaml
-twig_component:
-    ...
-    defaults:
-        ...
-        ErgoSarapu\DonationBundle\Twig\Components\: '@Donation/templates/components/'
+## Set up dev environment using DDEV
+```sh
+ddev start
 ```
 
+## Set up app integrated dev environment
+TODO: Describe how to set up dev environment with Symfony app using this bundle. While it is possible to develop bundle without setting up app itself, it is useful to verify things properly work as expected. Also it gives possibility to use Symfony console commands, e.g. to generate needed database migration files.
+
+## Initialize test database
+Create migrations:
+```sh
+./vendor/bin/doctrine-migrations migrations:diff
+```
+
+Migrate database
+```sh
+./vendor/bin/doctrine-migrations migrations:migrate
+```
+
+## Testing
+Use following command to run tests:
+```sh
+./vendor/bin/simple-phpunit
+```

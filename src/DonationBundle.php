@@ -94,5 +94,16 @@ class DonationBundle extends AbstractBundle
 
         $builder->getDefinition('donation_bundle.payum.payum_payment_provider')
             ->setArgument(1, $config['payments'] ?? null);
-    }    
+    }
+
+    public function prependExtension(ContainerConfigurator $container, ContainerBuilder $builder): void
+    {
+        $builder->prependExtensionConfig('twig_component',[
+            'defaults' => [
+                'ErgoSarapu\DonationBundle\Twig\Components\\' => [
+                    'template_directory' =>  '@Donation/components/',
+                ]
+            ]
+        ]);
+    }
 }

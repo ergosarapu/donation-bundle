@@ -49,8 +49,8 @@
         <service id="ErgoSarapu\DonationBundle\Repository\UserRepository" autowire="true">
             <tag name="doctrine.repository_service"/>
         </service>
-        <!-- <service id="ErgoSarapu\DonationBundle\Repository\CampaignRepository" autowire="true">
+        <service id="ErgoSarapu\DonationBundle\Repository\CampaignRepository" autowire="true">
             <tag name="doctrine.repository_service"/>
-        </service> -->
+        </service>
     </services>
 </container>

@@ -12,7 +12,7 @@ use Symfony\UX\LiveComponent\Attribute\LiveProp;
 use Symfony\UX\LiveComponent\ComponentWithFormTrait;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
 
-#[AsLiveComponent(template: '@Donation/components/donation_form.html.twig')]
+#[AsLiveComponent]
 final class DonationForm extends AbstractController
 {
     use DefaultActionTrait;

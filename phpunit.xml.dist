@@ -16,4 +16,7 @@
       <directory suffix="Test.php">./tests</directory>
     </testsuite>
   </testsuites>
+  <extensions>
+    <extension class="DAMA\DoctrineTestBundle\PHPUnit\PHPUnitExtension" />
+  </extensions>
 </phpunit>

@@ -7,6 +7,8 @@ use ErgoSarapu\DonationBundle\Dto\MoneyDto;
 use ErgoSarapu\DonationBundle\Entity\Payment\Status;
 use ErgoSarapu\DonationBundle\Form\DonationType;
 use ErgoSarapu\DonationBundle\Payum\PayumPaymentProvider;
+use ErgoSarapu\DonationBundle\Repository\CampaignRepository;
+use InvalidArgumentException;
 use Money\Money;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -15,12 +17,20 @@ use Symfony\Component\HttpFoundation\Response;
 class IndexController extends AbstractController
 {
 
-    public function __construct(private PayumPaymentProvider $provider)
+    public function __construct(private PayumPaymentProvider $provider, private readonly CampaignRepository $campaignRepository)
     {
     }
 
     public function __invoke(Request $request): Response
     {
+        $campaigns = $this->campaignRepository->findBy(['default' => true]);
+        if (count($campaigns) === 0) {
+            throw new InvalidArgumentException('No default campaign found');
+        }
+        if (count($campaigns) > 1) {
+            throw new InvalidArgumentException('Multiple default campaigns found');
+        }
+        
         $donation = new DonationDto();
 
         // Set initial default value
@@ -40,7 +50,7 @@ class IndexController extends AbstractController
             $payment->setNumber(uniqid());
             $payment->setCurrencyCode($donation->getAmount()->currency);
             $payment->setTotalAmount($donation->getAmount()->amount);
-            $payment->setDescription(sprintf('%s;%s', $payment->getNumber(), $this->campaignPublicId));
+            $payment->setDescription(sprintf('%s;%s', $payment->getNumber(), $campaigns[0]->getPublicId()));
             $payment->setClientId(null);
             $payment->setClientEmail($donation->getEmail());
             $payment->setGivenName($donation->getGivenName());
@@ -57,7 +67,8 @@ class IndexController extends AbstractController
 
         return $this->render('@Donation/landing.html.twig', [
             'form' => $form,
-            'donation' => $donation
+            'donation' => $donation,
+            'campaign' => $campaigns[0],
         ]);
     }
 }

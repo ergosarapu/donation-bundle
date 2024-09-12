@@ -9,7 +9,7 @@ use Symfony\Component\Validator\Constraints\When;
 
 class DonationDto
 {
-    private const string IS_TAX_RETURN = 'this.isTaxReturn() == true';
+    private const IS_TAX_RETURN = 'this.isTaxReturn() == true';
 
     private DonationInterval $type = DonationInterval::Single;
 

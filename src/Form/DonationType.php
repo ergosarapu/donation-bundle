@@ -157,8 +157,9 @@ class DonationType extends AbstractType
         $resolver->setDefault('payments_config', function (OptionsResolver $paymentsResolver): void {
             $paymentsResolver->setDefault('onetime', function (OptionsResolver $onetimeResolver): void {
                 $this->resolveBank($onetimeResolver);
-                $this->resolveCard($onetimeResolver);    
+                $this->resolveCard($onetimeResolver);
             });
+            $paymentsResolver->setDefault('monthly', null); // TODO
         });
         $resolver->setRequired(['payments_config']);
         $resolver->setAllowedTypes('payments_config', 'array');
