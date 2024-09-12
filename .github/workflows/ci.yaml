@@ -31,8 +31,12 @@ jobs:
             ini-values: date.timezone=UTC
 
       - name: Install dependencies
+        run: composer update
+
+      - name: Create database
         run: |
-            composer update
+          ./vendor/bin/doctrine-migrations migrations:diff
+          ./vendor/bin/doctrine-migrations migrations:migrate
 
       - name: Run tests
         run: vendor/bin/simple-phpunit
