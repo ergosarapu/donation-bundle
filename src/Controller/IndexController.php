@@ -31,6 +31,7 @@ class IndexController extends AbstractController
             throw new InvalidArgumentException('Multiple default campaigns found');
         }
         
+        $campaign = $campaigns[0];
         $donation = new DonationDto();
 
         // Set initial default value
@@ -50,12 +51,13 @@ class IndexController extends AbstractController
             $payment->setNumber(uniqid());
             $payment->setCurrencyCode($donation->getAmount()->currency);
             $payment->setTotalAmount($donation->getAmount()->amount);
-            $payment->setDescription(sprintf('%s;%s', $payment->getNumber(), $campaigns[0]->getPublicId()));
+            $payment->setDescription(sprintf('%s;%s', $payment->getNumber(), $campaign->getPublicId()));
             $payment->setClientId(null);
             $payment->setClientEmail($donation->getEmail());
             $payment->setGivenName($donation->getGivenName());
             $payment->setFamilyName($donation->getFamilyName());
             $payment->setNationalIdCode($donation->getNationalIdCode());
+            $payment->setCampaign($campaign);
             
             $this->provider->updatePayment($payment);
                         
@@ -68,7 +70,7 @@ class IndexController extends AbstractController
         return $this->render('@Donation/landing.html.twig', [
             'form' => $form,
             'donation' => $donation,
-            'campaign' => $campaigns[0],
+            'campaign' => $campaign,
         ]);
     }
 }

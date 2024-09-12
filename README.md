@@ -57,6 +57,12 @@ app.montonio_gateway_factory:
         - { name: payum.gateway_factory_builder, factory: montonio }
 ```
 
+## Step 6: Create admin user
+
+```sh
+php bin/console donation:add-user [email] [givenname] [familyname] --admin
+```
+
 # Development
 
 ## Set up dev environment using DDEV
