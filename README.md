@@ -132,13 +132,15 @@ ddev start
 TODO: Describe how to set up dev environment with Symfony app using this bundle. While it is possible to develop bundle without setting up app itself, it is useful to verify things properly work as expected. Also it gives possibility to use Symfony console commands, e.g. to generate needed database migration files.
 
 ## Initialize test database
-Create migrations:
-```sh
-./vendor/bin/doctrine-migrations migrations:diff
+Create missing directories and database file:
+```console
+mkdir var && mkdir migrations
+touch var/testdb.sqlite
 ```
 
-Migrate database
+Create and run migrations:
 ```sh
+./vendor/bin/doctrine-migrations migrations:diff
 ./vendor/bin/doctrine-migrations migrations:migrate
 ```
 
