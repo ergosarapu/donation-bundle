@@ -26,7 +26,7 @@ $ composer require ergosarapu/donation-bundle @dev
 
 Add following to `config/packages/doctrine_migrations.yaml`:
 
-```json
+```yaml
 doctrine_migrations:
     migrations_paths:
         'DonationBundle\Migrations': '@DonationBundle/migrations'
