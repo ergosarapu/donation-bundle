@@ -1,55 +1,52 @@
-# Installation
+# DonationBundle
+
+Donation Bundle allows creating developer friendly donation Symfony based websites easily
 
 The bundle currently supports Symfony 6.4
 
-## Step 1: Configure composer.json repository, e.g. add following if donation-bundle is mounted in local file system at `/mnt/donation-bundle`
+## Installation
 
-```json
-    "repositories":[
-        {
-            "type": "path",
-            "url": "/mnt/donation-bundle"
-        }
-    ],
-```
-
-## Step 2: Install the Bundle
-
-Open a command console, enter your project directory and execute the
-following command to download the latest stable version of this bundle:
+Open a command console, enter your project directory and execute:
 
 ```console
-$ composer require ergosarapu/donation-bundle @dev
+composer require ergosarapu/donation-bundle
 ```
 
-## Step 3: Initialize database
+To initialize database, first generate migrations files ...
 
-Add following to `config/packages/doctrine_migrations.yaml`:
-
-```yaml
-doctrine_migrations:
-    migrations_paths:
-        'DonationBundle\Migrations': '@DonationBundle/migrations'
+```console
+bin/console doctrine:migrations:diff
 ```
 
-The Docker configuration of symfony/doctrine-bundle repository is extensible thanks to Flex recipes. By default, the recipe installs PostgreSQL.
-If you prefer to work with MySQL, update the project configuration accordingly. In case you are using [symfony-docker](https://github.com/dunglas/symfony-docker) for your app, you can follow [these instructions](https://github.com/dunglas/symfony-docker/blob/main/docs/mysql.md).
+... then run migrations to create database tables:
 
-## Step 4: Register bundle routes
+```console
+bin/console doctrine:migrations:migrate
+```
 
-Add following to `config/routes.yaml`:
-
+Register bundle routes:
 ```yaml
+// config/routes.yaml
+
 donation_bundle_routes:
     # loads routes from the given routing file stored in bundle
     resource: '@DonationBundle/config/routes.xml'
 ```
 
-## Step 5: Register Payum gateway factories
+Create admin user:
+```sh
+php bin/console donation:add-user [email] [givenname] [familyname] --admin
+```
 
-Add following to `config/services.yaml`:
+If you run your app in localhost, then the admin panel can be accessed at http://localhost/admin.
+
+## Register Payum gateway factories
+
+The bundle uses Payum for payment gateway abstraction. In order to use a gateway, register Payum gateway factory, e.g:
 
 ```yaml
+// config/services.yaml
+
 app.montonio_gateway_factory:
     class: Payum\Core\Bridge\Symfony\Builder\GatewayFactoryBuilder
     arguments: [ErgoSarapu\PayumMontonio\MontonioGatewayFactory]
@@ -57,10 +54,71 @@ app.montonio_gateway_factory:
         - { name: payum.gateway_factory_builder, factory: montonio }
 ```
 
-## Step 6: Create admin user
+Then configure [PayumBundle](https://github.com/Payum/PayumBundle) and gateways.
 
-```sh
-php bin/console donation:add-user [email] [givenname] [familyname] --admin
+## Configuration
+
+The following configuration options are available for the Donation Bundle:
+
+```yaml
+# config/packages/donation.yaml
+
+donation:
+
+    # Payments configuration.
+    payments:
+        onetime:
+            bank:
+
+                # Prototype
+                country_code:
+                    gateways:
+
+                        # Prototype: Name of a Payum gateway
+                        name:
+
+                            # Payment method label as shown to the end user
+                            label:                ~ # Required
+
+                            # Payment method icon shown to the end user
+                            image:                ~
+            card:
+                gateways:
+
+                    # Prototype: Name of a Payum gateway
+                    name:
+
+                        # Payment method label as shown to the end user
+                        label:                ~ # Required
+
+                        # Payment method icon shown to the end user
+                        image:                ~
+        monthly:
+            bank:
+
+                # Prototype
+                country_code:
+                    gateways:
+
+                        # Prototype: Name of a Payum gateway
+                        name:
+
+                            # Payment method label as shown to the end user
+                            label:                ~ # Required
+
+                            # Payment method icon shown to the end user
+                            image:                ~
+            card:
+                gateways:
+
+                    # Prototype: Name of a Payum gateway
+                    name:
+
+                        # Payment method label as shown to the end user
+                        label:                ~ # Required
+
+                        # Payment method icon shown to the end user
+                        image:                ~
 ```
 
 # Development

@@ -16,14 +16,6 @@ class DonationBundle extends AbstractBundle
     {
         $definition->rootNode()
             ->children()
-                ->scalarNode('campaign_public_id')
-                    ->info('Campaign public Id, will be encoded into payment description')
-                    ->validate()
-                        ->ifEmpty()
-                        ->thenInvalid('Campaign public Id must be configured')
-                    ->end()
-                ->end()
-
                 ->arrayNode('payments')
                     ->info('Payments configuration.')
                     ->validate()
@@ -76,7 +68,7 @@ class DonationBundle extends AbstractBundle
         $treeBuilder = new TreeBuilder('gateways');
         return $treeBuilder->getRootNode()
             ->useAttributeAsKey('name')
-            ->arrayPrototype()
+            ->arrayPrototype()->info("Name of a Payum gateway")
                 ->children()
                     ->scalarNode('label')->isRequired()->cannotBeEmpty()->info('Payment method label as shown to the end user')->end()
                     ->scalarNode('image')->cannotBeEmpty()->info('Payment method icon shown to the end user')->end()
