@@ -128,8 +128,15 @@ donation:
 ddev start
 ```
 
-## Set up app integrated dev environment
-TODO: Describe how to set up dev environment with Symfony app using this bundle. While it is possible to develop bundle without setting up app itself, it is useful to verify things properly work as expected. Also it gives possibility to use Symfony console commands, e.g. to generate needed database migration files.
+## Install dependencies
+
+To restrict packages install to specific Symfony version, install symfony/flex globally and specify your desired Symfony version: 
+
+```console
+composer global config --no-plugins allow-plugins.symfony/flex true
+composer global require --no-interaction --no-progress symfony/flex:^2.4
+composer config extra.symfony.require "7.1"
+```
 
 ## Initialize test database
 Create missing directories and database file:
@@ -149,3 +156,6 @@ Use following command to run tests:
 ```sh
 ./vendor/bin/simple-phpunit
 ```
+
+## Set up app integrated dev environment
+TODO: Describe how to set up dev environment with Symfony app using this bundle. While it is possible to develop bundle without setting up app itself, it is useful to verify things work properly as expected.
