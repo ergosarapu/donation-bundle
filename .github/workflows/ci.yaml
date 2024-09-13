@@ -58,5 +58,5 @@ jobs:
 
       - name: Run tests
         env:
-          SYMFONY_DEPRECATIONS_HELPER: "disabled"
+          SYMFONY_DEPRECATIONS_HELPER: "max[direct]=0"
         run: vendor/bin/simple-phpunit
