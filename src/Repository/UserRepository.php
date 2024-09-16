@@ -22,7 +22,7 @@ use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
  */
 class UserRepository extends ServiceEntityRepository implements PasswordUpgraderInterface
 {
-    public function __construct(ManagerRegistry $registry, private readonly UserPasswordHasherInterface $passwordHasher)
+    public function __construct(?ManagerRegistry $registry, private readonly ?UserPasswordHasherInterface $passwordHasher)
     {
         parent::__construct($registry, User::class);
     }

@@ -37,7 +37,10 @@ class UpdatePaymentStatusExtension implements ExtensionInterface
 
     private function getStatus(string $status): Status {
         if ($status === 'new') {
-            return Status::Created; 
+            return Status::Created;
+        }
+        if ($status === 'payedout') {
+            return Status::Paid;
         }
         return Status::from($status);
     }

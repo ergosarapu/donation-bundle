@@ -1,1 +1,8 @@
-/vendor
+/vendor/
+composer.lock
+/phpunit.xml
+/var/cache
+.phpunit.result.cache
+.vscode
+/migrations/
+/var/testdb.sqlite

@@ -2,18 +2,13 @@
 
 namespace ErgoSarapu\DonationBundle;
 
-use ErgoSarapu\DonationBundle\Command\AddUserCommand;
-use ErgoSarapu\DonationBundle\Controller\IndexController;
-use ErgoSarapu\DonationBundle\Payum\UpdatePaymentStatusExtension;
-use ErgoSarapu\DonationBundle\Repository\UserRepository;
-use ErgoSarapu\DonationBundle\Twig\Components\DonationForm;
-use ErgoSarapu\DonationBundle\Utils\UserValidator;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
+use Symfony\Component\Intl\Countries;
 
 class DonationBundle extends AbstractBundle
 {
@@ -21,14 +16,6 @@ class DonationBundle extends AbstractBundle
     {
         $definition->rootNode()
             ->children()
-                ->scalarNode('campaign_public_id')
-                    ->info('Campaign public Id, will be encoded into payment description')
-                    ->validate()
-                        ->ifEmpty()
-                        ->thenInvalid('Campaign public Id must be configured')
-                    ->end()
-                ->end()
-
                 ->arrayNode('payments')
                     ->info('Payments configuration.')
                     ->validate()
@@ -59,6 +46,17 @@ class DonationBundle extends AbstractBundle
         $treeBuilder = new TreeBuilder('bank');
         return $treeBuilder->getRootNode()
             ->useAttributeAsKey('country_code')
+                ->validate()
+                    ->ifTrue(function (array $values): bool{
+                        foreach($values as $key => $value) {
+                            if (!Countries::exists($key)){
+                                return true;
+                            }
+                        }
+                        return false;
+                    })
+                    ->thenInvalid('Not a valid alpha-2 country code')
+                ->end()
             ->arrayPrototype()
                 ->children()
                     ->append($this->addGatewaysNode())
@@ -70,7 +68,7 @@ class DonationBundle extends AbstractBundle
         $treeBuilder = new TreeBuilder('gateways');
         return $treeBuilder->getRootNode()
             ->useAttributeAsKey('name')
-            ->arrayPrototype()
+            ->arrayPrototype()->info("Name of a Payum gateway")
                 ->children()
                     ->scalarNode('label')->isRequired()->cannotBeEmpty()->info('Payment method label as shown to the end user')->end()
                     ->scalarNode('image')->cannotBeEmpty()->info('Payment method icon shown to the end user')->end()
@@ -84,19 +82,20 @@ class DonationBundle extends AbstractBundle
 
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
     {
-        $container->import(__DIR__ . '/../config/controller.yaml');
+        $container->import(__DIR__ . '/../config/services.xml');
 
-        $container->services()->set(UpdatePaymentStatusExtension::class, class: UpdatePaymentStatusExtension::class)->public()->tag('payum.extension', ['all' => true]);
+        $builder->getDefinition('donation_bundle.payum.payum_payment_provider')
+            ->setArgument(1, $config['payments'] ?? null);
+    }
 
-        $container->services()->get(IndexController::class)
-            ->call('setPaymentsConfig', [$config['payments']])
-            ->call('setCampaignPublicId', [$config['campaign_public_id']]);
-        $container->services()->get(DonationForm::class)
-            ->call('setPaymentsConfig', [$config['payments']])
-            ->call('setCampaignPublicId', [$config['campaign_public_id']]);
-
-        $container->services()->set(AddUserCommand::class, AddUserCommand::class)->autoconfigure()->autowire();
-        $container->services()->set(UserValidator::class, UserValidator::class);
-        $container->services()->set(UserRepository::class, UserRepository::class)->autowire()->tag('doctrine.repository_service');
+    public function prependExtension(ContainerConfigurator $container, ContainerBuilder $builder): void
+    {
+        $builder->prependExtensionConfig('twig_component',[
+            'defaults' => [
+                'ErgoSarapu\DonationBundle\Twig\Components\\' => [
+                    'template_directory' =>  '@Donation/components/',
+                ]
+            ]
+        ]);
     }
 }

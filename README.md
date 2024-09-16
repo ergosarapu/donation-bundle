@@ -1,62 +1,52 @@
-Installation
-============
+# DonationBundle
+
+Donation Bundle allows creating developer friendly donation Symfony based websites easily
 
 The bundle currently supports Symfony 6.4
 
-Step 1: Configure composer.json repository, e.g. add following if donation-bundle is mounted in local file system at `/mnt/donation-bundle`
----------------------------
-```json
-    "repositories":[
-        {
-            "type": "path",
-            "url": "/mnt/donation-bundle"
-        }
-    ],
-```
+## Installation
 
-
-Step 2: Install the Bundle
----------------------------
-
-Open a command console, enter your project directory and execute the
-following command to download the latest stable version of this bundle:
+Open a command console, enter your project directory and execute:
 
 ```console
-$ composer require ergosarapu/donation-bundle @dev
+composer require ergosarapu/donation-bundle
 ```
 
-Step 3: Initialize database
----------------------------
+To initialize database, first generate migrations files ...
 
-The Docker configuration of symfony/doctrine-bundle repository is extensible thanks to Flex recipes. By default, the recipe installs PostgreSQL.
-If you prefer to work with MySQL, update the project configuration accordingly. In case you are using [symfony-docker](https://github.com/dunglas/symfony-docker) for your app, you can follow [these instructions](https://github.com/dunglas/symfony-docker/blob/main/docs/mysql.md).
+```console
+bin/console doctrine:migrations:diff
+```
 
-Step 4: Register bundle routes
----------------------------
+... then run migrations to create database tables:
 
-Add following to `config/routes.yaml`:
+```console
+bin/console doctrine:migrations:migrate
+```
 
+Register bundle routes:
 ```yaml
+// config/routes.yaml
+
 donation_bundle_routes:
     # loads routes from the given routing file stored in bundle
-    resource: '@DonationBundle/config/routes.php'
+    resource: '@DonationBundle/config/routes.xml'
 ```
 
-Step 5: Register bundle services
----------------------------
-
-Add following to `config/services.yaml`:
-
-```yaml
-ErgoSarapu\DonationBundle\Controller\AdminDashboardController:
+Create admin user:
+```sh
+php bin/console donation:add-user [email] [givenname] [familyname] --admin
 ```
 
-Step 6: Register Payum gateway factories
----------------------------
+If you run your app in localhost, then the admin panel can be accessed at http://localhost/admin.
 
-Add following to `config/services.yaml`:
+## Register Payum gateway factories
+
+The bundle uses Payum for payment gateway abstraction. In order to use a gateway, register Payum gateway factory, e.g:
 
 ```yaml
+// config/services.yaml
+
 app.montonio_gateway_factory:
     class: Payum\Core\Bridge\Symfony\Builder\GatewayFactoryBuilder
     arguments: [ErgoSarapu\PayumMontonio\MontonioGatewayFactory]
@@ -64,16 +54,108 @@ app.montonio_gateway_factory:
         - { name: payum.gateway_factory_builder, factory: montonio }
 ```
 
-Step 7: Configure Twig
----------------------------
+Then configure [PayumBundle](https://github.com/Payum/PayumBundle) and gateways.
 
-Add following to `config/packages/twig.yaml`:
+## Configuration
+
+The following configuration options are available for the Donation Bundle:
 
 ```yaml
-twig_component:
-    ...
-    defaults:
-        ...
-        ErgoSarapu\DonationBundle\Twig\Components\: '@Donation/templates/components/'
+# config/packages/donation.yaml
+
+donation:
+
+    # Payments configuration.
+    payments:
+        onetime:
+            bank:
+
+                # Prototype
+                country_code:
+                    gateways:
+
+                        # Prototype: Name of a Payum gateway
+                        name:
+
+                            # Payment method label as shown to the end user
+                            label:                ~ # Required
+
+                            # Payment method icon shown to the end user
+                            image:                ~
+            card:
+                gateways:
+
+                    # Prototype: Name of a Payum gateway
+                    name:
+
+                        # Payment method label as shown to the end user
+                        label:                ~ # Required
+
+                        # Payment method icon shown to the end user
+                        image:                ~
+        monthly:
+            bank:
+
+                # Prototype
+                country_code:
+                    gateways:
+
+                        # Prototype: Name of a Payum gateway
+                        name:
+
+                            # Payment method label as shown to the end user
+                            label:                ~ # Required
+
+                            # Payment method icon shown to the end user
+                            image:                ~
+            card:
+                gateways:
+
+                    # Prototype: Name of a Payum gateway
+                    name:
+
+                        # Payment method label as shown to the end user
+                        label:                ~ # Required
+
+                        # Payment method icon shown to the end user
+                        image:                ~
 ```
 
+# Development
+
+## Set up dev environment using DDEV
+```sh
+ddev start
+```
+
+## Install dependencies
+
+To restrict packages install to specific Symfony version, install symfony/flex globally and specify your desired Symfony version: 
+
+```console
+composer global config --no-plugins allow-plugins.symfony/flex true
+composer global require --no-interaction --no-progress symfony/flex:^2.4
+composer config extra.symfony.require "7.1"
+```
+
+## Initialize test database
+Create missing directories and database file:
+```console
+mkdir var && mkdir migrations
+touch var/testdb.sqlite
+```
+
+Create and run migrations:
+```sh
+./vendor/bin/doctrine-migrations migrations:diff
+./vendor/bin/doctrine-migrations migrations:migrate
+```
+
+## Testing
+Use following command to run tests:
+```sh
+./vendor/bin/simple-phpunit
+```
+
+## Set up app integrated dev environment
+TODO: Describe how to set up dev environment with Symfony app using this bundle. While it is possible to develop bundle without setting up app itself, it is useful to verify things work properly as expected.

@@ -2,23 +2,34 @@
     "name": "ergosarapu/donation-bundle",
     "description": "Donation Bundle allows creating developer friendly donation websites easily",
     "type": "symfony-bundle",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Ergo Sarapu",
+            "email": "ergosarapu@gmail.com"
+        }
+    ],
     "autoload": {
         "psr-4": {
             "ErgoSarapu\\DonationBundle\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "ErgoSarapu\\DonationBundle\\Tests\\": "tests/"
+        }
+    },
     "minimum-stability": "stable",
     "require": {
-        "payum/payum-bundle": "^2.5",
-        "symfony/http-client": "^6.4",
+        "php": "^8.2",
+        "payum/payum-bundle": "^2.6",
+        "symfony/http-client": "^6.4|^7.0",
         "easycorp/easyadmin-bundle": "^4.10",
-        "symfony/asset-mapper": "^6.4",
-        "symfony/asset": "^6.4",
-        "symfony/twig-pack": "^1.0",
+        "symfony/asset-mapper": "^6.4|^7.0",
+        "symfony/asset": "^6.4|^7.0",
         "symfony/stimulus-bundle": "^2.17",
         "symfony/ux-chartjs": "^2.17",
-        "symfony/orm-pack": "^2.4",
-        "symfony/form": "^6.4",
+        "symfony/form": "^6.4|^7.0",
         "symfonycasts/tailwind-bundle": "^0.5.1",
         "symfony/ux-twig-component": "^2.17",
         "symfony/ux-live-component": "^2.17",
@@ -26,6 +37,22 @@
         "tales-from-a-dev/flowbite-bundle": "^0.6.0",
         "moneyphp/money": "^4.5",
         "stof/doctrine-extensions-bundle": "^1.10",
-        "symfony/expression-language": "^6.4"
+        "symfony/expression-language": "^6.4|^7.0",
+        "doctrine/dbal": "^3",
+        "doctrine/doctrine-bundle": "^2.13",
+        "doctrine/doctrine-migrations-bundle": "^3.3",
+        "doctrine/orm": "^3.2"
+    },
+    "require-dev": {
+        "symfony/phpunit-bridge": "^7.1",
+        "symfony/yaml": "^6.4|^7.0",
+        "symfony/browser-kit": "^6.4|^7.0",
+        "symfony/dependency-injection": "^6.4|^7.0",
+        "dama/doctrine-test-bundle": "^8.2"
+    },
+    "extra": {
+        "symfony": {
+            "require": "7.1"
+        }
     }
 }

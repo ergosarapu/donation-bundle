@@ -2,17 +2,18 @@
 
 namespace ErgoSarapu\DonationBundle\Twig\Components;
 
-use ErgoSarapu\DonationBundle\Controller\AbstractPaymentController;
 use ErgoSarapu\DonationBundle\Dto\DonationDto;
 use ErgoSarapu\DonationBundle\Form\DonationType;
+use ErgoSarapu\DonationBundle\Payum\PayumPaymentProvider;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormInterface;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
 use Symfony\UX\LiveComponent\ComponentWithFormTrait;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
 
-#[AsLiveComponent(template: '@Donation/components/donation_form.html.twig')]
-final class DonationForm extends AbstractPaymentController
+#[AsLiveComponent]
+final class DonationForm extends AbstractController
 {
     use DefaultActionTrait;
     use ComponentWithFormTrait;
@@ -20,9 +21,13 @@ final class DonationForm extends AbstractPaymentController
     #[LiveProp]
     public ?DonationDto $initialFormData = null;
 
+    public function __construct(private PayumPaymentProvider $provider)
+    {
+    }
+
     protected function instantiateForm(): FormInterface {
         $payment = $this->initialFormData ?? new DonationDto();
 
-        return $this->createForm(DonationType::class, $payment, ['payments_config' => $this->paymentsConfig]);
+        return $this->createForm(DonationType::class, $payment, ['payments_config' => $this->provider->getPaymentsConfig()]);
     }
 }

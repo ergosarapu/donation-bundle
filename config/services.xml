@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<container xmlns="http://symfony.com/schema/dic/services"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://symfony.com/schema/dic/services
+        https://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <services>
+        <!-- Default configuration for services in *this* file -->
+        <defaults autowire="false" autoconfigure="false"/>
+
+        <!-- Controller -->
+        <service id="donation_bundle.controller.admin.login_controller" class="ErgoSarapu\DonationBundle\Controller\Admin\LoginController" autoconfigure="true" autowire="true"/>
+        <service id="ErgoSarapu\DonationBundle\Controller\AdminDashboardController" autoconfigure="true" autowire="true"/>
+        <service id="ErgoSarapu\DonationBundle\Controller\Admin\PaymentCrudController" autoconfigure="true" autowire="true"/>
+        <service id="ErgoSarapu\DonationBundle\Controller\Admin\CampaignCrudController" autoconfigure="true" autowire="true"/>
+
+        <service id="donation_bundle.controller.index_controller" class="ErgoSarapu\DonationBundle\Controller\IndexController" autoconfigure="true" autowire="true">
+            <call method="setContainer">
+                <argument type="service" id="Psr\Container\ContainerInterface"/>
+            </call>
+        </service>
+
+        <service id="donation_bundle.twig.components.donation_form" class="ErgoSarapu\DonationBundle\Twig\Components\DonationForm" autoconfigure="true" autowire="true">
+            <call method="setContainer">
+                <argument type="service" id="Psr\Container\ContainerInterface"/>
+            </call>
+        </service>
+
+        <service id="donation_bundle.controller.payment_done_controller" class="ErgoSarapu\DonationBundle\Controller\PaymentDoneController" autoconfigure="true">
+            <call method="setContainer">
+                <argument type="service" id="Psr\Container\ContainerInterface"/>
+            </call>
+        </service>
+
+        <!-- Payum -->
+        <service id="donation_bundle.payum.payum_payment_provider" class="ErgoSarapu\DonationBundle\Payum\PayumPaymentProvider" public="true" autowire="true" />
+        <service id="ErgoSarapu\DonationBundle\Payum\PayumPaymentProvider" alias="donation_bundle.payum.payum_payment_provider"/>
+
+        <service id="donation_bundle.payum.payment_status_extension" class="ErgoSarapu\DonationBundle\Payum\UpdatePaymentStatusExtension" autoconfigure="true" public="true">
+            <tag name="payum.extension" all="true"/>
+        </service>
+
+        <!-- Command -->
+        <service id="donation_bundle.add_user_command" class="ErgoSarapu\DonationBundle\Command\AddUserCommand" autoconfigure="true" autowire="true"/>
+        <service id="donation_bundle.user_validator" class="ErgoSarapu\DonationBundle\Utils\UserValidator"/>
+        <service id="ErgoSarapu\DonationBundle\Utils\UserValidator" alias="donation_bundle.user_validator"/>
+
+        <!-- Repository -->
+        <service id="ErgoSarapu\DonationBundle\Repository\UserRepository" autowire="true">
+            <tag name="doctrine.repository_service"/>
+        </service>
+        <service id="ErgoSarapu\DonationBundle\Repository\CampaignRepository" autowire="true">
+            <tag name="doctrine.repository_service"/>
+        </service>
+    </services>
+</container>

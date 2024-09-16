@@ -30,6 +30,9 @@ class Payment extends BasePayment
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $nationalIdCode = null;
 
+    #[ORM\ManyToOne]
+    private ?Campaign $campaign = null;
+
     public function getId(): int {
         return $this->id;
     }
@@ -68,5 +71,17 @@ class Payment extends BasePayment
 
     public function getDetailsString():string{
         return json_encode($this->getDetails());
+    }
+
+    public function getCampaign(): ?Campaign
+    {
+        return $this->campaign;
+    }
+
+    public function setCampaign(?Campaign $campaign): static
+    {
+        $this->campaign = $campaign;
+
+        return $this;
     }
 }
