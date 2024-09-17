@@ -61,7 +61,7 @@ class IndexController extends AbstractController
             
             $this->provider->updatePayment($payment);
                         
-            $targetUrl = $this->provider->createCaptureTargetUrl($gatewayName, $payment, 'payment_done');
+            $targetUrl = $this->provider->createCaptureTargetUrl($gatewayName, $payment, 'donation_payment_done');
             
             return $this->redirect($targetUrl);    
 

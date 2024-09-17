@@ -6,9 +6,13 @@
 
     <import resource="@PayumBundle/Resources/config/routing/all.xml"/>
 
-    <route id="dashboard" path="/admin" controller="ErgoSarapu\DonationBundle\Controller\AdminDashboardController::index"/>
-    <route id="admin_login" path="/login" controller="donation_bundle.controller.admin.login_controller"/>
-    <route id="index" path="/" controller="donation_bundle.controller.index_controller"/>
-    <route id="payment_done" path="/done" controller="donation_bundle.controller.payment_done_controller"/>
+    <route id="donation_dashboard" path="/admin" controller="ErgoSarapu\DonationBundle\Controller\AdminDashboardController::index"/>
+    <route id="donation_admin_login" path="/login" controller="donation_bundle.controller.admin.login_controller"/>
+    <route id="donation_index" path="/" controller="donation_bundle.controller.index_controller"/>
+    <route id="donation_payment_done" path="/done" controller="donation_bundle.controller.payment_done_controller"/>
+
+    <route id="donation_forgot_password_request" path="/reset-password" controller="donation_bundle.controller.reset_password_controller::request"/>
+    <route id="donation_reset_password" path="/reset-password/reset/{token?}" controller="donation_bundle.controller.reset_password_controller::reset"/>
+    <route id="donation_check_email" path="/reset-password/check-email" controller="donation_bundle.controller.reset_password_controller::checkEmail"/>
 
 </routes>

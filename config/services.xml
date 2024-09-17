@@ -32,6 +32,9 @@
             </call>
         </service>
 
+        <!-- Password Reset -->
+        <service id="donation_bundle.controller.reset_password_controller" class="ErgoSarapu\DonationBundle\Controller\Admin\ResetPasswordController" autoconfigure="true" autowire="true"/>
+
         <!-- Payum -->
         <service id="donation_bundle.payum.payum_payment_provider" class="ErgoSarapu\DonationBundle\Payum\PayumPaymentProvider" public="true" autowire="true" />
         <service id="ErgoSarapu\DonationBundle\Payum\PayumPaymentProvider" alias="donation_bundle.payum.payum_payment_provider"/>
@@ -50,6 +53,9 @@
             <tag name="doctrine.repository_service"/>
         </service>
         <service id="ErgoSarapu\DonationBundle\Repository\CampaignRepository" autowire="true">
+            <tag name="doctrine.repository_service"/>
+        </service>
+        <service id="ErgoSarapu\DonationBundle\Repository\ResetPasswordRequestRepository" autowire="true">
             <tag name="doctrine.repository_service"/>
         </service>
     </services>
