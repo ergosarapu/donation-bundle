@@ -1,0 +1,33 @@
+{% extends '@!EasyAdmin/page/login.html.twig' %}
+
+{% block page_title %}Reset your password{% endblock %}
+
+{% block wrapper_wrapper %}
+    {% for flash_error in app.flashes('reset_password_error') %}
+        <div class="alert alert-danger" role="alert">{{ flash_error }}</div>
+    {% endfor %}
+    {% include '@EasyAdmin/flash_messages.html.twig' %}
+    
+
+    <div class="login-wrapper">
+        <h3>Reset your password</h3>
+        <section class="content">
+
+            {{ form_start(requestForm) }}
+
+                <div class="form-group">
+                    {{ form_label(requestForm.email) }}
+                    <div class="form-widget">
+                        {{ form_widget(requestForm.email) }}
+                    </div>
+                </div>
+
+                <div class="form-text">
+                    Enter your email address, and we will send you a link to reset your password.
+                </div>
+
+                <button class="btn btn-primary">Send password reset email</button>
+            {{ form_end(requestForm) }}
+        </section>
+    </div>
+{% endblock %}

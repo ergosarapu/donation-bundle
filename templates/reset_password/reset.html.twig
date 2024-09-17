@@ -1,0 +1,25 @@
+{# {% extends 'base.html.twig' %} #}
+{% extends '@!EasyAdmin/page/login.html.twig' %}
+
+{% block title %}Reset your password{% endblock %}
+
+{% block wrapper_wrapper %}
+
+    <div class="login-wrapper">
+        <h3>Reset your password</h3>
+        <section class="content">
+
+            {{ form_start(resetForm) }}
+                <div class="form-group">
+                    {{ form_label(resetForm.plainPassword) }}
+                    <div class="form-widget">
+                        {{ form_widget(resetForm.plainPassword) }}
+                    </div>
+                </div>
+
+                <button class="btn btn-primary">Reset password</button>
+            {{ form_end(resetForm) }}
+        </section>
+    </div>
+
+{% endblock %}

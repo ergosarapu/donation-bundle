@@ -21,10 +21,12 @@ class LoginController extends AbstractController
             'error' => $error,
             'last_username' => $lastUsername,
             'csrf_token_intention' => 'authenticate',
-            'target_path' => $this->generateUrl('dashboard'),
+            'target_path' => $this->generateUrl('donation_dashboard'),
             'username_label' => 'Your username',
             'password_label' => 'Your password',
             'sign_in_label' => 'Log in',
+            'forgot_password_enabled' => true,
+            'forgot_password_path' => 'reset-password',
         ]);
     }
 }

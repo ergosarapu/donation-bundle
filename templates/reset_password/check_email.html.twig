@@ -1,0 +1,18 @@
+{% extends '@!EasyAdmin/page/login.html.twig' %}
+
+{% block page_title %}Password Reset Email Sent{% endblock %}
+
+{% block wrapper_wrapper %}
+    <div class="login-wrapper">
+        <h3>Check your inbox</h3>
+        <section class="content">
+            <div class="form-text">
+                If an account matching your email exists, then an email was just sent that contains a link that you can use to reset your password.
+                This link will expire in {{ resetToken.expirationMessageKey|trans(resetToken.expirationMessageData, 'ResetPasswordBundle') }}.
+            </div>
+            <div class="form-text">
+                If you don't receive an email please check your spam folder or <a href="{{ path('donation_forgot_password_request') }}">try again</a>.
+            </div>
+        </section>
+    </div>
+{% endblock %}

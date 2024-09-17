@@ -121,6 +121,21 @@ donation:
                         image:                ~
 ```
 
+## Reset password feature
+The password reset feature uses [SymfonyCastsResetPasswordBundle](https://github.com/symfonycasts/reset-password-bundle), check its configuration to modify its behavior.
+
+In order to use reset password feature, install [Mailer](https://symfony.com/doc/current/mailer.html) component in your application and configure [sender globally](https://symfony.com/doc/current/mailer.html#configuring-emails-globally):
+```yaml
+# config/packages/mailer.yaml
+
+mailer:
+    envelope:
+        sender: 'donations@example.com'
+    headers:
+        From: 'Donations <donations@example.com>'
+```
+
+
 # Development
 
 ## Set up dev environment using DDEV
