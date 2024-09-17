@@ -22,6 +22,7 @@ use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 use Symfony\UX\LiveComponent\LiveComponentBundle;
 use Symfony\UX\StimulusBundle\StimulusBundle;
 use Symfony\UX\TwigComponent\TwigComponentBundle;
+use SymfonyCasts\Bundle\ResetPassword\SymfonyCastsResetPasswordBundle;
 
 class IndexControllerTest extends TestCase
 {
@@ -112,6 +113,7 @@ class DonationBundleControllerKernel extends Kernel
             new StimulusBundle(),
             new DoctrineBundle(),
             new DAMADoctrineTestBundle(),
+            new SymfonyCastsResetPasswordBundle(),
         ];
     }
     
