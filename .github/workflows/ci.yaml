@@ -74,6 +74,7 @@ jobs:
         env:
           DATABASE_URL: "pdo-mysql://db:db@db/db"
         run: |
+          export DATABASE_URL=$DATABASE_URL
           mkdir migrations
           ./vendor/bin/doctrine-migrations migrations:diff --no-interaction
           ./vendor/bin/doctrine-migrations migrations:migrate --no-interaction
@@ -82,10 +83,12 @@ jobs:
         env:
           DATABASE_URL: "pdo-mysql://db:db@db/db"
         run: |
+          export DATABASE_URL=$DATABASE_URL
           ./vendor/bin/simple-phpunit --testsuite Functional
 
       - name: Run Integration Tests
         env:
           DATABASE_URL: "pdo-mysql://db:db@db/db"
         run: |
+          export DATABASE_URL=$DATABASE_URL
           ./vendor/bin/simple-phpunit --testsuite Integration
