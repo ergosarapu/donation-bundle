@@ -71,16 +71,21 @@ jobs:
         run: vendor/bin/simple-phpunit --testsuite Unit
       
       - name: Migrate database
+        env:
+          DATABASE_URL: pdo-mysql://db:db@db/db
         run: |
-          export DATABASE_URL=pdo-mysql://db:db@db/db
           mkdir migrations
           ./vendor/bin/doctrine-migrations migrations:diff --no-interaction
           ./vendor/bin/doctrine-migrations migrations:migrate --no-interaction
 
       - name: Run Functional Tests
+        env:
+          DATABASE_URL: pdo-mysql://db:db@db/db
         run: |
           ./vendor/bin/simple-phpunit --testsuite Functional
 
       - name: Run Integration Tests
+        env:
+          DATABASE_URL: pdo-mysql://db:db@db/db
         run: |
           ./vendor/bin/simple-phpunit --testsuite Integration
