@@ -90,7 +90,7 @@ class PaymentSummaryMysqlQuery extends AbstractQuery implements PaymentSummaryQu
     EOT;
 
     private const SQL = <<<EOT
-    SELECT campaigns.campaign_id campaignId, campaigns.campaign_name campaignName, start_date startDate, end_date endDate, period_key periodKey, COALESCE(SUM(p.total_amount), 0)/100 totalAmount FROM period_series
+    SELECT campaigns.campaign_id campaignId, campaigns.campaign_name campaignName, start_date startDate, end_date endDate, period_key periodKey, COALESCE(SUM(p.total_amount), 0) amount, ? currency FROM period_series
     LEFT JOIN
     (
         SELECT DISTINCT c.id campaign_id, c.name campaign_name FROM payment p LEFT JOIN campaign c ON p.campaign_id = c.id WHERE p.created_at >= ? AND p.created_at <= ?
@@ -100,6 +100,7 @@ class PaymentSummaryMysqlQuery extends AbstractQuery implements PaymentSummaryQu
     AND DATE(p.created_at) >= period_series.start_date
     AND DATE(p.created_at) <= period_series.end_date
     AND p.status = ?
+    AND p.currency_code = ?
     GROUP BY campaigns.campaign_id, start_date
     ORDER BY campaigns.campaign_id, start_date
     EOT;
@@ -110,9 +111,11 @@ class PaymentSummaryMysqlQuery extends AbstractQuery implements PaymentSummaryQu
     public function query(DateTime $startDate, DateTime $endDate, string $groupByPeriod = 'month'): array {
         $rsm = new DtoResultSetMapping(PaymentSummaryEntryDto::class);
         $query = $this->em->createNativeQuery($this->getSeriesCTE($groupByPeriod, $startDate, $endDate) . ' ' . self::SQL, $rsm->getMapping());
-        $query->setParameter(1, $startDate->format('Y-m-d'));
-        $query->setParameter(2, $endDate->format('Y-m-d'));
-        $query->setParameter(3, Status::Captured);
+        $query->setParameter(1, 'EUR');
+        $query->setParameter(2, $startDate->format('Y-m-d'));
+        $query->setParameter(3, $endDate->format('Y-m-d'));
+        $query->setParameter(4, Status::Captured);
+        $query->setParameter(5, 'EUR');
 
         return $query->getResult();
     }

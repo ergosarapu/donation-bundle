@@ -10,10 +10,19 @@
     <ini name="intl.default_locale" value="en"/>
     <ini name="intl.error_level" value="0"/>
     <ini name="memory_limit" value="-1"/>
+    <env name="APP_ENV" value="test"/>
+    <env name="APP_DEBUG" value="1"/>
+    <env name="DATABASE_URL" value="pdo-mysql://db:db@db/db"/>
   </php>
   <testsuites>
-    <testsuite name="Test suite">
-      <directory suffix="Test.php">./tests</directory>
+    <testsuite name="Unit">
+      <directory suffix="Test.php">./tests/Unit</directory>
+    </testsuite>
+    <testsuite name="Functional">
+      <directory suffix="Test.php">./tests/Functional</directory>
+    </testsuite>
+    <testsuite name="Integration">
+      <directory suffix="Test.php">./tests/Integration</directory>
     </testsuite>
   </testsuites>
   <extensions>

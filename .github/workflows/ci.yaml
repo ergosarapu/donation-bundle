@@ -30,6 +30,22 @@ jobs:
           - php: 8.3
             symfony: 7.1.*
 
+    services:
+      mysql:
+        image: mariadb:10.5
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: db
+          MYSQL_USER: db
+          MYSQL_PASSWORD: db
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost" 
+          --health-interval=10s 
+          --health-timeout=5s 
+          --health-retries=3
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -49,14 +65,22 @@ jobs:
       - name: Install dependencies
         run: composer update
 
-      - name: Create database
-        run: |
-          mkdir var && mkdir migrations
-          touch var/testdb.sqlite
-          ./vendor/bin/doctrine-migrations migrations:diff
-          ./vendor/bin/doctrine-migrations migrations:migrate
-
-      - name: Run tests
+      - name: Run Unit Tests
         env:
           SYMFONY_DEPRECATIONS_HELPER: "max[direct]=0"
-        run: vendor/bin/simple-phpunit
+        run: vendor/bin/simple-phpunit --testsuite Unit
+      
+      - name: Migrate database
+        run: |
+          export DATABASE_URL=pdo-mysql://db:db@db/db
+          mkdir migrations
+          ./vendor/bin/doctrine-migrations migrations:diff --no-interaction
+          ./vendor/bin/doctrine-migrations migrations:migrate --no-interaction
+
+      - name: Run Functional Tests
+        run: |
+          ./vendor/bin/simple-phpunit --testsuite Functional
+
+      - name: Run Integration Tests
+        run: |
+          ./vendor/bin/simple-phpunit --testsuite Integration

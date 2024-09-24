@@ -23,7 +23,11 @@ $ORMConfig->setProxyNamespace('Proxies');
 $ORMConfig->setMetadataDriverImpl($driver);
 $ORMConfig->setNamingStrategy(new UnderscoreNamingStrategy());
 
-$connection = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'path' => 'var/testdb.sqlite'], $ORMConfig);
+if (!isset($_ENV['DATABASE_URL'])) {
+    throw new InvalidArgumentException('DATABASE_URL not available as environment variable');
+}
+$connection = DriverManager::getConnection(['url' => $_ENV['DATABASE_URL']], $ORMConfig);
+
 $entityManager = new EntityManager($connection, $ORMConfig);
 
 return DependencyFactory::fromEntityManager(new PhpFile('migrations.php'), new ExistingEntityManager($entityManager));

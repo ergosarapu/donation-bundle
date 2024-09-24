@@ -2,9 +2,13 @@
 
 namespace ErgoSarapu\DonationBundle\Twig\Components;
 
+use ErgoSarapu\DonationBundle\Dto\Query\PaymentSummaryEntryDto;
 use ErgoSarapu\DonationBundle\Dto\SummaryFilterDto;
-use ErgoSarapu\DonationBundle\Form\PaymentTimeSeriesSummaryChartType;
+use ErgoSarapu\DonationBundle\Form\PaymentSummaryChartType;
 use ErgoSarapu\DonationBundle\Query\PaymentSummaryQueryInterface;
+use Money\Currencies\ISOCurrencies;
+use Money\Formatter\DecimalMoneyFormatter;
+use Money\MoneyFormatter;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormInterface;
 use Symfony\UX\Chartjs\Builder\ChartBuilderInterface;
@@ -23,12 +27,15 @@ final class PaymentSummaryChartForm extends AbstractController
     #[LiveProp]
     public ?SummaryFilterDto $filter = null;
 
+    private MoneyFormatter $formatter;
+    
     public function __construct(private ?ChartBuilderInterface $chartBuilder, private PaymentSummaryQueryInterface $query)
     {
+        $this->formatter = new DecimalMoneyFormatter(new ISOCurrencies());
     }
     
     protected function instantiateForm(): FormInterface {
-        return $this->createForm(PaymentTimeSeriesSummaryChartType::class, $this->filter);
+        return $this->createForm(PaymentSummaryChartType::class, $this->filter);
     }
 
     public function getChart(): Chart {
@@ -54,7 +61,7 @@ final class PaymentSummaryChartForm extends AbstractController
     }
 
     /**
-     * @param array<PaymentPeriodSummaryEntryDto> $seriesData
+     * @param array<PaymentSummaryEntryDto> $seriesData
      * @return array<string>
      */
     private function getTimeSeriesPeriods(array $seriesData): array {
@@ -65,7 +72,7 @@ final class PaymentSummaryChartForm extends AbstractController
     }
 
     /**
-     * @param array<PaymentSummaryDTO> $seriesData
+     * @param array<PaymentSummaryEntryDto> $seriesData
      * @return array<array<string, mixed>>
      */
     private function getTimeSeriesDatasets(array $seriesData): array {
@@ -84,7 +91,7 @@ final class PaymentSummaryChartForm extends AbstractController
                 array_push($datasets, $dataset);
             }
             $data = $dataset['data'];
-            $data[] = $item->totalAmount;
+            $data[] = $this->formatter->format($item->getAmount());
             $datasets[count($datasets) - 1]['data'] = $data;
         }
         return $datasets;

@@ -10,7 +10,7 @@ use Symfony\Component\Form\Extension\Core\Type\EnumType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class PaymentTimeSeriesSummaryChartType extends AbstractType
+class PaymentSummaryChartType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options):void
     {

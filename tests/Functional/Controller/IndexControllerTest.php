@@ -100,7 +100,7 @@ class DonationBundleControllerKernel extends Kernel
 
     public function __construct()
     {
-        parent::__construct('test', true);
+        parent::__construct($_ENV['APP_ENV'], $_ENV['APP_DEBUG']);
     }
 
     public function registerBundles(): iterable {
@@ -128,7 +128,7 @@ class DonationBundleControllerKernel extends Kernel
     {
         $builder->loadFromExtension('doctrine', [
             'dbal' => [
-                'url' => 'pdo-sqlite:///var/testdb.sqlite',
+                'url' => $_ENV['DATABASE_URL'],
                 'use_savepoints' => true,
             ],
             'orm' => [
