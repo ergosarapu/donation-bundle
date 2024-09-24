@@ -74,7 +74,7 @@ jobs:
         env:
           DATABASE_URL: "pdo-mysql://db:db@db/db"
         run: |
-          php -r "var_dump(\$_ENV);"
+          php -r "getenv();"
           mkdir migrations
           DATABASE_URL=pdo-mysql://db:db@db/db ./vendor/bin/doctrine-migrations migrations:diff --no-interaction
           DATABASE_URL=pdo-mysql://db:db@db/db ./vendor/bin/doctrine-migrations migrations:migrate --no-interaction
