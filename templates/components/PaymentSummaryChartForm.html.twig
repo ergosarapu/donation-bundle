@@ -1,0 +1,18 @@
+<div {{ attributes }}>
+    {% form_theme form with ['@EasyAdmin/symfony-form-themes/bootstrap_5_layout.html.twig'] only %}
+
+    {{ form_start(form) }}
+        <div class="row">
+            <div class="col-md-4">
+                {{ form_row(form.groupByPeriod) }}
+            </div>
+            <div class="col-md-4">
+                {{ form_row(form.startDate) }}
+            </div>
+            <div class="col-md-4">
+                {{ form_row(form.endDate) }}
+            </div>
+        </div>
+    {{ form_end(form) }}
+    {{ render_chart(this.chart) }}
+</div>

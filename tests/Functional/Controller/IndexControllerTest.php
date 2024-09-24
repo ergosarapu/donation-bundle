@@ -19,6 +19,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
+use Symfony\UX\Chartjs\ChartjsBundle;
 use Symfony\UX\LiveComponent\LiveComponentBundle;
 use Symfony\UX\StimulusBundle\StimulusBundle;
 use Symfony\UX\TwigComponent\TwigComponentBundle;
@@ -114,6 +115,7 @@ class DonationBundleControllerKernel extends Kernel
             new DoctrineBundle(),
             new DAMADoctrineTestBundle(),
             new SymfonyCastsResetPasswordBundle(),
+            new ChartjsBundle(),
         ];
     }
     
@@ -134,12 +136,6 @@ class DonationBundleControllerKernel extends Kernel
                 'naming_strategy' => 'doctrine.orm.naming_strategy.underscore',
             ]
         ]);
-
-        // $builder->loadFromExtension('twig_component', [
-        //     'defaults' => [
-        //         'ErgoSarapu\\DonationBundle\\Twig\\Components\\' => __DIR__.'/templates/components/'
-        //     ]
-        // ]);
 
         $builder->loadFromExtension('payum', 
             ['security' => 

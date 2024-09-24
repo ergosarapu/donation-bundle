@@ -2,6 +2,7 @@
 
 namespace ErgoSarapu\DonationBundle;
 
+use ErgoSarapu\DonationBundle\DependencyInjection\Compiler\RegisterQueryCompilerPass;
 use ErgoSarapu\DonationBundle\Repository\ResetPasswordRequestRepository;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
@@ -102,5 +103,11 @@ class DonationBundle extends AbstractBundle
         $builder->prependExtensionConfig('symfonycasts_reset_password', [
             'request_password_repository' => ResetPasswordRequestRepository::class
         ]);
+
+    }
+
+    public function build(ContainerBuilder $builder): void {
+        parent::build($builder);
+        $builder->addCompilerPass(new RegisterQueryCompilerPass());
     }
 }

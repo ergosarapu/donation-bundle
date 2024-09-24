@@ -1,8 +1,6 @@
 # DonationBundle
 
-Donation Bundle allows creating developer friendly donation Symfony based websites easily
-
-The bundle currently supports Symfony 6.4
+Donation Bundle allows creating Symfony based donation websites easily
 
 ## Installation
 

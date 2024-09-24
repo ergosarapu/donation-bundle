@@ -26,6 +26,12 @@
             </call>
         </service>
 
+        <service id="donation_bundle.twig.components.payment_summary_chart_form" class="ErgoSarapu\DonationBundle\Twig\Components\PaymentSummaryChartForm" autoconfigure="true" autowire="true">
+            <call method="setContainer">
+                <argument type="service" id="Psr\Container\ContainerInterface"/>
+            </call>
+        </service>
+
         <service id="donation_bundle.controller.payment_done_controller" class="ErgoSarapu\DonationBundle\Controller\PaymentDoneController" autoconfigure="true">
             <call method="setContainer">
                 <argument type="service" id="Psr\Container\ContainerInterface"/>
