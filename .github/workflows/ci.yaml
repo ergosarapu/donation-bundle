@@ -72,21 +72,20 @@ jobs:
       
       - name: Migrate database
         env:
-          DATABASE_URL: "pdo-mysql://db:db@db/db"
+          DATABASE_URL: "pdo-mysql://db:db@localhost/db"
         run: |
-          php -r "getenv();"
           mkdir migrations
-          DATABASE_URL=pdo-mysql://db:db@db/db ./vendor/bin/doctrine-migrations migrations:diff --no-interaction
-          DATABASE_URL=pdo-mysql://db:db@db/db ./vendor/bin/doctrine-migrations migrations:migrate --no-interaction
+          ./vendor/bin/doctrine-migrations migrations:diff --no-interaction
+          ./vendor/bin/doctrine-migrations migrations:migrate --no-interaction
 
       - name: Run Functional Tests
         env:
-          DATABASE_URL: "pdo-mysql://db:db@db/db"
+          DATABASE_URL: "pdo-mysql://db:db@localhost/db"
         run: |
           ./vendor/bin/simple-phpunit --testsuite Functional
 
       - name: Run Integration Tests
         env:
-          DATABASE_URL: "pdo-mysql://db:db@db/db"
+          DATABASE_URL: "pdo-mysql://db:db@localhost/db"
         run: |
           ./vendor/bin/simple-phpunit --testsuite Integration
