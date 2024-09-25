@@ -59,15 +59,6 @@ jobs:
       - name: Migrate database
         run: |
           mkdir migrations
-          # Wait for the MariaDB service to be available
-          for i in {1..30}; do
-            if nc -z mariadb 3306; then
-              echo "MariaDB is up!"
-              break
-            fi
-            echo "Waiting for MariaDB..."
-            sleep 1
-          done
           ./vendor/bin/doctrine-migrations migrations:diff --no-interaction
           ./vendor/bin/doctrine-migrations migrations:migrate --no-interaction
 
@@ -89,8 +80,8 @@ jobs:
           MYSQL_PASSWORD: db
         ports:
           - 3306:3306
-        # options: >-
-        #   --health-cmd="mysqladmin ping -h localhost" 
-        #   --health-interval=10s 
-        #   --health-timeout=5s 
-        #   --health-retries=3
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost" 
+          --health-interval=10s 
+          --health-timeout=5s 
+          --health-retries=3
