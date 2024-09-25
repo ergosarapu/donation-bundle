@@ -31,7 +31,7 @@ jobs:
             symfony: 7.1.*
 
     services:
-      mysql:
+      mariadb:
         image: mariadb:10.5
         env:
           MYSQL_ROOT_PASSWORD: root
@@ -72,7 +72,7 @@ jobs:
       
       - name: Migrate database
         env:
-          DATABASE_URL: "pdo-mysql://db:db@localhost/db"
+          DATABASE_URL: "pdo-mysql://db:db@mariadb/db"
         run: |
           mkdir migrations
           ./vendor/bin/doctrine-migrations migrations:diff --no-interaction
@@ -80,12 +80,12 @@ jobs:
 
       - name: Run Functional Tests
         env:
-          DATABASE_URL: "pdo-mysql://db:db@localhost/db"
+          DATABASE_URL: "pdo-mysql://db:db@mariadb/db"
         run: |
           ./vendor/bin/simple-phpunit --testsuite Functional
 
       - name: Run Integration Tests
         env:
-          DATABASE_URL: "pdo-mysql://db:db@localhost/db"
+          DATABASE_URL: "pdo-mysql://db:db@mariadb/db"
         run: |
           ./vendor/bin/simple-phpunit --testsuite Integration
