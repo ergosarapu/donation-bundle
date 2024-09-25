@@ -178,6 +178,10 @@ class DatabaseTestingKernel extends Kernel
                     ]]]
             ]
         ]);
+
+        $builder->loadFromExtension('framework', [
+            'secret' => 'FOO',
+        ]);
     }
     
     public function getCacheDir(): string
