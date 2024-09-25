@@ -12,7 +12,6 @@ use ErgoSarapu\DonationBundle\Entity\Payment;
 use ErgoSarapu\DonationBundle\Entity\Payment\Status;
 use ErgoSarapu\DonationBundle\Query\PaymentSummaryQueryInterface;
 use Gedmo\Timestampable\TimestampableListener;
-use Money\Money;
 use Payum\Bundle\PayumBundle\PayumBundle;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
@@ -21,7 +20,7 @@ use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Kernel;
-
+use SymfonyCasts\Bundle\ResetPassword\SymfonyCastsResetPasswordBundle;
 
 class PaymentSummaryQueryTest extends TestCase
 {
@@ -152,6 +151,7 @@ class DatabaseTestingKernel extends Kernel
             new DoctrineBundle(),
             new DAMADoctrineTestBundle(),
             new PayumBundle(),
+            new SymfonyCastsResetPasswordBundle(),
         ];
     }
 
