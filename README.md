@@ -1,8 +1,6 @@
 # DonationBundle
 
-Donation Bundle allows creating developer friendly donation Symfony based websites easily
-
-The bundle currently supports Symfony 6.4
+Donation Bundle allows creating Symfony based donation websites easily
 
 ## Installation
 
@@ -153,23 +151,10 @@ composer global require --no-interaction --no-progress symfony/flex:^2.4
 composer config extra.symfony.require "7.1"
 ```
 
-## Initialize test database
-Create missing directories and database file:
-```console
-mkdir var && mkdir migrations
-touch var/testdb.sqlite
-```
-
-Create and run migrations:
-```sh
-./vendor/bin/doctrine-migrations migrations:diff
-./vendor/bin/doctrine-migrations migrations:migrate
-```
-
 ## Testing
-Use following command to run tests:
+Use following script to run database migrations and tests:
 ```sh
-./vendor/bin/simple-phpunit
+./run_tests.sh
 ```
 
 ## Set up app integrated dev environment

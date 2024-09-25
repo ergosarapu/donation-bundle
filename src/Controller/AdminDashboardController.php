@@ -2,13 +2,15 @@
 
 namespace ErgoSarapu\DonationBundle\Controller;
 
+use DateInterval;
+use DateTime;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\MenuItem;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractDashboardController;
-use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
-use ErgoSarapu\DonationBundle\Controller\Admin\PaymentCrudController;
+use ErgoSarapu\DonationBundle\Dto\SummaryFilterDto;
 use ErgoSarapu\DonationBundle\Entity\Campaign;
 use ErgoSarapu\DonationBundle\Entity\Payment;
+use ErgoSarapu\DonationBundle\Enum\Period;
 use Symfony\Component\HttpFoundation\Response;
 
 class AdminDashboardController extends AbstractDashboardController
@@ -16,15 +18,24 @@ class AdminDashboardController extends AbstractDashboardController
 
     public function index(): Response
     {
-        $adminUrlGenerator = $this->container->get(AdminUrlGenerator::class);
+        $chartFilter = new SummaryFilterDto();
+        $chartFilter->setGroupByPeriod(Period::Month);
+        $endDate = new DateTime();
+        $startDate = clone $endDate;
+        $startDate->sub(new DateInterval('P1Y'));
 
-        return $this->redirect($adminUrlGenerator->setController(PaymentCrudController::class)->generateUrl());
+        $chartFilter->setStartDate($startDate);
+        $chartFilter->setEndDate($endDate);
+
+        return $this->render('@Donation/admin/dashboard.html.twig', [
+            'filter' => $chartFilter,
+        ]);
     }
 
     public function configureDashboard(): Dashboard
     {
         return Dashboard::new()
-            ->setTitle('App');
+            ->setTitle('Donation App');
     }
 
     public function configureMenuItems(): iterable

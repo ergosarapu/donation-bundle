@@ -13,6 +13,10 @@ jobs:
   phpunit:
     runs-on: ubuntu-latest
 
+    env:
+      SYMFONY_DEPRECATIONS_HELPER: "max[direct]=0"
+      DATABASE_URL: "pdo-mysql://db:db@127.0.0.1/db"
+
     strategy: 
       fail-fast: false
       matrix:
@@ -49,14 +53,35 @@ jobs:
       - name: Install dependencies
         run: composer update
 
-      - name: Create database
+      - name: Run Unit Tests
+        run: vendor/bin/simple-phpunit --testsuite Unit
+      
+      - name: Migrate database
         run: |
-          mkdir var && mkdir migrations
-          touch var/testdb.sqlite
-          ./vendor/bin/doctrine-migrations migrations:diff
-          ./vendor/bin/doctrine-migrations migrations:migrate
+          mkdir migrations
+          ./vendor/bin/doctrine-migrations migrations:diff --no-interaction
+          ./vendor/bin/doctrine-migrations migrations:migrate --no-interaction
 
-      - name: Run tests
+      - name: Run Functional Tests
+        run: |
+          ./vendor/bin/simple-phpunit --testsuite Functional
+
+      - name: Run Integration Tests
+        run: |
+          ./vendor/bin/simple-phpunit --testsuite Integration
+
+    services:
+      mariadb:
+        image: mariadb:10.5
         env:
-          SYMFONY_DEPRECATIONS_HELPER: "max[direct]=0"
-        run: vendor/bin/simple-phpunit
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: db
+          MYSQL_USER: db
+          MYSQL_PASSWORD: db
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost" 
+          --health-interval=10s 
+          --health-timeout=5s 
+          --health-retries=3

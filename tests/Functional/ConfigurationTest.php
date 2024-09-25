@@ -51,7 +51,7 @@ class DonationBundleTestingKernel extends Kernel
 {
     public function __construct(private array|string|null $config = null)
     {
-        parent::__construct('test', true);
+        parent::__construct($_ENV['APP_ENV'], $_ENV['APP_DEBUG']);
     }
 
     public function registerBundles(): iterable {
