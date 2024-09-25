@@ -29,7 +29,6 @@ if (!getenv('DATABASE_URL')) {
 }
 $dsnParser = new DsnParser();
 $connectionParams = $dsnParser->parse(getenv('DATABASE_URL'));
-var_dump($connectionParams);
 $connection = DriverManager::getConnection($connectionParams, $ORMConfig);
 
 $entityManager = new EntityManager($connection, $ORMConfig);

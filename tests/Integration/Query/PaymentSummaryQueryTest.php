@@ -151,7 +151,6 @@ class DatabaseTestingKernel extends Kernel
             new DoctrineBundle(),
             new DAMADoctrineTestBundle(),
             new PayumBundle(),
-            // new SymfonyCastsResetPasswordBundle(),
         ];
     }
 
@@ -178,10 +177,6 @@ class DatabaseTestingKernel extends Kernel
                     ]]]
             ]
         ]);
-
-        // $builder->loadFromExtension('framework', [
-        //     'secret' => 'FOO',
-        // ]);
     }
     
     public function getCacheDir(): string
