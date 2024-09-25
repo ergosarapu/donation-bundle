@@ -24,8 +24,6 @@ $ORMConfig->setProxyNamespace('Proxies');
 $ORMConfig->setMetadataDriverImpl($driver);
 $ORMConfig->setNamingStrategy(new UnderscoreNamingStrategy());
 
-$dsn = getenv('DATABASE_URL');
-var_dump($dsn);
 if (!getenv('DATABASE_URL')) {
     throw new InvalidArgumentException('DATABASE_URL not available as environment variable');
 }

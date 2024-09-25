@@ -13,6 +13,10 @@ jobs:
   phpunit:
     runs-on: ubuntu-latest
 
+    env:
+      SYMFONY_DEPRECATIONS_HELPER: "max[direct]=0"
+      DATABASE_URL: "pdo-mysql://db:db@127.0.0.1/db"
+
     strategy: 
       fail-fast: false
       matrix:
@@ -66,27 +70,18 @@ jobs:
         run: composer update
 
       - name: Run Unit Tests
-        env:
-          SYMFONY_DEPRECATIONS_HELPER: "max[direct]=0"
         run: vendor/bin/simple-phpunit --testsuite Unit
       
       - name: Migrate database
-        env:
-          DATABASE_URL: "pdo-mysql://db:db@127.0.0.1/db"
         run: |
-          echo $DATABASE_URL
           mkdir migrations
           ./vendor/bin/doctrine-migrations migrations:diff --no-interaction
           ./vendor/bin/doctrine-migrations migrations:migrate --no-interaction
 
       - name: Run Functional Tests
-        env:
-          DATABASE_URL: "pdo-mysql://db:db@127.0.0.1/db"
         run: |
           ./vendor/bin/simple-phpunit --testsuite Functional
 
       - name: Run Integration Tests
-        env:
-          DATABASE_URL: "pdo-mysql://db:db@127.0.0.1/db"
         run: |
           ./vendor/bin/simple-phpunit --testsuite Integration
