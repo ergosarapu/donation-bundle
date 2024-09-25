@@ -3,6 +3,7 @@
 require 'vendor/autoload.php';
 
 use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Tools\DsnParser;
 use Doctrine\ORM\EntityManager;
 use Doctrine\Migrations\Configuration\EntityManager\ExistingEntityManager;
 use Doctrine\Migrations\Configuration\Migration\PhpFile;
@@ -26,7 +27,9 @@ $ORMConfig->setNamingStrategy(new UnderscoreNamingStrategy());
 if (!getenv('DATABASE_URL')) {
     throw new InvalidArgumentException('DATABASE_URL not available as environment variable');
 }
-$connection = DriverManager::getConnection(['url' => getenv('DATABASE_URL')], $ORMConfig);
+$dsnParser = new DsnParser();
+$connectionParams = $dsnParser->parse(getenv('DATABASE_URL'));
+$connection = DriverManager::getConnection($connectionParams, $ORMConfig);
 
 $entityManager = new EntityManager($connection, $ORMConfig);
 
