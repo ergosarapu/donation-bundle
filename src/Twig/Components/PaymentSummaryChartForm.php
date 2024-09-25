@@ -7,7 +7,9 @@ use ErgoSarapu\DonationBundle\Dto\SummaryFilterDto;
 use ErgoSarapu\DonationBundle\Form\PaymentSummaryChartType;
 use ErgoSarapu\DonationBundle\Query\PaymentSummaryQueryInterface;
 use Money\Currencies\ISOCurrencies;
+use Money\Currency;
 use Money\Formatter\DecimalMoneyFormatter;
+use Money\Money;
 use Money\MoneyFormatter;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormInterface;
@@ -91,7 +93,8 @@ final class PaymentSummaryChartForm extends AbstractController
                 array_push($datasets, $dataset);
             }
             $data = $dataset['data'];
-            $data[] = $this->formatter->format($item->getAmount());
+            $amount = new Money($item->amount, new Currency($item->currency));
+            $data[] = $this->formatter->format($amount);
             $datasets[count($datasets) - 1]['data'] = $data;
         }
         return $datasets;

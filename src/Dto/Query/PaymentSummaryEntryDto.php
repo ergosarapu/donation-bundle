@@ -3,8 +3,6 @@
 namespace ErgoSarapu\DonationBundle\Dto\Query;
 
 use DateTime;
-use Money\Currency;
-use Money\Money;
 
 class PaymentSummaryEntryDto
 {
@@ -24,9 +22,5 @@ class PaymentSummaryEntryDto
             $this->amount,
             $this->currency
         );
-    }
-
-    public function getAmount(): Money{
-        return new Money($this->amount, new Currency($this->currency));
     }
 }
