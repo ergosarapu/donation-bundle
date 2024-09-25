@@ -72,7 +72,7 @@ jobs:
       
       - name: Migrate database
         env:
-          DATABASE_URL: "pdo-mysql://db:db@mariadb/db"
+          DATABASE_URL: "pdo-mysql://db:db@127.0.0.1/db"
         run: |
           echo $DATABASE_URL
           mkdir migrations
@@ -81,12 +81,12 @@ jobs:
 
       - name: Run Functional Tests
         env:
-          DATABASE_URL: "pdo-mysql://db:db@mariadb/db"
+          DATABASE_URL: "pdo-mysql://db:db@127.0.0.1/db"
         run: |
           ./vendor/bin/simple-phpunit --testsuite Functional
 
       - name: Run Integration Tests
         env:
-          DATABASE_URL: "pdo-mysql://db:db@mariadb/db"
+          DATABASE_URL: "pdo-mysql://db:db@127.0.0.1/db"
         run: |
           ./vendor/bin/simple-phpunit --testsuite Integration
