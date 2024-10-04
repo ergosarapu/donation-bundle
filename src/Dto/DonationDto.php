@@ -3,8 +3,10 @@
 namespace ErgoSarapu\DonationBundle\Dto;
 
 use ErgoSarapu\DonationBundle\Enum\DonationInterval;
+use Symfony\Component\Validator\Constraints\Email;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\NotNull;
+use Symfony\Component\Validator\Constraints\Valid;
 use Symfony\Component\Validator\Constraints\When;
 
 class DonationDto
@@ -13,27 +15,32 @@ class DonationDto
 
     private DonationInterval $type = DonationInterval::Single;
 
-    #[NotBlank]
+    #[NotBlank(groups: ['step2'])]
+    #[Email(groups: ['step2'])]
     private ?string $email = null;
 
     #[When(
         expression: self::IS_TAX_RETURN,
-        constraints: [new NotBlank()]
+        constraints: [new NotBlank()],
+        groups: ['step2']
     )]
     private ?string $givenName = null;
 
     #[When(
         expression: self::IS_TAX_RETURN,
-        constraints: [new NotBlank()]
+        constraints: [new NotBlank()],
+        groups: ['step2']
     )]
     private ?string $familyName = null;
 
     #[When(
         expression: self::IS_TAX_RETURN,
-        constraints: [new NotBlank()]
+        constraints: [new NotBlank()],
+        groups: ['step2']
     )]
     private ?string $nationalIdCode = null;
 
+    #[Valid]
     private ?MoneyDto $amount = null;
 
     private ?MoneyDto $chosenAmount = null;
@@ -42,7 +49,7 @@ class DonationDto
 
     private ?string $bankCountry = null;
 
-    #[NotNull(message: 'Choose bank for payment')]
+    #[NotNull(message: 'Choose bank for payment', groups:['step3'])]
     private ?string $gateway = null;
 
     public function getType():DonationInterval{

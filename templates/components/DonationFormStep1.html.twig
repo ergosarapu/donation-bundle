@@ -1,0 +1,17 @@
+{% extends '@Donation/components/donation_form_layout.html.twig' %}
+
+{% set step = 1 %}
+
+{% block title %}Vali summa{% endblock %}
+
+{% block form_fields %}
+    <div class="flex flex-col">
+        <div class="mb-3">
+            {{ form_errors(form) }}
+            {{ form_widget(form.amount, {'attr': {'class': 'p-4 text-2xl text-center'}}) }}
+            {{ form_errors(form.amount) }}
+            {{ form_help(form.amount) }}
+        </div>
+        <button type="submit" class="w-full px-6 py-3.5 text-base font-medium text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 rounded-lg text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">Edasi</button>
+    </div>
+{% endblock %}

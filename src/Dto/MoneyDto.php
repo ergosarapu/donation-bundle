@@ -6,6 +6,7 @@ namespace ErgoSarapu\DonationBundle\Dto;
 
 use Money\Currency;
 use Money\Money;
+use Symfony\Component\Validator\Constraints\GreaterThan;
 
 class MoneyDto
 {
@@ -25,6 +26,7 @@ class MoneyDto
     }
 
     public function __construct(
+        #[GreaterThan(0, groups: ['step1'])]
         public ?string $amount = null,
         public ?string $currency = null,
     ) {

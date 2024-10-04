@@ -2,18 +2,29 @@
 
 {% block title %}{{ campaign.publicTitle }}{% endblock %}
 
-{% block leftContent %}
-    <div class="aspect-video">
-        <iframe
-            class="w-full h-full"
-            src="https://www.youtube.com/embed/rs0GDMImzjA?si=vqTdWXhD7vN8kprh"
-            frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowfullscreen>
-        </iframe>
+{% block body %}
+    <div class="container mx-auto xl:px-48">
+        <div class="grid grid-cols-8">
+            <div class="lg:col-span-5 col-span-8">
+                <div class="p-8 m-8 prose prose-slate">
+                    <h1>
+                        Hello Donation Bundle!
+                    </h1>
+                    <p class="lead">This is the default landing page of Donation Bundle. Create a nice looking landing page for your donation campaign!</p>
+                    <p>
+                        Override <code>base.html.twig</code> to include assets properly and <code>landing.html.twig</code> to style the campaign page.
+                    </p>
+                    <p>To add donation form, use
+                        <blockquote class="not-italic">
+                            <code>&lt;twig:DonationForm :form="form" :donationData="donationData" :step="step" :action="action" /&gt;</code>
+                        </blockquote>
+                        in your twig template.
+                    </p>
+                </div>
+            </div>
+            <div class="p-8 m-8 lg:col-span-3 col-span-8 lg:order-none order-first">
+                <twig:DonationForm :form="form" :donationData="donationData" :step="step" :action="action"/>
+            </div>
+        </div>
     </div>
-{% endblock %}
-
-{% block rightContent %}
-    <twig:DonationForm :form="form" :initialFormData="donation" />
 {% endblock %}

@@ -100,6 +100,12 @@ class DonationBundle extends AbstractBundle
             ]
         ]);
 
+        $builder->prependExtensionConfig('twig',[
+            'form_themes' => [
+                '@TalesFromADevFlowbite/form/default.html.twig'
+            ]
+        ]);
+
         $builder->prependExtensionConfig('symfonycasts_reset_password', [
             'request_password_repository' => ResetPasswordRequestRepository::class
         ]);

@@ -26,6 +26,24 @@
             </call>
         </service>
 
+        <service id="donation_bundle.twig.components.donation_form_step_1" class="ErgoSarapu\DonationBundle\Twig\Components\DonationFormStep1" autoconfigure="true" autowire="true">
+            <call method="setContainer">
+                <argument type="service" id="Psr\Container\ContainerInterface"/>
+            </call>
+        </service>
+
+        <service id="donation_bundle.twig.components.donation_form_step_2" class="ErgoSarapu\DonationBundle\Twig\Components\DonationFormStep2" autoconfigure="true" autowire="true">
+            <call method="setContainer">
+                <argument type="service" id="Psr\Container\ContainerInterface"/>
+            </call>
+        </service>
+
+        <service id="donation_bundle.twig.components.donation_form_step_3" class="ErgoSarapu\DonationBundle\Twig\Components\DonationFormStep3" autoconfigure="true" autowire="true">
+            <call method="setContainer">
+                <argument type="service" id="Psr\Container\ContainerInterface"/>
+            </call>
+        </service>
+
         <service id="donation_bundle.twig.components.payment_summary_chart_form" class="ErgoSarapu\DonationBundle\Twig\Components\PaymentSummaryChartForm" autoconfigure="true" autowire="true">
             <call method="setContainer">
                 <argument type="service" id="Psr\Container\ContainerInterface"/>
