@@ -40,7 +40,6 @@ final class DonationFormStep1 extends AbstractController
         $this->locale = $requestStack->getCurrentRequest()->getLocale();
         $this->moneyTransformer = new MoneyToLocalizedStringTransformer(
             divisor: 100,
-            input: 'integer',
             locale: $this->locale
         );
     }
