@@ -4,9 +4,9 @@ namespace ErgoSarapu\DonationBundle\Dto;
 
 use ErgoSarapu\DonationBundle\Enum\DonationInterval;
 use Symfony\Component\Validator\Constraints\Email;
+use Symfony\Component\Validator\Constraints\GreaterThan;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\NotNull;
-use Symfony\Component\Validator\Constraints\Valid;
 use Symfony\Component\Validator\Constraints\When;
 
 class DonationDto
@@ -40,10 +40,14 @@ class DonationDto
     )]
     private ?string $nationalIdCode = null;
 
-    #[Valid]
-    private ?MoneyDto $amount = null;
+    #[NotBlank(groups: ['step1'])]
+    private ?string $currencyCode = null;
 
-    private ?MoneyDto $chosenAmount = null;
+    #[NotBlank(groups: ['step1'])]
+    #[GreaterThan(0, groups: ['step1'])]
+    private ?int $amount = null;
+
+    private ?int $chosenAmount = null;
 
     private bool $taxReturn = false;
 
@@ -92,19 +96,27 @@ class DonationDto
         $this->nationalIdCode = $nationalIdCode;
     }
 
-    public function getAmount():?MoneyDto{
+    public function getCurrencyCode():?string{
+        return $this->currencyCode;
+    }
+
+    public function setCurrencyCode(?string $currencyCode):void{
+        $this->currencyCode = $currencyCode;
+    }
+
+    public function getAmount():?int{
         return $this->amount;
     }
 
-    public function setAmount(?MoneyDto $amount):void{
+    public function setAmount(?int $amount):void{
         $this->amount = $amount;
     }
 
-    public function getChosenAmount():?MoneyDto{
+    public function getChosenAmount():?int{
         return $this->chosenAmount;
     }
 
-    public function setChosenAmount(?MoneyDto $chosenAmount):void{
+    public function setChosenAmount(?int $chosenAmount):void{
         $this->chosenAmount = $chosenAmount;
     }
 

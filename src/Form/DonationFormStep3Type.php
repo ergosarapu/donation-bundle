@@ -30,7 +30,7 @@ class DonationFormStep3Type extends AbstractDonationFormType
                 'expanded' => true, 
                 'required' => true, 
                 'choices' => $gateways, 
-                'placeholder' => 'Choose bank',
+                'placeholder' => 'Choose gateway',
                 'constraints' => [
                     new Choice(choices: array_values($gateways))
                 ],
@@ -42,8 +42,42 @@ class DonationFormStep3Type extends AbstractDonationFormType
     {
         parent::configureOptions($resolver);
         $resolver->setDefault('validation_groups', 'step3');
+        
+        $resolver->setDefault('payments_config', function (OptionsResolver $paymentsResolver): void {
+            $paymentsResolver->setDefault('onetime', function (OptionsResolver $onetimeResolver): void {
+                $this->resolveBank($onetimeResolver);
+                $this->resolveCard($onetimeResolver);
+            });
+            $paymentsResolver->setDefault('monthly', null); // TODO
+        });
+        $resolver->setRequired(['payments_config']);
+        $resolver->setAllowedTypes('payments_config', 'array');
     }
-    
+
+    private function resolveGateways(OptionsResolver $resolver): void{
+        $resolver
+            ->setRequired(['gateways'])
+            ->setDefault('gateways', function (OptionsResolver $resolver): void {
+                $resolver
+                    ->setPrototype(true) // Marks gateway name
+                    ->setRequired('label')
+                    ->setDefault('image', '');
+        });
+    }
+
+    private function resolveBank(OptionsResolver $resolver): void{
+        $resolver->setDefault('bank', function (OptionsResolver $resolver): void {
+            $resolver->setPrototype(true); // Marks country code
+            $this->resolveGateways($resolver);
+        });
+    }
+
+    private function resolveCard(OptionsResolver $resolver): void{
+        $resolver->setDefault('card', function (OptionsResolver $resolver): void {
+            $this->resolveGateways($resolver);
+        });
+    }
+
     public function finishView(FormView $view, FormInterface $form, array $options): void
     {
         $countryCode = $this->getSelectedBankCountry($view, $options);

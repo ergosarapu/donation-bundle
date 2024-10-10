@@ -11,6 +11,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 use Symfony\Component\Intl\Countries;
+use Symfony\Component\Intl\Currencies;
 
 class DonationBundle extends AbstractBundle
 {
@@ -18,6 +19,15 @@ class DonationBundle extends AbstractBundle
     {
         $definition->rootNode()
             ->children()
+                // Form
+                ->arrayNode('form')
+                    ->info('Form configuration.')
+                    ->children()
+                        ->append($this->addCurrencyNode())
+                    ->end()
+                ->end()
+
+                // Payments
                 ->arrayNode('payments')
                     ->info('Payments configuration.')
                     ->validate()
@@ -41,6 +51,49 @@ class DonationBundle extends AbstractBundle
                     ->end()
                 ->end()
             ->end();
+    }
+
+    private function addCurrencyNode(): NodeDefinition {
+        $notPositiveInt = function ($value){
+            return !is_numeric($value) || (int)$value != $value || !((int)$value > 0);
+        };
+
+        $treeBuilder = new TreeBuilder('currencies');
+        return $treeBuilder->getRootNode()
+        ->isRequired()
+        ->useAttributeAsKey('currency_code')
+        ->validate()
+            ->ifTrue(function (array $values): bool{
+                foreach($values as $key => $value) {
+                    if (!Currencies::exists($key)){
+                        return true;
+                    }
+                }
+                return false;
+            })
+            ->thenInvalid('Not a valid currency code.')
+        ->end()
+        ->arrayPrototype()
+        ->info("Currency code")
+            ->children()
+                ->scalarNode('amount_default')
+                    ->info('Default amount pre-filled for the end user.')
+                    ->isRequired()
+                    ->validate()
+                        ->ifTrue($notPositiveInt)
+                        ->thenInvalid('Value must be valid integer greater than 0.')
+                    ->end()
+                ->end()
+                ->arrayNode('amount_choices')
+                    ->scalarPrototype()
+                        ->validate()
+                            ->ifTrue($notPositiveInt)
+                            ->thenInvalid('Each value must be valid integer greater than 0.')
+                        ->end()
+                    ->end()
+                ->end()
+            ->end()
+        ->end();
     }
 
     private function addBankNode(): NodeDefinition {
@@ -86,8 +139,9 @@ class DonationBundle extends AbstractBundle
     {
         $container->import(__DIR__ . '/../config/services.xml');
 
-        $builder->getDefinition('donation_bundle.payum.payum_payment_provider')
-            ->setArgument(1, $config['payments'] ?? null);
+        $builder->getDefinition('donation_bundle.form.form_options_provider')
+            ->setArgument(0, $config['payments'] ?? null)
+            ->setArgument(1, $config['form']['currencies'] ?? null);
     }
 
     public function prependExtension(ContainerConfigurator $container, ContainerBuilder $builder): void

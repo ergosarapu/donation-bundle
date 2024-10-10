@@ -59,10 +59,11 @@
         <!-- Password Reset -->
         <service id="donation_bundle.controller.reset_password_controller" class="ErgoSarapu\DonationBundle\Controller\Admin\ResetPasswordController" autoconfigure="true" autowire="true"/>
 
-        <!-- Payum -->
-        <service id="donation_bundle.payum.payum_payment_provider" class="ErgoSarapu\DonationBundle\Payum\PayumPaymentProvider" public="true" autowire="true" />
-        <service id="ErgoSarapu\DonationBundle\Payum\PayumPaymentProvider" alias="donation_bundle.payum.payum_payment_provider"/>
+        <!-- Config/Options -->
+        <service id="donation_bundle.form.form_options_provider" class="ErgoSarapu\DonationBundle\Form\FormOptionsProvider" public="true" autowire="true" />
+        <service id="ErgoSarapu\DonationBundle\Form\FormOptionsProvider" alias="donation_bundle.form.form_options_provider"/>
 
+        <!-- Payum -->
         <service id="donation_bundle.payum.payment_status_extension" class="ErgoSarapu\DonationBundle\Payum\UpdatePaymentStatusExtension" autoconfigure="true" public="true">
             <tag name="payum.extension" all="true"/>
         </service>

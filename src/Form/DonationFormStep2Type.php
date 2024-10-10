@@ -40,5 +40,8 @@ class DonationFormStep2Type extends AbstractDonationFormType
     {
         parent::configureOptions($resolver);
         $resolver->setDefault('validation_groups', 'step2');
+
+        // This prevents displaying the 'This form should not contain extra fields.' message when fields are getting hidden using Dependent Form Fields
+        $resolver->setDefault('allow_extra_fields', true);
     }
 }
