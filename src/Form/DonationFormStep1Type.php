@@ -25,7 +25,7 @@ class DonationFormStep1Type extends AbstractDonationFormType
                 'expanded' => true, 
                 'required' => false, 
                 'choices' => $amountChoices,
-                'placeholder' => 'Custom amount',
+                'placeholder' => 'Muu summa',
             ])
             ->add('amount', MoneyType::class, ['divisor' => 100, 'input' => 'integer', 'label' => 'Sisesta annetuse summa'])
         ;
