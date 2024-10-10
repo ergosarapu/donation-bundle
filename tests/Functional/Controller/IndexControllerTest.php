@@ -154,7 +154,10 @@ class DonationBundleControllerKernel extends Kernel
             'secret' => 'FOO',
             'asset_mapper' => [
                 'paths' => ['assets/']
-            ]
+            ],
+            'session' => [
+                'storage_factory_id' => 'session.storage.factory.mock_file',
+            ],
         ]);
     }
 

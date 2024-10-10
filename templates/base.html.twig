@@ -13,24 +13,6 @@
 </head>
 <body>
   {% block body %}
-    <div class="container mx-auto border-solid border-2 rounded-lg">
-      <div class="grid grid-cols-4">
-        <div class="border-solid rounded-lg border-2 p-8 m-8 prose prose-slate md:col-span-2 col-span-4">
-          <h1>
-            Hello Donation Bundle!
-          </h1>
-          <p class="lead">Override this template and create a nice looking landing page for your donation campaign!</p>
-          To add donation form, use
-          <blockquote class="not-italic">
-            <code>&lt;twig:DonationForm :form=&quot;form&quot; :initialFormData=&quot;donation&quot; /&gt;</code>
-          </blockquote>
-          in your twig template.
-        </div>
-        <div class="border-solid rounded-lg border-2 p-8 m-8 md:col-span-2 col-span-4">
-            <twig:DonationForm :form="form" :initialFormData="donation" />
-        </div>
-      </div>
-    </div>
   {% endblock %}
 </body>
 </html>

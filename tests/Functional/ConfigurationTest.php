@@ -3,7 +3,7 @@
 namespace ErgoSarapu\DonationBundle\Tests\Functional;
 
 use ErgoSarapu\DonationBundle\DonationBundle;
-use ErgoSarapu\DonationBundle\Payum\PayumPaymentProvider;
+use ErgoSarapu\DonationBundle\Form\FormOptionsProvider;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
@@ -17,14 +17,21 @@ class ConfigurationTest extends TestCase
         $kernel = new DonationBundleTestingKernel();
         $kernel->boot();
 
-        /** @var PayumPaymentProvider $provider */
-        $provider = $kernel->getContainer()->get('donation_bundle.payum.payum_payment_provider');
+        /** @var FormOptionsProvider $optionsProvider */
+        $optionsProvider = $kernel->getContainer()->get('donation_bundle.form.form_options_provider');
         
-        $this->assertNull($provider->getPaymentsConfig());
+        $this->assertNull($optionsProvider->getPaymentsOptions());
+        $this->assertNull($optionsProvider->getCurrenciesOptions());
     }
 
     public function testPaymentsConfigEmpty(): void{
         $kernel = new DonationBundleTestingKernel(['payments' => []]);
+        $this->expectException(InvalidConfigurationException::class);
+        $kernel->boot();
+    }
+
+    public function testFormConfigEmpty(): void{
+        $kernel = new DonationBundleTestingKernel(['form' => []]);
         $this->expectException(InvalidConfigurationException::class);
         $kernel->boot();
     }
@@ -36,14 +43,22 @@ class ConfigurationTest extends TestCase
         $kernel->boot();
     }
 
+    public function testPaymentsConfigInvalidCurrency(): void{
+        $kernel = new DonationBundleTestingKernel('invalid_currency_code');
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessageMatches('/.*(Not a valid currency code.)/');
+        $kernel->boot();
+    }
+
     public function testPaymentsConfigFull(): void{
         $kernel = new DonationBundleTestingKernel('full');
         $kernel->boot();
 
-        /** @var PayumPaymentProvider $provider */
-        $provider = $kernel->getContainer()->get('donation_bundle.payum.payum_payment_provider');
+        /** @var FormOptionsProvider $optionsProvider */
+        $optionsProvider = $kernel->getContainer()->get('donation_bundle.form.form_options_provider');
 
-        $this->assertNotNull($provider->getPaymentsConfig());
+        $this->assertNotNull($optionsProvider->getPaymentsOptions());
+        $this->assertNotNull($optionsProvider->getCurrenciesOptions());
     }
 }
 

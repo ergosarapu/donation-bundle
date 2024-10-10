@@ -3,6 +3,8 @@
 namespace ErgoSarapu\DonationBundle\Dto;
 
 use ErgoSarapu\DonationBundle\Enum\DonationInterval;
+use Symfony\Component\Validator\Constraints\Email;
+use Symfony\Component\Validator\Constraints\GreaterThan;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\NotNull;
 use Symfony\Component\Validator\Constraints\When;
@@ -13,36 +15,45 @@ class DonationDto
 
     private DonationInterval $type = DonationInterval::Single;
 
-    #[NotBlank]
+    #[NotBlank(groups: ['step2'])]
+    #[Email(groups: ['step2'])]
     private ?string $email = null;
 
     #[When(
         expression: self::IS_TAX_RETURN,
-        constraints: [new NotBlank()]
+        constraints: [new NotBlank()],
+        groups: ['step2']
     )]
     private ?string $givenName = null;
 
     #[When(
         expression: self::IS_TAX_RETURN,
-        constraints: [new NotBlank()]
+        constraints: [new NotBlank()],
+        groups: ['step2']
     )]
     private ?string $familyName = null;
 
     #[When(
         expression: self::IS_TAX_RETURN,
-        constraints: [new NotBlank()]
+        constraints: [new NotBlank()],
+        groups: ['step2']
     )]
     private ?string $nationalIdCode = null;
 
-    private ?MoneyDto $amount = null;
+    #[NotBlank(groups: ['step1'])]
+    private ?string $currencyCode = null;
 
-    private ?MoneyDto $chosenAmount = null;
+    #[NotBlank(groups: ['step1'])]
+    #[GreaterThan(0, groups: ['step1'])]
+    private ?int $amount = null;
+
+    private ?int $chosenAmount = null;
 
     private bool $taxReturn = false;
 
     private ?string $bankCountry = null;
 
-    #[NotNull(message: 'Choose bank for payment')]
+    #[NotNull(message: 'Choose bank for payment', groups:['step3'])]
     private ?string $gateway = null;
 
     public function getType():DonationInterval{
@@ -85,19 +96,27 @@ class DonationDto
         $this->nationalIdCode = $nationalIdCode;
     }
 
-    public function getAmount():?MoneyDto{
+    public function getCurrencyCode():?string{
+        return $this->currencyCode;
+    }
+
+    public function setCurrencyCode(?string $currencyCode):void{
+        $this->currencyCode = $currencyCode;
+    }
+
+    public function getAmount():?int{
         return $this->amount;
     }
 
-    public function setAmount(?MoneyDto $amount):void{
+    public function setAmount(?int $amount):void{
         $this->amount = $amount;
     }
 
-    public function getChosenAmount():?MoneyDto{
+    public function getChosenAmount():?int{
         return $this->chosenAmount;
     }
 
-    public function setChosenAmount(?MoneyDto $chosenAmount):void{
+    public function setChosenAmount(?int $chosenAmount):void{
         $this->chosenAmount = $chosenAmount;
     }
 
