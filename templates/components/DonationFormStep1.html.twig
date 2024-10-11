@@ -6,7 +6,7 @@
 
 {% block form_fields %}
     <div class="flex flex-col">
-        <div class="mb-3">
+        <div {{ stimulus_controller('focus') }} class="mb-3">
             {{ form_errors(form) }}
 
             <div class="mb-3">
@@ -25,7 +25,7 @@
                                 class="hidden peer"
                                 {% if choice.vars.checked %} checked="checked"{% endif %}
                                 required>
-                            <label for="donation_chosen_amount_{{ loop.index0 }}" class="flex h-16 items-center justify-center text-gray-100 bg-primary-700 peer-checked:bg-gray-100 border border-gray-200 rounded-lg cursor-pointer peer-checked:border-primary-700 peer-checked:text-primary-700 hover:text-gray-600 hover:bg-gray-100">
+                            <label for="donation_chosen_amount_{{ loop.index0 }}" {% if loop.first %}data-action="click->focus#focus"{% endif %} class="flex h-16 items-center justify-center text-gray-100 bg-primary-700 peer-checked:bg-gray-100 border border-gray-200 rounded-lg cursor-pointer peer-checked:border-primary-700 peer-checked:text-primary-700 hover:text-gray-600 hover:bg-gray-100">
                                 <p class="text-center font-medium {% if loop.first %}text-sm{% else %}text-2xl{% endif %}">
                                     {{ choice.vars.label }}
                                 </p>
@@ -35,7 +35,7 @@
                 </ul>
             </div>
             
-            {{ form_widget(form.amount, {'attr': {'data-action': 'live#action', 'data-live-action-param': 'writeAmount', 'class': 'p-4 text-2xl text-center'}}) }}
+            {{ form_widget(form.amount, {'attr': {'data-action': 'live#action', 'data-live-action-param': 'writeAmount', 'class': 'p-4 text-2xl text-center', 'data-focus-target': 'focusMe'}}) }}
             {{ form_errors(form.amount) }}
 
         </div>
