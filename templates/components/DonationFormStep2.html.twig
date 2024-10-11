@@ -1,0 +1,25 @@
+{% extends '@Donation/components/donation_form_layout.html.twig' %}
+
+{% set step = 2 %}
+
+{% block title %}Kontakt{% endblock %}
+
+{% block form_fields %}
+    <div class="flex flex-col">
+        {{ form_errors(form) }}
+        {{ form_row(form.email) }}
+        {{ form_row(form.taxReturn) }}
+        {% if form.givenName is defined %}
+            {{ form_row(form.givenName) }}
+        {% endif %}
+        {% if form.familyName is defined %}
+            {{ form_row(form.familyName) }}
+        {% endif %}
+        {% if form.nationalIdCode is defined %}
+            {{ form_row(form.nationalIdCode) }}
+        {% endif %}
+        <div class="order-last">
+            <button type="submit" class="w-full px-6 py-3.5 text-base font-medium text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 rounded-lg text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">Edasi</button>
+        </div>
+    </div>
+{% endblock %}

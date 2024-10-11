@@ -1,4 +1,12 @@
 donation:
+  form:
+    currencies:
+      EUR:
+        amount_default: 1000
+        amount_choices:
+          - 100
+          - 1000
+          - 10000
   payments:
     onetime:
       bank:

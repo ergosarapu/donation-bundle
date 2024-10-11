@@ -1,0 +1,22 @@
+{
+    "name": "@ergosarapu/donation-bundle",
+    "symfony": {
+        "controllers": {
+            "focus": {
+                "main": "dist/focus_controller.js",
+                "name": "focus",
+                "fetch": "eager",
+                "enabled": true
+            }
+        },
+        "importmap": {
+            "@hotwired/stimulus": "^3.0.0"
+        }
+    },
+    "peerDependencies": {
+        "@hotwired/stimulus": "^3.0.0"
+    },
+    "devDependencies": {
+        "@hotwired/stimulus": "^3.0.0"
+    }
+}

@@ -15,6 +15,6 @@ class PaymentDoneController extends AbstractController
         $token = $payum->getHttpRequestVerifier()->verify($request);
         $gateway = $payum->getGateway($token->getGatewayName());
         $gateway->execute(new Notify($token));
-        return $this->redirectToRoute('thank_you');
+        return $this->redirectToRoute('donation_thank_you');
     }
 }

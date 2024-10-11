@@ -3,6 +3,7 @@
     "description": "Donation Bundle allows creating developer friendly donation websites easily",
     "type": "symfony-bundle",
     "license": "MIT",
+    "keywords": ["symfony-ux"],
     "authors": [
         {
             "name": "Ergo Sarapu",
@@ -42,7 +43,8 @@
         "doctrine/doctrine-bundle": "^2.13",
         "doctrine/doctrine-migrations-bundle": "^3.3",
         "doctrine/orm": "^3.2",
-        "symfonycasts/reset-password-bundle": "^1.22"
+        "symfonycasts/reset-password-bundle": "^1.22",
+        "symfony/ux-turbo": "^2.20"
     },
     "require-dev": {
         "symfony/phpunit-bridge": "^7.1",

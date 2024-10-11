@@ -1,0 +1,5 @@
+donation:
+  form:
+    currencies:
+      FOO:
+        amount_default: 2500
