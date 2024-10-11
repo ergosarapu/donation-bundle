@@ -113,13 +113,14 @@ class IndexController extends AbstractController
         if ($donation === null) {
             $donation = new DonationDto();
 
-            // Set initial default value
             $options = $this->formOptions->getCurrenciesOptions();
 
+            // Set initial default values
             $currencyCode = 'EUR';
-            $dafaultAmount = $options[$currencyCode]['amount_default'];
-            $donation->setAmount($dafaultAmount);
-            $donation->setCurrencyCode($currencyCode);
+            $defaultAmount = $options[$currencyCode]['amount_default'];
+            $donation->setAmount($defaultAmount);
+            $donation->setChosenAmount($defaultAmount);
+            $donation->setCurrencyCode($currencyCode);    
         }
         return $donation;
     }

@@ -3,6 +3,7 @@
     "description": "Donation Bundle allows creating developer friendly donation websites easily",
     "type": "symfony-bundle",
     "license": "MIT",
+    "keywords": ["symfony-ux"],
     "authors": [
         {
             "name": "Ergo Sarapu",

@@ -4,6 +4,7 @@ namespace ErgoSarapu\DonationBundle;
 
 use ErgoSarapu\DonationBundle\DependencyInjection\Compiler\RegisterQueryCompilerPass;
 use ErgoSarapu\DonationBundle\Repository\ResetPasswordRequestRepository;
+use Symfony\Component\AssetMapper\AssetMapperInterface;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
@@ -144,6 +145,35 @@ class DonationBundle extends AbstractBundle
             ->setArgument(1, $config['form']['currencies'] ?? null);
     }
 
+    private function prependAssetMapperConfig(ContainerBuilder $builder): void{
+        if (!$this->isAssetMapperAvailable($builder)) {
+            return;
+        }
+
+        $builder->prependExtensionConfig('framework', [
+            'asset_mapper' => [
+                'paths' => [
+                    __DIR__ . '/../assets/dist' => '@ergosarapu/donation-bundle',
+                ],
+            ],
+        ]);
+    }
+
+    private function isAssetMapperAvailable(ContainerBuilder $builder): bool
+    {
+        if (!interface_exists(AssetMapperInterface::class)) {
+            return false;
+        }
+
+        // check that FrameworkBundle 6.3 or higher is installed
+        $bundlesMetadata = $builder->getParameter('kernel.bundles_metadata');
+        if (!isset($bundlesMetadata['FrameworkBundle'])) {
+            return false;
+        }
+
+        return is_file($bundlesMetadata['FrameworkBundle']['path'] . '/Resources/config/asset_mapper.php');
+    }
+
     public function prependExtension(ContainerConfigurator $container, ContainerBuilder $builder): void
     {
         $builder->prependExtensionConfig('twig_component',[
@@ -158,6 +188,7 @@ class DonationBundle extends AbstractBundle
             'request_password_repository' => ResetPasswordRequestRepository::class
         ]);
 
+        $this->prependAssetMapperConfig($builder);
     }
 
     public function build(ContainerBuilder $builder): void {
