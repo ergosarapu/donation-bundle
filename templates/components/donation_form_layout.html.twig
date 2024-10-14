@@ -1,5 +1,5 @@
 <div class="container" {{ attributes }}>
-    {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+    {{ form_start(form, {'action': currentUrl, 'attr': {'novalidate': 'novalidate'}}) }}
 
     {# This div is required to to wrap everything below into enclosing form tags properly #}
     <div class="flex flex-col">
@@ -7,8 +7,8 @@
         {# Header #}
         <div class="flex flex-row">
             <div class="size-14">
-                {% if step > 1 %}
-                <a class="inline-block p-4 rounded-lg hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700" href="/{{ step - 1}}">
+                {% if previousUrl is defined and previousUrl is not null %}
+                <a class="inline-block p-4 rounded-lg hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700" href="{{ previousUrl }}">
                     <svg class="w-6 h-6 text-gray-800 dark:text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--!Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.2 288 416 288c17.7 0 32-14.3 32-32s-14.3-32-32-32l-306.7 0L214.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg>
                 </a>
                 {% endif %}

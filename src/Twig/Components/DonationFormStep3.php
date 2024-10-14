@@ -22,7 +22,10 @@ final class DonationFormStep3 extends AbstractController
     public ?DonationDto $donationData = null;
 
     #[LiveProp]
-    public ?string $action = null;
+    public ?string $currentUrl = null;
+
+    #[LiveProp]
+    public ?string $previousUrl = null;
 
     public function __construct(private FormOptionsProvider $provider)
     {
@@ -30,7 +33,6 @@ final class DonationFormStep3 extends AbstractController
 
     protected function instantiateForm(): FormInterface {
         $options = [
-            'action' => $this->action,
             'payments_config' => $this->provider->getPaymentsOptions(),
         ];
        return $this->createForm(DonationFormStep3Type::class, $this->donationData, $options);

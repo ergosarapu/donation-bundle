@@ -30,7 +30,7 @@ final class DonationFormStep1 extends AbstractController
     public ?DonationDto $donationData = null;
 
     #[LiveProp]
-    public ?string $action = null;
+    public ?string $currentUrl = null;
 
     private MoneyToLocalizedStringTransformer $moneyTransformer;
 
@@ -49,7 +49,6 @@ final class DonationFormStep1 extends AbstractController
             DonationFormStep1Type::class,
             $this->donationData,
             [
-                'action' => $this->action,
                 'currencies' => $this->formOptionsProvider->getCurrenciesOptions(),
                 'locale' => $this->locale,
             ]);

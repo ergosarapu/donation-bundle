@@ -20,6 +20,13 @@
             </call>
         </service>
 
+        <service id="donation_bundle.controller.redirect_controller" class="ErgoSarapu\DonationBundle\Controller\RedirectController" autoconfigure="true" autowire="true">
+            <call method="setContainer">
+                <argument type="service" id="Psr\Container\ContainerInterface"/>
+            </call>
+        </service>
+
+        <!-- Form -->
         <service id="donation_bundle.twig.components.donation_form" class="ErgoSarapu\DonationBundle\Twig\Components\DonationForm" autoconfigure="true" autowire="true">
             <call method="setContainer">
                 <argument type="service" id="Psr\Container\ContainerInterface"/>

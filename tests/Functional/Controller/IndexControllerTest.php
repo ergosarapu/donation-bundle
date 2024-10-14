@@ -121,6 +121,7 @@ class DonationBundleControllerKernel extends Kernel
     
     protected function configureRoutes(RoutingConfigurator $routes): void{
         $routes->import(__DIR__.'/../../../config/routes.xml')->prefix('/');
+        $routes->import(__DIR__.'/../../../config/routes_campaign.xml')->prefix('/');
         $routes->import('@LiveComponentBundle/config/routes.php');
     }
 
