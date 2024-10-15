@@ -7,6 +7,12 @@
                 "name": "focus",
                 "fetch": "eager",
                 "enabled": true
+            },
+            "auto-click": {
+                "main": "dist/auto-click_controller.js",
+                "name": "auto-click",
+                "fetch": "eager",
+                "enabled": true
             }
         },
         "importmap": {

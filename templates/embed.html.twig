@@ -1,0 +1,9 @@
+{% extends '@Donation/base.html.twig' %}
+
+{% block title %}{{ campaign.publicTitle }}{% endblock %}
+
+{% block body %}
+    <div class="container mx-auto xl:px-48">
+        <twig:DonationForm :form="form" :donationData="donationData" :step="step" :currentUrl="currentUrl" :previousUrl="previousUrl"/>
+    </div>
+{% endblock %}

@@ -16,14 +16,14 @@
                     </p>
                     <p>To add donation form, use
                         <blockquote class="not-italic">
-                            <code>&lt;twig:DonationForm :form="form" :donationData="donationData" :step="step" :action="action" /&gt;</code>
+                            <code>&lt;twig:DonationForm :form="form" :donationData="donationData" :step="step" :currentUrl="currentUrl" :previousUrl="previousUrl" /&gt;</code>
                         </blockquote>
                         in your twig template.
                     </p>
                 </div>
             </div>
             <div class="p-8 m-8 lg:col-span-3 col-span-8 lg:order-none order-first">
-                <twig:DonationForm :form="form" :donationData="donationData" :step="step" :action="action"/>
+                <twig:DonationForm :form="form" :donationData="donationData" :step="step" :currentUrl="currentUrl" :previousUrl="previousUrl"/>
             </div>
         </div>
     </div>

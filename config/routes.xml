@@ -8,9 +8,9 @@
 
     <route id="donation_dashboard" path="/admin" controller="ErgoSarapu\DonationBundle\Controller\AdminDashboardController::index"/>
     <route id="donation_admin_login" path="/login" controller="donation_bundle.controller.admin.login_controller"/>
-    <route id="donation_index" path="/{step}" controller="donation_bundle.controller.index_controller">
-        <requirement key="step">\d+</requirement>
-        <default key="step">1</default>
+    <route id="donation_payment_redirect" path="/redirect?{targetUrl}" controller="donation_bundle.controller.redirect_controller">
+        <requirement key="targetUrl">.+</requirement>
+        <default key="targetUrl">#</default>
     </route>
     <route id="donation_payment_done" path="/done" controller="donation_bundle.controller.payment_done_controller"/>
     <route id="donation_thank_you" path="/thank-you" controller="Symfony\Bundle\FrameworkBundle\Controller\TemplateController">
@@ -20,5 +20,4 @@
     <route id="donation_forgot_password_request" path="/reset-password" controller="donation_bundle.controller.reset_password_controller::request"/>
     <route id="donation_reset_password" path="/reset-password/reset/{token?}" controller="donation_bundle.controller.reset_password_controller::reset"/>
     <route id="donation_check_email" path="/reset-password/check-email" controller="donation_bundle.controller.reset_password_controller::checkEmail"/>
-
 </routes>

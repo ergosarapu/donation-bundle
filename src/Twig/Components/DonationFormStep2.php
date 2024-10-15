@@ -21,9 +21,12 @@ final class DonationFormStep2 extends AbstractController
     public ?DonationDto $donationData = null;
 
     #[LiveProp]
-    public ?string $action = null;
+    public ?string $currentUrl = null;
+
+    #[LiveProp]
+    public ?string $previousUrl = null;
 
     protected function instantiateForm(): FormInterface {
-       return $this->createForm(DonationFormStep2Type::class, $this->donationData, ['action' => $this->action]);
+       return $this->createForm(DonationFormStep2Type::class, $this->donationData);
     }
 }

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<routes xmlns="http://symfony.com/schema/routing"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://symfony.com/schema/routing
+        https://symfony.com/schema/routing/routing-1.0.xsd">
+
+    <route id="donation_landing" path="/{campaign}/{step}" controller="donation_bundle.controller.index_controller">
+        <default key="campaign">default</default>
+        <default key="template">landing</default>
+        <requirement key="step">\d+</requirement>
+        <default key="step">1</default>
+    </route>
+    <route id="donation_embed" path="/{campaign}/{template}/{step}" controller="donation_bundle.controller.index_controller">
+        <default key="campaign">default</default>
+        <!-- Only allow 'embed' template -->
+        <requirement key="template">embed</requirement>
+        <requirement key="step">\d+</requirement>
+        <default key="step">1</default>
+    </route>
+</routes>

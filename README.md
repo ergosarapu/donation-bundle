@@ -29,6 +29,12 @@ Register bundle routes:
 donation_bundle_routes:
     # loads routes from the given routing file stored in bundle
     resource: '@DonationBundle/config/routes.xml'
+
+# Define or override your routes here
+
+donation_bundle_routes_campaign:
+    # loads rest of loosely matching routes as last so they will not match before the ones defined before
+    resource: '@DonationBundle/config/routes_campaign.xml'
 ```
 
 Create admin user:

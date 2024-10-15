@@ -26,13 +26,15 @@ class IndexController extends AbstractController
     }
 
     public function __invoke(
-        Request $request, int $step = 1): Response
+        Request $request,
+        string $campaign,
+        string $template,
+        int $step = 1): Response
     {
         $campaign = $this->getDefaultCampaign();
         $donation = $this->getDonationData($request);
-        $formAction  = $this->getFormAction($step);
 
-        $form = $this->getDonationFormStep($step, $donation, $formAction, $request);
+        $form = $this->getDonationFormStep($step, $donation, $request);
 
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
@@ -67,42 +69,47 @@ class IndexController extends AbstractController
                 )->getTargetUrl();
                 
                 $request->getSession()->remove('donation');
-
-                return $this->redirect($targetUrl);
+                
+                return $this->redirectToRoute('donation_payment_redirect', ['targetUrl' => $targetUrl]);
             }
 
             $request->getSession()->set('donation', $donation);
 
-            return $this->redirectToRoute('donation_index', ['step' => $step + 1]);
+            return $this->redirectToRoute('donation_' . $template, ['template' => $template, 'step' => $step + 1]);
         }
 
-
-        return $this->render('@Donation/landing.html.twig', [
+        return $this->render('@Donation/' . $template . '.html.twig', [
             'form' => $form,
             'donationData' => $donation,
             'campaign' => $campaign,
             'step' => $step,
-            'action' => $formAction
+            'currentUrl' => $this->getFormUrl($template, $step),
+            'previousUrl' => $step === 1 ? null : $this->getFormUrl($template, $step - 1),
         ]);
     }
 
-    private function getFormAction(int $step): string {
-        return  $this->generateUrl('donation_index', ['step' => $step]);
+    private function getFormUrl(string $template, int $step): string {
+        return $this->generateUrl('donation_' . $template, ['template' => $template, 'step' => $step]);
     }
 
-    private function getDonationFormStep(int $step, DonationDto $donation, string $formAction, Request $request): FormInterface {
-        $options = [
-            'action' => $formAction,
-        ];
+    private function getDonationFormStep(int $step, DonationDto $donation, Request $request): FormInterface {
         if ($step === 1){
-            $options['currencies'] = $this->formOptions->getCurrenciesOptions();
-            $options['locale'] = $request->getLocale();
-            return $this->createForm(DonationFormStep1Type::class, $donation, $options);
+            return $this->createForm(
+                DonationFormStep1Type::class,
+                $donation,
+                [
+                    'currencies' => $this->formOptions->getCurrenciesOptions(),
+                    'locale' => $request->getLocale(),
+                ]);
         } else if ($step === 2){
-            return $this->createForm(DonationFormStep2Type::class, $donation, $options);
+            return $this->createForm(DonationFormStep2Type::class, $donation);
         } else if ($step === 3){
-            $options['payments_config'] = $this->formOptions->getPaymentsOptions();
-            return $this->createForm(DonationFormStep3Type::class, $donation, $options);
+            return $this->createForm(
+                DonationFormStep3Type::class,
+                $donation, 
+                [
+                    'payments_config' => $this->formOptions->getPaymentsOptions()
+                ]);
         }
         throw new InvalidArgumentException('Unsupported form step ' . $step);
     }
