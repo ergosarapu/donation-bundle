@@ -2,8 +2,10 @@
 
 namespace ErgoSarapu\DonationBundle;
 
+use DateInterval;
 use ErgoSarapu\DonationBundle\DependencyInjection\Compiler\RegisterQueryCompilerPass;
 use ErgoSarapu\DonationBundle\Repository\ResetPasswordRequestRepository;
+use Exception;
 use Symfony\Component\AssetMapper\AssetMapperInterface;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
@@ -28,25 +30,52 @@ class DonationBundle extends AbstractBundle
                     ->end()
                 ->end()
 
-                // Payments
-                ->arrayNode('payments')
-                    ->info('Payments configuration.')
+                ->arrayNode('gateways')
+                    // ->isRequired()
+                    ->info('Gateways configuration')
                     ->validate()
                         ->ifEmpty()
-                        ->thenInvalid('Configure at least one payment frequency type.')
+                        ->thenInvalid('Configure at least one gateway')
                     ->end()
-
-                    ->children()
-                        ->arrayNode('onetime')
-                            ->children()
-                                ->append($this->addBankNode())
-                                ->append($this->addCardNode())
+                    ->useAttributeAsKey('name')
+                    ->arrayPrototype()
+                        ->children()
+                            ->scalarNode('group')
+                                ->isRequired()->info('The name of the gateway group')
                             ->end()
-                        ->end()
-                        ->arrayNode('monthly')
-                            ->children()
-                                ->append($this->addBankNode())
-                                ->append($this->addCardNode())
+                            ->scalarNode('label')
+                                ->isRequired()->cannotBeEmpty()->info('Payment method label as shown to the end user')
+                            ->end()
+                            ->scalarNode('image')
+                                ->cannotBeEmpty()->info('Payment method icon shown to the end user')
+                            ->end()
+                            ->arrayNode('frequencies')
+                                ->defaultValue([null])
+                                ->scalarPrototype()->end()
+                                ->validate()
+                                    ->ifTrue(function (array $values): bool {
+                                        foreach($values as $value) {
+                                            if ($value === null) {
+                                                // Null value marks one-time payment frequency, allow this
+                                                continue;
+                                            }
+                                            // Try to construct date interval, this throws in case of bad interval string
+                                            try {
+                                                new DateInterval($value);
+                                            } catch (Exception $e){
+                                                throw new Exception(sprintf('Invalid frequency date interval format (%s)', $value), previous: $e);
+                                            }
+                                        }
+                                        return false;
+                                    })
+                                    ->thenInvalid('Not valid frequencies')
+                                ->end()
+                            ->end()
+                            ->scalarNode('country')->validate()
+                                ->ifTrue(function (string $value): bool{
+                                    return !Countries::exists($value);
+                                })
+                                ->thenInvalid('Not a valid alpha-2 country code')
                             ->end()
                         ->end()
                     ->end()
@@ -141,8 +170,8 @@ class DonationBundle extends AbstractBundle
         $container->import(__DIR__ . '/../config/services.xml');
 
         $builder->getDefinition('donation_bundle.form.form_options_provider')
-            ->setArgument(0, $config['payments'] ?? null)
-            ->setArgument(1, $config['form']['currencies'] ?? null);
+            ->setArgument(0, $config['gateways'])
+            ->setArgument(1, $config['form']['currencies'] ?? []);
     }
 
     private function prependAssetMapperConfig(ContainerBuilder $builder): void{

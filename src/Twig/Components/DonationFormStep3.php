@@ -32,8 +32,10 @@ final class DonationFormStep3 extends AbstractController
     }
 
     protected function instantiateForm(): FormInterface {
+        $frequency = $this->donationData->getFrequency();
         $options = [
-            'payments_config' => $this->provider->getPaymentsOptions(),
+            'frequency' => $frequency,
+            'gateways' => $this->provider->getGateways($frequency),
         ];
        return $this->createForm(DonationFormStep3Type::class, $this->donationData, $options);
     }

@@ -49,8 +49,9 @@ final class DonationFormStep1 extends AbstractController
             DonationFormStep1Type::class,
             $this->donationData,
             [
-                'currencies' => $this->formOptionsProvider->getCurrenciesOptions(),
+                'currencies' => $this->formOptionsProvider->getCurrencies(),
                 'locale' => $this->locale,
+                'frequencies' => $this->formOptionsProvider->getFrequencies(),
             ]);
             
     }
@@ -84,7 +85,7 @@ final class DonationFormStep1 extends AbstractController
         }
 
         // Check if normalized value exists in choices
-        $options = $this->formOptionsProvider->getCurrenciesOptions();
+        $options = $this->formOptionsProvider->getCurrencies();
         if (!in_array($normalized, $options['EUR']['amount_choices'])){
             $this->formValues['chosenAmount'] = '';
             return;

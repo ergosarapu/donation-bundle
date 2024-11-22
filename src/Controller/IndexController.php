@@ -98,17 +98,20 @@ class IndexController extends AbstractController
                 DonationFormStep1Type::class,
                 $donation,
                 [
-                    'currencies' => $this->formOptions->getCurrenciesOptions(),
+                    'currencies' => $this->formOptions->getCurrencies(),
                     'locale' => $request->getLocale(),
+                    'frequencies' => $this->formOptions->getFrequencies(),
                 ]);
         } else if ($step === 2){
             return $this->createForm(DonationFormStep2Type::class, $donation);
         } else if ($step === 3){
+            $frequency = $donation->getFrequency();
             return $this->createForm(
                 DonationFormStep3Type::class,
                 $donation, 
                 [
-                    'payments_config' => $this->formOptions->getPaymentsOptions()
+                    'frequency' => $frequency,
+                    'gateways' => $this->formOptions->getGateways($frequency),
                 ]);
         }
         throw new InvalidArgumentException('Unsupported form step ' . $step);
@@ -120,14 +123,14 @@ class IndexController extends AbstractController
         if ($donation === null) {
             $donation = new DonationDto();
 
-            $options = $this->formOptions->getCurrenciesOptions();
+            $options = $this->formOptions->getCurrencies();
 
             // Set initial default values
             $currencyCode = 'EUR';
             $defaultAmount = $options[$currencyCode]['amount_default'];
             $donation->setAmount($defaultAmount);
             $donation->setChosenAmount($defaultAmount);
-            $donation->setCurrencyCode($currencyCode);    
+            $donation->setCurrencyCode($currencyCode);
         }
         return $donation;
     }

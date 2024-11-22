@@ -20,12 +20,12 @@ class ConfigurationTest extends TestCase
         /** @var FormOptionsProvider $optionsProvider */
         $optionsProvider = $kernel->getContainer()->get('donation_bundle.form.form_options_provider');
         
-        $this->assertNull($optionsProvider->getPaymentsOptions());
-        $this->assertNull($optionsProvider->getCurrenciesOptions());
+        $this->assertEmpty($optionsProvider->getGateways());
+        $this->assertEmpty($optionsProvider->getCurrencies());
     }
 
-    public function testPaymentsConfigEmpty(): void{
-        $kernel = new DonationBundleTestingKernel(['payments' => []]);
+    public function testGatewaysConfigEmpty(): void{
+        $kernel = new DonationBundleTestingKernel(['gateways' => []]);
         $this->expectException(InvalidConfigurationException::class);
         $kernel->boot();
     }
@@ -36,29 +36,46 @@ class ConfigurationTest extends TestCase
         $kernel->boot();
     }
 
-    public function testPaymentsConfigInvalidBankCountry(): void{
-        $kernel = new DonationBundleTestingKernel('invalid_bank_country_code');
+    public function testGatewayConfigInvalidBankCountry(): void{
+        $kernel = new DonationBundleTestingKernel('gateway_invalid_country_code');
         $this->expectException(InvalidConfigurationException::class);
         $this->expectExceptionMessageMatches('/.*(Not a valid alpha-2 country code)/');
         $kernel->boot();
     }
 
-    public function testPaymentsConfigInvalidCurrency(): void{
-        $kernel = new DonationBundleTestingKernel('invalid_currency_code');
+    public function testFormConfigInvalidCurrency(): void{
+        $kernel = new DonationBundleTestingKernel('form_invalid_currency_code');
         $this->expectException(InvalidConfigurationException::class);
         $this->expectExceptionMessageMatches('/.*(Not a valid currency code.)/');
         $kernel->boot();
     }
 
-    public function testPaymentsConfigFull(): void{
+    public function testGatewayConfigInvalidFrequencyDateInterval(): void{
+        $kernel = new DonationBundleTestingKernel('gateway_invalid_frequency_date_interval');
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessageMatches('/.*(Invalid frequency date interval format)/');
+        $kernel->boot();
+    }
+
+    public function testGatewayConfigMissingFrequency(): void{
+        $kernel = new DonationBundleTestingKernel('gateway_missing_frequency_date_interval');
+        $kernel->boot();
+
+        /** @var FormOptionsProvider $optionsProvider */
+        $optionsProvider = $kernel->getContainer()->get('donation_bundle.form.form_options_provider');
+
+        $this->assertNotEmpty($optionsProvider->getGateways());
+    }
+
+    public function testFullConfig(): void{
         $kernel = new DonationBundleTestingKernel('full');
         $kernel->boot();
 
         /** @var FormOptionsProvider $optionsProvider */
         $optionsProvider = $kernel->getContainer()->get('donation_bundle.form.form_options_provider');
 
-        $this->assertNotNull($optionsProvider->getPaymentsOptions());
-        $this->assertNotNull($optionsProvider->getCurrenciesOptions());
+        $this->assertNotEmpty($optionsProvider->getGateways());
+        $this->assertNotEmpty($optionsProvider->getCurrencies());
     }
 }
 
