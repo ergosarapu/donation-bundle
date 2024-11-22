@@ -69,60 +69,40 @@ The following configuration options are available for the Donation Bundle:
 
 donation:
 
-    # Payments configuration.
-    payments:
-        onetime:
-            bank:
+    # Form configuration.
+    form:
+        currencies:           # Required
 
-                # Prototype
-                country_code:
-                    gateways:
+            # Prototype: Currency code
+            currency_code:
 
-                        # Prototype: Name of a Payum gateway
-                        name:
+                # Default amount pre-filled for the end user.
+                amount_default:       ~ # Required
+                amount_choices:       []
 
-                            # Payment method label as shown to the end user
-                            label:                ~ # Required
+    # Gateways configuration
+    gateways:
 
-                            # Payment method icon shown to the end user
-                            image:                ~
-            card:
-                gateways:
+        # Prototype
+        name:
 
-                    # Prototype: Name of a Payum gateway
-                    name:
+            # The label of the gateway group shown to the end user
+            group:                ~ # Required
 
-                        # Payment method label as shown to the end user
-                        label:                ~ # Required
+            # The label of payment gateway shown to the end user
+            label:                ~ # Required
 
-                        # Payment method icon shown to the end user
-                        image:                ~
-        monthly:
-            bank:
+            # The icon of payment gateway shown to the end user
+            image:                ~
 
-                # Prototype
-                country_code:
-                    gateways:
+            # Available recurring frequencies, null for one-time (default) or date interval string, e.g. P1M for monthly, P1W for weekly, etc
+            frequencies:
 
-                        # Prototype: Name of a Payum gateway
-                        name:
+                # Default:
+                - 
 
-                            # Payment method label as shown to the end user
-                            label:                ~ # Required
-
-                            # Payment method icon shown to the end user
-                            image:                ~
-            card:
-                gateways:
-
-                    # Prototype: Name of a Payum gateway
-                    name:
-
-                        # Payment method label as shown to the end user
-                        label:                ~ # Required
-
-                        # Payment method icon shown to the end user
-                        image:                ~
+            # Marks gateway as country specific so user can quickly filter gateways with same country. Must be valid alpha-2 country code.
+            country:              ~
 ```
 
 ## Reset password feature
