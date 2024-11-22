@@ -10,28 +10,35 @@
             {{ form_errors(form) }}
 
             {# Frequency #}
-            <div class="mb-3">
-                {{ form_errors(form.frequency) }}
-                <ul class="flex justify-center items-stretch">
-                    {% for choice in form.frequency.children %}
-                        <li class="flex-1 min-w-0">
-                            <input
-                                type="radio"
-                                id="donation_frequency_{{ loop.index0 }}"
-                                name="{{ field_name(form.frequency) }}"
-                                value="{{ choice.vars.value }}"
-                                {% if choice.vars.checked %} checked="checked"{% endif %}
-                                class="hidden peer"
-                                required>
-                            <label for="donation_frequency_{{ loop.index0 }}" class="flex h-10 border {% if loop.first %}rounded-l-lg{% endif %} {% if loop.last %}rounded-r-lg{% endif %} cursor-pointer text-gray-100 bg-primary-700 peer-checked:bg-gray-100 border-primary-700 peer-checked:border-primary-700 peer-checked:text-primary-700 hover:text-gray-600 hover:bg-gray-100">
-                                <div class="flex w-full items-center p-2">
-                                    <p class="grow text-center text-nowrap truncate">{{ choice.vars.label|trans }}</p>
-                                </div>  
-                            </label>
-                        </li>
-                    {% endfor %}
-                </ul>
-            </div>
+            {% if form.frequency.children|length == 1 %}
+                {# Render and hide frequency option #}
+                <div class="hidden">
+                    {{ form_row(form.frequency) }}
+                </div>
+            {% else %}
+                <div class="mb-3">
+                    {{ form_errors(form.frequency) }}
+                    <ul class="flex justify-center items-stretch">
+                        {% for choice in form.frequency.children %}
+                            <li class="flex-1 min-w-0">
+                                <input
+                                    type="radio"
+                                    id="donation_frequency_{{ loop.index0 }}"
+                                    name="{{ field_name(form.frequency) }}"
+                                    value="{{ choice.vars.value }}"
+                                    {% if choice.vars.checked %} checked="checked"{% endif %}
+                                    class="hidden peer"
+                                    required>
+                                <label for="donation_frequency_{{ loop.index0 }}" class="flex h-10 border {% if loop.first %}rounded-l-lg{% endif %} {% if loop.last %}rounded-r-lg{% endif %} cursor-pointer text-gray-100 bg-primary-700 peer-checked:bg-gray-100 border-primary-700 peer-checked:border-primary-700 peer-checked:text-primary-700 hover:text-gray-600 hover:bg-gray-100">
+                                    <div class="flex w-full items-center p-2">
+                                        <p class="grow text-center text-nowrap truncate">{{ choice.vars.label|trans }}</p>
+                                    </div>  
+                                </label>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
 
             {# Frequency Title #}
             <p class="mb-3 text-center">{{ ('payment.frequency.title.' ~ donationData.frequency)|trans }}</p>
