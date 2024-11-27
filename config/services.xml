@@ -13,6 +13,7 @@
         <service id="ErgoSarapu\DonationBundle\Controller\AdminDashboardController" autoconfigure="true" autowire="true"/>
         <service id="ErgoSarapu\DonationBundle\Controller\Admin\PaymentCrudController" autoconfigure="true" autowire="true"/>
         <service id="ErgoSarapu\DonationBundle\Controller\Admin\CampaignCrudController" autoconfigure="true" autowire="true"/>
+        <service id="ErgoSarapu\DonationBundle\Controller\Admin\SubscriptionCrudController" autoconfigure="true" autowire="true"/>
 
         <service id="donation_bundle.controller.index_controller" class="ErgoSarapu\DonationBundle\Controller\IndexController" autoconfigure="true" autowire="true">
             <call method="setContainer">
@@ -75,16 +76,30 @@
             <tag name="payum.extension" all="true"/>
         </service>
 
+        <!-- Subscription -->
+        <service id="donation_bundle.subscription.subscription_manager" class="ErgoSarapu\DonationBundle\Subscription\SubscriptionManager" autowire="true" public="true"/>
+        <service id="ErgoSarapu\DonationBundle\Subscription\SubscriptionManager" alias="donation_bundle.subscription.subscription_manager"/>
+
         <!-- Command -->
         <service id="donation_bundle.add_user_command" class="ErgoSarapu\DonationBundle\Command\AddUserCommand" autoconfigure="true" autowire="true"/>
+        <service id="donation_bundle.subscription_process_command" class="ErgoSarapu\DonationBundle\Command\SubscriptionProcessCommand" autoconfigure="true" autowire="true"/>
         <service id="donation_bundle.user_validator" class="ErgoSarapu\DonationBundle\Utils\UserValidator"/>
         <service id="ErgoSarapu\DonationBundle\Utils\UserValidator" alias="donation_bundle.user_validator"/>
+
+        <!-- Message Handler -->
+        <service id="donation_bundle.message_handler.capture_payment" class="ErgoSarapu\DonationBundle\MessageHandler\CapturePaymentHandler" autoconfigure="true" autowire="true"/>
 
         <!-- Repository -->
         <service id="ErgoSarapu\DonationBundle\Repository\UserRepository" autowire="true">
             <tag name="doctrine.repository_service"/>
         </service>
         <service id="ErgoSarapu\DonationBundle\Repository\CampaignRepository" autowire="true">
+            <tag name="doctrine.repository_service"/>
+        </service>
+        <service id="ErgoSarapu\DonationBundle\Repository\PaymentRepository" autowire="true">
+            <tag name="doctrine.repository_service"/>
+        </service>
+        <service id="ErgoSarapu\DonationBundle\Repository\SubscriptionRepository" autowire="true">
             <tag name="doctrine.repository_service"/>
         </service>
         <service id="ErgoSarapu\DonationBundle\Repository\ResetPasswordRequestRepository" autowire="true">

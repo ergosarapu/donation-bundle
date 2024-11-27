@@ -2,46 +2,31 @@
 
 namespace ErgoSarapu\DonationBundle\Tests\Integration\Query;
 
-use DAMA\DoctrineTestBundle\DAMADoctrineTestBundle;
 use DateTime;
-use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
 use Doctrine\ORM\EntityManager;
-use ErgoSarapu\DonationBundle\DonationBundle;
 use ErgoSarapu\DonationBundle\Entity\Campaign;
 use ErgoSarapu\DonationBundle\Entity\Payment;
 use ErgoSarapu\DonationBundle\Entity\Payment\Status;
 use ErgoSarapu\DonationBundle\Query\PaymentSummaryQueryInterface;
+use ErgoSarapu\DonationBundle\Tests\Integration\IntegrationTestingKernel;
 use Gedmo\Timestampable\TimestampableListener;
-use Payum\Bundle\PayumBundle\PayumBundle;
-use PHPUnit\Framework\TestCase;
-use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
-use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
-use Symfony\Component\Config\Loader\LoaderInterface;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
-use Symfony\Component\HttpKernel\Kernel;
-use SymfonyCasts\Bundle\ResetPassword\SymfonyCastsResetPasswordBundle;
+use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
-class PaymentSummaryQueryTest extends TestCase
+class PaymentSummaryQueryTest extends KernelTestCase
 {
-
-    private ?Kernel $kernel;
 
     private ?EntityManager $entityManager;
 
     private PaymentSummaryQueryInterface $query;
     
-    protected function setUp(): void {
-        $this->kernel = new DatabaseTestingKernel();
-        $this->kernel->boot();
-        $this->entityManager = $this->kernel->getContainer()->get('doctrine')->getManager();
-        $this->entityManager->getEventManager()->addEventSubscriber(new TimestampableListener());
-        $this->query = $this->kernel->getContainer()->get(PaymentSummaryQueryInterface::class);
+    protected static function getKernelClass(): string
+    {
+        return IntegrationTestingKernel::class;
     }
-
-    protected function tearDown(): void {
-        $this->entityManager->close();
-        $this->entityManager = null;
+    protected function setUp(): void {
+        $this->entityManager = $this->getContainer()->get('doctrine')->getManager();
+        $this->entityManager->getEventManager()->addEventSubscriber(new TimestampableListener());
+        $this->query = $this->getContainer()->get(PaymentSummaryQueryInterface::class);
     }
 
     public function testQuery():void{
@@ -133,55 +118,5 @@ class PaymentSummaryQueryTest extends TestCase
     
     private function assertStrEq(string $expected, object $actual): void {
         $this->assertSame($expected, (string)$actual);
-    }
-}
-class DatabaseTestingKernel extends Kernel
-{
-    use MicroKernelTrait;
-
-    public function __construct()
-    {
-        parent::__construct($_ENV['APP_ENV'], $_ENV['APP_DEBUG']);
-    }
-
-    public function registerBundles(): iterable {
-        return [
-            new DonationBundle(),
-            new FrameworkBundle(),
-            new DoctrineBundle(),
-            new DAMADoctrineTestBundle(),
-            new PayumBundle(),
-        ];
-    }
-
-    protected function configureContainer(ContainerConfigurator $container, LoaderInterface $loader, ContainerBuilder $builder): void
-    {
-        $builder->loadFromExtension('doctrine', [
-            'dbal' => [
-                'url' => $_ENV['DATABASE_URL'],
-                'use_savepoints' => true,
-            ],
-            'orm' => [
-                'auto_mapping' => true,
-                'naming_strategy' => 'doctrine.orm.naming_strategy.underscore',
-            ]
-        ]);
-
-        $builder->loadFromExtension('payum', 
-        ['security' => 
-            ['token_storage' => 
-                ['Payum\Core\Model\Token' => 
-                    ['filesystem' => [
-                        'storage_dir' => __DIR__.'/../../../var/cache/gateways',
-                        'id_property' => 'hash',
-                    ]]]
-            ]
-        ]);
-    }
-    
-    public function getCacheDir(): string
-    {
-        // Ensure each kernel instance generates its own cache allowing different test cases do not reuse the cache
-        return parent::getCacheDir().'/'.spl_object_hash($this);
     }
 }

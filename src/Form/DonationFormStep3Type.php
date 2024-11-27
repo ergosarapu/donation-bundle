@@ -122,7 +122,7 @@ class DonationFormStep3Type extends AbstractDonationFormType
         if ($first === null) {
             throw new RuntimeException('Empty gateways array provided');
         }
-        return array_shift($gateways)['group'];
+        return $first['group'];
     }
 
     private function getCountryChoices(array $countryCodes): ?array {

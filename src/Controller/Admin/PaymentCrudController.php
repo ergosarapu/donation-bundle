@@ -35,6 +35,7 @@ class PaymentCrudController extends AbstractCrudController
             TextField::new('familyName')->setDisabled()->setColumns(4),
             ChoiceField::new('status')->setDisabled()->setColumns(4),
             MoneyField::new('totalAmount')->setCurrencyPropertyPath('currencyCode')->setDisabled()->setColumns(4),
+            AssociationField::new('subscription')->setDisabled()->setColumns(4),
 
             FormField::addColumn(6),
             FormField::addFieldset('Meta'),

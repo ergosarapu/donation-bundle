@@ -2,15 +2,17 @@
 
 namespace ErgoSarapu\DonationBundle\Controller;
 
+use Doctrine\ORM\EntityManagerInterface;
 use ErgoSarapu\DonationBundle\Dto\DonationDto;
 use ErgoSarapu\DonationBundle\Entity\Campaign;
 use ErgoSarapu\DonationBundle\Entity\Payment;
-use ErgoSarapu\DonationBundle\Entity\Payment\Status;
+use ErgoSarapu\DonationBundle\Entity\Payment\Status as PaymentStatus;
 use ErgoSarapu\DonationBundle\Form\DonationFormStep1Type;
 use ErgoSarapu\DonationBundle\Form\DonationFormStep2Type;
 use ErgoSarapu\DonationBundle\Form\DonationFormStep3Type;
 use ErgoSarapu\DonationBundle\Form\FormOptionsProvider;
 use ErgoSarapu\DonationBundle\Repository\CampaignRepository;
+use ErgoSarapu\DonationBundle\Subscription\SubscriptionManager;
 use InvalidArgumentException;
 use Payum\Core\Payum;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -21,7 +23,12 @@ use Symfony\Component\HttpFoundation\Response;
 class IndexController extends AbstractController
 {
 
-    public function __construct(private FormOptionsProvider $formOptions, private readonly CampaignRepository $campaignRepository, private ?Payum $payum)
+    public function __construct(
+        private FormOptionsProvider $formOptions,
+        private readonly CampaignRepository $campaignRepository,
+        private ?Payum $payum,
+        private readonly EntityManagerInterface $entityManager,
+        private readonly SubscriptionManager $subscriptionManager)
     {
     }
 
@@ -48,7 +55,7 @@ class IndexController extends AbstractController
                 $gatewayName = $donation->getGateway();
                 
                 $payment = $this->payum->getStorage(Payment::class)->create();
-                $payment->setStatus(Status::Created);
+                $payment->setStatus(PaymentStatus::Created);
                 $payment->setNumber(uniqid());
                 $payment->setCurrencyCode($donation->getCurrencyCode());
                 $payment->setTotalAmount($donation->getAmount());
@@ -68,6 +75,13 @@ class IndexController extends AbstractController
                     'donation_payment_done' // the route to redirect after capture
                 )->getTargetUrl();
                 
+                // If frequency is set then create subscription
+                if ($donation->getFrequency() !== null) {
+                    $subscription = $this->subscriptionManager->createSubscription($payment, $donation->getFrequency());
+                    $this->entityManager->persist($subscription);
+                    $this->entityManager->flush();
+                }
+
                 $request->getSession()->remove('donation');
                 
                 return $this->redirectToRoute('donation_payment_redirect', ['targetUrl' => $targetUrl]);

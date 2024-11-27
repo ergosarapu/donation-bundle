@@ -46,7 +46,8 @@
         "symfonycasts/reset-password-bundle": "^1.22",
         "symfony/ux-turbo": "^2.20",
         "twig/intl-extra": "^3.15",
-        "twig/extra-bundle": "^3.15"
+        "twig/extra-bundle": "^3.15",
+        "symfony/messenger": "^7.1"
     },
     "require-dev": {
         "symfony/phpunit-bridge": "^7.1",
@@ -54,7 +55,8 @@
         "symfony/browser-kit": "^6.4|^7.0",
         "symfony/dependency-injection": "^6.4|^7.0",
         "dama/doctrine-test-bundle": "^8.2",
-        "symfony/mailer": "7.1"
+        "symfony/mailer": "7.1",
+        "zenstruck/messenger-test": "^1.11"
     },
     "extra": {
         "symfony": {
