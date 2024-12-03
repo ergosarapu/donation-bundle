@@ -20,7 +20,7 @@ use Symfony\UX\LiveComponent\Attribute\LiveProp;
 use Symfony\UX\LiveComponent\ComponentWithFormTrait;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
 
-#[AsLiveComponent]
+#[AsLiveComponent(route: 'live_component_admin')]
 final class PaymentSummaryChartForm extends AbstractController
 {
     use DefaultActionTrait;

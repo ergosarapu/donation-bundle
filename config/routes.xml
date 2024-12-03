@@ -7,6 +7,9 @@
     <import resource="@PayumBundle/Resources/config/routing/all.xml"/>
 
     <route id="donation_dashboard" path="/admin" controller="ErgoSarapu\DonationBundle\Controller\AdminDashboardController::index"/>
+    <route id="live_component_admin" path="/admin/_components/{_live_component}/{_live_action}">
+        <default key="_live_action">get</default>
+    </route>
     <route id="donation_admin_login" path="/login" controller="donation_bundle.controller.admin.login_controller"/>
     <route id="donation_payment_redirect" path="/redirect?{targetUrl}" controller="donation_bundle.controller.redirect_controller">
         <requirement key="targetUrl">.+</requirement>
