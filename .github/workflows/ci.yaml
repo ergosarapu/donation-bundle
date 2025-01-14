@@ -14,7 +14,6 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      SYMFONY_DEPRECATIONS_HELPER: "max[direct]=0"
       DATABASE_URL: "pdo-mysql://db:db@127.0.0.1/db"
 
     strategy: 
@@ -54,7 +53,7 @@ jobs:
         run: composer update
 
       - name: Run Unit Tests
-        run: vendor/bin/simple-phpunit --testsuite Unit
+        run: vendor/bin/phpunit --testsuite Unit
       
       - name: Migrate database
         run: |
@@ -64,11 +63,11 @@ jobs:
 
       - name: Run Functional Tests
         run: |
-          ./vendor/bin/simple-phpunit --testsuite Functional
+          ./vendor/bin/phpunit --testsuite Functional
 
       - name: Run Integration Tests
         run: |
-          ./vendor/bin/simple-phpunit --testsuite Integration
+          ./vendor/bin/phpunit --testsuite Integration
 
     services:
       mariadb:
