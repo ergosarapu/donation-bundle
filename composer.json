@@ -50,13 +50,13 @@
         "symfony/messenger": "^7.1"
     },
     "require-dev": {
-        "symfony/phpunit-bridge": "^7.1",
         "symfony/yaml": "^6.4|^7.0",
         "symfony/browser-kit": "^6.4|^7.0",
         "symfony/dependency-injection": "^6.4|^7.0",
         "dama/doctrine-test-bundle": "^8.2",
         "symfony/mailer": "7.1",
-        "zenstruck/messenger-test": "^1.11"
+        "zenstruck/messenger-test": "^1.11",
+        "phpunit/phpunit": "^11.5"
     },
     "extra": {
         "symfony": {

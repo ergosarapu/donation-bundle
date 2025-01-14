@@ -75,6 +75,9 @@
         <service id="donation_bundle.payum.payment_status_extension" class="ErgoSarapu\DonationBundle\Payum\UpdatePaymentStatusExtension" autoconfigure="true" public="true">
             <tag name="payum.extension" all="true"/>
         </service>
+        <service id="donation_bundle.payum.activate_subscription_extension" class="ErgoSarapu\DonationBundle\Payum\ActivateSubscriptionExtension" autoconfigure="true" public="true">
+            <tag name="payum.extension" all="true"/>
+        </service>
 
         <!-- Subscription -->
         <service id="donation_bundle.subscription.subscription_manager" class="ErgoSarapu\DonationBundle\Subscription\SubscriptionManager" autowire="true" public="true"/>

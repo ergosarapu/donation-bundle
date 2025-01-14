@@ -4,9 +4,11 @@ namespace ErgoSarapu\DonationBundle\Payum;
 
 use ErgoSarapu\DonationBundle\Entity\Payment;
 use ErgoSarapu\DonationBundle\Entity\Payment\Status;
+use Payum\Core\Bridge\Spl\ArrayObject;
 use Payum\Core\Extension\Context;
 use Payum\Core\Extension\ExtensionInterface;
-use Payum\Core\Request\BaseGetStatus;
+use Payum\Core\Request\GetHumanStatus;
+use Payum\Core\Request\Notify;
 
 class UpdatePaymentStatusExtension implements ExtensionInterface
 {
@@ -17,19 +19,24 @@ class UpdatePaymentStatusExtension implements ExtensionInterface
 
     public function onPostExecute(Context $context) {
         $request = $context->getRequest();
-        
-        if (!$request instanceof BaseGetStatus) {
+        if (!$request instanceof Notify) {
             return;
         }
 
+        $model = $request->getModel();
+        if (!$model instanceof ArrayObject) {
+            return;
+        }
+        
         $payment = $request->getFirstModel();
-
         if (!$payment instanceof Payment) {
             return;
         }
 
+        $context->getGateway()->execute($status = new GetHumanStatus($model));
+        
         // TODO: handle state machine properly
-        $status = $this->getStatus($request->getValue());
+        $status = $this->getStatus($status->getValue());
         if ($payment->getStatus() !== $status){
             $payment->setStatus($status);
         }
