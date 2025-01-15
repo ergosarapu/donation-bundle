@@ -64,6 +64,8 @@
             </call>
         </service>
 
+        <service id="donation_bundle.twig.components.flag" class="ErgoSarapu\DonationBundle\Twig\Components\Flag" autoconfigure="true" autowire="true" />
+
         <!-- Password Reset -->
         <service id="donation_bundle.controller.reset_password_controller" class="ErgoSarapu\DonationBundle\Controller\Admin\ResetPasswordController" autoconfigure="true" autowire="true"/>
 
