@@ -40,4 +40,9 @@ class SubscriptionCrudController extends AbstractCrudController
             ChoiceField::new('status')->setColumns(6),
         ];
     }
+
+    public function configureCrud(Crud $crud): Crud
+    {
+        return $crud->setDefaultSort(['createdAt' => 'DESC']);
+    }
 }

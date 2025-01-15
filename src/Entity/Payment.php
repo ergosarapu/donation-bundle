@@ -77,7 +77,7 @@ class Payment extends BasePayment
     }
 
     public function getDetailsString():string{
-        return json_encode($this->getDetails());
+        return json_encode($this->getDetails(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     }
 
     public function getCampaign(): ?Campaign
