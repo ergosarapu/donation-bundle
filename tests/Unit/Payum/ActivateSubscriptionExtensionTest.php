@@ -49,14 +49,14 @@ class ActivateSubscriptionExtensionTest extends TestCase
         $this->gatewayMock->expects($this->once())->method('execute')->willReturnCallback(function (GetHumanStatus $request) {
             $request->markCaptured();
         });
-        $this->extension->onExecute($this->context);
+        $this->extension->onPostExecute($this->context);
         $this->assertEquals(SubscriptionStatus::Active, $this->payment->getSubscription()->getStatus());
     }
 
     #[DataProvider('ignoredSubscriptionStatuses')]
     public function testSubscriptionStatusNotChangedForNotCreatedSubscription(SubscriptionStatus $status) {
         $this->payment->getSubscription()->setStatus($status);
-        $this->extension->onExecute($this->context);
+        $this->extension->onPostExecute($this->context);
         $this->assertEquals($status, $this->payment->getSubscription()->getStatus());
     }
 
@@ -71,7 +71,7 @@ class ActivateSubscriptionExtensionTest extends TestCase
     #[DataProvider('ignoredPaymentStatusCallbacks')]
     public function testSubscriptionStatusNotChangedForNotCapturedPayment(callable $callback) {
         $this->gatewayMock->expects($this->once())->method('execute')->willReturnCallback($callback);
-        $this->extension->onExecute($this->context);
+        $this->extension->onPostExecute($this->context);
         $this->assertEquals(SubscriptionStatus::Created, $this->payment->getSubscription()->getStatus());
     }
 

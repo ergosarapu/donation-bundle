@@ -16,6 +16,9 @@ class ActivateSubscriptionExtension implements ExtensionInterface
     public function onPreExecute(Context $context) { }
 
     public function onExecute(Context $context) {
+    }
+
+    public function onPostExecute(Context $context) {
         $request = $context->getRequest();
         if (!$request instanceof Notify) {
             return;
@@ -52,7 +55,5 @@ class ActivateSubscriptionExtension implements ExtensionInterface
             $subscription->setStatus(Status::Active);
         }
     }
-
-    public function onPostExecute(Context $context) { }
 
 }
