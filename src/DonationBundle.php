@@ -128,45 +128,6 @@ class DonationBundle extends AbstractBundle
         ->end();
     }
 
-    private function addBankNode(): NodeDefinition {
-
-        $treeBuilder = new TreeBuilder('bank');
-        return $treeBuilder->getRootNode()
-            ->useAttributeAsKey('country_code')
-                ->validate()
-                    ->ifTrue(function (array $values): bool{
-                        foreach($values as $key => $value) {
-                            if (!Countries::exists($key)){
-                                return true;
-                            }
-                        }
-                        return false;
-                    })
-                    ->thenInvalid('Not a valid alpha-2 country code')
-                ->end()
-            ->arrayPrototype()
-                ->children()
-                    ->append($this->addGatewaysNode())
-                ->end()
-            ->end();
-    }
-
-    private function addGatewaysNode(): NodeDefinition {
-        $treeBuilder = new TreeBuilder('gateways');
-        return $treeBuilder->getRootNode()
-            ->useAttributeAsKey('name')
-            ->arrayPrototype()->info("Name of a Payum gateway")
-                ->children()
-                    ->scalarNode('label')->isRequired()->cannotBeEmpty()->info('Payment method label as shown to the end user')->end()
-                    ->scalarNode('image')->cannotBeEmpty()->info('Payment method icon shown to the end user')->end()
-                ->end()
-            ->end();
-    }
-
-    private function addCardNode(): NodeDefinition {
-        return (new TreeBuilder('card'))->getRootNode()->append($this->addGatewaysNode());
-    }
-
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
     {
         $container->import(__DIR__ . '/../config/services.xml');

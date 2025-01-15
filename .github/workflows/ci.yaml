@@ -53,7 +53,7 @@ jobs:
         run: composer update
 
       - name: Run Unit Tests
-        run: vendor/bin/phpunit --testsuite Unit
+        run: vendor/bin/phpunit --testdox --testsuite Unit
       
       - name: Migrate database
         run: |
@@ -63,11 +63,11 @@ jobs:
 
       - name: Run Functional Tests
         run: |
-          ./vendor/bin/phpunit --testsuite Functional
+          ./vendor/bin/phpunit --testdox --testsuite Functional
 
       - name: Run Integration Tests
         run: |
-          ./vendor/bin/phpunit --testsuite Integration
+          ./vendor/bin/phpunit --testdox --testsuite Integration
 
     services:
       mariadb:

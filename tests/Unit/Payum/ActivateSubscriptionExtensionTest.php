@@ -64,7 +64,7 @@ class ActivateSubscriptionExtensionTest extends TestCase
     {
         $statuses = array_filter(SubscriptionStatus::cases(), fn($status) => $status !== SubscriptionStatus::Created);
         foreach ($statuses as $status) {
-            yield [$status];
+            yield $status->name => [$status];
         }
     }
 
@@ -77,15 +77,15 @@ class ActivateSubscriptionExtensionTest extends TestCase
 
     public static function ignoredPaymentStatusCallbacks(): Generator
     {
-        yield [fn(GetHumanStatus $request) => $request->markAuthorized()];
-        yield [fn(GetHumanStatus $request) => $request->markCanceled()];
-        yield [fn(GetHumanStatus $request) => $request->markExpired()];
-        yield [fn(GetHumanStatus $request) => $request->markFailed()];
-        yield [fn(GetHumanStatus $request) => $request->markNew()];
-        yield [fn(GetHumanStatus $request) => $request->markPayedout()];
-        yield [fn(GetHumanStatus $request) => $request->markPending()];
-        yield [fn(GetHumanStatus $request) => $request->markRefunded()];
-        yield [fn(GetHumanStatus $request) => $request->markSuspended()];
-        yield [fn(GetHumanStatus $request) => $request->markUnknown()];
+        yield 'markAuthorized' => [fn(GetHumanStatus $request) => $request->markAuthorized()];
+        yield 'markCanceled' => [fn(GetHumanStatus $request) => $request->markCanceled()];
+        yield 'markExpired' => [fn(GetHumanStatus $request) => $request->markExpired()];
+        yield 'markFailed' => [fn(GetHumanStatus $request) => $request->markFailed()];
+        yield 'markNew' => [fn(GetHumanStatus $request) => $request->markNew()];
+        yield 'markPayedout' => [fn(GetHumanStatus $request) => $request->markPayedout()];
+        yield 'markPending' => [fn(GetHumanStatus $request) => $request->markPending()];
+        yield 'markRefunded' => [fn(GetHumanStatus $request) => $request->markRefunded()];
+        yield 'markSuspended' => [fn(GetHumanStatus $request) => $request->markSuspended()];
+        yield 'markUnknown' => [fn(GetHumanStatus $request) => $request->markUnknown()];
     }
 }

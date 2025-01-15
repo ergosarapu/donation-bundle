@@ -17,9 +17,10 @@ class DonationFormStep1Type extends AbstractDonationFormType
     public function buildForm(FormBuilderInterface $builder, array $options):void
     {
         $amountChoices = $this->getAmountChoices($options, 'EUR'); // TODO: Handle different currencies
+        $frequencyChoices = $this->getFrequenciesChoices($options['frequencies']);
         $builder
             ->add('frequency', ChoiceType::class, [
-                'choices' => $this->getFrequenciesChoices($options['frequencies']),
+                'choices' => $frequencyChoices,
                 'expanded' => true,
             ])
             ->add('currencyCode', HiddenType::class) // TODO: Let user choose different currency

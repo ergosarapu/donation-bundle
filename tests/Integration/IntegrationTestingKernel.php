@@ -6,6 +6,7 @@ use DAMA\DoctrineTestBundle\DAMADoctrineTestBundle;
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
 use ErgoSarapu\DonationBundle\DonationBundle;
 use Payum\Bundle\PayumBundle\PayumBundle;
+use Payum\Offline\OfflineGatewayFactory;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Component\Config\Loader\LoaderInterface;
@@ -59,7 +60,15 @@ class IntegrationTestingKernel extends Kernel
                         'storage_dir' => __DIR__.'/../../../var/cache/gateways',
                         'id_property' => 'hash',
                     ]]]
+                    ],
+        'gateways' => [
+            'my_gateway' => [
+                'factory' => 'offline',
+                'username' => 'test',
+                'password' => 'test',
+                'sandbox' => true,
             ]
+        ]
         ]);
     }
     

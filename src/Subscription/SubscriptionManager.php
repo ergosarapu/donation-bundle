@@ -47,10 +47,13 @@ class SubscriptionManager
         }
         
         $this->entityManager->flush();
+        // Commit before dispatching, so the message can be also handled by synchronous listeners
+        $this->entityManager->commit();
+
         foreach($payments as $payment) {
             $this->messageBus->dispatch(new CapturePayment($payment->getId()));
         }
-        $this->entityManager->commit();
+        
         return count($payments);
     }
 
@@ -58,16 +61,19 @@ class SubscriptionManager
         $payment = new Payment();
         $payment->setSubscription($subscription);
         $payment->setStatus(PaymentStatus::Created);
-        $payment->setNumber(uniqid());
+        $payment->setNumber(uniqid(true));
         $payment->setCurrencyCode($subscription->getCurrencyCode());
         $payment->setTotalAmount($subscription->getAmount());
-        $payment->setDescription(sprintf('%s;%s', $payment->getNumber(), $subscription->getInitialPayment()->getCampaign()?->getPublicId()));
+
+        $initialPayment = $subscription->getInitialPayment();
+        $payment->setDescription(sprintf('%s;%s', $payment->getNumber(), $initialPayment->getCampaign()?->getPublicId()));
         $payment->setClientId(null);
-        $payment->setClientEmail($subscription->getInitialPayment()->getClientEmail());
-        $payment->setGivenName($subscription->getInitialPayment()->getGivenName());
-        $payment->setFamilyName($subscription->getInitialPayment()->getFamilyName());
-        $payment->setNationalIdCode($subscription->getInitialPayment()->getNationalIdCode());
-        $payment->setCampaign($subscription->getInitialPayment()->getCampaign());
+        $payment->setClientEmail($initialPayment->getClientEmail());
+        $payment->setGivenName($initialPayment->getGivenName());
+        $payment->setFamilyName($initialPayment->getFamilyName());
+        $payment->setNationalIdCode($initialPayment->getNationalIdCode());
+        $payment->setCampaign($initialPayment->getCampaign());
+        $payment->setGateway($initialPayment->getGateway());
         return $payment;
     }
 

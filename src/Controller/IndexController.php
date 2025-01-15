@@ -56,7 +56,7 @@ class IndexController extends AbstractController
                 
                 $payment = $this->payum->getStorage(Payment::class)->create();
                 $payment->setStatus(PaymentStatus::Created);
-                $payment->setNumber(uniqid());
+                $payment->setNumber(uniqid(true));
                 $payment->setCurrencyCode($donation->getCurrencyCode());
                 $payment->setTotalAmount($donation->getAmount());
                 $payment->setDescription(sprintf('%s;%s', $payment->getNumber(), $campaign->getPublicId()));
@@ -66,6 +66,7 @@ class IndexController extends AbstractController
                 $payment->setFamilyName($donation->getFamilyName());
                 $payment->setNationalIdCode($donation->getNationalIdCode());
                 $payment->setCampaign($campaign);
+                $payment->setGateway($gatewayName);
                 
                 $this->payum->getStorage(Payment::class)->update($payment);
                 
