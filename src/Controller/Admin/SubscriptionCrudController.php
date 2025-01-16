@@ -37,7 +37,7 @@ class SubscriptionCrudController extends AbstractCrudController
             AssociationField::new('initialPayment')->setDisabled()->hideOnIndex()->setColumns(6),
             TextField::new('interval')->setDisabled()->setColumns(6),
             MoneyField::new('amount')->setCurrencyPropertyPath('currencyCode')->setDisabled()->setColumns(6),
-            DateTimeField::new('nextRenewalTime')->setDisabled()->setColumns(6),
+            DateTimeField::new('nextRenewalTime')->setColumns(6),
             ChoiceField::new('status')->setColumns(6),
         ];
     }
