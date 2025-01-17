@@ -7,8 +7,8 @@ use ErgoSarapu\DonationBundle\Entity\Payment\Status;
 use Payum\Core\Bridge\Spl\ArrayObject;
 use Payum\Core\Extension\Context;
 use Payum\Core\Extension\ExtensionInterface;
+use Payum\Core\Request\Generic;
 use Payum\Core\Request\GetHumanStatus;
-use Payum\Core\Request\Notify;
 
 class UpdatePaymentStatusExtension implements ExtensionInterface
 {
@@ -19,7 +19,7 @@ class UpdatePaymentStatusExtension implements ExtensionInterface
 
     public function onPostExecute(Context $context) {
         $request = $context->getRequest();
-        if (!$request instanceof Notify) {
+        if (!$request instanceof Generic) {
             return;
         }
 
