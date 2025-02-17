@@ -69,60 +69,72 @@ The following configuration options are available for the Donation Bundle:
 
 donation:
 
-    # Payments configuration.
-    payments:
-        onetime:
-            bank:
+    # Form configuration.
+    form:
+        currencies:           # Required
 
-                # Prototype
-                country_code:
-                    gateways:
+            # Prototype: Currency code
+            currency_code:
 
-                        # Prototype: Name of a Payum gateway
-                        name:
+                # Default amount pre-filled for the end user.
+                amount_default:       ~ # Required
+                amount_choices:       []
 
-                            # Payment method label as shown to the end user
-                            label:                ~ # Required
+    # Gateways configuration
+    gateways:
 
-                            # Payment method icon shown to the end user
-                            image:                ~
-            card:
-                gateways:
+        # Prototype
+        name:
 
-                    # Prototype: Name of a Payum gateway
-                    name:
+            # The label of the gateway group shown to the end user
+            group:                ~ # Required
 
-                        # Payment method label as shown to the end user
-                        label:                ~ # Required
+            # The label of payment gateway shown to the end user
+            label:                ~ # Required
 
-                        # Payment method icon shown to the end user
-                        image:                ~
-        monthly:
-            bank:
+            # The icon of payment gateway shown to the end user
+            image:                ~
 
-                # Prototype
-                country_code:
-                    gateways:
+            # Available recurring frequencies, null for one-time (default) or date interval string, e.g. P1M for monthly, P1W for weekly, etc
+            frequencies:
 
-                        # Prototype: Name of a Payum gateway
-                        name:
+                # Default:
+                - 
 
-                            # Payment method label as shown to the end user
-                            label:                ~ # Required
+            # Marks gateway as country specific so user can quickly filter gateways with same country. Must be valid alpha-2 country code.
+            country:              ~
+```
+## Process Subscription payments
 
-                            # Payment method icon shown to the end user
-                            image:                ~
-            card:
-                gateways:
+To create new payments for subscriptions (renew) run following command periodically. This dispatches created payments to messenger transport for capturing:
+```sh
+bin/console donation:subscription:process
+```
 
-                    # Prototype: Name of a Payum gateway
-                    name:
+To handle subscription payment capture asynchronously, you may create following Messenger configuration. Adjust according to your needs:
 
-                        # Payment method label as shown to the end user
-                        label:                ~ # Required
+```yaml
+# config/packages/messenger.yaml
 
-                        # Payment method icon shown to the end user
-                        image:                ~
+framework:
+    messenger:
+        transports:
+            async: 'doctrine://default'
+
+            subscription:
+                dsn: 'doctrine://default?queue_name=subscription'
+                failure_transport: subscription_failed
+                retry_strategy:
+                    max_retries: 0 // Do not retry subscription capture automatically, it will land in failure transport for manual processing
+
+            subscription_failed:
+                dsn: 'doctrine://default?queue_name=subscription_failed'
+                retry_strategy:
+                    max_retries: 10
+                    delay: 0
+
+        routing:
+            'ErgoSarapu\DonationBundle\Message\CapturePayment': subscription
 ```
 
 ## Reset password feature

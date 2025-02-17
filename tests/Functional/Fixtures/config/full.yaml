@@ -7,28 +7,21 @@ donation:
           - 100
           - 1000
           - 10000
-  payments:
-    onetime:
-      bank:
-        EE:
-          gateways:
-            bank_gateway_1:
-              label: Bank Gateway 1
-              image: bank/gateway1.png
-      card:
-        gateways:
-          card_gateway_1:
-            label: Card Gateway 1
-            image: card/gateway1.png
-    monthly:
-      bank:
-        EE:
-          gateways:
-            bank_gateway_2:
-              label: Bank Gateway 2
-              image: bank/gateway2.png
-      card:
-        gateways:
-          card_gateway_2:
-            label: Card Gateway 2
-            image: card/gateway2.png
+  gateways:
+    banklink_gateway:
+      # frequencies: [null] # Omitting frequencies defaults to [null]
+      group: Banklink
+      country: EE
+      label: Bank Name
+      image: bank1.png
+    bank_st_gateway:
+      frequencies: ['P1M']
+      group: Bank Standing Order
+      country: EE
+      label: Bank Name
+      image: bank1.png
+    card_gateway_1:
+      frequencies: [~, 'P1M'] # including null or ~ means single time
+      group: Card Payment
+      label: Card Gateway 1
+      image: card/gateway1.png

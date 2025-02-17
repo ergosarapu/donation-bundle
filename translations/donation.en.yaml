@@ -1,0 +1,6 @@
+payment.frequency.: One-time
+payment.frequency.P1M: Monthly
+payment.frequency.title.: One-time payment
+payment.frequency.title.P1M: Monthly payment
+payment.frequency.summary.: One-time payment %amount%
+payment.frequency.summary.P1M: Monthly payment %amount%

@@ -7,7 +7,6 @@ use Money\Currency;
 use Money\Formatter\IntlMoneyFormatter;
 use Money\Money;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
-use Symfony\Component\Form\Extension\Core\Type\CurrencyType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\MoneyType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -18,7 +17,12 @@ class DonationFormStep1Type extends AbstractDonationFormType
     public function buildForm(FormBuilderInterface $builder, array $options):void
     {
         $amountChoices = $this->getAmountChoices($options, 'EUR'); // TODO: Handle different currencies
+        $frequencyChoices = $this->getFrequenciesChoices($options['frequencies']);
         $builder
+            ->add('frequency', ChoiceType::class, [
+                'choices' => $frequencyChoices,
+                'expanded' => true,
+            ])
             ->add('currencyCode', HiddenType::class) // TODO: Let user choose different currency
             // ->add('type', EnumType::class, ['class' => DonationInterval::class])
             ->add('chosenAmount', ChoiceType::class, [
@@ -45,6 +49,9 @@ class DonationFormStep1Type extends AbstractDonationFormType
             $currenciesResolver->setAllowedTypes('amount_choices', 'int[]');
         });
 
+        // Null represents one-time payment frequency
+        $resolver->setDefault('frequencies', [null]);
+
         $resolver->setRequired(['currencies']);
         $resolver->setAllowedTypes('currencies', 'array');
 
@@ -67,5 +74,14 @@ class DonationFormStep1Type extends AbstractDonationFormType
         $numberFormatter->setAttribute(\NumberFormatter::FRACTION_DIGITS, 0);
         $moneyFormatter = new IntlMoneyFormatter($numberFormatter, new ISOCurrencies());
         return $moneyFormatter->format($money);
+    }
+
+    private function getFrequenciesChoices(array $frequencies): array {
+        $choices = [];
+        foreach($frequencies as $frequency) {
+            // Create translatable message key, e.g. payment.frequency.P1M
+            $choices['payment.frequency.'.$frequency] = $frequency;
+        }
+        return $choices;
     }
 }

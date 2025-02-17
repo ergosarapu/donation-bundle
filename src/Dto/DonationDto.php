@@ -2,7 +2,10 @@
 
 namespace ErgoSarapu\DonationBundle\Dto;
 
-use ErgoSarapu\DonationBundle\Enum\DonationInterval;
+use Money\Currencies\ISOCurrencies;
+use Money\Currency;
+use Money\Formatter\DecimalMoneyFormatter;
+use Money\Money;
 use Symfony\Component\Validator\Constraints\Email;
 use Symfony\Component\Validator\Constraints\GreaterThan;
 use Symfony\Component\Validator\Constraints\NotBlank;
@@ -12,8 +15,6 @@ use Symfony\Component\Validator\Constraints\When;
 class DonationDto
 {
     private const IS_TAX_RETURN = 'this.isTaxReturn() == true';
-
-    private DonationInterval $type = DonationInterval::Single;
 
     #[NotBlank(groups: ['step2'])]
     #[Email(groups: ['step2'])]
@@ -51,18 +52,14 @@ class DonationDto
 
     private bool $taxReturn = false;
 
-    private ?string $bankCountry = null;
+    private ?string $gatewayCountry = null;
 
-    #[NotNull(message: 'Choose bank for payment', groups:['step3'])]
+    #[NotNull(message: 'Choose gateway for payment', groups:['step3'])]
     private ?string $gateway = null;
 
-    public function getType():DonationInterval{
-        return $this->type;
-    }
+    private ?string $gatewayGroup = null;
 
-    public function setType(DonationInterval $type):void{
-        $this->type = $type;
-    }
+    private ?string $frequency = null;
 
     public function getEmail():?string{
         return $this->email;
@@ -128,14 +125,13 @@ class DonationDto
         $this->taxReturn = $taxReturn;
     }
 
-    public function getBankCountry():?string{
-        return $this->bankCountry;
+    public function getGatewayCountry():?string{
+        return $this->gatewayCountry;
     }
 
-    public function setBankCountry(?string $bankCountry):void{
-        $this->bankCountry = $bankCountry;
+    public function setGatewayCountry(?string $gatewayCountry):void{
+        $this->gatewayCountry = $gatewayCountry;
     }
-
 
     public function getGateway():?string{
         return $this->gateway;
@@ -143,5 +139,27 @@ class DonationDto
 
     public function setGateway(?string $gateway):void{
         $this->gateway = $gateway;
+    }
+
+    public function getGatewayGroup():?string{
+        return $this->gatewayGroup;
+    }
+
+    public function setGatewayGroup(?string $gatewayGroup):void{
+        $this->gatewayGroup = $gatewayGroup;
+    }
+
+    public function getFrequency():?string{
+        return $this->frequency;
+    }
+
+    public function setFrequency(?string $frequency):void{
+        $this->frequency = $frequency;
+    }
+
+    public function decimalAmount():string {
+        $money = new Money($this->amount, new Currency($this->currencyCode));
+        $moneyFormatter = new DecimalMoneyFormatter(new ISOCurrencies());
+        return $moneyFormatter->format($money);
     }
 }

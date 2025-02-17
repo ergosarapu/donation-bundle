@@ -6,6 +6,10 @@ use Payum\Core\Model\Payment as BasePayment;
 use Doctrine\ORM\Mapping as ORM;
 use ErgoSarapu\DonationBundle\Entity\Payment\Status;
 use Gedmo\Timestampable\Traits\TimestampableEntity;
+use Money\Currencies\ISOCurrencies;
+use Money\Currency;
+use Money\Formatter\DecimalMoneyFormatter;
+use Money\Money;
 
 #[ORM\Entity]
 #[ORM\Table]
@@ -32,6 +36,12 @@ class Payment extends BasePayment
 
     #[ORM\ManyToOne]
     private ?Campaign $campaign = null;
+
+    #[ORM\ManyToOne]
+    private ?Subscription $subscription = null;
+
+    #[ORM\Column(length: 32, nullable: true)]
+    private ?string $gateway = null;
 
     public function getId(): int {
         return $this->id;
@@ -70,7 +80,7 @@ class Payment extends BasePayment
     }
 
     public function getDetailsString():string{
-        return json_encode($this->getDetails());
+        return json_encode($this->getDetails(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     }
 
     public function getCampaign(): ?Campaign
@@ -83,5 +93,44 @@ class Payment extends BasePayment
         $this->campaign = $campaign;
 
         return $this;
+    }
+
+    public function getSubscription(): ?Subscription
+    {
+        return $this->subscription;
+    }
+
+    public function setSubscription(?Subscription $subscription): static
+    {
+        $this->subscription = $subscription;
+
+        return $this;
+    }
+
+    public function getGateway(): ?string
+    {
+        return $this->gateway;
+    }
+
+    public function setGateway(?string $gateway): static
+    {
+        $this->gateway = $gateway;
+
+        return $this;
+    }
+
+    public function __toString(): string
+    {
+        $money = new Money($this->totalAmount, new Currency($this->currencyCode));
+        $moneyFormatter = new DecimalMoneyFormatter(new ISOCurrencies());
+
+        return sprintf(
+            '#%s %s %s %s (%s)',
+            $this->id,
+            $this->createdAt->format('Y-m-d'),
+            $moneyFormatter->format($money),
+            $this->currencyCode,
+            $this->status->name,
+        );
     }
 }

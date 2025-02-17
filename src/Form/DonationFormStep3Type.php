@@ -2,38 +2,56 @@
 
 namespace ErgoSarapu\DonationBundle\Form;
 
+use RuntimeException;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\Intl\Countries;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\Validator\Constraints\Choice;
 use Symfonycasts\DynamicForms\DependentField;
 use Symfonycasts\DynamicForms\DynamicFormBuilder;
 
 class DonationFormStep3Type extends AbstractDonationFormType
 {
+
     public function buildForm(FormBuilderInterface $builder, array $options):void
     {
         $builder = new DynamicFormBuilder($builder);
 
-        // Bank payment
-        $choices = $this->getCountryChoices($this->getBankCountryCodes($options));
-        $builder->add('bankCountry', ChoiceType::class, ['choices' => $choices, 'label' => 'Pangamakse riik']);
-        $builder->addDependent('gateway', ['bankCountry'], function(DependentField $field, ?string $bankCountry) use ($options) {
-            if ($bankCountry === null) {
-                $bankCountry = $this->getDefaultBankCountry($options);
+        // Group
+        $builder->add('gatewayGroup', ChoiceType::class, [
+            'choices' => $this->getGatewayGroupChoices($options['gateways']),
+            'expanded' => true,
+        ]);
+
+        // Country
+        $builder->addDependent('gatewayCountry', ['gatewayGroup'], function (DependentField $field, ?string $group) use ($options) {
+            if ($group === null) {
+                $group = $this->getDefaultGroupName($options['gateways']);
             }
-            $gateways = $this->getBankGateways($options, $bankCountry);
+            $countryCodes = $this->getGroupCountryCodes($group, $options['gateways']);
+            $choices = $this->getCountryChoices($countryCodes);
+
             $field->add(ChoiceType::class, [
-                'expanded' => true, 
-                'required' => true, 
-                'choices' => $gateways, 
-                'placeholder' => 'Choose gateway',
-                'constraints' => [
-                    new Choice(choices: array_values($gateways))
-                ],
+                'choices' => $choices,
+                'expanded' => true,
+            ]);
+        });
+
+        $builder->addDependent('gateway', ['gatewayGroup', 'gatewayCountry'], function(DependentField $field, ?string $group, ?string $countryCode) use ($options) {
+            if ($group === null) {
+                $group = $this->getDefaultGroupName($options['gateways']);
+            }
+            if (empty($countryCode)) {
+                $this->getGroupCountryCodes($group, $options['gateways']);
+                $countryCode = $this->getDefaultGroupCountryCode($group, $options['gateways']);
+            }
+
+            $gateways = $this->getGatewayChoices($options['gateways'], $group, $countryCode);
+            $field->add(ChoiceType::class, [
+                'choices' => $gateways,
+                'expanded' => true,
             ]);
         });
     }
@@ -43,85 +61,92 @@ class DonationFormStep3Type extends AbstractDonationFormType
         parent::configureOptions($resolver);
         $resolver->setDefault('validation_groups', 'step3');
         
-        $resolver->setDefault('payments_config', function (OptionsResolver $paymentsResolver): void {
-            $paymentsResolver->setDefault('onetime', function (OptionsResolver $onetimeResolver): void {
-                $this->resolveBank($onetimeResolver);
-                $this->resolveCard($onetimeResolver);
-            });
-            $paymentsResolver->setDefault('monthly', null); // TODO
-        });
-        $resolver->setRequired(['payments_config']);
-        $resolver->setAllowedTypes('payments_config', 'array');
-    }
+        $resolver->define('frequency')->default(null)->info('Frequency type, null for one-time or dateinterval string, e.g. P1M for monthly');
 
-    private function resolveGateways(OptionsResolver $resolver): void{
-        $resolver
-            ->setRequired(['gateways'])
-            ->setDefault('gateways', function (OptionsResolver $resolver): void {
-                $resolver
-                    ->setPrototype(true) // Marks gateway name
-                    ->setRequired('label')
-                    ->setDefault('image', '');
-        });
-    }
-
-    private function resolveBank(OptionsResolver $resolver): void{
-        $resolver->setDefault('bank', function (OptionsResolver $resolver): void {
-            $resolver->setPrototype(true); // Marks country code
-            $this->resolveGateways($resolver);
-        });
-    }
-
-    private function resolveCard(OptionsResolver $resolver): void{
-        $resolver->setDefault('card', function (OptionsResolver $resolver): void {
-            $this->resolveGateways($resolver);
+        $resolver->define('gateways')->default(function (OptionsResolver $groupsResolver): void {
+            $groupsResolver->setPrototype(true) // Marks gateway id
+                ->define('group')->required()
+                ->define('country')->default(null)
+                ->define('label')->required()
+                ->define('image')->required();
         });
     }
 
     public function finishView(FormView $view, FormInterface $form, array $options): void
     {
-        $countryCode = $this->getSelectedBankCountry($view, $options);
+        // Set first group as selected by default
+        $hasChecked = array_reduce($view['gatewayGroup']->children, function (bool $carry, mixed $item): bool {
+            return $carry || $item->vars['checked'];
+        }, false);
+        if (!$hasChecked) {
+            // If nothing checked, check the first group
+            $view['gatewayGroup']->children[0]->vars['checked'] = true;
+        }
+
+        // Set image for gateway options
         foreach ($view['gateway']->children as $child){
-            $child->vars['image'] = $this->getBankImage($countryCode, $child->vars['value'], $options);
+            $child->vars['image'] = $options['gateways'][$child->vars['value']]['image'];
         }
     }
 
-    private function getBankImage(string $countryCode, string $gatewayName, array $options) : string {
-        return $options['payments_config']['onetime']['bank'][$countryCode]['gateways'][$gatewayName]['image'];
-    }
-
-    private function getSelectedBankCountry(FormView $view, array $options) : string {
-        $selected = $view['bankCountry']->vars['value'];
-        if (empty($selected)) {
-            $selected = $this->getDefaultBankCountry($options);
+    private function getGatewayGroupChoices(array $gateways): array {
+        $choices = [];
+        foreach($gateways as $gateway) {
+            $group = $gateway['group'];
+            $choices[$group] = $group;
         }
-        return $selected;
+        return array_unique($choices);
     }
 
-    private function getDefaultBankCountry(array $options) : string {
-        $countryCodes = $this->getBankCountryCodes($options);
-        return reset($countryCodes);
+    private function getGroupCountryCodes(string $group, array $gateways): array {
+        $countryCodes = [];
+        foreach ($gateways as $gateway) {
+            if ($group !== $gateway['group']){
+                continue;
+            }
+            if ($gateway['country'] === null) {
+                continue;
+            }
+            $countryCodes[] = $gateway['country'];
+        }
+        return array_unique($countryCodes);
+    }
+
+    private function getDefaultGroupCountryCode(string $group, array $gateways) : ?string {
+        $countryCodes = $this->getGroupCountryCodes($group, $gateways);
+        return array_shift($countryCodes);
     }
     
-    private function getBankCountryCodes(array $options): array {
-        return array_keys($options['payments_config']['onetime']['bank']);
+    private function getDefaultGroupName(array $gateways) : string {
+        $first = array_shift($gateways);
+        if ($first === null) {
+            throw new RuntimeException('Empty gateways array provided');
+        }
+        return $first['group'];
     }
 
-    private function getCountryChoices(array $countryCodes): array {
+    private function getCountryChoices(array $countryCodes): ?array {
         $choicesWithLabels = [];
         foreach($countryCodes as $countryCode) {
             $choicesWithLabels[Countries::getName($countryCode)] = $countryCode;
         }
         return $choicesWithLabels;
     }
-    
-    private function getBankGateways(array $options, string $countryCode): array {
-        $gateways = [];
-        foreach ($options['payments_config']['onetime']['bank'][$countryCode]['gateways'] as $gatewayName => $gatewayProperties) {
-            $gateways[$gatewayProperties['label']] = $gatewayName;
-        }
-        return $gateways;
+
+    private function filterGateways(array $gateways, ?string $group, ?string $countryCode): array {
+        $filterFun = function ($gateway) use ($group, $countryCode) {
+            return $gateway['group'] === $group && $gateway['country'] === $countryCode;
+        };
+        return array_filter($gateways, $filterFun);
     }
 
-    
+    private function getGatewayChoices(array $gateways, ?string $group, ?string $countryCode): array {
+        $gateways = $this->filterGateways($gateways, $group, $countryCode);
+        
+        $choices = [];
+        foreach ($gateways as $gatewayId => $gateway) {
+            $choices[$gateway['label']] = $gatewayId;
+        }
+        return $choices;
+    }
 }

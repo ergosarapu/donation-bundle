@@ -2,8 +2,10 @@
 
 namespace ErgoSarapu\DonationBundle;
 
+use DateInterval;
 use ErgoSarapu\DonationBundle\DependencyInjection\Compiler\RegisterQueryCompilerPass;
 use ErgoSarapu\DonationBundle\Repository\ResetPasswordRequestRepository;
+use Exception;
 use Symfony\Component\AssetMapper\AssetMapperInterface;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
@@ -28,25 +30,54 @@ class DonationBundle extends AbstractBundle
                     ->end()
                 ->end()
 
-                // Payments
-                ->arrayNode('payments')
-                    ->info('Payments configuration.')
+                ->arrayNode('gateways')
+                    // ->isRequired()
+                    ->info('Gateways configuration')
                     ->validate()
                         ->ifEmpty()
-                        ->thenInvalid('Configure at least one payment frequency type.')
+                        ->thenInvalid('Configure at least one gateway')
                     ->end()
-
-                    ->children()
-                        ->arrayNode('onetime')
-                            ->children()
-                                ->append($this->addBankNode())
-                                ->append($this->addCardNode())
+                    ->useAttributeAsKey('name')
+                    ->arrayPrototype()
+                        ->children()
+                            ->scalarNode('group')
+                                ->isRequired()->info('The label of the gateway group shown to the end user')
                             ->end()
-                        ->end()
-                        ->arrayNode('monthly')
-                            ->children()
-                                ->append($this->addBankNode())
-                                ->append($this->addCardNode())
+                            ->scalarNode('label')
+                                ->isRequired()->cannotBeEmpty()->info('The label of payment gateway shown to the end user')
+                            ->end()
+                            ->scalarNode('image')
+                                ->cannotBeEmpty()->info('The icon of payment gateway shown to the end user')
+                            ->end()
+                            ->arrayNode('frequencies')
+                                ->info('Available recurring frequencies, null for one-time (default) or date interval string, e.g. P1M for monthly, P1W for weekly, etc')
+                                ->defaultValue([null])
+                                ->scalarPrototype()->end()
+                                ->validate()
+                                    ->ifTrue(function (array $values): bool {
+                                        foreach($values as $value) {
+                                            if ($value === null) {
+                                                // Null value marks one-time payment frequency, allow this
+                                                continue;
+                                            }
+                                            // Try to construct date interval, this throws in case of bad interval string
+                                            try {
+                                                new DateInterval($value);
+                                            } catch (Exception $e){
+                                                throw new Exception(sprintf('Invalid frequency date interval format (%s)', $value), previous: $e);
+                                            }
+                                        }
+                                        return false;
+                                    })
+                                    ->thenInvalid('Not valid frequencies')
+                                ->end()
+                            ->end()
+                            ->scalarNode('country')
+                                ->info('Marks gateway as country specific so user can quickly filter gateways with same country. Must be valid alpha-2 country code.')
+                                ->validate()->ifTrue(function (string $value): bool{
+                                    return !Countries::exists($value);
+                                })
+                                ->thenInvalid('Not a valid alpha-2 country code')
                             ->end()
                         ->end()
                     ->end()
@@ -97,52 +128,13 @@ class DonationBundle extends AbstractBundle
         ->end();
     }
 
-    private function addBankNode(): NodeDefinition {
-
-        $treeBuilder = new TreeBuilder('bank');
-        return $treeBuilder->getRootNode()
-            ->useAttributeAsKey('country_code')
-                ->validate()
-                    ->ifTrue(function (array $values): bool{
-                        foreach($values as $key => $value) {
-                            if (!Countries::exists($key)){
-                                return true;
-                            }
-                        }
-                        return false;
-                    })
-                    ->thenInvalid('Not a valid alpha-2 country code')
-                ->end()
-            ->arrayPrototype()
-                ->children()
-                    ->append($this->addGatewaysNode())
-                ->end()
-            ->end();
-    }
-
-    private function addGatewaysNode(): NodeDefinition {
-        $treeBuilder = new TreeBuilder('gateways');
-        return $treeBuilder->getRootNode()
-            ->useAttributeAsKey('name')
-            ->arrayPrototype()->info("Name of a Payum gateway")
-                ->children()
-                    ->scalarNode('label')->isRequired()->cannotBeEmpty()->info('Payment method label as shown to the end user')->end()
-                    ->scalarNode('image')->cannotBeEmpty()->info('Payment method icon shown to the end user')->end()
-                ->end()
-            ->end();
-    }
-
-    private function addCardNode(): NodeDefinition {
-        return (new TreeBuilder('card'))->getRootNode()->append($this->addGatewaysNode());
-    }
-
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
     {
         $container->import(__DIR__ . '/../config/services.xml');
 
         $builder->getDefinition('donation_bundle.form.form_options_provider')
-            ->setArgument(0, $config['payments'] ?? null)
-            ->setArgument(1, $config['form']['currencies'] ?? null);
+            ->setArgument(0, $config['gateways'])
+            ->setArgument(1, $config['form']['currencies'] ?? []);
     }
 
     private function prependAssetMapperConfig(ContainerBuilder $builder): void{

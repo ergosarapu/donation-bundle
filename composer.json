@@ -24,39 +24,41 @@
     "require": {
         "php": "^8.2",
         "payum/payum-bundle": "^2.6",
-        "symfony/http-client": "^6.4|^7.0",
+        "symfony/http-client": "^6.4|^7.1",
         "easycorp/easyadmin-bundle": "^4.10",
-        "symfony/asset-mapper": "^6.4|^7.0",
+        "symfony/asset-mapper": "^6.4|^7.1",
         "symfony/asset": "^6.4|^7.0",
         "symfony/stimulus-bundle": "^2.17",
         "symfony/ux-chartjs": "^2.17",
-        "symfony/form": "^6.4|^7.0",
-        "symfonycasts/tailwind-bundle": "^0.5.1",
+        "symfony/form": "^6.4|^7.1",
+        "symfonycasts/tailwind-bundle": "^0.7",
         "symfony/ux-twig-component": "^2.17",
         "symfony/ux-live-component": "^2.17",
         "symfonycasts/dynamic-forms": "^0.1.2",
         "tales-from-a-dev/flowbite-bundle": "^0.6.0",
         "moneyphp/money": "^4.5",
         "stof/doctrine-extensions-bundle": "^1.10",
-        "symfony/expression-language": "^6.4|^7.0",
+        "symfony/expression-language": "^6.4|^7.1",
         "doctrine/dbal": "^3",
         "doctrine/doctrine-bundle": "^2.13",
         "doctrine/doctrine-migrations-bundle": "^3.3",
         "doctrine/orm": "^3.2",
         "symfonycasts/reset-password-bundle": "^1.22",
-        "symfony/ux-turbo": "^2.20"
+        "symfony/ux-turbo": "^2.20",
+        "twig/intl-extra": "^3.15",
+        "twig/extra-bundle": "^3.15",
+        "symfony/messenger": "^6.4|^7.1"
     },
     "require-dev": {
-        "symfony/phpunit-bridge": "^7.1",
-        "symfony/yaml": "^6.4|^7.0",
-        "symfony/browser-kit": "^6.4|^7.0",
-        "symfony/dependency-injection": "^6.4|^7.0",
+        "symfony/yaml": "^6.4|^7.1",
+        "symfony/browser-kit": "^6.4|^7.1",
+        "symfony/dependency-injection": "^6.4|^7.1",
         "dama/doctrine-test-bundle": "^8.2",
-        "symfony/mailer": "7.1"
-    },
-    "extra": {
-        "symfony": {
-            "require": "7.1"
-        }
+        "symfony/mailer": "7.1",
+        "zenstruck/messenger-test": "^1.11",
+        "payum/offline": "^1.7",
+        "php-http/guzzle7-adapter": "^1.1",
+        "php-http/message-factory": "^1.1",
+        "phpunit/phpunit": "^11.5"
     }
 }

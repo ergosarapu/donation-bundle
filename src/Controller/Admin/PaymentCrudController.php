@@ -2,15 +2,16 @@
 
 namespace ErgoSarapu\DonationBundle\Controller\Admin;
 
+use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\CodeEditorField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\EmailField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\MoneyField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use ErgoSarapu\DonationBundle\Entity\Payment;
 
@@ -35,10 +36,17 @@ class PaymentCrudController extends AbstractCrudController
             TextField::new('familyName')->setDisabled()->setColumns(4),
             ChoiceField::new('status')->setDisabled()->setColumns(4),
             MoneyField::new('totalAmount')->setCurrencyPropertyPath('currencyCode')->setDisabled()->setColumns(4),
+            AssociationField::new('subscription')->setDisabled()->setColumns(4),
+            TextField::new('gateway')->setDisabled()->setColumns(4),
 
             FormField::addColumn(6),
             FormField::addFieldset('Meta'),
-            TextareaField::new('detailsString')->setDisabled()->hideOnIndex(),
+            CodeEditorField::new('detailsString')->setLanguage('yaml')->hideLineNumbers()->setDisabled()->hideOnIndex(),
         ];
+    }
+
+    public function configureCrud(Crud $crud): Crud
+    {
+        return $crud->setDefaultSort(['createdAt' => 'DESC']);
     }
 }

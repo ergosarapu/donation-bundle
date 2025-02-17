@@ -1,0 +1,6 @@
+donation:
+  gateways:
+    bank:
+      group: Foo
+      label: Bar
+      country: XX

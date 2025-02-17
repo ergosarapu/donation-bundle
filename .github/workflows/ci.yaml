@@ -14,7 +14,6 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      SYMFONY_DEPRECATIONS_HELPER: "max[direct]=0"
       DATABASE_URL: "pdo-mysql://db:db@127.0.0.1/db"
 
     strategy: 
@@ -26,13 +25,13 @@ jobs:
           - php: 8.3
             symfony: 6.4.*
           - php: 8.2
-            symfony: 7.0.*
+            symfony: 7.1.*
           - php: 8.3
-            symfony: 7.0.*
+            symfony: 7.1.*
           - php: 8.2
-            symfony: 7.1.*
+            symfony: 7.2.*
           - php: 8.3
-            symfony: 7.1.*
+            symfony: 7.2.*
 
     steps:
       - name: Checkout
@@ -54,7 +53,7 @@ jobs:
         run: composer update
 
       - name: Run Unit Tests
-        run: vendor/bin/simple-phpunit --testsuite Unit
+        run: vendor/bin/phpunit --testdox --testsuite Unit
       
       - name: Migrate database
         run: |
@@ -64,11 +63,11 @@ jobs:
 
       - name: Run Functional Tests
         run: |
-          ./vendor/bin/simple-phpunit --testsuite Functional
+          ./vendor/bin/phpunit --testdox --testsuite Functional
 
       - name: Run Integration Tests
         run: |
-          ./vendor/bin/simple-phpunit --testsuite Integration
+          ./vendor/bin/phpunit --testdox --testsuite Integration
 
     services:
       mariadb:

@@ -1,0 +1,6 @@
+payment.frequency.: Ühekordne
+payment.frequency.P1M: Igakuine
+payment.frequency.title.: Ühekordne makse
+payment.frequency.title.P1M: Igakuine makse
+payment.frequency.summary.: Ühekordne makse %amount%
+payment.frequency.summary.P1M: Igakuine makse %amount%

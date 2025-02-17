@@ -10,6 +10,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractDashboardController;
 use ErgoSarapu\DonationBundle\Dto\SummaryFilterDto;
 use ErgoSarapu\DonationBundle\Entity\Campaign;
 use ErgoSarapu\DonationBundle\Entity\Payment;
+use ErgoSarapu\DonationBundle\Entity\Subscription;
 use ErgoSarapu\DonationBundle\Enum\Period;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -41,7 +42,8 @@ class AdminDashboardController extends AbstractDashboardController
     public function configureMenuItems(): iterable
     {
         yield MenuItem::linkToDashboard('Dashboard', 'fa fa-home');
-        yield MenuItem::linkToCrud('Payments', 'fa fa-report', Payment::class);
-        yield MenuItem::linkToCrud('Campaigns', 'fa fa-report', Campaign::class);
+        yield MenuItem::linkToCrud('Payments', 'fa fa-money-bill', Payment::class);
+        yield MenuItem::linkToCrud('Campaigns', 'fa fa-rocket', Campaign::class);
+        yield MenuItem::linkToCrud('Subscriptions', 'fa fa-arrow-rotate-right', Subscription::class);
     }
 }
