@@ -42,16 +42,17 @@ class SubscriptionManagerTest extends KernelTestCase
         $this->subscriptionRepository = $this->getContainer()->get(SubscriptionRepository::class);
     }
 
-    public function testSubscriptionRenewedAndPaymentCaptureDispatched(): void {
+    #[DataProvider('renewalInputs')]
+    public function testSubscriptionRenewedAndPaymentCaptureDispatched(string $subscriptionCreated, string $interval, DateTime $currentTime, DateTime $nextRenewalTime): void {
 
-        $payment = $this->createPayment(100, Status::Captured, '2024-02-01', 'EUR', 'my_gateway');
+        $payment = $this->createPayment(100, Status::Captured, $subscriptionCreated, 'EUR', 'my_gateway');
         $this->entityManager->persist($payment);
 
-        $subscription = $this->subscriptionManager->createSubscription($payment, 'P1M', SubscriptionStatus::Active);
+        $subscription = $this->subscriptionManager->createSubscription($payment, $interval, SubscriptionStatus::Active);
         $this->entityManager->persist($subscription);
         $this->entityManager->flush();
 
-        $paymentsCreated = $this->subscriptionManager->renewAndDispatchCapturePayments(new DateTime('2024-03-01'));
+        $paymentsCreated = $this->subscriptionManager->renewAndDispatchCapturePayments($currentTime);
         $this->assertEquals(1, $paymentsCreated);
         
         // Ensure we do not get cached entities
@@ -61,12 +62,24 @@ class SubscriptionManagerTest extends KernelTestCase
         $this->assertCount(2, $payments);
 
         $subscription = $this->subscriptionRepository->find($subscription->getId());
-        $this->assertEquals(new DateTime('2024-04-01'), $subscription->getNextRenewalTime());
+        $this->assertEquals($nextRenewalTime, $subscription->getNextRenewalTime());
 
         $this->assertSame($subscription, $payments[0]->getSubscription());
         $this->assertSame($subscription, $payments[1]->getSubscription());
         
         $this->bus()->dispatched()->assertCount(1);
+    }
+
+    public static function renewalInputs(): array
+    {
+        return [
+            ['subscriptionCreated' => '2024-02-01', 'interval' => 'P1M', 'currentTime' => new DateTime('2024-03-01'), 'nextRenewalTime' => new DateTime('2024-04-01')],
+            ['subscriptionCreated' => '2024-02-01', 'interval' => 'P1M', 'currentTime' => new DateTime('2024-04-01'), 'nextRenewalTime' => new DateTime('2024-05-01')],
+            ['subscriptionCreated' => '2024-02-01', 'interval' => 'P1M', 'currentTime' => new DateTime('2024-04-15'), 'nextRenewalTime' => new DateTime('2024-05-15')],
+            ['subscriptionCreated' => '2024-02-01', 'interval' => 'P1W', 'currentTime' => new DateTime('2024-02-08'), 'nextRenewalTime' => new DateTime('2024-02-15')],
+            ['subscriptionCreated' => '2024-02-01', 'interval' => 'P1W', 'currentTime' => new DateTime('2024-02-15'), 'nextRenewalTime' => new DateTime('2024-02-22')],
+            ['subscriptionCreated' => '2024-02-01', 'interval' => 'P1W', 'currentTime' => new DateTime('2024-02-13'), 'nextRenewalTime' => new DateTime('2024-02-20')],
+        ];
     }
 
     #[DataProvider('ignoredSubscriptionStatuses')]
@@ -101,6 +114,7 @@ class SubscriptionManagerTest extends KernelTestCase
             yield $status->name => [$status];
         }
     }
+
     private function createPayment(int $totalAmount, Status $status, string $createdAt, string $currency = 'EUR', string $gateway = null): Payment {
         $payment = new Payment();
         $payment->setTotalAmount($totalAmount);

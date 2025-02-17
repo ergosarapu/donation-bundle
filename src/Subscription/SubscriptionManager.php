@@ -37,9 +37,20 @@ class SubscriptionManager
         foreach($subscriptions as $subscription) {
             $payment = $this->createNextPayment($subscription);
             $this->entityManager->persist($payment);
-            
+
             $nextRenewalTime = clone $subscription->getNextRenewalTime();
-            $nextRenewalTime->add(new DateInterval($subscription->getInterval()));
+            $interval = new DateInterval($subscription->getInterval());
+            $nextRenewalTime->add($interval);
+
+            $curTimeNextRenewalTime = clone $currentTime;
+            $curTimeNextRenewalTime->add($interval);
+
+            # If renewal is processed more than 1 day late, the next renewal time will be based on current time.
+            # This guards against processing renewals more frequently than expected by donor. 
+            if ($curTimeNextRenewalTime > $nextRenewalTime && $curTimeNextRenewalTime->diff($nextRenewalTime)->days > 1) {
+                $nextRenewalTime = $curTimeNextRenewalTime;
+            }
+
             $subscription->setNextRenewalTime($nextRenewalTime);
             $this->entityManager->persist($subscription);
 
