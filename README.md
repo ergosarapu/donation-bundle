@@ -167,6 +167,7 @@ To restrict packages install to specific Symfony version, install symfony/flex g
 composer global config --no-plugins allow-plugins.symfony/flex true
 composer global require --no-interaction --no-progress symfony/flex:^2.4
 composer config extra.symfony.require "7.1"
+composer update
 ```
 
 ## Testing
