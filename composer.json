@@ -54,7 +54,7 @@
         "symfony/browser-kit": "^6.4|^7.2|^7.3",
         "symfony/dependency-injection": "^6.4|^7.2|^7.3",
         "dama/doctrine-test-bundle": "^8.2",
-        "symfony/mailer": "^7.2|^7.3",
+        "symfony/mailer": "^6.4|^7.2|^7.3",
         "zenstruck/messenger-test": "^1.11",
         "payum/offline": "^1.7",
         "php-http/guzzle7-adapter": "^1.1",
