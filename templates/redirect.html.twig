@@ -7,5 +7,5 @@
         </div>
     </div>
 
-    <a class="hidden" {{ stimulus_controller('auto-click') }} href="{{ targetUrl }}" target="_parent">Click here to redirect</a>
+    <a class="hidden" {{ stimulus_controller('auto-click') }} data-auto-click-timeout-value="{{ redirectAfterMilliseconds }}" href="{{ targetUrl }}" target="_parent">Click here to redirect</a>
 {% endblock %}

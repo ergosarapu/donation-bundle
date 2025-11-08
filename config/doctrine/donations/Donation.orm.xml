@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                  https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\Donation" table="projection_donation">
+        <id name="id" type="string" column="id">
+            <generator strategy="NONE"/>
+        </id>
+        <field name="paymentId" type="string" column="payment_id" nullable="false"/>
+        <field name="amount" type="integer" column="amount" nullable="false"/>
+        <field name="currency" type="string" column="currency" nullable="false"/>
+        <field name="status" type="string" column="status" length="16" nullable="false"/>
+    </entity>
+
+</doctrine-mapping>

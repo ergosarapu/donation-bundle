@@ -7,6 +7,8 @@ use DateTime;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\MenuItem;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractDashboardController;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model\Payment as PaymentReadModel;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\Donation;
 use ErgoSarapu\DonationBundle\Dto\SummaryFilterDto;
 use ErgoSarapu\DonationBundle\Entity\Campaign;
 use ErgoSarapu\DonationBundle\Entity\Payment;
@@ -43,7 +45,12 @@ class AdminDashboardController extends AbstractDashboardController
     {
         yield MenuItem::linkToDashboard('Dashboard', 'fa fa-home');
         yield MenuItem::linkToCrud('Payments', 'fa fa-money-bill', Payment::class);
+
         yield MenuItem::linkToCrud('Campaigns', 'fa fa-rocket', Campaign::class);
         yield MenuItem::linkToCrud('Subscriptions', 'fa fa-arrow-rotate-right', Subscription::class);
+
+        yield MenuItem::section('Projections');
+        yield MenuItem::linkToCrud('Payments', 'fa fa-money-bill', PaymentReadModel::class);
+        yield MenuItem::linkToCrud('Donations', 'fa fa-hand-holding-heart', Donation::class);
     }
 }

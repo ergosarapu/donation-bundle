@@ -2,19 +2,21 @@
 
 namespace ErgoSarapu\DonationBundle\Controller;
 
-use Doctrine\ORM\EntityManagerInterface;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Command\InitiateDonation;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentGatewayInterface;
+use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\ValueObject\CampaignId;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\Dto\DonationDto;
 use ErgoSarapu\DonationBundle\Entity\Campaign;
-use ErgoSarapu\DonationBundle\Entity\Payment;
-use ErgoSarapu\DonationBundle\Entity\Payment\Status as PaymentStatus;
 use ErgoSarapu\DonationBundle\Form\DonationFormStep1Type;
 use ErgoSarapu\DonationBundle\Form\DonationFormStep2Type;
 use ErgoSarapu\DonationBundle\Form\DonationFormStep3Type;
 use ErgoSarapu\DonationBundle\Form\FormOptionsProvider;
 use ErgoSarapu\DonationBundle\Repository\CampaignRepository;
-use ErgoSarapu\DonationBundle\Subscription\SubscriptionManager;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use InvalidArgumentException;
-use Payum\Core\Payum;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -26,9 +28,7 @@ class IndexController extends AbstractController
     public function __construct(
         private FormOptionsProvider $formOptions,
         private readonly CampaignRepository $campaignRepository,
-        private ?Payum $payum,
-        private readonly EntityManagerInterface $entityManager,
-        private readonly SubscriptionManager $subscriptionManager)
+        private readonly CommandBusInterface $commandBus)
     {
     }
 
@@ -51,41 +51,40 @@ class IndexController extends AbstractController
             if ($step === 3) {
                 /** @var DonationDto $donation */
                 $donation = $form->getData();
+                $gateway = new Gateway($donation->getGateway());
 
-                $gatewayName = $donation->getGateway();
+                $amount = new Money($donation->getAmount(), new Currency($donation->getCurrencyCode()));
                 
-                $payment = $this->payum->getStorage(Payment::class)->create();
-                $payment->setStatus(PaymentStatus::Created);
-                $payment->setNumber(uniqid(true));
-                $payment->setCurrencyCode($donation->getCurrencyCode());
-                $payment->setTotalAmount($donation->getAmount());
-                $payment->setDescription(sprintf('%s;%s', $payment->getNumber(), $campaign->getPublicId()));
-                $payment->setClientId(null);
-                $payment->setClientEmail($donation->getEmail());
-                $payment->setGivenName($donation->getGivenName());
-                $payment->setFamilyName($donation->getFamilyName());
-                $payment->setNationalIdCode($donation->getNationalIdCode());
-                $payment->setCampaign($campaign);
-                $payment->setGateway($gatewayName);
+                $redirectParams = [];
+                $redirectRoute = null;
+                $campaignId = CampaignId::generate(); // TODO: use active campaign id
                 
-                $this->payum->getStorage(Payment::class)->update($payment);
+                // TODO: Recurring donations
+                // if ($donation->getFrequency() === null){
+                    $initiateDonation = new InitiateDonation(
+                        $amount,
+                        $campaignId,
+                        $gateway,
+                        // TODO: donor info if available
+                    );
+                    $redirectParams['donationId'] = $initiateDonation->donationId->toString();
+                    $redirectRoute = 'donation_redirect';
+                // } else {
+                //     $interval = new RecurringInterval($donation->getFrequency());
+                //     $createRecurringDonation = new CreateRecurringDonationByDonor(
+                //         $campaignId,
+                //         $amount,
+                //         $interval,
+                //         // TODO: donor info if available
+                //     );
+                //     $redirectParams['recurringDonationId'] = $createRecurringDonation->recurringDonationId->toString();
+                // }
                 
-                $targetUrl = $this->payum->getTokenFactory()->createCaptureToken(
-                    $gatewayName, 
-                    $payment,
-                    'donation_payment_done' // the route to redirect after capture
-                )->getTargetUrl();
+                $this->commandBus->dispatch($initiateDonation);
                 
-                // If frequency is set then create subscription
-                if ($donation->getFrequency() !== null) {
-                    $subscription = $this->subscriptionManager->createSubscription($payment, $donation->getFrequency());
-                    $this->entityManager->persist($subscription);
-                    $this->entityManager->flush();
-                }
-
                 $request->getSession()->remove('donation');
                 
-                return $this->redirectToRoute('donation_payment_redirect', ['targetUrl' => $targetUrl]);
+                return $this->redirectToRoute($redirectRoute, $redirectParams);
             }
 
             $request->getSession()->set('donation', $donation);

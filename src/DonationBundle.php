@@ -3,13 +3,18 @@
 namespace ErgoSarapu\DonationBundle;
 
 use DateInterval;
+use ErgoSarapu\DonationBundle\DependencyInjection\Compiler\MakeTestServicesPublicPass;
 use ErgoSarapu\DonationBundle\DependencyInjection\Compiler\RegisterQueryCompilerPass;
+use ErgoSarapu\DonationBundle\Entity\Payment;
+use ErgoSarapu\DonationBundle\Entity\PaymentToken;
+use ErgoSarapu\DonationBundle\Payum\PHPSerializeType;
 use ErgoSarapu\DonationBundle\Repository\ResetPasswordRequestRepository;
 use Exception;
 use Symfony\Component\AssetMapper\AssetMapperInterface;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
+use Symfony\Component\DependencyInjection\Compiler\PassConfig;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
@@ -130,7 +135,7 @@ class DonationBundle extends AbstractBundle
 
     public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
     {
-        $container->import(__DIR__ . '/../config/services.xml');
+        $container->import(__DIR__ . '/../config/services.php');
 
         $builder->getDefinition('donation_bundle.form.form_options_provider')
             ->setArgument(0, $config['gateways'])
@@ -178,6 +183,128 @@ class DonationBundle extends AbstractBundle
 
         $builder->prependExtensionConfig('symfonycasts_reset_password', [
             'request_password_repository' => ResetPasswordRequestRepository::class
+        ]);
+
+        $builder->prependExtensionConfig('doctrine', [
+            'dbal' => [
+                'default_connection' => 'default',
+                'connections' => [
+                    'default' => [
+                        'url' => '%env(DATABASE_URL)%', // Used by the application (legacy)
+                    ],
+                    // Different connection for projections to enable write access to read models
+                    'projection' => [
+                        'url' => '%env(DATABASE_URL)%',
+                    ]
+                ],
+                'types' => [
+                    // This is specifically needed due to "object" type in 
+                    // ./vendor/payum/core/Payum/Core/Bridge/Doctrine/Resources/mapping/Token.orm.xml
+                    'object' => PHPSerializeType::class,
+                ],
+            ],
+            'orm' => [
+                'entity_managers' => [
+                    'default' => [
+                        'connection' => 'default',
+                        'naming_strategy' => 'doctrine.orm.naming_strategy.underscore',
+                        'mappings' => [
+                            'DonationBundle' => [
+                                'type' => 'attribute',
+                                'dir' => __DIR__ . '/Entity',
+                                'prefix' => 'ErgoSarapu\DonationBundle\Entity',
+                                'alias' => 'DonationBundle',
+                                'is_bundle' => false,
+                            ],
+                            'DonationsReadModel' => [
+                                'type' => 'xml',
+                                'dir' => __DIR__ . '/../config/doctrine/donations',
+                                'prefix' => 'ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model',
+                                'alias' => 'DonationsReadModel',
+                                'is_bundle' => false,
+                            ],
+                            'PaymentsReadModel' => [
+                                'type' => 'xml',
+                                'dir' => __DIR__ . '/../config/doctrine/payments',
+                                'prefix' => 'ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model',
+                                'alias' => 'PaymentsReadModel',
+                                'is_bundle' => false,
+                            ]
+                        ],
+                    ],
+                    'projection' => [
+                        'connection' => 'projection',
+                        'naming_strategy' => 'doctrine.orm.naming_strategy.underscore',
+                        'auto_mapping' => false,
+                        'mappings' => [
+                            'DonationsReadModel' => [
+                                'type' => 'xml',
+                                'dir' => __DIR__ . '/../config/doctrine/donations',
+                                'prefix' => 'ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model',
+                                'alias' => 'DonationsReadModel',
+                                'is_bundle' => false,
+                            ],
+                            'PaymentsReadModel' => [
+                                'type' => 'xml',
+                                'dir' => __DIR__ . '/../config/doctrine/payments',
+                                'prefix' => 'ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model',
+                                'alias' => 'PaymentsReadModel',
+                                'is_bundle' => false,
+                            ]
+                        ],
+                    ],
+                ],
+            ]
+        ]);
+
+        $builder->prependExtensionConfig('framework', [
+            'messenger' => [
+                'default_bus' => 'message.bus',
+                'buses' => [
+                    'message.bus' => null,
+                    'command.bus' => null,
+                    'query.bus' => null,
+                    'event.bus' => [
+                        'default_middleware' => [
+                            'allow_no_handlers' => true,
+                        ],
+                    ],
+                ],
+            ]
+        ]);
+
+        $builder->prependExtensionConfig('patchlevel_event_sourcing', [
+            'connection' => [
+                'service' => 'doctrine.dbal.default_connection'
+            ],
+            'store' => [
+                'type' => 'dbal_stream', 
+                'merge_orm_schema' => true,
+            ],
+            'aggregates' => [
+                __DIR__ . '/BCDonations/Domain/Donation',
+                __DIR__ . '/BCPayments/Domain/Payment',
+            ],
+            'events' => [
+                __DIR__ . '/BCDonations/Domain/Donation/Event',
+                __DIR__ . '/BCPayments/Domain/Payment/Event',
+            ]
+        ]);
+
+        $builder->prependExtensionConfig('payum', [
+            'storages' => [
+                Payment::class => [
+                    'doctrine' => 'orm'
+                ]
+            ],
+            'security' => 
+                ['token_storage' => 
+                    [
+                        PaymentToken::class => [
+                            'doctrine' => 'orm'
+                        ]    
+                    ]
+                ],
         ]);
 
         $this->prependAssetMapperConfig($builder);

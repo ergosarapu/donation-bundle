@@ -11,9 +11,11 @@
         <default key="_live_action">get</default>
     </route>
     <route id="donation_admin_login" path="/login" controller="donation_bundle.controller.admin.login_controller"/>
-    <route id="donation_payment_redirect" path="/redirect?{targetUrl}" controller="donation_bundle.controller.redirect_controller">
-        <requirement key="targetUrl">.+</requirement>
-        <default key="targetUrl">#</default>
+    <route id="donation_redirect" path="/donate/{donationId}" controller="donation_bundle.controller.redirect_controller">
+        <requirement key="donationId">.+</requirement>
+    </route>
+    <route id="recurring_donation_redirect" path="/donate_recurring/{recurringDonationId}" controller="donation_bundle.controller.redirect_controller">
+        <requirement key="recurringDonationId">.+</requirement>
     </route>
     <route id="donation_payment_done" path="/done" controller="donation_bundle.controller.payment_done_controller"/>
     <route id="donation_thank_you" path="/thank-you" controller="Symfony\Bundle\FrameworkBundle\Controller\TemplateController">

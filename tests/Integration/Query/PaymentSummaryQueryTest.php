@@ -8,7 +8,7 @@ use ErgoSarapu\DonationBundle\Entity\Campaign;
 use ErgoSarapu\DonationBundle\Entity\Payment;
 use ErgoSarapu\DonationBundle\Entity\Payment\Status;
 use ErgoSarapu\DonationBundle\Query\PaymentSummaryQueryInterface;
-use ErgoSarapu\DonationBundle\Tests\Integration\IntegrationTestingKernel;
+use ErgoSarapu\DonationBundle\Tests\Helpers\DonationBundleTestingKernel;
 use Gedmo\Timestampable\TimestampableListener;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
@@ -21,7 +21,7 @@ class PaymentSummaryQueryTest extends KernelTestCase
     
     protected static function getKernelClass(): string
     {
-        return IntegrationTestingKernel::class;
+        return DonationBundleTestingKernel::class;
     }
     protected function setUp(): void {
         $this->entityManager = $this->getContainer()->get('doctrine')->getManager();

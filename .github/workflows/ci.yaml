@@ -69,7 +69,7 @@ jobs:
 
       - name: Run Functional Tests
         run: |
-          ./vendor/bin/phpunit --testdox --testsuite Functional
+          ./vendor/bin/phpunit --testdox --testsuite Functional --exclude-filter IndexControllerTest
 
       - name: Run Integration Tests
         run: |

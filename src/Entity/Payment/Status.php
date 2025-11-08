@@ -11,7 +11,7 @@ enum Status: string
     case Failed = 'failed';
     case Expired = 'expired';
     case Canceled = 'canceled';
-    case Paid = 'paid';         // Use for offline/cash payments
+    // case Paid = 'paid';         // Use for payments from merchant to user, like debit, not supported currently
     case Refunded = 'refunded';
-    case Unknown = 'unknown';
+    // case Unknown = 'unknown'; // Not supported
 }

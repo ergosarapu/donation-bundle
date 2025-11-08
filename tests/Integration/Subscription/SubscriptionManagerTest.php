@@ -10,7 +10,7 @@ use ErgoSarapu\DonationBundle\Entity\Subscription\Status as SubscriptionStatus;
 use ErgoSarapu\DonationBundle\Repository\PaymentRepository;
 use ErgoSarapu\DonationBundle\Repository\SubscriptionRepository;
 use ErgoSarapu\DonationBundle\Subscription\SubscriptionManager;
-use ErgoSarapu\DonationBundle\Tests\Integration\IntegrationTestingKernel;
+use ErgoSarapu\DonationBundle\Tests\Helpers\DonationBundleTestingKernel;
 use Gedmo\Timestampable\TimestampableListener;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -31,7 +31,7 @@ class SubscriptionManagerTest extends KernelTestCase
 
     protected static function getKernelClass(): string
     {
-        return IntegrationTestingKernel::class;
+        return DonationBundleTestingKernel::class;
     }
 
     protected function setUp(): void {
@@ -67,7 +67,7 @@ class SubscriptionManagerTest extends KernelTestCase
         $this->assertSame($subscription, $payments[0]->getSubscription());
         $this->assertSame($subscription, $payments[1]->getSubscription());
         
-        $this->bus()->dispatched()->assertCount(1);
+        $this->bus('message.bus')->dispatched()->assertCount(1);
     }
 
     public static function renewalInputs(): array
@@ -104,7 +104,7 @@ class SubscriptionManagerTest extends KernelTestCase
         $this->assertEquals(new DateTime('2024-03-01'), $subscription->getNextRenewalTime());
         $this->assertSame($subscription, $payments[0]->getSubscription());
 
-        $this->bus()->dispatched()->assertEmpty();   
+        $this->bus('message.bus')->dispatched()->assertEmpty();   
     }
 
     public static function ignoredSubscriptionStatuses(): Generator
@@ -115,7 +115,7 @@ class SubscriptionManagerTest extends KernelTestCase
         }
     }
 
-    private function createPayment(int $totalAmount, Status $status, string $createdAt, string $currency = 'EUR', string $gateway = null): Payment {
+    private function createPayment(int $totalAmount, Status $status, string $createdAt, string $currency = 'EUR', ?string $gateway = null): Payment {
         $payment = new Payment();
         $payment->setTotalAmount($totalAmount);
         $payment->setStatus($status);

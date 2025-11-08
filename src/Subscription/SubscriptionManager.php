@@ -11,6 +11,7 @@ use ErgoSarapu\DonationBundle\Entity\Subscription\Status as SubscriptionStatus;
 use ErgoSarapu\DonationBundle\Entity\Payment\Status as PaymentStatus;
 use ErgoSarapu\DonationBundle\Message\CapturePayment;
 use ErgoSarapu\DonationBundle\Repository\SubscriptionRepository;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use Symfony\Component\Messenger\MessageBusInterface;
 
 class SubscriptionManager
@@ -72,7 +73,7 @@ class SubscriptionManager
         $payment = new Payment();
         $payment->setSubscription($subscription);
         $payment->setStatus(PaymentStatus::Created);
-        $payment->setNumber(uniqid(true));
+        $payment->setNumber(PaymentId::generate()->toString());
         $payment->setCurrencyCode($subscription->getCurrencyCode());
         $payment->setTotalAmount($subscription->getAmount());
 
