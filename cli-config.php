@@ -12,14 +12,14 @@ require 'vendor/autoload.php';
 use Doctrine\Migrations\Configuration\EntityManager\ExistingEntityManager;
 use Doctrine\Migrations\Configuration\Migration\PhpFile;
 use Doctrine\Migrations\DependencyFactory;
-use ErgoSarapu\DonationBundle\Tests\Integration\IntegrationTestingKernel;
+use ErgoSarapu\DonationBundle\Tests\Helpers\DonationBundleTestingKernel;
 
 if (!getenv('DATABASE_URL')) {
     throw new InvalidArgumentException('DATABASE_URL not available as environment variable');
 }
 
 // Boot the IntegrationTestingKernel to load all bundles and configuration
-$kernel = new IntegrationTestingKernel('dev', true);
+$kernel = new DonationBundleTestingKernel('dev', true);
 $kernel->boot();
 
 // Get the EntityManager from the kernel container
