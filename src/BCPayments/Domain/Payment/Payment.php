@@ -4,7 +4,6 @@ namespace ErgoSarapu\DonationBundle\BCPayments\Domain\Payment;
 
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\ValueObject\DonationId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\AbstractPaymentCreated;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentAmountChanged;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentAuthorized;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentCanceled;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentCaptured;
@@ -110,12 +109,6 @@ class Payment extends BasicAggregateRoot
         $this->amount = $event->remainingAmount;
     }
 
-    #[Apply]
-    protected function applyPaymentAmountChanged(PaymentAmountChanged $event): void
-    {
-        $this->amount = $event->newAmount;
-    }
-
     public function markPending(): void{
         // Idempotency guard
         if ($this->status === PaymentStatus::Pending) {
@@ -212,12 +205,5 @@ class Payment extends BasicAggregateRoot
             throw new LogicException('Cannot transition from ' . $from->value . ' to ' . $to->value . '.');
         }
         return $canTransition;
-    }
-
-    public function changeAmount(Money $newAmount): void {
-        if ($this->amount->equals($newAmount)) {
-            return;
-        }
-        $this->recordThat(new PaymentAmountChanged($this->id, $newAmount));
     }
 }

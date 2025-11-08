@@ -5,7 +5,6 @@ namespace ErgoSarapu\DonationBundle\BCPayments\Infrastructure\Projection;
 use Doctrine\ORM\EntityManagerInterface;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model\Payment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\Port\PaymentProjectionRepositoryInterface;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentAmountChanged;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentAuthorized;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentCanceled;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentCaptured;
@@ -109,15 +108,6 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         $payment = $this->findOne($event->paymentId);
         $payment->setStatus($event->status->value);
         $payment->setAmount($event->remainingAmount->amount());
-        $this->projectionEntityManager->flush();
-    }
-
-    #[Subscribe(PaymentAmountChanged::class)]
-    public function onPaymentAmountChanged(
-        PaymentAmountChanged $event
-    ): void {
-        $payment = $this->findOne($event->paymentId);
-        $payment->setAmount($event->newAmount->amount());
         $this->projectionEntityManager->flush();
     }
 
