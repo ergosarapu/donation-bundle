@@ -2,8 +2,8 @@
 
 namespace ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event;
 
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\ValueObject\DonationId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\ValueObject\PaymentStatus;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
@@ -21,7 +21,7 @@ class PaymentInitiated extends AbstractPaymentCreated
         public readonly Gateway $gateway,
         public readonly ShortDescription $description,
         public readonly URL $redirectUrl,
-        public readonly ?DonationId $donationId = null,
+        public readonly ?PaymentAppliedToId $appliedTo = null,
     ) {
         parent::__construct(
             $paymentId,

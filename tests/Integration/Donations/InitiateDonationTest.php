@@ -9,6 +9,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\Donation;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\ValueObject\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\ValueObject\DonationStatus;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsCaptured;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsFailed;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetPayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetPendingPayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model\Payment;
@@ -17,7 +18,6 @@ use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\QueryBusInterface;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\ValueObject\PaymentStatus;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
-use ErgoSarapu\DonationBundle\Tests\Integration\IntegrationTestingKernel;
 use Patchlevel\EventSourcing\Subscription\Engine\SubscriptionEngine;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
@@ -78,5 +78,26 @@ class InitiateDonationTest extends KernelTestCase
         $this->assertEquals(PaymentStatus::Captured->value, $payment->getStatus());
         $donation = $this->queryBus->ask(new GetDonation($initiateDonation->donationId));
         $this->assertEquals(DonationStatus::Accepted->value, $donation->getStatus());
+    }
+
+    public function testInitiateAndFailDonation(): void
+    {
+        // Initiate donation
+        $amount = new Money(100, new Currency('EUR'));
+        $initiateDonation = new InitiateDonation($amount, CampaignId::generate(), new Gateway('test'));
+        $this->commandBus->dispatch($initiateDonation);
+
+        /** @var ?Donation $donation */
+        $donation = $this->queryBus->ask(new GetPendingDonation($initiateDonation->donationId));
+        $this->assertNotNull($donation);
+        $this->assertEquals(DonationStatus::Pending->value, $donation->getStatus());
+
+        // Mark payment as not succeeded and expect donation to be failed
+        $this->commandBus->dispatch(new MarkPaymentAsFailed(PaymentId::fromString($donation->getPaymentId())));
+        
+        $payment = $this->queryBus->ask(new GetPayment(PaymentId::fromString($donation->getPaymentId())));
+        $this->assertEquals(PaymentStatus::Failed->value, $payment->getStatus());
+        $donation = $this->queryBus->ask(new GetDonation($initiateDonation->donationId));
+        $this->assertEquals(DonationStatus::Failed->value, $donation->getStatus());
     }
 }

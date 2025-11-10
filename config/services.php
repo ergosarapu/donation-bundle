@@ -172,7 +172,10 @@ return function (ContainerConfigurator $container) {
     $services->set('donation_bundle.donations.application.donation.command_handler.mark_donation_as_accepted', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\MarkDonationAsAcceptedHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
-    
+    $services->set('donation_bundle.donations.application.donation.command_handler.mark_donation_as_failed', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\MarkDonationAsFailedHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+
     // Payments 
     $services->set('donation_bundle.payments.application.payment.command_handler.initiate_payment', \ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\InitiatePaymentHandler::class)
         ->autoconfigure(true)
@@ -232,12 +235,18 @@ return function (ContainerConfigurator $container) {
     $services->set('donation_bundle.application.donations.domain_event_handler.donation_initiated', \ErgoSarapu\DonationBundle\BCDonations\Application\EventHandler\Domain\DonationInitiatedHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
-    $services->set('donation_bundle.application.donations.integration_event_handler.payment_captured', \ErgoSarapu\DonationBundle\BCDonations\Application\EventHandler\Integration\PaymentCapturedHandler::class)
+    $services->set('donation_bundle.application.donations.integration_event_handler.payment_succeeded', \ErgoSarapu\DonationBundle\BCDonations\Application\EventHandler\Integration\PaymentSucceededHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.application.donations.integration_event_handler.payment_did_not_succeed', \ErgoSarapu\DonationBundle\BCDonations\Application\EventHandler\Integration\PaymentDidNotSucceedHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
 
     // Payments
-    $services->set('donation_bundle.application.payments.domain_event_handler.payment_captured', \ErgoSarapu\DonationBundle\BCPayments\Application\EventHandler\Domain\PaymentCapturedHandler::class)
+    $services->set('donation_bundle.application.payments.domain_event_handler.payment_succeeded', \ErgoSarapu\DonationBundle\BCPayments\Application\EventHandler\Domain\PaymentSucceededHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.application.payments.domain_event_handler.payment_did_not_succeed', \ErgoSarapu\DonationBundle\BCPayments\Application\EventHandler\Domain\PaymentDidNotSucceedHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
 

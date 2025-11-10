@@ -2,16 +2,16 @@
 
 namespace ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event;
 
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\ValueObject\DonationId;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 
-class PaymentCapturedIntegrationEvent
+class PaymentSucceededIntegrationEvent
 {
     public function __construct(
         public readonly PaymentId $paymentId,
-        public readonly Money $capturedAmount,
-        public readonly ?DonationId $donationId,
+        public readonly Money $amount,
+        public readonly ?PaymentAppliedToId $appliedTo,
     ) {
     }
 }

@@ -6,6 +6,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Event\DonationInitiate
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Command\InitiatePaymentIntegrationCommand;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\EventHandlerInterface;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
 
 class DonationInitiatedHandler implements EventHandlerInterface
 {
@@ -20,7 +21,7 @@ class DonationInitiatedHandler implements EventHandlerInterface
             $event->amount,
             $event->gateway,
             $event->description,
-            $event->donationId,
+            PaymentAppliedToId::fromString($event->donationId->toString()),
             $event->donorEmail,
         ));
     }

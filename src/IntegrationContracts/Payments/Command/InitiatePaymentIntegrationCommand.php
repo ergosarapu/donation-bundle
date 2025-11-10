@@ -3,6 +3,7 @@
 namespace ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Command;
 
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\ValueObject\DonationId;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
@@ -16,7 +17,7 @@ class InitiatePaymentIntegrationCommand
         public readonly Money $amount,
         public readonly Gateway $gateway,
         public readonly ShortDescription $description,
-        public readonly ?DonationId $donationId = null,
+        public readonly ?PaymentAppliedToId $appliedTo = null,
         public readonly ?Email $email = null,   
     )
     {

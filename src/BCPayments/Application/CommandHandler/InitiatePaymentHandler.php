@@ -44,7 +44,7 @@ class InitiatePaymentHandler implements CommandHandlerInterface
             $command->gateway,
             $command->description,
             $redirectUrl,
-            $command->donationId,
+            $command->appliedTo,
         );
         try {
             $this->paymentRepository->save($payment);

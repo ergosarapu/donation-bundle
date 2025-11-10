@@ -6,6 +6,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\Donation;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Port\DonationProjectionRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Event\DonationAccepted;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Event\DonationFailed;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Event\DonationInitiated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\ValueObject\DonationId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\ValueObject\DonationStatus;
@@ -54,6 +55,14 @@ class DonationProjector implements DonationProjectionRepositoryInterface
 
     #[Subscribe(DonationAccepted::class)]
     public function onDonationAccepted(DonationAccepted $event): void {
+        $donation = $this->findOne($event->donationId);
+        $donation->setStatus($event->status->value);
+        $this->projectionEntityManager->persist($donation);
+        $this->projectionEntityManager->flush();
+    }
+
+    #[Subscribe(DonationFailed::class)]
+    public function onDonationFailed(DonationFailed $event): void {
         $donation = $this->findOne($event->donationId);
         $donation->setStatus($event->status->value);
         $this->projectionEntityManager->persist($donation);

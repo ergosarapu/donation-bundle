@@ -5,6 +5,7 @@ namespace ErgoSarapu\DonationBundle\BCDonations\Domain\Donation;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\ValueObject\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Event\AbstractDonationCreated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Event\DonationAccepted;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Event\DonationFailed;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Event\DonationInitiated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\ValueObject\DonationId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\ValueObject\DonationStatus;
@@ -75,6 +76,12 @@ class Donation extends BasicAggregateRoot
         $this->amount = $event->acceptedAmount;
     }
 
+    #[Apply]
+    protected function applyFailed(DonationFailed $event): void
+    {
+        $this->status = $event->status;
+    }
+
     public function markAccepted(Money $acceptedAmount): void{
         // Idempotency guard
         if ($this->status === DonationStatus::Accepted) {
@@ -84,11 +91,24 @@ class Donation extends BasicAggregateRoot
             return;
         }
         $this->canTransitionToAccepted(true);
-        $this->recordThat(new DonationAccepted($this->id, $acceptedAmount, DonationStatus::Accepted));
+        $this->recordThat(new DonationAccepted($this->id, $acceptedAmount));
     }
 
     public function canTransitionToAccepted(bool $throw = false): bool {
         return $this->canTransition($this->status, DonationStatus::Accepted, [DonationStatus::Pending], $throw);
+    }
+
+    public function markFailed(): void{
+        // Idempotency guard
+        if ($this->status === DonationStatus::Failed) {
+            return;
+        }
+        $this->canTransitionToFailed(true);
+        $this->recordThat(new DonationFailed($this->id));
+    }
+
+    public function canTransitionToFailed(bool $throw = false): bool {
+        return $this->canTransition($this->status, DonationStatus::Failed, [DonationStatus::Pending], $throw);
     }
 
     /** 

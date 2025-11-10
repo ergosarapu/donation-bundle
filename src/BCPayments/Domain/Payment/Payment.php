@@ -2,17 +2,19 @@
 
 namespace ErgoSarapu\DonationBundle\BCPayments\Domain\Payment;
 
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\ValueObject\DonationId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\AbstractPaymentCreated;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentAuthorized;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentCanceled;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentCaptured;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentDidNotSucceed;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentInitiated;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentFailed;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentPending;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentRefunded;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentSucceeded;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\ValueObject\PaymentStatus;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
@@ -30,7 +32,8 @@ class Payment extends BasicAggregateRoot
     private PaymentId $id;
     private Money $amount;
     private PaymentStatus $status;
-    private ?DonationId $donationId = null;
+    private ?PaymentAppliedToId $appliedTo = null;
+    private bool $succeedRecorded = false;
 
     public static function initiate(
         PaymentId $id,
@@ -38,7 +41,7 @@ class Payment extends BasicAggregateRoot
         Gateway $gateway,
         ShortDescription $description,
         URL $redirectUrl,
-        ?DonationId $donationId = null,
+        ?PaymentAppliedToId $appliedTo = null,
     ): self {
         $payment = new self();
         $payment->recordThat(new PaymentInitiated(
@@ -48,7 +51,7 @@ class Payment extends BasicAggregateRoot
             $gateway,
             $description,
             $redirectUrl,
-            $donationId,
+            $appliedTo,
         ));
         return $payment;
     }
@@ -64,7 +67,7 @@ class Payment extends BasicAggregateRoot
     {
         $this->applyCreated($event);
         $this->status = $event->status;
-        $this->donationId = $event->donationId;
+        $this->appliedTo = $event->appliedTo;
         // $this->gateway = $event->gateway;
         // $this->description = $event->description;
         // $this->captureUrl = $event->captureUrl;
@@ -109,6 +112,17 @@ class Payment extends BasicAggregateRoot
         $this->amount = $event->remainingAmount;
     }
 
+    #[Apply]
+    protected function applyPaymentSucceeded(PaymentSucceeded $event): void
+    {
+        $this->succeedRecorded = true;
+    }
+
+    #[Apply]
+    protected function applyPaymentDidNotSucceeded(PaymentDidNotSucceed $event): void
+    {
+    }
+
     public function markPending(): void{
         // Idempotency guard
         if ($this->status === PaymentStatus::Pending) {
@@ -132,6 +146,15 @@ class Payment extends BasicAggregateRoot
         }
         $this->canTransitionToAuthorized(true);
         $this->recordThat(new PaymentAuthorized($this->id, $authorizedAmount));
+        $this->recordSucceeded();
+    }
+
+    private function recordSucceeded(): void {
+        if ($this->succeedRecorded) {
+            // "Succeed" can mean authorized, captured or settled - therefore we want to record it only once
+            return;
+        }
+        $this->recordThat(new PaymentSucceeded($this->id, $this->amount, $this->appliedTo));
     }
 
     public function canTransitionToAuthorized(bool $throw = false): bool {
@@ -147,7 +170,8 @@ class Payment extends BasicAggregateRoot
             return;
         }
         $this->canTransitionToCaptured(true);
-        $this->recordThat(new PaymentCaptured($this->id, $capturedAmount, $this->donationId));
+        $this->recordThat(new PaymentCaptured($this->id, $capturedAmount, $this->appliedTo));
+        $this->recordSucceeded();
     }
 
     public function canTransitionToCaptured(bool $throw = false): bool {
@@ -161,6 +185,7 @@ class Payment extends BasicAggregateRoot
         }
         $this->canTransitionToCanceled(true);
         $this->recordThat(new PaymentCanceled($this->id));
+        $this->recordThat(new PaymentDidNotSucceed($this->id, $this->appliedTo));
     }
 
     public function canTransitionToCanceled(bool $throw = false): bool {
@@ -173,7 +198,8 @@ class Payment extends BasicAggregateRoot
             return;
         }
         $this->canTransitionToFailed(true);
-        $this->recordThat(new PaymentFailed($this->id));
+        $this->recordThat(new PaymentFailed($this->id, $this->appliedTo));
+        $this->recordThat(new PaymentDidNotSucceed($this->id, $this->appliedTo));
     }
 
     public function canTransitionToFailed(bool $throw = false): bool {

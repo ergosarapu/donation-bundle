@@ -3,20 +3,16 @@
 namespace ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event;
 
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\ValueObject\PaymentStatus;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
 use Patchlevel\EventSourcing\Attribute\Event;
 
-#[Event(name: 'payment.failed')]
-class PaymentFailed
+#[Event(name: 'payment.did_not_succeed')]
+class PaymentDidNotSucceed
 {
-    public readonly PaymentStatus $status;
-
     public function __construct(
         public readonly PaymentId $paymentId,
         public readonly ?PaymentAppliedToId $appliedTo = null,
     ) {
-        $this->status = PaymentStatus::Failed;
     }
 
 }
