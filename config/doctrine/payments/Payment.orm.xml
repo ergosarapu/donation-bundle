@@ -11,7 +11,7 @@
 
         <field name="amount" type="integer" column="amount" nullable="false"/>
         <field name="currency" type="string" column="currency" nullable="false"/>
-        <field name="status" type="string" column="status" length="50" nullable="false"/>
+        <field name="status" type="string" column="status" length="50" nullable="false" enum-type="ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\ValueObject\PaymentStatus"/>
         <field name="redirectUrl" type="string" column="redirect_url" nullable="true"/>
     </entity>
 </doctrine-mapping>
