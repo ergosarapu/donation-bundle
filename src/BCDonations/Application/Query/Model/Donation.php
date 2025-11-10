@@ -2,13 +2,15 @@
 
 namespace ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model;
 
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\ValueObject\DonationStatus;
+
 class Donation
 {
     private string $id;
     private string $paymentId;
     private int $amount;
     private string $currency;
-    private string $status;
+    private DonationStatus $status;
 
     public function getId(): string
     {
@@ -50,12 +52,12 @@ class Donation
         $this->currency = $currency;
     }
 
-    public function getStatus(): string
+    public function getStatus(): DonationStatus
     {
         return $this->status;
     }
 
-    public function setStatus(string $status): void
+    public function setStatus(DonationStatus $status): void
     {
         $this->status = $status;
     }

@@ -48,7 +48,7 @@ class DonationProjector implements DonationProjectionRepositoryInterface
         $donation->setPaymentId($event->paymentId->toString());
         $donation->setAmount($event->amount->amount());
         $donation->setCurrency($event->amount->currency()->code());
-        $donation->setStatus($event->status->value);
+        $donation->setStatus($event->status);
         $this->projectionEntityManager->persist($donation);
         $this->projectionEntityManager->flush();
     }
@@ -56,7 +56,7 @@ class DonationProjector implements DonationProjectionRepositoryInterface
     #[Subscribe(DonationAccepted::class)]
     public function onDonationAccepted(DonationAccepted $event): void {
         $donation = $this->findOne($event->donationId);
-        $donation->setStatus($event->status->value);
+        $donation->setStatus($event->status);
         $this->projectionEntityManager->persist($donation);
         $this->projectionEntityManager->flush();
     }
@@ -64,7 +64,7 @@ class DonationProjector implements DonationProjectionRepositoryInterface
     #[Subscribe(DonationFailed::class)]
     public function onDonationFailed(DonationFailed $event): void {
         $donation = $this->findOne($event->donationId);
-        $donation->setStatus($event->status->value);
+        $donation->setStatus($event->status);
         $this->projectionEntityManager->persist($donation);
         $this->projectionEntityManager->flush();
     }

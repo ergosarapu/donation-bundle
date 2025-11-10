@@ -3,6 +3,7 @@
 namespace ErgoSarapu\DonationBundle\Controller\Admin\CQRS;
 
 use Doctrine\ORM\Event\PreUpdateEventArgs;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\MoneyField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
@@ -31,20 +32,10 @@ class PaymentCQRSController extends AbstractCQRSController
     /**
      * @param Payment $entity
      */
-    public function dispatchCommandsForUpdate(object $entity, PreUpdateEventArgs $updateEvent): void {
-        
-        // Example:
+    public function dispatchCommandsForUpdate(object $entity, PreUpdateEventArgs $updateEvent): void {        
         $changes = $updateEvent->getEntityChangeSet();
         foreach ($changes as $field => $change) {
-            $command = match ($field) {
-                // 'amount' => new ChangePaymentAmount(PaymentId::fromString($entity->getId()), new Money($updateEvent->getNewValue($field), new Currency($entity->getCurrency()))),
-                default => null,
-            };
-            if ($command !== null){
-                $this->commandBus->dispatch($command);
-            } else {
-                $this->addFlash('warning', sprintf('No command was dispatched for "%s" field change.', $field));
-            }
+            $this->addFlash('warning', sprintf('No command was dispatched for "%s" field change, old value "%s", new value "%s"', $field, $updateEvent->getOldValue($field), $updateEvent->getNewValue($field)));
         }
     }
 
@@ -57,7 +48,7 @@ class PaymentCQRSController extends AbstractCQRSController
         return [
             IdField::new('id')->setDisabled(),
             MoneyField::new('amount')->setCurrencyPropertyPath('currency'),
-            TextField::new('status'),
+            ChoiceField::new('status'),
         ];
     }
 }

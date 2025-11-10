@@ -50,7 +50,7 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         $payment->setId($event->paymentId->toString());
         $payment->setAmount($event->amount->amount());
         $payment->setCurrency($event->amount->currency()->code());
-        $payment->setStatus($event->status->value);
+        $payment->setStatus($event->status);
         $payment->setRedirectUrl($event->redirectUrl->value());
         $this->projectionEntityManager->persist($payment);
         $this->projectionEntityManager->flush();
@@ -61,7 +61,7 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         PaymentPending $event
     ): void {
         $payment = $this->findOne($event->paymentId);
-        $payment->setStatus($event->status->value);
+        $payment->setStatus($event->status);
         $this->projectionEntityManager->flush();
     }
 
@@ -70,7 +70,7 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         PaymentAuthorized $event
     ): void {
         $payment = $this->findOne($event->paymentId);
-        $payment->setStatus($event->status->value);
+        $payment->setStatus($event->status);
         $payment->setAmount($event->authorizedAmount->amount());
         $this->projectionEntityManager->flush();
     }
@@ -78,7 +78,7 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
     #[Subscribe(PaymentCaptured::class)]
     public function onPaymentCaptured(PaymentCaptured $event): void {
         $payment = $this->findOne($event->paymentId);
-        $payment->setStatus($event->status->value);
+        $payment->setStatus($event->status);
         $payment->setAmount($event->capturedAmount->amount());
         $this->projectionEntityManager->flush();
     }
@@ -88,7 +88,7 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         PaymentCanceled $event
     ): void {
         $payment = $this->findOne($event->paymentId);
-        $payment->setStatus($event->status->value);
+        $payment->setStatus($event->status);
         $this->projectionEntityManager->flush();
     }
 
@@ -97,7 +97,7 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         PaymentFailed $event
     ): void {
         $payment = $this->findOne($event->paymentId);
-        $payment->setStatus($event->status->value);
+        $payment->setStatus($event->status);
         $this->projectionEntityManager->flush();
     }
 
@@ -106,7 +106,7 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         PaymentRefunded $event
     ): void {
         $payment = $this->findOne($event->paymentId);
-        $payment->setStatus($event->status->value);
+        $payment->setStatus($event->status);
         $payment->setAmount($event->remainingAmount->amount());
         $this->projectionEntityManager->flush();
     }

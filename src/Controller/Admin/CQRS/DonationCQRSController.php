@@ -3,6 +3,7 @@
 namespace ErgoSarapu\DonationBundle\Controller\Admin\CQRS;
 
 use Doctrine\ORM\Event\PreUpdateEventArgs;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\MoneyField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
@@ -27,6 +28,10 @@ class DonationCQRSController extends AbstractCQRSController
      * @param Donation $entity
      */
     public function dispatchCommandsForUpdate(object $entity, PreUpdateEventArgs $updateEvent): void {
+        $changes = $updateEvent->getEntityChangeSet();
+        foreach ($changes as $field => $change) {
+            $this->addFlash('warning', sprintf('No command was dispatched for "%s" field change, old value "%s", new value "%s"', $field, $updateEvent->getOldValue($field), $updateEvent->getNewValue($field)));
+        }
     }
 
     public static function getEntityFqcn(): string {
@@ -38,7 +43,7 @@ class DonationCQRSController extends AbstractCQRSController
         return [
             IdField::new('id')->setDisabled(),
             MoneyField::new('amount')->setCurrencyPropertyPath('currency'),
-            TextField::new('status'),
+            ChoiceField::new('status'),
         ];
     }
 }

@@ -64,20 +64,20 @@ class InitiateDonationTest extends KernelTestCase
         /** @var ?Donation $donation */
         $donation = $this->queryBus->ask(new GetPendingDonation($initiateDonation->donationId));
         $this->assertNotNull($donation);
-        $this->assertEquals(DonationStatus::Pending->value, $donation->getStatus());
+        $this->assertEquals(DonationStatus::Pending, $donation->getStatus());
 
         /** @var ?Payment $payment */
         $payment = $this->queryBus->ask(new GetPendingPayment(PaymentId::fromString($donation->getPaymentId())));
         $this->assertNotNull($payment);
         $this->assertNotNull($payment->getRedirectUrl());
-        $this->assertEquals(PaymentStatus::Pending->value, $payment->getStatus());
+        $this->assertEquals(PaymentStatus::Pending, $payment->getStatus());
 
         // Mark payment as captured and expect donation to be accepted
         $this->commandBus->dispatch(new MarkPaymentAsCaptured(PaymentId::fromString($donation->getPaymentId()), $amount));
         $payment = $this->queryBus->ask(new GetPayment(PaymentId::fromString($donation->getPaymentId())));
-        $this->assertEquals(PaymentStatus::Captured->value, $payment->getStatus());
+        $this->assertEquals(PaymentStatus::Captured, $payment->getStatus());
         $donation = $this->queryBus->ask(new GetDonation($initiateDonation->donationId));
-        $this->assertEquals(DonationStatus::Accepted->value, $donation->getStatus());
+        $this->assertEquals(DonationStatus::Accepted, $donation->getStatus());
     }
 
     public function testInitiateAndFailDonation(): void
@@ -90,14 +90,14 @@ class InitiateDonationTest extends KernelTestCase
         /** @var ?Donation $donation */
         $donation = $this->queryBus->ask(new GetPendingDonation($initiateDonation->donationId));
         $this->assertNotNull($donation);
-        $this->assertEquals(DonationStatus::Pending->value, $donation->getStatus());
+        $this->assertEquals(DonationStatus::Pending, $donation->getStatus());
 
         // Mark payment as not succeeded and expect donation to be failed
         $this->commandBus->dispatch(new MarkPaymentAsFailed(PaymentId::fromString($donation->getPaymentId())));
         
         $payment = $this->queryBus->ask(new GetPayment(PaymentId::fromString($donation->getPaymentId())));
-        $this->assertEquals(PaymentStatus::Failed->value, $payment->getStatus());
+        $this->assertEquals(PaymentStatus::Failed, $payment->getStatus());
         $donation = $this->queryBus->ask(new GetDonation($initiateDonation->donationId));
-        $this->assertEquals(DonationStatus::Failed->value, $donation->getStatus());
+        $this->assertEquals(DonationStatus::Failed, $donation->getStatus());
     }
 }
