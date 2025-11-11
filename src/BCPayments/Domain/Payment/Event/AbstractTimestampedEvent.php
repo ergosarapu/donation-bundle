@@ -3,16 +3,15 @@
 namespace ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event;
 
 use DateTimeImmutable;
-use DateTimeZone;
 use Patchlevel\Hydrator\Normalizer\DateTimeImmutableNormalizer;
 
 abstract class AbstractTimestampedEvent
 {
-    #[DateTimeImmutableNormalizer]
+    #[DateTimeImmutableNormalizer(DateTimeImmutable::RFC3339_EXTENDED)]
     public readonly DateTimeImmutable $occuredOn;
 
     public function __construct(
     ) {
-        $this->occuredOn = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+        $this->occuredOn = new DateTimeImmutable();
     }
 }

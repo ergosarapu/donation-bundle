@@ -60,21 +60,16 @@ jobs:
         run: composer update
 
       - name: Run Unit Tests
-        run: vendor/bin/phpunit --testdox --testsuite Unit
+        run: composer test-unit
       
       - name: Migrate database
-        run: |
-          mkdir migrations
-          ./vendor/bin/doctrine-migrations migrations:diff --no-interaction
-          ./vendor/bin/doctrine-migrations migrations:migrate --no-interaction
+        run: composer test-migrate
 
       - name: Run Functional Tests
-        run: |
-          ./vendor/bin/phpunit --testdox --testsuite Functional --exclude-filter IndexControllerTest
+        run: composer test-functional
 
       - name: Run Integration Tests
-        run: |
-          ./vendor/bin/phpunit --testdox --testsuite Integration
+        run: composer test-integration
 
     services:
       mariadb:

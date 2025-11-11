@@ -10,8 +10,6 @@ use ErgoSarapu\DonationBundle\Entity\PaymentToken;
 use ErgoSarapu\DonationBundle\Payum\PHPSerializeType;
 use ErgoSarapu\DonationBundle\Repository\ResetPasswordRequestRepository;
 use Exception;
-use SimPod\DoctrineUtcDateTime\UTCDateTimeImmutableType;
-use SimPod\DoctrineUtcDateTime\UTCDateTimeType;
 use Symfony\Component\AssetMapper\AssetMapperInterface;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
@@ -203,10 +201,6 @@ class DonationBundle extends AbstractBundle
                     // This is specifically needed due to "object" type in 
                     // ./vendor/payum/core/Payum/Core/Bridge/Doctrine/Resources/mapping/Token.orm.xml
                     'object' => PHPSerializeType::class,
-                    'datetime' => UTCDateTimeType::class,
-                    'datetimetz' => UTCDateTimeType::class,
-                    'datetime_immutable' => UTCDateTimeImmutableType::class,
-                    'datetimetz_immutable' => UTCDateTimeImmutableType::class,
                 ],
             ],
             'orm' => [
@@ -319,5 +313,6 @@ class DonationBundle extends AbstractBundle
     public function build(ContainerBuilder $builder): void {
         parent::build($builder);
         $builder->addCompilerPass(new RegisterQueryCompilerPass());
+        $builder->addCompilerPass(new MakeTestServicesPublicPass(), PassConfig::TYPE_OPTIMIZE);
     }
 }
