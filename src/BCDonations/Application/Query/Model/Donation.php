@@ -2,6 +2,7 @@
 
 namespace ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model;
 
+use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\ValueObject\DonationStatus;
 
 class Donation
@@ -11,6 +12,8 @@ class Donation
     private int $amount;
     private string $currency;
     private DonationStatus $status;
+    private DateTimeImmutable $createdAt;
+    private DateTimeImmutable $updatedAt;
 
     public function getId(): string
     {
@@ -60,5 +63,25 @@ class Donation
     public function setStatus(DonationStatus $status): void
     {
         $this->status = $status;
+    }
+
+    public function getCreatedAt(): DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function setCreatedAt(DateTimeImmutable $createdAt): void
+    {
+        $this->createdAt = $createdAt;
+    }
+
+    public function getUpdatedAt(): DateTimeImmutable
+    {
+        return $this->updatedAt;
+    }
+
+    public function setUpdatedAt(DateTimeImmutable $updatedAt): void
+    {
+        $this->updatedAt = $updatedAt;
     }
 }

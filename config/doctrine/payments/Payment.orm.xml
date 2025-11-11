@@ -13,5 +13,7 @@
         <field name="currency" type="string" column="currency" nullable="false"/>
         <field name="status" type="string" column="status" length="50" nullable="false" enum-type="ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\ValueObject\PaymentStatus"/>
         <field name="redirectUrl" type="string" column="redirect_url" nullable="true"/>
+        <field name="createdAt" type="datetime_immutable" column="created_at" nullable="false"/>
+        <field name="updatedAt" type="datetime_immutable" column="updated_at" nullable="false"/>
     </entity>
 </doctrine-mapping>

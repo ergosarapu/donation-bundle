@@ -7,13 +7,14 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\ValueObject\DonationSt
 use Patchlevel\EventSourcing\Attribute\Event;
 
 #[Event(name: 'donation.failed')]
-final class DonationFailed
+final class DonationFailed extends AbstractTimestampedEvent
 {
     public readonly DonationStatus $status;
 
     public function __construct(
         public readonly DonationId $donationId,
     ) {
+        parent::__construct();
         $this->status = DonationStatus::Failed;
     }
 }

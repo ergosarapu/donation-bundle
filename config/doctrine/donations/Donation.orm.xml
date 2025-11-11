@@ -12,6 +12,8 @@
         <field name="amount" type="integer" column="amount" nullable="false"/>
         <field name="currency" type="string" column="currency" nullable="false"/>
         <field name="status" type="string" column="status" length="16" nullable="false" enum-type="ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\ValueObject\DonationStatus"/>
+        <field name="createdAt" type="datetime_immutable" column="created_at" nullable="false"/>
+        <field name="updatedAt" type="datetime_immutable" column="updated_at" nullable="false"/>
     </entity>
 
 </doctrine-mapping>

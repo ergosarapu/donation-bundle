@@ -8,7 +8,7 @@ use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
 use Patchlevel\EventSourcing\Attribute\Event;
 
 #[Event(name: 'payment.failed')]
-class PaymentFailed
+class PaymentFailed extends AbstractTimestampedEvent
 {
     public readonly PaymentStatus $status;
 
@@ -16,6 +16,7 @@ class PaymentFailed
         public readonly PaymentId $paymentId,
         public readonly ?PaymentAppliedToId $appliedTo = null,
     ) {
+        parent::__construct();
         $this->status = PaymentStatus::Failed;
     }
 

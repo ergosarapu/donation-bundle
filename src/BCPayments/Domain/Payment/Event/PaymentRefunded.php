@@ -8,7 +8,7 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use Patchlevel\EventSourcing\Attribute\Event;
 
 #[Event(name: 'payment.refunded')]
-class PaymentRefunded
+class PaymentRefunded extends AbstractTimestampedEvent
 {
     public readonly PaymentStatus $status;
 
@@ -16,6 +16,7 @@ class PaymentRefunded
         public readonly PaymentId $paymentId,
         public readonly Money $remainingAmount,
     ) {
+        parent::__construct();
         $this->status = PaymentStatus::Refunded;
     }
 

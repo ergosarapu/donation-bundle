@@ -12,20 +12,17 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\URL;
 use Patchlevel\EventSourcing\Attribute\Event;
 
 #[Event(name: 'payment.initiated')]
-class PaymentInitiated extends AbstractPaymentCreated
+class PaymentInitiated extends AbstractTimestampedEvent
 {
     public function __construct(
-        PaymentId $paymentId,
-        Money $amount,
+        public readonly PaymentId $paymentId,
+        public readonly Money $amount,
         public readonly PaymentStatus $status,
         public readonly Gateway $gateway,
         public readonly ShortDescription $description,
         public readonly URL $redirectUrl,
         public readonly ?PaymentAppliedToId $appliedTo = null,
     ) {
-        parent::__construct(
-            $paymentId,
-            $amount
-        );
+        parent::__construct();
     }
 }

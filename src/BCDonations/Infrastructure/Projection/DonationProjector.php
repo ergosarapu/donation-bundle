@@ -14,6 +14,7 @@ use Patchlevel\EventSourcing\Attribute\Projector;
 use Patchlevel\EventSourcing\Attribute\Subscribe;
 use Patchlevel\EventSourcing\Attribute\Teardown;
 use Patchlevel\EventSourcing\Subscription\Subscriber\SubscriberUtil;
+use RuntimeException;
 
 #[Projector('donation')]
 class DonationProjector implements DonationProjectionRepositoryInterface
@@ -26,6 +27,29 @@ class DonationProjector implements DonationProjectionRepositoryInterface
     }
 
     public function findOne(?DonationId $id = null, ?DonationStatus $status = null): ?Donation {
+        return $this->findOneByCriteria($this->buildCriteria($id, $status));
+    }
+
+    private function findOneOrThrow(?DonationId $id = null, ?DonationStatus $status = null): Donation {
+        $criteria = $this->buildCriteria($id, $status);
+        $donation = $this->findOneByCriteria($criteria);
+        if ($donation === null) {
+            throw new \RuntimeException(sprintf('%s not found for criteria (%s)', Donation::class, json_encode($criteria))); 
+        }
+        return $donation;
+    }
+
+    /**
+     * @param array<string, string> $criteria 
+     */
+    private function findOneByCriteria(array $criteria): ?Donation{
+        return $this->projectionEntityManager->getRepository(Donation::class)->findOneBy($criteria);
+    }
+
+    /**
+     * @return array<string, string> 
+     */
+    private function buildCriteria(?DonationId $id = null, ?DonationStatus $status = null): array {
         $criteria = [];
         if ($id !== null) {
             $criteria['id'] = $id->toString();
@@ -33,7 +57,7 @@ class DonationProjector implements DonationProjectionRepositoryInterface
         if ($status !== null) {
             $criteria['status'] = $status->value;
         }
-        return $this->projectionEntityManager->getRepository(Donation::class)->findOneBy($criteria);
+        return $criteria;
     }
 
     #[Subscribe(DonationInitiated::class)]
@@ -45,6 +69,8 @@ class DonationProjector implements DonationProjectionRepositoryInterface
 
         $donation = new Donation();
         $donation->setId($event->donationId->toString());
+        $donation->setCreatedAt($event->occuredOn);
+        $donation->setUpdatedAt($event->occuredOn);
         $donation->setPaymentId($event->paymentId->toString());
         $donation->setAmount($event->amount->amount());
         $donation->setCurrency($event->amount->currency()->code());
@@ -55,7 +81,8 @@ class DonationProjector implements DonationProjectionRepositoryInterface
 
     #[Subscribe(DonationAccepted::class)]
     public function onDonationAccepted(DonationAccepted $event): void {
-        $donation = $this->findOne($event->donationId);
+        $donation = $this->findOneOrThrow($event->donationId);
+        $donation->setUpdatedAt($event->occuredOn);
         $donation->setStatus($event->status);
         $this->projectionEntityManager->persist($donation);
         $this->projectionEntityManager->flush();
@@ -63,7 +90,8 @@ class DonationProjector implements DonationProjectionRepositoryInterface
 
     #[Subscribe(DonationFailed::class)]
     public function onDonationFailed(DonationFailed $event): void {
-        $donation = $this->findOne($event->donationId);
+        $donation = $this->findOneOrThrow($event->donationId);
+        $donation->setUpdatedAt($event->occuredOn);
         $donation->setStatus($event->status);
         $this->projectionEntityManager->persist($donation);
         $this->projectionEntityManager->flush();

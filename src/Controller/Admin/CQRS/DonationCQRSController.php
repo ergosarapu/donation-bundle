@@ -4,6 +4,7 @@ namespace ErgoSarapu\DonationBundle\Controller\Admin\CQRS;
 
 use Doctrine\ORM\Event\PreUpdateEventArgs;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\MoneyField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
@@ -41,9 +42,14 @@ class DonationCQRSController extends AbstractCQRSController
     public function configureFields(string $pageName): iterable
     {
         return [
-            IdField::new('id')->setDisabled(),
+            IdField::new('id')->setDisabled()->hideOnIndex(),
+            IdField::new('id')->setDisabled()->formatValue(function ($value, $entity) {
+                return substr((string)$value, -12);
+            })->hideOnDetail()->hideOnForm(),
             MoneyField::new('amount')->setCurrencyPropertyPath('currency'),
             ChoiceField::new('status'),
+            DateTimeField::new('createdAt')->setDisabled(),
+            DateTimeField::new('updatedAt')->setDisabled(),
         ];
     }
 }

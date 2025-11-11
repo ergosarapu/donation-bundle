@@ -8,7 +8,7 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use Patchlevel\EventSourcing\Attribute\Event;
 
 #[Event(name: 'donation.accepted')]
-final class DonationAccepted
+final class DonationAccepted extends AbstractTimestampedEvent
 {
     public readonly DonationStatus $status;
 
@@ -16,6 +16,7 @@ final class DonationAccepted
         public readonly DonationId $donationId,
         public readonly Money $acceptedAmount,
     ) {
+        parent::__construct();
         $this->status = DonationStatus::Accepted;
     }
 }

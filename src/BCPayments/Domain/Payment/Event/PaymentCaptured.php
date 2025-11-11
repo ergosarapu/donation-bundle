@@ -10,7 +10,7 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use Patchlevel\EventSourcing\Attribute\Event;
 
 #[Event(name: 'payment.captured')]
-class PaymentCaptured
+class PaymentCaptured extends AbstractTimestampedEvent
 {
     public readonly PaymentStatus $status;
 
@@ -19,6 +19,7 @@ class PaymentCaptured
         public readonly Money $capturedAmount,
         public readonly ?PaymentAppliedToId $appliedTo = null,
     ) {
+        parent::__construct();
         $this->status = PaymentStatus::Captured;
     }
 

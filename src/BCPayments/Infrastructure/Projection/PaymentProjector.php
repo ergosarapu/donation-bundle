@@ -30,6 +30,29 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
     }
 
     public function findOne(?PaymentId $id = null, ?PaymentStatus $status = null): ?Payment {
+        return $this->findOneByCriteria($this->buildCriteria($id, $status));
+    }
+
+    private function findOneOrThrow(?PaymentId $id = null, ?PaymentStatus $status = null): Payment {
+        $criteria = $this->buildCriteria($id, $status);
+        $donation = $this->findOneByCriteria($criteria);
+        if ($donation === null) {
+            throw new \RuntimeException(sprintf('%s not found for criteria (%s)', Payment::class, json_encode($criteria))); 
+        }
+        return $donation;
+    }
+
+    /**
+     * @param array<string, string> $criteria 
+     */
+    private function findOneByCriteria(array $criteria): ?Payment{
+        return $this->projectionEntityManager->getRepository(Payment::class)->findOneBy($criteria);
+    }
+
+    /**
+     * @return array<string, string> 
+     */
+    private function buildCriteria(?PaymentId $id = null, ?PaymentStatus $status = null): array {
         $criteria = [];
         if ($id !== null) {
             $criteria['id'] = $id->toString();
@@ -37,7 +60,7 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         if ($status !== null) {
             $criteria['status'] = $status->value;
         }
-        return $this->projectionEntityManager->getRepository(Payment::class)->findOneBy($criteria);
+        return $criteria;
     }
     
     #[Subscribe(PaymentInitiated::class)]
@@ -48,6 +71,8 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         }
         $payment = new Payment();
         $payment->setId($event->paymentId->toString());
+        $payment->setCreatedAt($event->occuredOn);
+        $payment->setUpdatedAt($event->occuredOn);
         $payment->setAmount($event->amount->amount());
         $payment->setCurrency($event->amount->currency()->code());
         $payment->setStatus($event->status);
@@ -60,7 +85,8 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
     public function onPaymentPending(
         PaymentPending $event
     ): void {
-        $payment = $this->findOne($event->paymentId);
+        $payment = $this->findOneOrThrow($event->paymentId);
+        $payment->setUpdatedAt($event->occuredOn);
         $payment->setStatus($event->status);
         $this->projectionEntityManager->flush();
     }
@@ -69,7 +95,8 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
     public function onPaymentAuthorized(
         PaymentAuthorized $event
     ): void {
-        $payment = $this->findOne($event->paymentId);
+        $payment = $this->findOneOrThrow($event->paymentId);
+        $payment->setUpdatedAt($event->occuredOn);
         $payment->setStatus($event->status);
         $payment->setAmount($event->authorizedAmount->amount());
         $this->projectionEntityManager->flush();
@@ -77,7 +104,8 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
 
     #[Subscribe(PaymentCaptured::class)]
     public function onPaymentCaptured(PaymentCaptured $event): void {
-        $payment = $this->findOne($event->paymentId);
+        $payment = $this->findOneOrThrow($event->paymentId);
+        $payment->setUpdatedAt($event->occuredOn);
         $payment->setStatus($event->status);
         $payment->setAmount($event->capturedAmount->amount());
         $this->projectionEntityManager->flush();
@@ -87,7 +115,8 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
     public function onPaymentCanceled(
         PaymentCanceled $event
     ): void {
-        $payment = $this->findOne($event->paymentId);
+        $payment = $this->findOneOrThrow($event->paymentId);
+        $payment->setUpdatedAt($event->occuredOn);
         $payment->setStatus($event->status);
         $this->projectionEntityManager->flush();
     }
@@ -96,7 +125,8 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
     public function onPaymentFailed(
         PaymentFailed $event
     ): void {
-        $payment = $this->findOne($event->paymentId);
+        $payment = $this->findOneOrThrow($event->paymentId);
+        $payment->setUpdatedAt($event->occuredOn);
         $payment->setStatus($event->status);
         $this->projectionEntityManager->flush();
     }
@@ -105,7 +135,8 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
     public function onPaymentRefunded(
         PaymentRefunded $event
     ): void {
-        $payment = $this->findOne($event->paymentId);
+        $payment = $this->findOneOrThrow($event->paymentId);
+        $payment->setUpdatedAt($event->occuredOn);
         $payment->setStatus($event->status);
         $payment->setAmount($event->remainingAmount->amount());
         $this->projectionEntityManager->flush();

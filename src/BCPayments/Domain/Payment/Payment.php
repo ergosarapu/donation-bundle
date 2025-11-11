@@ -56,16 +56,11 @@ class Payment extends BasicAggregateRoot
         return $payment;
     }
 
-    protected function applyCreated(AbstractPaymentCreated $event): void
-    {
-        $this->id = $event->paymentId;
-        $this->amount = $event->amount;
-    }
-
     #[Apply(PaymentInitiated::class)]
     protected function applyInitiated(PaymentInitiated $event): void
     {
-        $this->applyCreated($event);
+        $this->id = $event->paymentId;
+        $this->amount = $event->amount;
         $this->status = $event->status;
         $this->appliedTo = $event->appliedTo;
         // $this->gateway = $event->gateway;

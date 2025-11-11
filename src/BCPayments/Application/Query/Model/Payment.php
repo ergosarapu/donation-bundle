@@ -2,6 +2,7 @@
 
 namespace ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model;
 
+use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\ValueObject\PaymentStatus;
 
 class Payment
@@ -11,6 +12,8 @@ class Payment
     private string $currency;
     private PaymentStatus $status;
     private ?string $redirectUrl;
+    private DateTimeImmutable $createdAt;
+    private DateTimeImmutable $updatedAt;
     
     public function getId(): string
     {
@@ -60,5 +63,25 @@ class Payment
     public function setRedirectUrl(?string $redirectUrl): void
     {
         $this->redirectUrl = $redirectUrl;
+    }
+
+    public function getCreatedAt(): DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function setCreatedAt(DateTimeImmutable $createdAt): void
+    {
+        $this->createdAt = $createdAt;
+    }
+
+    public function getUpdatedAt(): DateTimeImmutable
+    {
+        return $this->updatedAt;
+    }
+
+    public function setUpdatedAt(DateTimeImmutable $updatedAt): void
+    {
+        $this->updatedAt = $updatedAt;
     }
 }

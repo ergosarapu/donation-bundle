@@ -9,7 +9,7 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
 
-abstract class AbstractDonationCreated
+abstract class AbstractDonationCreated extends AbstractTimestampedEvent
 {
     public function __construct(
         public readonly DonationId $donationId,
@@ -19,5 +19,6 @@ abstract class AbstractDonationCreated
         public readonly ?Email $donorEmail,
         public readonly ?NationalIdCode $donorNationalIdCode,
     ) {
+        parent::__construct();
     }
 }
