@@ -171,9 +171,14 @@ composer update
 ```
 
 ## Testing
-Use following script to run database migrations and tests:
+To run tests, use:
 ```sh
-./run_tests.sh
+composer test-unit
+export DATABASE_URL=pdo-mysql://db:db@db/db
+composer test-migrate
+composer test-functional
+composer test-integration
+composer test-all
 ```
 
 ## Set up app integrated dev environment
