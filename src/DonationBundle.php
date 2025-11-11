@@ -3,7 +3,6 @@
 namespace ErgoSarapu\DonationBundle;
 
 use DateInterval;
-use ErgoSarapu\DonationBundle\DependencyInjection\Compiler\MakeTestServicesPublicPass;
 use ErgoSarapu\DonationBundle\DependencyInjection\Compiler\RegisterQueryCompilerPass;
 use ErgoSarapu\DonationBundle\Entity\Payment;
 use ErgoSarapu\DonationBundle\Entity\PaymentToken;
@@ -313,6 +312,5 @@ class DonationBundle extends AbstractBundle
     public function build(ContainerBuilder $builder): void {
         parent::build($builder);
         $builder->addCompilerPass(new RegisterQueryCompilerPass());
-        $builder->addCompilerPass(new MakeTestServicesPublicPass(), PassConfig::TYPE_OPTIMIZE);
     }
 }
