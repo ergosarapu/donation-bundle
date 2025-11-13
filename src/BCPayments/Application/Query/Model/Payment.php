@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model;
 
 use DateTimeImmutable;
@@ -14,7 +16,7 @@ class Payment
     private ?string $redirectUrl;
     private DateTimeImmutable $createdAt;
     private DateTimeImmutable $updatedAt;
-    
+
     public function getId(): string
     {
         return $this->id;

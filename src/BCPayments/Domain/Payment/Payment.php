@@ -1,20 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\BCPayments\Domain\Payment;
 
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\AbstractPaymentCreated;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentAuthorized;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentCanceled;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentCaptured;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentDidNotSucceed;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentInitiated;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentFailed;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentInitiated;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentPending;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentRefunded;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentSucceeded;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\ValueObject\PaymentStatus;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
@@ -118,7 +119,8 @@ class Payment extends BasicAggregateRoot
     {
     }
 
-    public function markPending(): void{
+    public function markPending(): void
+    {
         // Idempotency guard
         if ($this->status === PaymentStatus::Pending) {
             return;
@@ -127,11 +129,13 @@ class Payment extends BasicAggregateRoot
         $this->recordThat(new PaymentPending($this->id));
     }
 
-    public function canTransitionToPending(bool $throw = false): bool {
+    public function canTransitionToPending(bool $throw = false): bool
+    {
         return $this->canTransition($this->status, PaymentStatus::Pending, [], $throw);
     }
 
-    public function markAuthorized(Money $authorizedAmount): void{
+    public function markAuthorized(Money $authorizedAmount): void
+    {
         // Idempotency guard
         if ($this->status === PaymentStatus::Authorized) {
             if (!$this->amount->equals($authorizedAmount)) {
@@ -144,7 +148,8 @@ class Payment extends BasicAggregateRoot
         $this->recordSucceeded();
     }
 
-    private function recordSucceeded(): void {
+    private function recordSucceeded(): void
+    {
         if ($this->succeedRecorded) {
             // "Succeed" can mean authorized, captured or settled - therefore we want to record it only once
             return;
@@ -152,11 +157,13 @@ class Payment extends BasicAggregateRoot
         $this->recordThat(new PaymentSucceeded($this->id, $this->amount, $this->appliedTo));
     }
 
-    public function canTransitionToAuthorized(bool $throw = false): bool {
+    public function canTransitionToAuthorized(bool $throw = false): bool
+    {
         return $this->canTransition($this->status, PaymentStatus::Authorized, [PaymentStatus::Pending], $throw);
     }
 
-    public function markCaptured(Money $capturedAmount): void{
+    public function markCaptured(Money $capturedAmount): void
+    {
         // Idempotency guard
         if ($this->status === PaymentStatus::Captured) {
             if (!$this->amount->equals($capturedAmount)) {
@@ -169,11 +176,13 @@ class Payment extends BasicAggregateRoot
         $this->recordSucceeded();
     }
 
-    public function canTransitionToCaptured(bool $throw = false): bool {
+    public function canTransitionToCaptured(bool $throw = false): bool
+    {
         return $this->canTransition($this->status, PaymentStatus::Captured, [PaymentStatus::Pending, PaymentStatus::Authorized], $throw);
     }
 
-    public function markCanceled(): void{
+    public function markCanceled(): void
+    {
         // Idempotency guard
         if ($this->status === PaymentStatus::Canceled) {
             return;
@@ -183,11 +192,13 @@ class Payment extends BasicAggregateRoot
         $this->recordThat(new PaymentDidNotSucceed($this->id, $this->appliedTo));
     }
 
-    public function canTransitionToCanceled(bool $throw = false): bool {
+    public function canTransitionToCanceled(bool $throw = false): bool
+    {
         return $this->canTransition($this->status, PaymentStatus::Canceled, [PaymentStatus::Pending, PaymentStatus::Authorized], $throw);
     }
 
-    public function markFailed(): void{
+    public function markFailed(): void
+    {
         // Idempotency guard
         if ($this->status === PaymentStatus::Failed) {
             return;
@@ -197,11 +208,13 @@ class Payment extends BasicAggregateRoot
         $this->recordThat(new PaymentDidNotSucceed($this->id, $this->appliedTo));
     }
 
-    public function canTransitionToFailed(bool $throw = false): bool {
+    public function canTransitionToFailed(bool $throw = false): bool
+    {
         return $this->canTransition($this->status, PaymentStatus::Failed, [PaymentStatus::Pending, PaymentStatus::Authorized], $throw);
     }
 
-    public function markRefunded(Money $remainingAmount): void{
+    public function markRefunded(Money $remainingAmount): void
+    {
         // Idempotency guard
         if ($this->status === PaymentStatus::Refunded) {
             if (!$this->amount->equals($remainingAmount)) {
@@ -213,14 +226,16 @@ class Payment extends BasicAggregateRoot
         $this->recordThat(new PaymentRefunded($this->id, $remainingAmount));
     }
 
-    public function canTransitionToRefunded(bool $throw = false): bool {
+    public function canTransitionToRefunded(bool $throw = false): bool
+    {
         return $this->canTransition($this->status, PaymentStatus::Refunded, [PaymentStatus::Captured], $throw);
     }
 
-    /** 
-     * @param array<PaymentStatus> $allowedFrom 
+    /**
+     * @param array<PaymentStatus> $allowedFrom
      */
-    private function canTransition(PaymentStatus $from, PaymentStatus $to, array $allowedFrom, bool $throw = false): bool {
+    private function canTransition(PaymentStatus $from, PaymentStatus $to, array $allowedFrom, bool $throw = false): bool
+    {
         $canTransition = in_array($from, $allowedFrom);
         if ($throw && !$canTransition) {
             throw new LogicException('Cannot transition from ' . $from->value . ' to ' . $to->value . '.');

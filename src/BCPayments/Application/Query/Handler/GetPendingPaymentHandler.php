@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\BCPayments\Application\Query\Handler;
 
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetPendingPayment;
@@ -15,6 +17,7 @@ class GetPendingPaymentHandler implements QueryHandlerInterface
 
     public function __invoke(GetPendingPayment $query): mixed
     {
+
         return $this->paymentRepository->findOne($query->paymentId, PaymentStatus::Pending);
     }
 }

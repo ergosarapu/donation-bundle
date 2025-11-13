@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler;
 
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsRefunded;
-use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\CommandHandlerInterface;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentRepositoryInterface;
+use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\CommandHandlerInterface;
 
 class MarkPaymentAsRefundedHandler implements CommandHandlerInterface
 {

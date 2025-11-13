@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\BCPayments\Application\EventHandler\Domain;
 
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentDidNotSucceed;
@@ -9,7 +11,6 @@ use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\EventHandlerInterfa
 
 class PaymentDidNotSucceedHandler implements EventHandlerInterface
 {
-
     public function __construct(private readonly EventBusInterface $eventBus)
     {
     }

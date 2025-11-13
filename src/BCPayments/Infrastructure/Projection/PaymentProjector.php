@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\BCPayments\Infrastructure\Projection;
 
 use Doctrine\ORM\EntityManagerInterface;
@@ -29,30 +31,34 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
     ) {
     }
 
-    public function findOne(?PaymentId $id = null, ?PaymentStatus $status = null): ?Payment {
+    public function findOne(?PaymentId $id = null, ?PaymentStatus $status = null): ?Payment
+    {
         return $this->findOneByCriteria($this->buildCriteria($id, $status));
     }
 
-    private function findOneOrThrow(?PaymentId $id = null, ?PaymentStatus $status = null): Payment {
+    private function findOneOrThrow(?PaymentId $id = null, ?PaymentStatus $status = null): Payment
+    {
         $criteria = $this->buildCriteria($id, $status);
         $donation = $this->findOneByCriteria($criteria);
         if ($donation === null) {
-            throw new \RuntimeException(sprintf('%s not found for criteria (%s)', Payment::class, json_encode($criteria))); 
+            throw new \RuntimeException(sprintf('%s not found for criteria (%s)', Payment::class, json_encode($criteria)));
         }
         return $donation;
     }
 
     /**
-     * @param array<string, string> $criteria 
+     * @param array<string, string> $criteria
      */
-    private function findOneByCriteria(array $criteria): ?Payment{
+    private function findOneByCriteria(array $criteria): ?Payment
+    {
         return $this->projectionEntityManager->getRepository(Payment::class)->findOneBy($criteria);
     }
 
     /**
-     * @return array<string, string> 
+     * @return array<string, string>
      */
-    private function buildCriteria(?PaymentId $id = null, ?PaymentStatus $status = null): array {
+    private function buildCriteria(?PaymentId $id = null, ?PaymentStatus $status = null): array
+    {
         $criteria = [];
         if ($id !== null) {
             $criteria['id'] = $id->toString();
@@ -62,9 +68,10 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         }
         return $criteria;
     }
-    
+
     #[Subscribe(PaymentInitiated::class)]
-    public function onPaymentInitiated(PaymentInitiated $event): void {
+    public function onPaymentInitiated(PaymentInitiated $event): void
+    {
         // Idempotency guard
         if ($this->findOne($event->paymentId) !== null) {
             return;
@@ -103,7 +110,8 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
     }
 
     #[Subscribe(PaymentCaptured::class)]
-    public function onPaymentCaptured(PaymentCaptured $event): void {
+    public function onPaymentCaptured(PaymentCaptured $event): void
+    {
         $payment = $this->findOneOrThrow($event->paymentId);
         $payment->setUpdatedAt($event->occuredOn);
         $payment->setStatus($event->status);
@@ -143,7 +151,8 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
     }
 
     #[Teardown]
-    public function teardown(): void{
+    public function teardown(): void
+    {
         $this->projectionEntityManager->createQuery('DELETE FROM ' . Payment::class)->execute();
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\BCPayments\Application\Query\Port;
 
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model\Payment;

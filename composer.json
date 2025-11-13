@@ -61,7 +61,8 @@
         "php-http/message-factory": "^1.1",
         "phpunit/phpunit": "^11",
         "phpstan/phpstan": "^2.1",
-        "patchlevel/event-sourcing-phpunit": "^1.2"
+        "patchlevel/event-sourcing-phpunit": "^1.2",
+        "friendsofphp/php-cs-fixer": "^3.89"
     },
     "extra": {
         "symfony": {
@@ -73,6 +74,7 @@
         "test-migrate": "mkdir migrations && ./vendor/bin/doctrine-migrations migrations:diff --no-interaction && ./vendor/bin/doctrine-migrations migrations:migrate --no-interaction",
         "test-functional": "./vendor/bin/phpunit --testdox --testsuite Functional --exclude-filter IndexControllerTest",
         "test-integration": "./vendor/bin/phpunit --testdox --testsuite Integration",
-        "test-all": "composer test-unit && composer test-functional && composer test-integration"
+        "test-all": "composer test-unit && composer test-functional && composer test-integration",
+        "analyse": "./vendor/bin/php-cs-fixer check && ./vendor/bin/phpstan analyse"
     }
 }

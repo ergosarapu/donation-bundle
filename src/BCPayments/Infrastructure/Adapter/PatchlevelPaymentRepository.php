@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\BCPayments\Infrastructure\Adapter;
 
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentRepositoryInterface;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
 use ErgoSarapu\DonationBundle\SharedInfrastructure\Repository\PatchlevelRepositoryWrapperTrait;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 
@@ -18,7 +20,9 @@ final class PatchlevelPaymentRepository implements PaymentRepositoryInterface
 
     public function load(PaymentId $paymentId): Payment
     {
-        return $this->loadAggregate($paymentId);
+        /** @var Payment $payment */
+        $payment = $this->loadAggregate($paymentId);
+        return $payment;
     }
 
     public function has(PaymentId $paymentId): bool

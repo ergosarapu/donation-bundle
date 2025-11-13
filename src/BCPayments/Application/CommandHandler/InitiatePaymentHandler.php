@@ -1,22 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler;
 
-use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\CommandHandlerInterface;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
-use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentGatewayInterface;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentRepositoryInterface;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Command\InitiatePaymentIntegrationCommand;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
+use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\CommandHandlerInterface;
 
 class InitiatePaymentHandler implements CommandHandlerInterface
 {
-
     public function __construct(
         private readonly PaymentRepositoryInterface $paymentRepository,
         private readonly PaymentGatewayInterface $paymentGateway,
-    )
-    {
+    ) {
     }
 
     public function __invoke(InitiatePaymentIntegrationCommand $command): void
@@ -36,7 +36,7 @@ class InitiatePaymentHandler implements CommandHandlerInterface
             $command->description,
             $command->email,
         );
-        
+
         // Create new aggregate
         $payment = Payment::initiate(
             $command->paymentId,
