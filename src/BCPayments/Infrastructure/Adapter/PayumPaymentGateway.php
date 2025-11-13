@@ -13,7 +13,6 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\URL;
-use InvalidArgumentException;
 use Payum\Core\Payum;
 
 class PayumPaymentGateway implements PaymentGatewayInterface
@@ -32,7 +31,7 @@ class PayumPaymentGateway implements PaymentGatewayInterface
         $payment->setCurrencyCode($amount->currency()->code());
         $payment->setTotalAmount($amount->amount());
         $payment->setDescription($description->toString());
-        if ($email !== null){
+        if ($email !== null) {
             // Is the e-mail really required by Payum?
             $payment->setClientEmail($email->toString());
         }
