@@ -60,7 +60,7 @@ class InitiateDonationTest extends KernelTestCase
     {
         // Initiate donation
         $amount = new Money(100, new Currency('EUR'));
-        $initiateDonation = new InitiateDonation($amount, CampaignId::generate(), new Gateway('test'), donorEmail: new Email('example@example.com'));
+        $initiateDonation = new InitiateDonation($amount, CampaignId::generate(), new Gateway('test'));
         $this->commandBus->dispatch($initiateDonation);
 
         /** @var ?Donation $donation */
@@ -86,7 +86,7 @@ class InitiateDonationTest extends KernelTestCase
     {
         // Initiate donation
         $amount = new Money(100, new Currency('EUR'));
-        $initiateDonation = new InitiateDonation($amount, CampaignId::generate(), new Gateway('test'), donorEmail: new Email('example@example.com'));
+        $initiateDonation = new InitiateDonation($amount, CampaignId::generate(), new Gateway('test'));
         $this->commandBus->dispatch($initiateDonation);
 
         /** @var ?Donation $donation */

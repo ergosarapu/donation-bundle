@@ -25,9 +25,6 @@ class PayumPaymentGateway implements PaymentGatewayInterface
 
     public function createPaymentRedirectUrl(Gateway $gateway, PaymentId $paymentId, Money $amount, ShortDescription $description, ?Email $email): URL
     {
-        if ($email === null) {
-            throw new InvalidArgumentException('Email is required by Payum to create payment redirect URL');
-        }
         /** @var Payment $payment */
         $payment = $this->payum->getStorage(Payment::class)->create(); // TODO: Replace with other payment structure
         $payment->setStatus(Status::Created);
@@ -35,7 +32,10 @@ class PayumPaymentGateway implements PaymentGatewayInterface
         $payment->setCurrencyCode($amount->currency()->code());
         $payment->setTotalAmount($amount->amount());
         $payment->setDescription($description->toString());
-        $payment->setClientEmail($email->toString());
+        if ($email !== null){
+            // Is the e-mail really required by Payum?
+            $payment->setClientEmail($email->toString());
+        }
         $payment->setGateway($gateway->id());
 
         $this->payum->getStorage(Payment::class)->update($payment);
