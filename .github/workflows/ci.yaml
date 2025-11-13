@@ -60,7 +60,7 @@ jobs:
         run: composer update
 
       - name: Check Code
-        run: composer code-check
+        run: composer analyse
 
       - name: Run Unit Tests
         run: composer test-unit
