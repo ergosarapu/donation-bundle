@@ -20,7 +20,6 @@ use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\QueryBusInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\Tests\Helpers\DonationBundleTestingKernel;
@@ -76,9 +75,15 @@ class InitiateDonationTest extends KernelTestCase
 
         // Mark payment as captured and expect donation to be accepted
         $this->commandBus->dispatch(new MarkPaymentAsCaptured(PaymentId::fromString($donation->getPaymentId()), $amount));
+
+        /** @var ?Payment $payment */
         $payment = $this->queryBus->ask(new GetPayment(PaymentId::fromString($donation->getPaymentId())));
+        $this->assertNotNull($payment);
         $this->assertEquals(PaymentStatus::Captured, $payment->getStatus());
+
+        /** @var ?Donation $donation */
         $donation = $this->queryBus->ask(new GetDonation($initiateDonation->donationId));
+        $this->assertNotNull($donation);
         $this->assertEquals(DonationStatus::Accepted, $donation->getStatus());
     }
 
@@ -97,9 +102,14 @@ class InitiateDonationTest extends KernelTestCase
         // Mark payment as not succeeded and expect donation to be failed
         $this->commandBus->dispatch(new MarkPaymentAsFailed(PaymentId::fromString($donation->getPaymentId())));
 
+        /** @var ?Payment $payment */
         $payment = $this->queryBus->ask(new GetPayment(PaymentId::fromString($donation->getPaymentId())));
+        $this->assertNotNull($payment);
         $this->assertEquals(PaymentStatus::Failed, $payment->getStatus());
+
+        /** @var ?Donation $donation */
         $donation = $this->queryBus->ask(new GetDonation($initiateDonation->donationId));
+        $this->assertNotNull($donation);
         $this->assertEquals(DonationStatus::Failed, $donation->getStatus());
     }
 }

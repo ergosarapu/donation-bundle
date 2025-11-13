@@ -3,7 +3,10 @@
 declare(strict_types=1);
 
 $finder = (new PhpCsFixer\Finder())
-    ->in(__DIR__.'/src/BCPayments')
+    ->in([
+        __DIR__.'/src/BCPayments',
+        __DIR__.'/tests/Integration',
+    ])
 ;
 
 return (new PhpCsFixer\Config())

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\Tests\Integration\Subscription;
 
 use DateTime;
@@ -17,10 +19,10 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Zenstruck\Messenger\Test\InteractsWithMessenger;
 
-class SubscriptionManagerTest extends KernelTestCase 
+class SubscriptionManagerTest extends KernelTestCase
 {
     use InteractsWithMessenger;
-    
+
     private ?EntityManagerInterface $entityManager;
 
     private SubscriptionManager $subscriptionManager;
@@ -34,7 +36,8 @@ class SubscriptionManagerTest extends KernelTestCase
         return DonationBundleTestingKernel::class;
     }
 
-    protected function setUp(): void {
+    protected function setUp(): void
+    {
         $this->entityManager = $this->getContainer()->get('doctrine')->getManager();
         $this->entityManager->getEventManager()->addEventSubscriber(new TimestampableListener());
         $this->subscriptionManager = $this->getContainer()->get(SubscriptionManager::class);
@@ -43,7 +46,8 @@ class SubscriptionManagerTest extends KernelTestCase
     }
 
     #[DataProvider('renewalInputs')]
-    public function testSubscriptionRenewedAndPaymentCaptureDispatched(string $subscriptionCreated, string $interval, DateTime $currentTime, DateTime $nextRenewalTime): void {
+    public function testSubscriptionRenewedAndPaymentCaptureDispatched(string $subscriptionCreated, string $interval, DateTime $currentTime, DateTime $nextRenewalTime): void
+    {
 
         $payment = $this->createPayment(100, Status::Captured, $subscriptionCreated, 'EUR', 'my_gateway');
         $this->entityManager->persist($payment);
@@ -54,7 +58,7 @@ class SubscriptionManagerTest extends KernelTestCase
 
         $paymentsCreated = $this->subscriptionManager->renewAndDispatchCapturePayments($currentTime);
         $this->assertEquals(1, $paymentsCreated);
-        
+
         // Ensure we do not get cached entities
         $this->entityManager->clear();
 
@@ -66,7 +70,7 @@ class SubscriptionManagerTest extends KernelTestCase
 
         $this->assertSame($subscription, $payments[0]->getSubscription());
         $this->assertSame($subscription, $payments[1]->getSubscription());
-        
+
         $this->bus('message.bus')->dispatched()->assertCount(1);
     }
 
@@ -83,7 +87,8 @@ class SubscriptionManagerTest extends KernelTestCase
     }
 
     #[DataProvider('ignoredSubscriptionStatuses')]
-    public function testNonActiveSubscriptionRenewalIgnored(SubscriptionStatus $status): void {
+    public function testNonActiveSubscriptionRenewalIgnored(SubscriptionStatus $status): void
+    {
         $payment = $this->createPayment(100, Status::Captured, '2024-02-01', 'EUR');
         $this->entityManager->persist($payment);
 
@@ -104,18 +109,19 @@ class SubscriptionManagerTest extends KernelTestCase
         $this->assertEquals(new DateTime('2024-03-01'), $subscription->getNextRenewalTime());
         $this->assertSame($subscription, $payments[0]->getSubscription());
 
-        $this->bus('message.bus')->dispatched()->assertEmpty();   
+        $this->bus('message.bus')->dispatched()->assertEmpty();
     }
 
     public static function ignoredSubscriptionStatuses(): Generator
     {
-        $statuses = array_filter(SubscriptionStatus::cases(), fn($status) => $status !== SubscriptionStatus::Active);
+        $statuses = array_filter(SubscriptionStatus::cases(), fn ($status) => $status !== SubscriptionStatus::Active);
         foreach ($statuses as $status) {
             yield $status->name => [$status];
         }
     }
 
-    private function createPayment(int $totalAmount, Status $status, string $createdAt, string $currency = 'EUR', ?string $gateway = null): Payment {
+    private function createPayment(int $totalAmount, Status $status, string $createdAt, string $currency = 'EUR', ?string $gateway = null): Payment
+    {
         $payment = new Payment();
         $payment->setTotalAmount($totalAmount);
         $payment->setStatus($status);

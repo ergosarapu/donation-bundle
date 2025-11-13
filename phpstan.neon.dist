@@ -1,4 +1,9 @@
+includes:
+    - vendor/phpstan/phpstan-symfony/extension.neon
 parameters:
 	level: 10
 	paths:
 		- src/BCPayments
+		- tests/Integration/Donations
+	symfony:
+		containerXmlPath: var/cache/test/phpstan/ErgoSarapu_DonationBundle_Tests_Helpers_DonationBundleTestingKernelTestDebugContainer.xml

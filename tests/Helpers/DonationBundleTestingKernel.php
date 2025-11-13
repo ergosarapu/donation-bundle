@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\Tests\Helpers;
 
 use DAMA\DoctrineTestBundle\DAMADoctrineTestBundle;
@@ -24,13 +26,14 @@ class DonationBundleTestingKernel extends Kernel
 
     private array|string|null $bundleConfig = [];
 
-    public function __construct(string $environment, bool $debug, array|string|null $bundleConfig = null)
+    public function __construct(string $environment, bool $debug, array|string|null $bundleConfig = null, private readonly ?string $cachePath = null)
     {
         $this->bundleConfig = $bundleConfig;
         parent::__construct($environment, $debug);
     }
 
-    public function registerBundles(): iterable {
+    public function registerBundles(): iterable
+    {
         return [
             new DonationBundle(),
             new FrameworkBundle(),
@@ -43,7 +46,8 @@ class DonationBundleTestingKernel extends Kernel
         ];
     }
 
-    protected function configureRoutes(RoutingConfigurator $routes): void{
+    protected function configureRoutes(RoutingConfigurator $routes): void
+    {
         $routes->import(__DIR__.'/../../config/routes.xml')->prefix('/');
     }
 
@@ -60,7 +64,7 @@ class DonationBundleTestingKernel extends Kernel
             }
         }
 
-        
+
         $builder->loadFromExtension('framework', [
             'test' => true,
             'messenger' => [
@@ -107,12 +111,17 @@ class DonationBundleTestingKernel extends Kernel
             ],
         ]);
     }
-    
+
     public function getCacheDir(): string
     {
-        // Ensure each kernel instance generates its own cache based on the configuration
-        // This allows different configurations to have separate caches
-        $configHash = md5(serialize($this->bundleConfig));
-        return parent::getCacheDir().'/'.$configHash;
+        if ($this->cachePath) {
+            // In case cachePath is explicitly provided, use that
+            $path = $this->cachePath;
+        } else {
+            // Ensure each kernel instance generates its own cache based on the configuration
+            // This allows different configurations to have separate caches
+            $path = md5(serialize($this->bundleConfig));
+        }
+        return parent::getCacheDir().'/'.$path;
     }
 }

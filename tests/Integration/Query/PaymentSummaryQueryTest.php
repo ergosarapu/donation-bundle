@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\Tests\Integration\Query;
 
 use DateTime;
@@ -14,23 +16,24 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 class PaymentSummaryQueryTest extends KernelTestCase
 {
-
     private ?EntityManager $entityManager;
 
     private PaymentSummaryQueryInterface $query;
-    
+
     protected static function getKernelClass(): string
     {
         return DonationBundleTestingKernel::class;
     }
-    protected function setUp(): void {
+    protected function setUp(): void
+    {
         $this->entityManager = $this->getContainer()->get('doctrine')->getManager();
         $this->entityManager->getEventManager()->addEventSubscriber(new TimestampableListener());
         $this->query = $this->getContainer()->get(PaymentSummaryQueryInterface::class);
     }
 
-    public function testQuery():void{
-        
+    public function testQuery(): void
+    {
+
         // Payments with no campaign
         $this->createPayment(100, Status::Captured, '2024-09-01');
         $this->createPayment(100, Status::Captured, '2024-09-30');
@@ -47,7 +50,7 @@ class PaymentSummaryQueryTest extends KernelTestCase
         $this->createPayment(100, Status::Captured, '2024-07-01', $campaignB);
 
         $this->entityManager->flush();
-        
+
         // Query
         $result = $this->query->query(new DateTime('2024-01-01'), new DateTime('2024-12-15'));
 
@@ -96,7 +99,8 @@ class PaymentSummaryQueryTest extends KernelTestCase
         $this->assertStrEq($cid.', Campaign B, 2024-12-01, 2024-12-15, 2024-12, 0, EUR', array_shift($result));
     }
 
-    private function createPayment(int $totalAmount, Status $status, string $createdAt, ?Campaign $campaign = null, string $currency = 'EUR'){
+    private function createPayment(int $totalAmount, Status $status, string $createdAt, ?Campaign $campaign = null, string $currency = 'EUR')
+    {
         $payment = new Payment();
         $payment->setTotalAmount($totalAmount);
         $payment->setStatus($status);
@@ -106,7 +110,8 @@ class PaymentSummaryQueryTest extends KernelTestCase
         $this->entityManager->persist($payment);
     }
 
-    private function createCampaign(string $name, int $publidId, string $publicTitle): Campaign{
+    private function createCampaign(string $name, int $publidId, string $publicTitle): Campaign
+    {
         $campaign = new Campaign();
         $campaign->setName($name);
         $campaign->setDefault(false);
@@ -115,8 +120,9 @@ class PaymentSummaryQueryTest extends KernelTestCase
         $this->entityManager->persist($campaign);
         return $campaign;
     }
-    
-    private function assertStrEq(string $expected, object $actual): void {
+
+    private function assertStrEq(string $expected, object $actual): void
+    {
         $this->assertSame($expected, (string)$actual);
     }
 }
