@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event;
+namespace ErgoSarapu\DonationBundle\SharedKernel\Event;
 
 use DateTimeImmutable;
 use Patchlevel\Hydrator\Normalizer\DateTimeImmutableNormalizer;
