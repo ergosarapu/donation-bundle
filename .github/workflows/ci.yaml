@@ -53,8 +53,11 @@ jobs:
       - name: Install dependencies
         run: make install
 
-      - name: Check Code
+      - name: Run PHPStan
         run: make phpstan
+
+      - name: Check Code Style
+        run: make cs-check
 
       - name: Run Unit Tests
         run: make phpunit-unit

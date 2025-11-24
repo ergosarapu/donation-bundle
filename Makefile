@@ -26,7 +26,6 @@ phpunit-functional:																	## run phpunit functional tests
 
 .PHONY: migrate
 migrate:																			## run database migrations
-	export DATABASE_URL=pdo-mysql://db:db@db/db; \
 	vendor/bin/doctrine-migrations migrations:diff --no-interaction; \
 	vendor/bin/doctrine-migrations migrations:migrate --no-interaction
 
