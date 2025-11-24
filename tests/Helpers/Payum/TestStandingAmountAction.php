@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\Tests\Helpers\Payum;
 
 use ErgoSarapu\DonationBundle\Payum\Request\GetStandingAmount;
@@ -11,7 +13,8 @@ use Payum\Core\Exception\RequestNotSupportedException;
 
 class TestStandingAmountAction implements ActionInterface
 {
-    public function execute($request): void{
+    public function execute($request): void
+    {
         RequestNotSupportedException::assertSupports($this, $request);
 
         $model = ArrayObject::ensureArrayObject($request->getModel());
@@ -24,7 +27,8 @@ class TestStandingAmountAction implements ActionInterface
         $request->setAmount($amount);
     }
 
-    public function supports($request) {
+    public function supports($request)
+    {
         return
             $request instanceof GetStandingAmount &&
             $request->getModel() instanceof \ArrayAccess

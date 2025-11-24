@@ -247,7 +247,7 @@ class DonationsTest extends AcceptanceTestCase
 
     private function thenRecurringDonationNotActivated(): void
     {
-        $this->transport('event')->dispatched()->assertNotContains(RecurringDonationActivated::class, 1);
+        $this->transport('event')->dispatched()->assertNotContains(RecurringDonationActivated::class);
     }
 
 

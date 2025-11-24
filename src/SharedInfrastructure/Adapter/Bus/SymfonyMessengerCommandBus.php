@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\SharedInfrastructure\Adapter\Bus;
 
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
@@ -11,8 +13,9 @@ class SymfonyMessengerCommandBus implements CommandBusInterface
     {
     }
 
-    public function dispatch(object $command): void {
+    public function dispatch(object $command): void
+    {
         $this->commandBus->dispatch($command);
     }
-    
+
 }

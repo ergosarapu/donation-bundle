@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\BCDonations\Infrastructure\Projection;
 
 use Doctrine\ORM\EntityManagerInterface;
@@ -14,7 +16,6 @@ use Patchlevel\EventSourcing\Attribute\Projector;
 use Patchlevel\EventSourcing\Attribute\Subscribe;
 use Patchlevel\EventSourcing\Attribute\Teardown;
 use Patchlevel\EventSourcing\Subscription\Subscriber\SubscriberUtil;
-use RuntimeException;
 
 #[Projector('donation')]
 class DonationProjector implements DonationProjectionRepositoryInterface
@@ -26,30 +27,34 @@ class DonationProjector implements DonationProjectionRepositoryInterface
     ) {
     }
 
-    public function findOne(?DonationId $id = null, ?DonationStatus $status = null): ?Donation {
+    public function findOne(?DonationId $id = null, ?DonationStatus $status = null): ?Donation
+    {
         return $this->findOneByCriteria($this->buildCriteria($id, $status));
     }
 
-    private function findOneOrThrow(?DonationId $id = null, ?DonationStatus $status = null): Donation {
+    private function findOneOrThrow(?DonationId $id = null, ?DonationStatus $status = null): Donation
+    {
         $criteria = $this->buildCriteria($id, $status);
         $donation = $this->findOneByCriteria($criteria);
         if ($donation === null) {
-            throw new \RuntimeException(sprintf('%s not found for criteria (%s)', Donation::class, json_encode($criteria))); 
+            throw new \RuntimeException(sprintf('%s not found for criteria (%s)', Donation::class, json_encode($criteria)));
         }
         return $donation;
     }
 
     /**
-     * @param array<string, string> $criteria 
+     * @param array<string, string> $criteria
      */
-    private function findOneByCriteria(array $criteria): ?Donation{
+    private function findOneByCriteria(array $criteria): ?Donation
+    {
         return $this->projectionEntityManager->getRepository(Donation::class)->findOneBy($criteria);
     }
 
     /**
-     * @return array<string, string> 
+     * @return array<string, string>
      */
-    private function buildCriteria(?DonationId $id = null, ?DonationStatus $status = null): array {
+    private function buildCriteria(?DonationId $id = null, ?DonationStatus $status = null): array
+    {
         $criteria = [];
         if ($id !== null) {
             $criteria['id'] = $id->toString();
@@ -61,7 +66,8 @@ class DonationProjector implements DonationProjectionRepositoryInterface
     }
 
     #[Subscribe(DonationInitiated::class)]
-    public function onDonationInitiated(DonationInitiated $event): void {
+    public function onDonationInitiated(DonationInitiated $event): void
+    {
         if ($this->findOne($event->donationId) !== null) {
             // Idempotency guard
             return;
@@ -80,7 +86,8 @@ class DonationProjector implements DonationProjectionRepositoryInterface
     }
 
     #[Subscribe(DonationAccepted::class)]
-    public function onDonationAccepted(DonationAccepted $event): void {
+    public function onDonationAccepted(DonationAccepted $event): void
+    {
         $donation = $this->findOneOrThrow($event->donationId);
         $donation->setUpdatedAt($event->occuredOn);
         $donation->setStatus($event->status);
@@ -89,7 +96,8 @@ class DonationProjector implements DonationProjectionRepositoryInterface
     }
 
     #[Subscribe(DonationFailed::class)]
-    public function onDonationFailed(DonationFailed $event): void {
+    public function onDonationFailed(DonationFailed $event): void
+    {
         $donation = $this->findOneOrThrow($event->donationId);
         $donation->setUpdatedAt($event->occuredOn);
         $donation->setStatus($event->status);
@@ -98,7 +106,8 @@ class DonationProjector implements DonationProjectionRepositoryInterface
     }
 
     #[Teardown]
-    public function teardown(): void{
+    public function teardown(): void
+    {
         $this->projectionEntityManager->createQuery('DELETE FROM ' . Donation::class)->execute();
     }
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\Tests\Helpers;
 
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -10,7 +12,7 @@ abstract class DonationBundleKernelTestCase extends KernelTestCase
     protected static function createKernel(array $options = []): KernelInterface
     {
         $bundleConfig = $options['bundle_config'] ?? [];
-        
+
         return new DonationBundleTestingKernel(
             $options['environment'] ?? 'test',
             $options['debug'] ?? true,

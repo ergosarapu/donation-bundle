@@ -1,20 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler;
 
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\MarkDonationAsFailed;
-use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\CommandHandlerInterface;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Port\DonationRepositoryInterface;
+use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\CommandHandlerInterface;
 
 class MarkDonationAsFailedHandler implements CommandHandlerInterface
 {
     public function __construct(
         private readonly DonationRepositoryInterface $donationRepository
-    ) {}
+    ) {
+    }
 
-    public function __invoke(MarkDonationAsFailed $command): void {
+    public function __invoke(MarkDonationAsFailed $command): void
+    {
 
-        if (!$this->donationRepository->has($command->donationId)){
+        if (!$this->donationRepository->has($command->donationId)) {
             // TODO: log warning about missing donation?
             return;
         }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\BCDonations\Application\EventHandler\Integration;
 
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\MarkDonationAsAccepted;

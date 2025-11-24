@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\SharedInfrastructure\Doctrine;
 
 use Doctrine\ORM\Event\PreUpdateEventArgs;
@@ -11,14 +13,14 @@ use Exception;
 class UpdateEntityInterceptedException extends Exception
 {
     /**
-     * @param TEntity $entity 
+     * @param TEntity $entity
      */
     public function __construct(private readonly object $entity, private readonly PreUpdateEventArgs $updateEvent)
     {
     }
 
     /**
-     * @return TEntity 
+     * @return TEntity
      */
     public function getEntity(): object
     {

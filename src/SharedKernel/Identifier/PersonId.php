@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\SharedKernel\Identifier;
 
 use Patchlevel\EventSourcing\Aggregate\AggregateRootId;

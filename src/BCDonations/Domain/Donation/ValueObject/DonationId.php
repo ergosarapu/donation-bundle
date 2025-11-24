@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\ValueObject;
 
 use Patchlevel\EventSourcing\Aggregate\AggregateRootId;

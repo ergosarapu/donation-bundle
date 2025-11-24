@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\Tests\Functional\Controller;
 
 use DAMA\DoctrineTestBundle\DAMADoctrineTestBundle;
@@ -27,24 +29,26 @@ use SymfonyCasts\Bundle\ResetPassword\SymfonyCastsResetPasswordBundle;
 
 class IndexControllerTest extends TestCase
 {
-
     private ?Kernel $kernel;
 
     private ?EntityManager $entityManager;
 
-    protected function setUp(): void {
+    protected function setUp(): void
+    {
         $this->kernel = new DonationBundleControllerKernel();
         $this->kernel->boot();
         $this->entityManager = $this->kernel->getContainer()->get('doctrine')->getManager();
         $this->entityManager->getEventManager()->addEventSubscriber(new TimestampableListener());
     }
 
-    protected function tearDown(): void {
+    protected function tearDown(): void
+    {
         $this->entityManager->close();
         $this->entityManager = null;
     }
 
-    public function testIndex() : void {
+    public function testIndex(): void
+    {
         $campaign = (new Campaign())
             ->setName('Campaign Name')
             ->setDefault(true)
@@ -60,7 +64,8 @@ class IndexControllerTest extends TestCase
         $this->assertSame('Public Title', $crawler->filterXPath('//head/title')->text());
     }
 
-    public function testIndexNoDefaultCampaign() : void {
+    public function testIndexNoDefaultCampaign(): void
+    {
         $campaign = (new Campaign())
             ->setName('Campaign Name')
             ->setDefault(false)
@@ -74,13 +79,14 @@ class IndexControllerTest extends TestCase
         $this->assertSame(500, $client->getResponse()->getStatusCode());
     }
 
-    public function testIndexMultipleDefaultCampaign() : void {
+    public function testIndexMultipleDefaultCampaign(): void
+    {
         $this->entityManager->persist((new Campaign())
             ->setName('Campaign 1')
             ->setDefault(true)
             ->setPublicTitle('Public Title 1')
             ->setPublicId(100));
-        
+
         $this->entityManager->persist((new Campaign())
             ->setName('Campaign 2')
             ->setDefault(true)
@@ -103,7 +109,8 @@ class DonationBundleControllerKernel extends Kernel
         parent::__construct($_ENV['APP_ENV'], $_ENV['APP_DEBUG']);
     }
 
-    public function registerBundles(): iterable {
+    public function registerBundles(): iterable
+    {
         return [
             new DonationBundle(),
             new FrameworkBundle(),
@@ -118,8 +125,9 @@ class DonationBundleControllerKernel extends Kernel
             new ChartjsBundle(),
         ];
     }
-    
-    protected function configureRoutes(RoutingConfigurator $routes): void{
+
+    protected function configureRoutes(RoutingConfigurator $routes): void
+    {
         $routes->import(__DIR__.'/../../../config/routes.xml')->prefix('/');
         $routes->import(__DIR__.'/../../../config/routes_campaign.xml')->prefix('/');
         $routes->import('@LiveComponentBundle/config/routes.php');
@@ -138,16 +146,18 @@ class DonationBundleControllerKernel extends Kernel
             ]
         ]);
 
-        $builder->loadFromExtension('payum', 
-            ['security' => 
-                ['token_storage' => 
-                    ['Payum\Core\Model\Token' => 
+        $builder->loadFromExtension(
+            'payum',
+            ['security' =>
+                ['token_storage' =>
+                    ['Payum\Core\Model\Token' =>
                         ['filesystem' => [
                             'storage_dir' => __DIR__.'/../../../var/cache/gateways',
                             'id_property' => 'hash',
                         ]]]
                 ]
-            ]);
+            ]
+        );
 
         $loader->load(__DIR__.'/../Fixtures/config/full.yaml', 'yaml');
 

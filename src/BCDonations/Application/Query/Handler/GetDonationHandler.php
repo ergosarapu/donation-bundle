@@ -1,12 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\BCDonations\Application\Query\Handler;
 
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetDonation;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\Donation;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Port\DonationProjectionRepositoryInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\QueryHandlerInterface;
-use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\Donation;
-
 
 class GetDonationHandler implements QueryHandlerInterface
 {

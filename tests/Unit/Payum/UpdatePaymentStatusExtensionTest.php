@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\Tests\Unit\Payum;
 
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsAuthorized;
@@ -7,14 +9,14 @@ use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsCancel
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsCaptured;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsFailed;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsRefunded;
-use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\Entity\Payment;
 use ErgoSarapu\DonationBundle\Entity\Payment\Status;
 use ErgoSarapu\DonationBundle\Payum\Request\GetStandingAmount;
 use ErgoSarapu\DonationBundle\Payum\UpdatePaymentStatusExtension;
+use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use Payum\Core\Bridge\Spl\ArrayObject;
 use Payum\Core\Extension\Context;
 use Payum\Core\GatewayInterface;
@@ -27,10 +29,9 @@ use ValueError;
 
 class UpdatePaymentStatusExtensionTest extends TestCase
 {
+    private Payment $payment;
 
-    private Payment $payment; 
-
-    private Notify $request; 
+    private Notify $request;
 
     private Context $context;
 
@@ -53,8 +54,9 @@ class UpdatePaymentStatusExtensionTest extends TestCase
         $this->extension = new UpdatePaymentStatusExtension($this->commandBusMock);
     }
 
-    public function testStatusCaptured(): void{ 
-        $this->gatewayMock->expects($this->exactly(2))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex){
+    public function testStatusCaptured(): void
+    {
+        $this->gatewayMock->expects($this->exactly(2))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex) {
             $callIndex++;
             if ($callIndex === 1 && $request instanceof GetHumanStatus) {
                 $request->markCaptured();
@@ -78,8 +80,9 @@ class UpdatePaymentStatusExtensionTest extends TestCase
         $this->assertEquals(Status::Captured, $this->payment->getStatus());
     }
 
-    public function testStatusAuthorized() {
-        $this->gatewayMock->expects($this->exactly(2))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex){
+    public function testStatusAuthorized()
+    {
+        $this->gatewayMock->expects($this->exactly(2))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex) {
             $callIndex++;
             if ($callIndex === 1 && $request instanceof GetHumanStatus) {
                 $request->markAuthorized();
@@ -103,8 +106,9 @@ class UpdatePaymentStatusExtensionTest extends TestCase
         $this->assertEquals(Status::Authorized, $this->payment->getStatus());
     }
 
-    public function testStatusCanceled() {
-        $this->gatewayMock->expects($this->exactly(2))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex){
+    public function testStatusCanceled()
+    {
+        $this->gatewayMock->expects($this->exactly(2))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex) {
             $callIndex++;
             if ($callIndex === 1 && $request instanceof GetHumanStatus) {
                 $request->markCanceled();
@@ -126,8 +130,9 @@ class UpdatePaymentStatusExtensionTest extends TestCase
         $this->assertEquals(Status::Canceled, $this->payment->getStatus());
     }
 
-    public function testStatusExpired() {
-        $this->gatewayMock->expects($this->exactly(2))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex){
+    public function testStatusExpired()
+    {
+        $this->gatewayMock->expects($this->exactly(2))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex) {
             $callIndex++;
             if ($callIndex === 1 && $request instanceof GetHumanStatus) {
                 $request->markExpired();
@@ -149,8 +154,9 @@ class UpdatePaymentStatusExtensionTest extends TestCase
         $this->assertEquals(Status::Expired, $this->payment->getStatus());
     }
 
-    public function testStatusFailed() {
-        $this->gatewayMock->expects($this->exactly(2))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex){
+    public function testStatusFailed()
+    {
+        $this->gatewayMock->expects($this->exactly(2))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex) {
             $callIndex++;
             if ($callIndex === 1 && $request instanceof GetHumanStatus) {
                 $request->markFailed();
@@ -172,8 +178,9 @@ class UpdatePaymentStatusExtensionTest extends TestCase
         $this->assertEquals(Status::Failed, $this->payment->getStatus());
     }
 
-    public function testStatusNew() {
-        $this->gatewayMock->expects($this->exactly(2))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex){
+    public function testStatusNew()
+    {
+        $this->gatewayMock->expects($this->exactly(2))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex) {
             $callIndex++;
             if ($callIndex === 1 && $request instanceof GetHumanStatus) {
                 $request->markNew();
@@ -190,8 +197,9 @@ class UpdatePaymentStatusExtensionTest extends TestCase
         $this->assertEquals(Status::Created, $this->payment->getStatus());
     }
 
-    public function testStatusPayedout() {
-        $this->gatewayMock->expects($this->exactly(1))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex){
+    public function testStatusPayedout()
+    {
+        $this->gatewayMock->expects($this->exactly(1))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex) {
             $callIndex++;
             if ($callIndex === 1 && $request instanceof GetHumanStatus) {
                 $request->markPayedout();
@@ -203,8 +211,9 @@ class UpdatePaymentStatusExtensionTest extends TestCase
         $this->extension->onPostExecute($this->context);
     }
 
-    public function testStatusPending() {
-        $this->gatewayMock->expects($this->exactly(2))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex){
+    public function testStatusPending()
+    {
+        $this->gatewayMock->expects($this->exactly(2))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex) {
             $callIndex++;
             if ($callIndex === 1 && $request instanceof GetHumanStatus) {
                 $request->markPending();
@@ -220,8 +229,9 @@ class UpdatePaymentStatusExtensionTest extends TestCase
         $this->assertEquals(Status::Pending, $this->payment->getStatus());
     }
 
-    public function testStatusRefunded() {
-        $this->gatewayMock->expects($this->exactly(2))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex){
+    public function testStatusRefunded()
+    {
+        $this->gatewayMock->expects($this->exactly(2))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex) {
             $callIndex++;
             if ($callIndex === 1 && $request instanceof GetHumanStatus) {
                 $request->markRefunded();
@@ -245,8 +255,9 @@ class UpdatePaymentStatusExtensionTest extends TestCase
         $this->assertEquals(Status::Refunded, $this->payment->getStatus());
     }
 
-    public function testStatusSuspended() {
-        $this->gatewayMock->expects($this->exactly(1))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex){
+    public function testStatusSuspended()
+    {
+        $this->gatewayMock->expects($this->exactly(1))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex) {
             $callIndex++;
             if ($callIndex === 1 && $request instanceof GetHumanStatus) {
                 $request->markSuspended();
@@ -259,8 +270,9 @@ class UpdatePaymentStatusExtensionTest extends TestCase
         $this->extension->onPostExecute($this->context);
     }
 
-    public function testStatusUnknown() {
-        $this->gatewayMock->expects($this->exactly(1))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex){
+    public function testStatusUnknown()
+    {
+        $this->gatewayMock->expects($this->exactly(1))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex) {
             $callIndex++;
             if ($callIndex === 1 && $request instanceof GetHumanStatus) {
                 $request->markUnknown();

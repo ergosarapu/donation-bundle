@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\Tests\Helpers\Payum;
 
 use Payum\Core\Action\ActionInterface;

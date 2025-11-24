@@ -1,19 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\SharedInfrastructure\Repository;
 
-use Patchlevel\EventSourcing\Aggregate\AggregateRoot;
-use Patchlevel\EventSourcing\Repository\Repository;
-use Patchlevel\EventSourcing\Repository\RepositoryException;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\RepositoryException as AppRepositoryException;
+use Patchlevel\EventSourcing\Aggregate\AggregateRoot;
 use Patchlevel\EventSourcing\Aggregate\AggregateRootId;
 use Patchlevel\EventSourcing\Repository\AggregateAlreadyExists;
+use Patchlevel\EventSourcing\Repository\Repository;
+use Patchlevel\EventSourcing\Repository\RepositoryException;
 
 trait PatchlevelRepositoryWrapperTrait
 {
-    /** 
-    * @param Repository<AggregateRoot> $repository 
+    /**
+    * @param Repository<AggregateRoot> $repository
     */
     public function __construct(
         private readonly Repository $repository

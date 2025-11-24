@@ -1,12 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\BCDonations\Application\Query\Handler;
 
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetPendingDonation;
-use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Port\DonationProjectionRepositoryInterface;
-use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\QueryHandlerInterface;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\Donation;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Port\DonationProjectionRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\ValueObject\DonationStatus;
+use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\QueryHandlerInterface;
+
 class GetPendingDonationHandler implements QueryHandlerInterface
 {
     public function __construct(private readonly DonationProjectionRepositoryInterface $repository)

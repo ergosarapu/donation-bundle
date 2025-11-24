@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\SharedInfrastructure\Processor;
 
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\EventBusInterface;

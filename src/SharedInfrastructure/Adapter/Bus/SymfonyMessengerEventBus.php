@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\SharedInfrastructure\Adapter\Bus;
 
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\EventBusInterface;
@@ -11,8 +13,9 @@ class SymfonyMessengerEventBus implements EventBusInterface
     {
     }
 
-    public function dispatch(object $event): void {
+    public function dispatch(object $event): void
+    {
         $this->eventBus->dispatch($event);
     }
-    
+
 }
