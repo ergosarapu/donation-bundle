@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 $finder = (new PhpCsFixer\Finder())
     ->in([
+        __DIR__.'/src/BCDonations',
         __DIR__.'/src/BCPayments',
-        __DIR__.'/tests/Integration',
+        __DIR__.'/src/SharedKernel',
+        __DIR__.'/src/SharedApplication',
+        __DIR__.'/src/SharedInfrastructure',
+        __DIR__.'/tests',
     ])
 ;
 
