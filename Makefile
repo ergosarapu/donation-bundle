@@ -26,6 +26,7 @@ phpunit-functional:																	## run phpunit functional tests
 
 .PHONY: migrate
 migrate:																			## run database migrations
+	mkdir migrations -p; \
 	vendor/bin/doctrine-migrations migrations:diff --no-interaction; \
 	vendor/bin/doctrine-migrations migrations:migrate --no-interaction
 
