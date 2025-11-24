@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event;
 
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 
-class PaymentDidNotSucceedIntegrationEvent
+class PaymentDidNotSucceedIntegrationEvent implements IntegrationEventInterface
 {
     public function __construct(
         public readonly PaymentId $paymentId,

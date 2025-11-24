@@ -1,19 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle;
 
 use DateInterval;
 use ErgoSarapu\DonationBundle\DependencyInjection\Compiler\RegisterQueryCompilerPass;
 use ErgoSarapu\DonationBundle\Entity\Payment;
 use ErgoSarapu\DonationBundle\Entity\PaymentToken;
+use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Command\IntegrationCommandInterface;
+use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\IntegrationEventInterface;
 use ErgoSarapu\DonationBundle\Payum\PHPSerializeType;
 use ErgoSarapu\DonationBundle\Repository\ResetPasswordRequestRepository;
+use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandInterface;
+use ErgoSarapu\DonationBundle\SharedApplication\Port\Event\EventInterface;
 use Exception;
 use Symfony\Component\AssetMapper\AssetMapperInterface;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
-use Symfony\Component\DependencyInjection\Compiler\PassConfig;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
@@ -59,7 +64,7 @@ class DonationBundle extends AbstractBundle
                                 ->scalarPrototype()->end()
                                 ->validate()
                                     ->ifTrue(function (array $values): bool {
-                                        foreach($values as $value) {
+                                        foreach ($values as $value) {
                                             if ($value === null) {
                                                 // Null value marks one-time payment frequency, allow this
                                                 continue;
@@ -67,7 +72,7 @@ class DonationBundle extends AbstractBundle
                                             // Try to construct date interval, this throws in case of bad interval string
                                             try {
                                                 new DateInterval($value);
-                                            } catch (Exception $e){
+                                            } catch (Exception $e) {
                                                 throw new Exception(sprintf('Invalid frequency date interval format (%s)', $value), previous: $e);
                                             }
                                         }
@@ -78,7 +83,7 @@ class DonationBundle extends AbstractBundle
                             ->end()
                             ->scalarNode('country')
                                 ->info('Marks gateway as country specific so user can quickly filter gateways with same country. Must be valid alpha-2 country code.')
-                                ->validate()->ifTrue(function (string $value): bool{
+                                ->validate()->ifTrue(function (string $value): bool {
                                     return !Countries::exists($value);
                                 })
                                 ->thenInvalid('Not a valid alpha-2 country code')
@@ -89,8 +94,9 @@ class DonationBundle extends AbstractBundle
             ->end();
     }
 
-    private function addCurrencyNode(): NodeDefinition {
-        $notPositiveInt = function ($value){
+    private function addCurrencyNode(): NodeDefinition
+    {
+        $notPositiveInt = function ($value) {
             return !is_numeric($value) || (int)$value != $value || !((int)$value > 0);
         };
 
@@ -99,9 +105,9 @@ class DonationBundle extends AbstractBundle
         ->isRequired()
         ->useAttributeAsKey('currency_code')
         ->validate()
-            ->ifTrue(function (array $values): bool{
-                foreach($values as $key => $value) {
-                    if (!Currencies::exists($key)){
+            ->ifTrue(function (array $values): bool {
+                foreach ($values as $key => $value) {
+                    if (!Currencies::exists($key)) {
                         return true;
                     }
                 }
@@ -141,7 +147,8 @@ class DonationBundle extends AbstractBundle
             ->setArgument(1, $config['form']['currencies'] ?? []);
     }
 
-    private function prependAssetMapperConfig(ContainerBuilder $builder): void{
+    private function prependAssetMapperConfig(ContainerBuilder $builder): void
+    {
         if (!$this->isAssetMapperAvailable($builder)) {
             return;
         }
@@ -172,7 +179,7 @@ class DonationBundle extends AbstractBundle
 
     public function prependExtension(ContainerConfigurator $container, ContainerBuilder $builder): void
     {
-        $builder->prependExtensionConfig('twig_component',[
+        $builder->prependExtensionConfig('twig_component', [
             'defaults' => [
                 'ErgoSarapu\DonationBundle\Twig\Components\\' => [
                     'template_directory' =>  '@Donation/components/',
@@ -197,7 +204,7 @@ class DonationBundle extends AbstractBundle
                     ]
                 ],
                 'types' => [
-                    // This is specifically needed due to "object" type in 
+                    // This is specifically needed due to "object" type in
                     // ./vendor/payum/core/Payum/Core/Bridge/Doctrine/Resources/mapping/Token.orm.xml
                     'object' => PHPSerializeType::class,
                 ],
@@ -262,12 +269,25 @@ class DonationBundle extends AbstractBundle
                 'buses' => [
                     'message.bus' => null,
                     'command.bus' => null,
+                    // 'integration.command.bus' => null,
                     'query.bus' => null,
                     'event.bus' => [
                         'default_middleware' => [
                             'allow_no_handlers' => true,
                         ],
                     ],
+                ],
+                'transports' => [
+                    'event' => 'sync://',
+                    'command' => 'sync://',
+                    'integration_event' => 'sync://',
+                    'integration_command' => 'sync://',
+                ],
+                'routing' => [
+                    EventInterface::class => 'event',
+                    CommandInterface::class => 'command',
+                    IntegrationEventInterface::class => 'integration_event',
+                    IntegrationCommandInterface::class => 'integration_command',
                 ],
             ]
         ]);
@@ -277,11 +297,12 @@ class DonationBundle extends AbstractBundle
                 'service' => 'doctrine.dbal.default_connection'
             ],
             'store' => [
-                'type' => 'dbal_stream', 
+                'type' => 'dbal_stream',
                 'merge_orm_schema' => true,
             ],
             'aggregates' => [
                 __DIR__ . '/BCDonations/Domain/Donation',
+                __DIR__ . '/BCDonations/Domain/RecurringDonation',
                 __DIR__ . '/BCPayments/Domain/Payment',
             ],
             'events' => [
@@ -296,12 +317,12 @@ class DonationBundle extends AbstractBundle
                     'doctrine' => 'orm'
                 ]
             ],
-            'security' => 
-                ['token_storage' => 
+            'security' =>
+                ['token_storage' =>
                     [
                         PaymentToken::class => [
                             'doctrine' => 'orm'
-                        ]    
+                        ]
                     ]
                 ],
         ]);
@@ -309,7 +330,8 @@ class DonationBundle extends AbstractBundle
         $this->prependAssetMapperConfig($builder);
     }
 
-    public function build(ContainerBuilder $builder): void {
+    public function build(ContainerBuilder $builder): void
+    {
         parent::build($builder);
         $builder->addCompilerPass(new RegisterQueryCompilerPass());
     }

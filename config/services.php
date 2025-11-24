@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 use ErgoSarapu\DonationBundle\SharedInfrastructure\Doctrine\EntityWriteInterceptor;
+use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\DependencyInjection\Reference;
-use Symfony\Component\DependencyInjection\Definition;
 
 return function (ContainerConfigurator $container) {
     $services = $container->services();
@@ -157,14 +159,22 @@ return function (ContainerConfigurator $container) {
             ->addArgument(\ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Donation::class));
     $services->alias(\ErgoSarapu\DonationBundle\BCDonations\Application\Port\DonationRepositoryInterface::class, 'donation_bundle.infrastructure.donations.repository.adapter.patchlevel_donation_repository');
 
+    $services->set('donation_bundle.infrastructure.donations.repository.adapter.patchlevel_recurring_donation_repository', \ErgoSarapu\DonationBundle\BCDonations\Infrastructure\Adapter\PatchlevelRecurringDonationRepository::class)
+        ->arg(0, (new Definition(\Patchlevel\EventSourcing\Repository\Repository::class))
+            ->setFactory([new Reference(\Patchlevel\EventSourcing\Repository\RepositoryManager::class), 'get'])
+            ->addArgument(\ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringDonation\RecurringDonation::class));
+    $services->alias(\ErgoSarapu\DonationBundle\BCDonations\Application\Port\RecurringDonationRepositoryInterface::class, 'donation_bundle.infrastructure.donations.repository.adapter.patchlevel_recurring_donation_repository');
+
+
     // ************************
     // *** Command Handlers ***
     // ************************
 
-    // All services implementing the CommandHandlerInterface will be registered on the command.bus bus
+    // All services implementing the CommandHandlerInterface  will be registered to handle commands from transports
     $services->instanceof(\ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\CommandHandlerInterface::class)
-        ->tag('messenger.message_handler', ['bus' => 'command.bus']);
-    
+        ->tag('messenger.message_handler', ['from_transport' => 'command'])
+        ->tag('messenger.message_handler', ['from_transport' => 'integration_command']);
+
     // Donations
     $services->set('donation_bundle.donations.application.donation.command_handler.initiate_donation', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\InitiateDonationHandler::class)
         ->autoconfigure(true)
@@ -175,8 +185,26 @@ return function (ContainerConfigurator $container) {
     $services->set('donation_bundle.donations.application.donation.command_handler.mark_donation_as_failed', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\MarkDonationAsFailedHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
+    $services->set('donation_bundle.donations.application.donation.command_handler.initiate_recurring_donation', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\InitiateRecurringDonationHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.donations.application.donation.command_handler.activate_recurring_donation', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\ActivateRecurringDonationHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.donations.application.donation.command_handler.mark_recurring_donation_as_failed', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\MarkRecurringDonationAsFailedHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.donations.application.donation.command_handler.mark_recurring_donation_as_failing', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\MarkRecurringDonationAsFailingHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.donations.application.donation.command_handler.initiate_recurring_donation_renewal', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\InitiateRecurringDonationRenewalHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.donations.application.donation.command_handler.complete_recurring_donation_renewal', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\CompleteRecurringDonationRenewalHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
 
-    // Payments 
+    // Payments
     $services->set('donation_bundle.payments.application.payment.command_handler.initiate_payment', \ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\InitiatePaymentHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
@@ -214,6 +242,12 @@ return function (ContainerConfigurator $container) {
     $services->set('donation_bundle.application.donations.query_handler.get_pending_donation', \ErgoSarapu\DonationBundle\BCDonations\Application\Query\Handler\GetPendingDonationHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
+    $services->set('donation_bundle.application.donations.query_handler.get_recurring_donation', \ErgoSarapu\DonationBundle\BCDonations\Application\Query\Handler\GetRecurringDonationHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.application.donations.query_handler.get_pending_recurring_donation', \ErgoSarapu\DonationBundle\BCDonations\Application\Query\Handler\GetPendingRecurringDonationHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
 
     // Payments
     $services->set('donation_bundle.application.payments.query_handler.get_payment', \ErgoSarapu\DonationBundle\BCPayments\Application\Query\Handler\GetPaymentHandler::class)
@@ -227,10 +261,11 @@ return function (ContainerConfigurator $container) {
     // *** Event Handlers ***
     // **********************
 
-    // All services implementing the EventHandlerInterface will be registered on the event.bus bus
+    // All services implementing the EventHandlerInterface will be registered to handle events from transports
     $services->instanceof(\ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\EventHandlerInterface::class)
-        ->tag('messenger.message_handler', ['bus' => 'event.bus']);
-    
+        ->tag('messenger.message_handler', ['from_transport' => 'event'])
+        ->tag('messenger.message_handler', ['from_transport' => 'integration_event']);
+
     // Donations
     $services->set('donation_bundle.application.donations.domain_event_handler.donation_initiated', \ErgoSarapu\DonationBundle\BCDonations\Application\EventHandler\Domain\DonationInitiatedHandler::class)
         ->autoconfigure(true)
@@ -239,6 +274,18 @@ return function (ContainerConfigurator $container) {
         ->autoconfigure(true)
         ->autowire(true);
     $services->set('donation_bundle.application.donations.integration_event_handler.payment_did_not_succeed', \ErgoSarapu\DonationBundle\BCDonations\Application\EventHandler\Integration\PaymentDidNotSucceedHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.application.donations.domain_event_handler.recurring_donation_initiated', \ErgoSarapu\DonationBundle\BCDonations\Application\EventHandler\Domain\RecurringDonationInitiatedHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.application.donations.domain_event_handler.donation_accepted', \ErgoSarapu\DonationBundle\BCDonations\Application\EventHandler\Domain\DonationAcceptedHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.application.donations.domain_event_handler.donation_failed', \ErgoSarapu\DonationBundle\BCDonations\Application\EventHandler\Domain\DonationFailedHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.application.donations.domain_event_handler.recurring_donation_renewal_initiated', \ErgoSarapu\DonationBundle\BCDonations\Application\EventHandler\Domain\RecurringDonationRenewalInitiatedHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
 
@@ -285,6 +332,12 @@ return function (ContainerConfigurator $container) {
         ->autowire(true)
         ->tag('event_sourcing.subscriber');
     $services->alias(\ErgoSarapu\DonationBundle\BCDonations\Application\Query\Port\DonationProjectionRepositoryInterface::class, 'donation_bundle.infrastructure.projector.donation');
+
+    $services->set('donation_bundle.infrastructure.projector.recurring_donation', \ErgoSarapu\DonationBundle\BCDonations\Infrastructure\Projection\RecurringDonationProjector::class)
+        ->autoconfigure(true)
+        ->autowire(true)
+        ->tag('event_sourcing.subscriber');
+    $services->alias(\ErgoSarapu\DonationBundle\BCDonations\Application\Query\Port\RecurringDonationProjectionRepositoryInterface::class, 'donation_bundle.infrastructure.projector.recurring_donation');
 
     // Payments
 

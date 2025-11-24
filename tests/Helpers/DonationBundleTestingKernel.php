@@ -64,14 +64,8 @@ class DonationBundleTestingKernel extends Kernel
             }
         }
 
-
         $builder->loadFromExtension('framework', [
             'test' => true,
-            'messenger' => [
-                'transports' => [
-                    'async' => 'test://'
-                ],
-            ]
         ]);
 
         $builder->loadFromExtension('payum', [
@@ -94,9 +88,11 @@ class DonationBundleTestingKernel extends Kernel
             'subscription' => [
                 'throw_on_error' => ['enabled' => true],
                 // If new domain events are generated then they are not part of current subscription engine and don't
-                // get processed. Enable catching up these in testing.
+                // get processed. Enable catching up these when testing.
                 // https://event-sourcing-bundle.patchlevel.io/latest/configuration/#catch-up
-                'catch_up' => ['enabled' => true],
+                'catch_up' => [
+                    'enabled' => true,
+                ],
                 'run_after_aggregate_save' => [
                     'enabled' => true,
                 ],

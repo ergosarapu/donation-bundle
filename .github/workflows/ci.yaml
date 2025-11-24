@@ -42,7 +42,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
             php-version: ${{ matrix.php }}
-            extensions: pdo_sqlite
+            extensions: pdo_mysql
 
       - name: Configure Symfony version ${{ matrix.symfony }}
         run: |
@@ -51,22 +51,25 @@ jobs:
             composer config extra.symfony.require "${{ matrix.symfony }}"
 
       - name: Install dependencies
-        run: composer update
+        run: make install
 
       - name: Check Code
-        run: php phpstan-create-cache.php && composer analyse
+        run: make phpstan
 
       - name: Run Unit Tests
-        run: composer test-unit
+        run: make phpunit-unit
       
-      - name: Migrate database
-        run: composer test-migrate
+      - name: Migrate Database
+        run: make migrate
 
-      - name: Run Functional Tests
-        run: composer test-functional
+      - name: Run Acceptance Tests
+        run: make phpunit-acceptance
 
       - name: Run Integration Tests
-        run: composer test-integration
+        run: make phpunit-integration
+
+      - name: Run Functional Tests
+        run: make phpunit-functional
 
     services:
       mariadb:

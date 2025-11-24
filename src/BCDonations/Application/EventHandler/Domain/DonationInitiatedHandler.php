@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\BCDonations\Application\EventHandler\Domain;
 
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Event\DonationInitiated;
@@ -16,6 +18,10 @@ class DonationInitiatedHandler implements EventHandlerInterface
 
     public function __invoke(DonationInitiated $event): void
     {
+        $useAgreementFrom = null;
+        if ($event->parentRecurringActivationDonationId !== null) {
+            $useAgreementFrom = PaymentAppliedToId::fromString($event->parentRecurringActivationDonationId->toString());
+        }
         $this->commandBus->dispatch(new InitiatePaymentIntegrationCommand(
             $event->paymentId,
             $event->amount,
@@ -23,6 +29,7 @@ class DonationInitiatedHandler implements EventHandlerInterface
             $event->description,
             PaymentAppliedToId::fromString($event->donationId->toString()),
             $event->donorEmail,
+            $useAgreementFrom,
         ));
     }
 }

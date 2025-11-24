@@ -47,7 +47,7 @@
         "twig/intl-extra": "^3.15",
         "twig/extra-bundle": "^3.15",
         "symfony/messenger": "^6.4|^7.2|^7.3",
-        "patchlevel/event-sourcing-bundle": "^3.2"
+        "patchlevel/event-sourcing-bundle": "^3.12"
     },
     "require-dev": {
         "symfony/yaml": "^6.4|^7.2|^7.3",
@@ -69,13 +69,5 @@
         "symfony": {
             "require": "7.3"
         }
-    },
-    "scripts": {
-        "test-unit": "./vendor/bin/phpunit --testdox --testsuite Unit --exclude-filter SubscriptionTest",
-        "test-migrate": "mkdir migrations -p && ./vendor/bin/doctrine-migrations migrations:diff --no-interaction && ./vendor/bin/doctrine-migrations migrations:migrate --no-interaction",
-        "test-functional": "./vendor/bin/phpunit --testdox --testsuite Functional --exclude-filter IndexControllerTest",
-        "test-integration": "./vendor/bin/phpunit --testdox --testsuite Integration",
-        "test-all": "composer test-unit && composer test-functional && composer test-integration",
-        "analyse": "./vendor/bin/php-cs-fixer check -v && ./vendor/bin/phpstan analyse -v"
     }
 }
