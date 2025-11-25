@@ -10,8 +10,8 @@ use Patchlevel\Hydrator\Normalizer\ObjectNormalizer;
 final class PersonName
 {
     public function __construct(
-        private readonly string $givenName,
-        private readonly string $familyName
+        public readonly string $givenName,
+        public readonly string $familyName
     ) {
     }
 }

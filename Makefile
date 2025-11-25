@@ -33,12 +33,12 @@ migrate:																			## run database migrations
 .PHONY: phpstan
 phpstan:																			## run phpstan static analysis
 	php phpstan-create-cache.php; \
-	vendor/bin/phpstan analyse -v
+	php -d memory_limit=512M vendor/bin/phpstan analyse -v
 
-.PHONY: cs
-cs:																					## php-cs-fixer fix
+.PHONY: cs-fix
+cs-fix:																				## php-cs-fixer fix
 	vendor/bin/php-cs-fixer fix -v
 
 .PHONY: cs-check
-cs-check:																					## php-cs-fixer check
+cs-check:																			## php-cs-fixer check
 	vendor/bin/php-cs-fixer check -v

@@ -77,6 +77,9 @@ class ConfigurationTest extends DonationBundleKernelTestCase
         $this->assertNotEmpty($optionsProvider->getCurrencies());
     }
 
+    /**
+     * @param array<string,mixed>|string|null $bundleConfig
+     */
     private static function bootKernelWithConfig(array|string|null $bundleConfig = null): void
     {
         self::bootKernel([

@@ -9,13 +9,22 @@ use Symfony\Component\HttpKernel\KernelInterface;
 
 abstract class DonationBundleKernelTestCase extends KernelTestCase
 {
+    /**
+     * @param array{
+     *     environment?: string,
+     *     debug?: bool,
+     *     bundle_config?: array<string, mixed>|string
+     * } $options
+     */
     protected static function createKernel(array $options = []): KernelInterface
     {
-        $bundleConfig = $options['bundle_config'] ?? [];
+        $environment = $options['environment'] ?? 'test';
+        $debug = $options['debug'] ?? true;
+        $bundleConfig = $options['bundle_config'] ?? null;
 
         return new DonationBundleTestingKernel(
-            $options['environment'] ?? 'test',
-            $options['debug'] ?? true,
+            $environment,
+            $debug,
             $bundleConfig
         );
     }

@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\Tests\Integration\Query;
 
 use DateTime;
-use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
+use ErgoSarapu\DonationBundle\Dto\Query\PaymentSummaryEntryDto;
 use ErgoSarapu\DonationBundle\Entity\Campaign;
 use ErgoSarapu\DonationBundle\Entity\Payment;
 use ErgoSarapu\DonationBundle\Entity\Payment\Status;
@@ -16,7 +17,7 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 class PaymentSummaryQueryTest extends KernelTestCase
 {
-    private ?EntityManager $entityManager;
+    private EntityManagerInterface $entityManager;
 
     private PaymentSummaryQueryInterface $query;
 
@@ -26,7 +27,7 @@ class PaymentSummaryQueryTest extends KernelTestCase
     }
     protected function setUp(): void
     {
-        $this->entityManager = $this->getContainer()->get('doctrine')->getManager();
+        $this->entityManager = $this->getContainer()->get(EntityManagerInterface::class);
         $this->entityManager->getEventManager()->addEventSubscriber(new TimestampableListener());
         $this->query = $this->getContainer()->get(PaymentSummaryQueryInterface::class);
     }
@@ -99,7 +100,7 @@ class PaymentSummaryQueryTest extends KernelTestCase
         $this->assertStrEq($cid.', Campaign B, 2024-12-01, 2024-12-15, 2024-12, 0, EUR', array_shift($result));
     }
 
-    private function createPayment(int $totalAmount, Status $status, string $createdAt, ?Campaign $campaign = null, string $currency = 'EUR')
+    private function createPayment(int $totalAmount, Status $status, string $createdAt, ?Campaign $campaign = null, string $currency = 'EUR'): void
     {
         $payment = new Payment();
         $payment->setTotalAmount($totalAmount);
@@ -121,8 +122,9 @@ class PaymentSummaryQueryTest extends KernelTestCase
         return $campaign;
     }
 
-    private function assertStrEq(string $expected, object $actual): void
+    private function assertStrEq(string $expected, mixed $actual): void
     {
-        $this->assertSame($expected, (string)$actual);
+        assert($actual instanceof PaymentSummaryEntryDto);
+        $this->assertSame($expected, $actual->__toString());
     }
 }

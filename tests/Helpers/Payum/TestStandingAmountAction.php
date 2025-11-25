@@ -9,6 +9,7 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use Payum\Core\Action\ActionInterface;
 use Payum\Core\Bridge\Spl\ArrayObject;
+use Payum\Core\Exception\InvalidArgumentException;
 use Payum\Core\Exception\RequestNotSupportedException;
 
 class TestStandingAmountAction implements ActionInterface
@@ -17,13 +18,21 @@ class TestStandingAmountAction implements ActionInterface
     {
         RequestNotSupportedException::assertSupports($this, $request);
 
+
+        if (!$request instanceof GetStandingAmount) {
+            throw RequestNotSupportedException::createActionNotSupported($this, $request);
+        }
         $model = ArrayObject::ensureArrayObject($request->getModel());
 
         if (!isset($model['amount'])) {
             return;
         }
 
-        $amount = new Money($model['amount'] * 100, new Currency('EUR'));
+        $amountValue = $model['amount'];
+        if (!is_numeric($amountValue)) {
+            throw new InvalidArgumentException('Amount must be numeric');
+        }
+        $amount = new Money((int)($amountValue * 100), new Currency('EUR'));
         $request->setAmount($amount);
     }
 

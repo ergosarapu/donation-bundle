@@ -10,7 +10,7 @@ use Patchlevel\Hydrator\Normalizer\ObjectNormalizer;
 final class NationalIdCode
 {
     public function __construct(
-        private readonly string $value,
+        public readonly string $value,
     ) {
     }
 }

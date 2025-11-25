@@ -5,6 +5,13 @@ parameters:
 	paths:
 		- src/BCPayments
 		- src/BCDonations
-		- tests/Integration/Donations
+		- src/SharedKernel
+		- src/SharedApplication
+		- src/SharedInfrastructure
+		- tests
+	excludePaths:
+		- tests/Unit/Payum/ActivateSubscriptionExtensionTest.php
+		- tests/Integration/Subscription/SubscriptionManagerTest.php
+		- tests/Functional/Controller/IndexControllerTest.php
 	symfony:
 		containerXmlPath: var/cache/test/phpstan/ErgoSarapu_DonationBundle_Tests_Helpers_DonationBundleTestingKernelTestDebugContainer.xml

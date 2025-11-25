@@ -46,7 +46,7 @@ class ActivateSubscriptionExtensionTest extends TestCase
         $this->extension = new ActivateSubscriptionExtension();
     }
 
-    public function testSubscriptionActivated()
+    public function testSubscriptionActivated(): void
     {
         $this->gatewayMock->expects($this->once())->method('execute')->willReturnCallback(function (GetHumanStatus $request) {
             $request->markCaptured();

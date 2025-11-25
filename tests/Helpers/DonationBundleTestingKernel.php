@@ -24,9 +24,10 @@ class DonationBundleTestingKernel extends Kernel
 {
     use MicroKernelTrait;
 
-    private array|string|null $bundleConfig = [];
-
-    public function __construct(string $environment, bool $debug, array|string|null $bundleConfig = null, private readonly ?string $cachePath = null)
+    /**
+     * @param array<string, mixed>|string|null $bundleConfig
+     */
+    public function __construct(string $environment, bool $debug, private array|string|null $bundleConfig = null, private readonly ?string $cachePath = null)
     {
         $this->bundleConfig = $bundleConfig;
         parent::__construct($environment, $debug);
@@ -60,7 +61,9 @@ class DonationBundleTestingKernel extends Kernel
             if (is_string($this->bundleConfig)) {
                 $loader->load($this->bundleConfig);
             } else {
-                $builder->loadFromExtension('donation', $this->bundleConfig);
+                /** @var array<string, mixed> $config */
+                $config = $this->bundleConfig;
+                $builder->loadFromExtension('donation', $config);
             }
         }
 

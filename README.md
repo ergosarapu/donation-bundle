@@ -175,7 +175,7 @@ To run tests, use:
 ```sh
 export DATABASE_URL=pdo-mysql://db:db@db/db
 make migrate
-make test
+make phpunit
 ```
 
 ## Set up app integrated dev environment

@@ -80,7 +80,7 @@ class UpdatePaymentStatusExtensionTest extends TestCase
         $this->assertEquals(Status::Captured, $this->payment->getStatus());
     }
 
-    public function testStatusAuthorized()
+    public function testStatusAuthorized(): void
     {
         $this->gatewayMock->expects($this->exactly(2))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex) {
             $callIndex++;
@@ -106,7 +106,7 @@ class UpdatePaymentStatusExtensionTest extends TestCase
         $this->assertEquals(Status::Authorized, $this->payment->getStatus());
     }
 
-    public function testStatusCanceled()
+    public function testStatusCanceled(): void
     {
         $this->gatewayMock->expects($this->exactly(2))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex) {
             $callIndex++;
@@ -130,7 +130,7 @@ class UpdatePaymentStatusExtensionTest extends TestCase
         $this->assertEquals(Status::Canceled, $this->payment->getStatus());
     }
 
-    public function testStatusExpired()
+    public function testStatusExpired(): void
     {
         $this->gatewayMock->expects($this->exactly(2))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex) {
             $callIndex++;
@@ -154,7 +154,7 @@ class UpdatePaymentStatusExtensionTest extends TestCase
         $this->assertEquals(Status::Expired, $this->payment->getStatus());
     }
 
-    public function testStatusFailed()
+    public function testStatusFailed(): void
     {
         $this->gatewayMock->expects($this->exactly(2))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex) {
             $callIndex++;
@@ -178,7 +178,7 @@ class UpdatePaymentStatusExtensionTest extends TestCase
         $this->assertEquals(Status::Failed, $this->payment->getStatus());
     }
 
-    public function testStatusNew()
+    public function testStatusNew(): void
     {
         $this->gatewayMock->expects($this->exactly(2))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex) {
             $callIndex++;
@@ -197,7 +197,7 @@ class UpdatePaymentStatusExtensionTest extends TestCase
         $this->assertEquals(Status::Created, $this->payment->getStatus());
     }
 
-    public function testStatusPayedout()
+    public function testStatusPayedout(): void
     {
         $this->gatewayMock->expects($this->exactly(1))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex) {
             $callIndex++;
@@ -211,7 +211,7 @@ class UpdatePaymentStatusExtensionTest extends TestCase
         $this->extension->onPostExecute($this->context);
     }
 
-    public function testStatusPending()
+    public function testStatusPending(): void
     {
         $this->gatewayMock->expects($this->exactly(2))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex) {
             $callIndex++;
@@ -229,7 +229,7 @@ class UpdatePaymentStatusExtensionTest extends TestCase
         $this->assertEquals(Status::Pending, $this->payment->getStatus());
     }
 
-    public function testStatusRefunded()
+    public function testStatusRefunded(): void
     {
         $this->gatewayMock->expects($this->exactly(2))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex) {
             $callIndex++;
@@ -255,7 +255,7 @@ class UpdatePaymentStatusExtensionTest extends TestCase
         $this->assertEquals(Status::Refunded, $this->payment->getStatus());
     }
 
-    public function testStatusSuspended()
+    public function testStatusSuspended(): void
     {
         $this->gatewayMock->expects($this->exactly(1))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex) {
             $callIndex++;
@@ -270,7 +270,7 @@ class UpdatePaymentStatusExtensionTest extends TestCase
         $this->extension->onPostExecute($this->context);
     }
 
-    public function testStatusUnknown()
+    public function testStatusUnknown(): void
     {
         $this->gatewayMock->expects($this->exactly(1))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex) {
             $callIndex++;
