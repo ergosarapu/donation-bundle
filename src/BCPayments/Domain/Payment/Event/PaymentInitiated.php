@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event;
 
+use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\ValueObject\PaymentStatus;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\AbstractTimestampedEvent;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
@@ -18,6 +19,7 @@ use Patchlevel\EventSourcing\Attribute\Event;
 class PaymentInitiated extends AbstractTimestampedEvent
 {
     public function __construct(
+        DateTimeImmutable $occuredOn,
         public readonly PaymentId $paymentId,
         public readonly Money $amount,
         public readonly PaymentStatus $status,
@@ -26,6 +28,6 @@ class PaymentInitiated extends AbstractTimestampedEvent
         public readonly URL $redirectUrl,
         public readonly ?PaymentAppliedToId $appliedTo = null,
     ) {
-        parent::__construct();
+        parent::__construct($occuredOn);
     }
 }

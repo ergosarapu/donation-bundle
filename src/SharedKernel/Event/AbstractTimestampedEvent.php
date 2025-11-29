@@ -13,7 +13,8 @@ abstract class AbstractTimestampedEvent
     public readonly DateTimeImmutable $occuredOn;
 
     public function __construct(
+        DateTimeImmutable $occuredOn
     ) {
-        $this->occuredOn = new DateTimeImmutable();
+        $this->occuredOn = $occuredOn;
     }
 }

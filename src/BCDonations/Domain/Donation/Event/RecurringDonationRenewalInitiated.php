@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Event;
 
+use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\ValueObject\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\ValueObject\DonationId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringDonation\ValueObject\RecurringDonationId;
@@ -18,6 +19,7 @@ use Patchlevel\EventSourcing\Attribute\Event;
 class RecurringDonationRenewalInitiated extends AbstractTimestampedEvent implements EventInterface
 {
     public function __construct(
+        DateTimeImmutable $occuredOn,
         public readonly RecurringDonationId $recurringDonationId,
         public readonly DonationId $activationDonationId,
         public readonly CampaignId $campaignId,
@@ -25,6 +27,6 @@ class RecurringDonationRenewalInitiated extends AbstractTimestampedEvent impleme
         public readonly Gateway $gateway,
         public readonly Email $donorEmail,
     ) {
-        parent::__construct();
+        parent::__construct($occuredOn);
     }
 }

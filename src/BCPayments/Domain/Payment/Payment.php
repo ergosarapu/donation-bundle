@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\BCPayments\Domain\Payment;
 
+use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentAuthorized;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentCanceled;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentCaptured;
@@ -37,6 +38,7 @@ class Payment extends BasicAggregateRoot
     private bool $succeedRecorded = false;
 
     public static function initiate(
+        DateTimeImmutable $currentTime,
         PaymentId $id,
         Money $amount,
         Gateway $gateway,
@@ -46,6 +48,7 @@ class Payment extends BasicAggregateRoot
     ): self {
         $payment = new self();
         $payment->recordThat(new PaymentInitiated(
+            $currentTime,
             $id,
             $amount,
             PaymentStatus::Pending,
@@ -119,14 +122,14 @@ class Payment extends BasicAggregateRoot
     {
     }
 
-    public function markPending(): void
+    public function markPending(DateTimeImmutable $currentTime): void
     {
         // Idempotency guard
         if ($this->status === PaymentStatus::Pending) {
             return;
         }
         $this->canTransitionToPending(true);
-        $this->recordThat(new PaymentPending($this->id));
+        $this->recordThat(new PaymentPending($currentTime, $this->id));
     }
 
     public function canTransitionToPending(bool $throw = false): bool
@@ -134,7 +137,7 @@ class Payment extends BasicAggregateRoot
         return $this->canTransition($this->status, PaymentStatus::Pending, [], $throw);
     }
 
-    public function markAuthorized(Money $authorizedAmount): void
+    public function markAuthorized(DateTimeImmutable $currentTime, Money $authorizedAmount): void
     {
         // Idempotency guard
         if ($this->status === PaymentStatus::Authorized) {
@@ -144,17 +147,17 @@ class Payment extends BasicAggregateRoot
             return;
         }
         $this->canTransitionToAuthorized(true);
-        $this->recordThat(new PaymentAuthorized($this->id, $authorizedAmount));
-        $this->recordSucceeded();
+        $this->recordThat(new PaymentAuthorized($currentTime, $this->id, $authorizedAmount));
+        $this->recordSucceeded($currentTime);
     }
 
-    private function recordSucceeded(): void
+    private function recordSucceeded(DateTimeImmutable $currentTime): void
     {
         if ($this->succeedRecorded) {
             // "Succeed" can mean authorized, captured or settled - therefore we want to record it only once
             return;
         }
-        $this->recordThat(new PaymentSucceeded($this->id, $this->amount, $this->appliedTo));
+        $this->recordThat(new PaymentSucceeded($currentTime, $this->id, $this->amount, $this->appliedTo));
     }
 
     public function canTransitionToAuthorized(bool $throw = false): bool
@@ -162,7 +165,7 @@ class Payment extends BasicAggregateRoot
         return $this->canTransition($this->status, PaymentStatus::Authorized, [PaymentStatus::Pending], $throw);
     }
 
-    public function markCaptured(Money $capturedAmount): void
+    public function markCaptured(DateTimeImmutable $currentTime, Money $capturedAmount): void
     {
         // Idempotency guard
         if ($this->status === PaymentStatus::Captured) {
@@ -172,8 +175,8 @@ class Payment extends BasicAggregateRoot
             return;
         }
         $this->canTransitionToCaptured(true);
-        $this->recordThat(new PaymentCaptured($this->id, $capturedAmount, $this->appliedTo));
-        $this->recordSucceeded();
+        $this->recordThat(new PaymentCaptured($currentTime, $this->id, $capturedAmount, $this->appliedTo));
+        $this->recordSucceeded($currentTime);
     }
 
     public function canTransitionToCaptured(bool $throw = false): bool
@@ -181,15 +184,15 @@ class Payment extends BasicAggregateRoot
         return $this->canTransition($this->status, PaymentStatus::Captured, [PaymentStatus::Pending, PaymentStatus::Authorized], $throw);
     }
 
-    public function markCanceled(): void
+    public function markCanceled(DateTimeImmutable $currentTime): void
     {
         // Idempotency guard
         if ($this->status === PaymentStatus::Canceled) {
             return;
         }
         $this->canTransitionToCanceled(true);
-        $this->recordThat(new PaymentCanceled($this->id));
-        $this->recordThat(new PaymentDidNotSucceed($this->id, $this->appliedTo));
+        $this->recordThat(new PaymentCanceled($currentTime, $this->id));
+        $this->recordThat(new PaymentDidNotSucceed($currentTime, $this->id, $this->appliedTo));
     }
 
     public function canTransitionToCanceled(bool $throw = false): bool
@@ -197,15 +200,15 @@ class Payment extends BasicAggregateRoot
         return $this->canTransition($this->status, PaymentStatus::Canceled, [PaymentStatus::Pending, PaymentStatus::Authorized], $throw);
     }
 
-    public function markFailed(): void
+    public function markFailed(DateTimeImmutable $currentTime): void
     {
         // Idempotency guard
         if ($this->status === PaymentStatus::Failed) {
             return;
         }
         $this->canTransitionToFailed(true);
-        $this->recordThat(new PaymentFailed($this->id, $this->appliedTo));
-        $this->recordThat(new PaymentDidNotSucceed($this->id, $this->appliedTo));
+        $this->recordThat(new PaymentFailed($currentTime, $this->id, $this->appliedTo));
+        $this->recordThat(new PaymentDidNotSucceed($currentTime, $this->id, $this->appliedTo));
     }
 
     public function canTransitionToFailed(bool $throw = false): bool
@@ -213,7 +216,7 @@ class Payment extends BasicAggregateRoot
         return $this->canTransition($this->status, PaymentStatus::Failed, [PaymentStatus::Pending, PaymentStatus::Authorized], $throw);
     }
 
-    public function markRefunded(Money $remainingAmount): void
+    public function markRefunded(DateTimeImmutable $currentTime, Money $remainingAmount): void
     {
         // Idempotency guard
         if ($this->status === PaymentStatus::Refunded) {
@@ -223,7 +226,7 @@ class Payment extends BasicAggregateRoot
             return;
         }
         $this->canTransitionToRefunded(true);
-        $this->recordThat(new PaymentRefunded($this->id, $remainingAmount));
+        $this->recordThat(new PaymentRefunded($currentTime, $this->id, $remainingAmount));
     }
 
     public function canTransitionToRefunded(bool $throw = false): bool

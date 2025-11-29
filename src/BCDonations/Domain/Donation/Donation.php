@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\BCDonations\Domain\Donation;
 
+use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\ValueObject\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Event\DonationAccepted;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Event\DonationFailed;
@@ -35,6 +36,7 @@ class Donation extends BasicAggregateRoot
     private ?RecurringDonationId $recurringDonationId = null;
 
     public static function initiate(
+        DateTimeImmutable $currentTime,
         DonationId $id,
         CampaignId $campaignId,
         PaymentId $paymentId,
@@ -49,6 +51,7 @@ class Donation extends BasicAggregateRoot
     ): self {
         $donation = new self();
         $donation->recordThat(new DonationInitiated(
+            $currentTime,
             $id,
             $amount,
             DonationStatus::Pending,
@@ -89,7 +92,7 @@ class Donation extends BasicAggregateRoot
         $this->status = $event->status;
     }
 
-    public function markAccepted(Money $acceptedAmount): void
+    public function markAccepted(DateTimeImmutable $currentTime, Money $acceptedAmount): void
     {
         // Idempotency guard
         if ($this->status === DonationStatus::Accepted) {
@@ -99,7 +102,7 @@ class Donation extends BasicAggregateRoot
             return;
         }
         $this->canTransitionToAccepted(true);
-        $this->recordThat(new DonationAccepted($this->id, $acceptedAmount, $this->recurringActivation, $this->recurringDonationId));
+        $this->recordThat(new DonationAccepted($currentTime, $this->id, $acceptedAmount, $this->recurringActivation, $this->recurringDonationId));
     }
 
     public function canTransitionToAccepted(bool $throw = false): bool
@@ -107,14 +110,14 @@ class Donation extends BasicAggregateRoot
         return $this->canTransition($this->status, DonationStatus::Accepted, [DonationStatus::Pending], $throw);
     }
 
-    public function markFailed(): void
+    public function markFailed(DateTimeImmutable $currentTime): void
     {
         // Idempotency guard
         if ($this->status === DonationStatus::Failed) {
             return;
         }
         $this->canTransitionToFailed(true);
-        $this->recordThat(new DonationFailed($this->id, $this->recurringActivation, $this->recurringDonationId));
+        $this->recordThat(new DonationFailed($currentTime, $this->id, $this->recurringActivation, $this->recurringDonationId));
     }
 
     public function canTransitionToFailed(bool $throw = false): bool

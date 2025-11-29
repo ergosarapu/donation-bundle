@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Event;
 
+use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\ValueObject\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\ValueObject\DonationId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringDonation\ValueObject\RecurringDonationId;
@@ -24,6 +25,7 @@ class RecurringDonationInitiated extends AbstractTimestampedEvent implements Eve
     public readonly RecurringDonationStatus $status;
 
     public function __construct(
+        DateTimeImmutable $occuredOn,
         public readonly RecurringDonationId $id,
         public readonly DonationId $activationDonationId,
         public readonly CampaignId $campaignId,
@@ -34,7 +36,7 @@ class RecurringDonationInitiated extends AbstractTimestampedEvent implements Eve
         public readonly ?PersonName $donorName = null,
         public readonly ?NationalIdCode $donorNationalIdCode = null,
     ) {
-        parent::__construct();
+        parent::__construct($occuredOn);
         $this->status = RecurringDonationStatus::Pending;
     }
 }

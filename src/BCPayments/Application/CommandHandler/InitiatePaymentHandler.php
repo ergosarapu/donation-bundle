@@ -10,12 +10,14 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Command\InitiatePaymentIntegrationCommand;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\CommandHandlerInterface;
+use Psr\Clock\ClockInterface;
 
 class InitiatePaymentHandler implements CommandHandlerInterface
 {
     public function __construct(
         private readonly PaymentRepositoryInterface $paymentRepository,
         private readonly PaymentGatewayInterface $paymentGateway,
+        private readonly ClockInterface $clock,
     ) {
     }
 
@@ -39,6 +41,7 @@ class InitiatePaymentHandler implements CommandHandlerInterface
 
         // Create new aggregate
         $payment = Payment::initiate(
+            $this->clock->now(),
             $command->paymentId,
             $command->amount,
             $command->gateway,

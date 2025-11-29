@@ -7,12 +7,22 @@ namespace ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringDonation;
 use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\ValueObject\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Event\RecurringDonationActivated;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Event\RecurringDonationCanceled;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Event\RecurringDonationExpired;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Event\RecurringDonationFailed;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Event\RecurringDonationFailing;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Event\RecurringDonationInitiated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Event\RecurringDonationRenewalCompleted;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Event\RecurringDonationRenewalInitiated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\ValueObject\DonationId;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Exception\RecurringDonationActivateNotAllowedException;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Exception\RecurringDonationMarkCanceledNotAllowedException;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Exception\RecurringDonationMarkFailedNotAllowedException;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Exception\RecurringDonationMarkFailingNotAllowedException;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Exception\RecurringDonationRenewalAlreadyInitiatedException;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Exception\RecurringDonationRenewalNotAllowedException;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Exception\RecurringDonationRenewalNotDueYetException;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Exception\RecurringDonationRenewalNotInitiatedException;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringDonation\ValueObject\RecurringDonationId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringDonation\ValueObject\RecurringDonationStatus;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringDonation\ValueObject\RecurringInterval;
@@ -21,12 +31,10 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
-use LogicException;
 use Patchlevel\EventSourcing\Aggregate\BasicAggregateRoot;
 use Patchlevel\EventSourcing\Attribute\Aggregate;
 use Patchlevel\EventSourcing\Attribute\Apply;
 use Patchlevel\EventSourcing\Attribute\Id;
-use Psr\Clock\ClockInterface;
 
 #[Aggregate(name: 'recurring_donation')]
 class RecurringDonation extends BasicAggregateRoot
@@ -45,6 +53,7 @@ class RecurringDonation extends BasicAggregateRoot
 
 
     public static function initiate(
+        DateTimeImmutable $currentTime,
         RecurringDonationId $id,
         DonationId $activationDonationId,
         CampaignId $campaignId,
@@ -57,6 +66,7 @@ class RecurringDonation extends BasicAggregateRoot
     ): self {
         $donation = new self();
         $donation->recordThat(new RecurringDonationInitiated(
+            $currentTime,
             $id,
             $activationDonationId,
             $campaignId,
@@ -81,18 +91,22 @@ class RecurringDonation extends BasicAggregateRoot
         $this->amount = $event->amount;
         $this->gateway = $event->gateway;
         $this->donorEmail = $event->donorEmail;
+        $this->nextRenewalTime = null;
     }
 
     #[Apply]
     protected function applyRecurringDonationActivated(RecurringDonationActivated $event): void
     {
+        $this->id = $event->id;
         $this->nextRenewalTime = $event->nextRenewalTime;
         $this->status = $event->status;
+        $this->interval = $event->interval;
     }
 
     #[Apply]
     protected function applyRecurringDonationFailing(RecurringDonationFailing $event): void
     {
+        $this->id = $event->id;
         $this->status = $event->status;
     }
 
@@ -103,24 +117,43 @@ class RecurringDonation extends BasicAggregateRoot
         $this->nextRenewalTime = null;
     }
 
-    public function initiateRenewal(): void
+    #[Apply]
+    protected function applyRecurringDonationExpired(RecurringDonationExpired $event): void
     {
-        if ($this->status !== RecurringDonationStatus::Active) {
-            throw new LogicException('Only active recurring donations can be renewed.');
-        }
+        $this->status = $event->status;
+        $this->nextRenewalTime = null;
+    }
 
+    #[Apply]
+    protected function applyRecurringDonationCanceled(RecurringDonationCanceled $event): void
+    {
+        $this->status = $event->status;
+        $this->nextRenewalTime = null;
+    }
+
+    public function initiateRenewal(DateTimeImmutable $currentTime): void
+    {
         if ($this->isRenewing) {
-            throw new LogicException('Recurring donation is already in the process of renewing.');
+            throw new RecurringDonationRenewalAlreadyInitiatedException();
         }
 
-        $this->recordThat(new RecurringDonationRenewalInitiated(
-            $this->id,
-            $this->activationDonationId,
-            $this->campaignId,
-            $this->amount,
-            $this->gateway,
-            $this->donorEmail,
-        ));
+        if ($this->nextRenewalTime > $currentTime) {
+            throw new RecurringDonationRenewalNotDueYetException();
+        }
+
+        $closure = match ($this->status) {
+            RecurringDonationStatus::Active => fn () => $this->recordThat(new RecurringDonationRenewalInitiated(
+                $currentTime,
+                $this->id,
+                $this->activationDonationId,
+                $this->campaignId,
+                $this->amount,
+                $this->gateway,
+                $this->donorEmail,
+            )),
+            default => fn () => throw new RecurringDonationRenewalNotAllowedException('Only active recurring donations can be renewed.'),
+        };
+        $closure->call($this);
     }
 
     #[Apply]
@@ -129,14 +162,18 @@ class RecurringDonation extends BasicAggregateRoot
         $this->isRenewing = true;
     }
 
-    public function completeRenewal(ClockInterface $clock): void
+    public function completeRenewal(DateTimeImmutable $currentTime): void
     {
         if (!$this->isRenewing) {
-            throw new LogicException('Can only complete renewal for recurring donations that are renewing.');
+            throw new RecurringDonationRenewalNotInitiatedException();
         }
-
-        $nextRenewalTime = $clock->now()->add($this->interval->toDateInterval());
-        $this->recordThat(new RecurringDonationRenewalCompleted($this->id, $nextRenewalTime));
+        $this->recordThat(
+            new RecurringDonationRenewalCompleted(
+                $currentTime,
+                $this->id,
+                $this->calculateNextRenewalTime($currentTime)
+            )
+        );
     }
 
     #[Apply]
@@ -146,83 +183,71 @@ class RecurringDonation extends BasicAggregateRoot
         $this->nextRenewalTime = $event->nextRenewalTime;
     }
 
-    public function activate(ClockInterface $clock): void
+    public function activate(DateTimeImmutable $currentTime): void
     {
-        // Idempotency: if already active, do nothing
-        if ($this->status === RecurringDonationStatus::Active) {
-            return;
-        }
-
-        if ($this->status === RecurringDonationStatus::Pending) {
-            $nextRenewalTime = $clock->now()->add($this->interval->toDateInterval());
-            $this->recordThat(new RecurringDonationActivated($this->id, $nextRenewalTime));
-            return;
-        }
-
-        if ($this->status === RecurringDonationStatus::Failing) {
-            $nextRenewalTime = $this->nextRenewalTime;
-
-            // If for some reason there is no next renewal time, set it to now + interval
-            if ($nextRenewalTime === null) {
-                $this->recordThat(new RecurringDonationActivated($this->id, $clock->now()->add($this->interval->toDateInterval())));
-                return;
-            }
-
-            // If renewal time is still in the future, just reactivate
-            if ($nextRenewalTime > $clock->now()) {
-                $this->recordThat(new RecurringDonationActivated($this->id, $nextRenewalTime));
-                return;
-            }
-
-            // If renewal time has passed, ensure next renewal time is in the future
-            while ($nextRenewalTime <= $clock->now()) {
-                $nextRenewalTime = $nextRenewalTime->add($this->interval->toDateInterval());
-            }
-            $this->recordThat(new RecurringDonationActivated($this->id, $nextRenewalTime));
-            return;
-        }
-        throw new LogicException('Only pending and failing recurring donations can be activated.');
+        $result = match ($this->status) {
+            RecurringDonationStatus::Pending => fn () => $this->calculateNextRenewalTimeAndActivate($currentTime),
+            RecurringDonationStatus::Failing => fn () => $this->calculateNextRenewalTimeAndActivate($currentTime),
+            default => fn () => throw new RecurringDonationActivateNotAllowedException('Activate not allowed from status: ' . $this->status->value),
+        };
+        $result->call($this);
     }
 
-    public function markFailing(): void
+    private function calculateNextRenewalTimeAndActivate(DateTimeImmutable $now): void
     {
-        // Idempotency guard
-        if ($this->status === RecurringDonationStatus::Failed) {
-            return;
+        $this->recordThat(
+            new RecurringDonationActivated(
+                $now,
+                $this->id,
+                $this->calculateNextRenewalTime($now),
+                $this->interval
+            )
+        );
+    }
+
+    private function calculateNextRenewalTime(DateTimeImmutable $now): DateTimeImmutable
+    {
+        $nextRenewalTime = $this->nextRenewalTime;
+        if ($nextRenewalTime === null) {
+            return $now->add($this->interval->toDateInterval());
         }
-        $this->canTransitionToFailing(true);
-        $this->recordThat(new RecurringDonationFailing($this->id));
-    }
 
-    public function canTransitionToFailing(bool $throw = false): bool
-    {
-        return $this->canTransition($this->status, RecurringDonationStatus::Failing, [RecurringDonationStatus::Active], $throw);
-    }
-
-    public function markFailed(): void
-    {
-        // Idempotency guard
-        if ($this->status === RecurringDonationStatus::Failed) {
-            return;
+        // Make sure the next renewal time is in the future
+        while ($nextRenewalTime <= $now) {
+            $nextRenewalTime = $nextRenewalTime->add($this->interval->toDateInterval());
         }
-        $this->canTransitionToFailed(true);
-        $this->recordThat(new RecurringDonationFailed($this->id));
+        return $nextRenewalTime;
     }
 
-    public function canTransitionToFailed(bool $throw = false): bool
+    public function markFailing(DateTimeImmutable $currentTime): void
     {
-        return $this->canTransition($this->status, RecurringDonationStatus::Failed, [RecurringDonationStatus::Pending, RecurringDonationStatus::Active, RecurringDonationStatus::Failing], $throw);
+        $result = match ($this->status) {
+            RecurringDonationStatus::Active => fn () => $this->recordThat(new RecurringDonationFailing($currentTime, $this->id)),
+            default => fn () => throw new RecurringDonationMarkFailingNotAllowedException('Mark Failing not allowed from status: ' . $this->status->value),
+        };
+        $result->call($this);
     }
 
-    /**
-     * @param array<RecurringDonationStatus> $allowedFrom
-     */
-    private function canTransition(RecurringDonationStatus $from, RecurringDonationStatus $to, array $allowedFrom, bool $throw = false): bool
+    public function markFailed(DateTimeImmutable $currentTime): void
     {
-        $canTransition = in_array($from, $allowedFrom);
-        if ($throw && !$canTransition) {
-            throw new LogicException('Cannot transition from ' . $from->value . ' to ' . $to->value . '.');
-        }
-        return $canTransition;
+        $closure = match ($this->status) {
+            RecurringDonationStatus::Failing => fn () => $this->recordThat(new RecurringDonationFailed($currentTime, $this->id)),
+            RecurringDonationStatus::Pending => fn () => $this->recordThat(new RecurringDonationFailed($currentTime, $this->id)),
+            RecurringDonationStatus::Active => fn () => $this->recordThat(new RecurringDonationFailed($currentTime, $this->id)),
+            default => fn () => throw new RecurringDonationMarkFailedNotAllowedException('Mark Failed not allowed from status: ' . $this->status->value),
+        };
+        $closure->call($this);
     }
+
+    public function markCanceled(DateTimeImmutable $currentTime): void
+    {
+        $closure = match ($this->status) {
+            RecurringDonationStatus::Failing => fn () => $this->recordThat(new RecurringDonationCanceled($currentTime, $this->id)),
+            RecurringDonationStatus::Pending => fn () => $this->recordThat(new RecurringDonationCanceled($currentTime, $this->id)),
+            RecurringDonationStatus::Active => fn () => $this->recordThat(new RecurringDonationCanceled($currentTime, $this->id)),
+            default => fn () => throw new RecurringDonationMarkCanceledNotAllowedException('Mark Canceled not allowed from status: ' . $this->status->value),
+        };
+        $closure->call($this);
+    }
+
 }

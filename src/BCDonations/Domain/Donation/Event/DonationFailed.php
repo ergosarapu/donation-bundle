@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Event;
 
+use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\ValueObject\DonationId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\ValueObject\DonationStatus;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringDonation\ValueObject\RecurringDonationId;
@@ -17,11 +18,12 @@ final class DonationFailed extends AbstractTimestampedEvent implements EventInte
     public readonly DonationStatus $status;
 
     public function __construct(
+        DateTimeImmutable $occuredOn,
         public readonly DonationId $donationId,
         public readonly bool $failsRecurring = false,
         public readonly ?RecurringDonationId $recurringDonationId = null,
     ) {
-        parent::__construct();
+        parent::__construct($occuredOn);
         $this->status = DonationStatus::Failed;
     }
 }

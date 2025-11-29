@@ -14,10 +14,11 @@ use Patchlevel\EventSourcing\Attribute\Event;
 class RecurringDonationRenewalCompleted extends AbstractTimestampedEvent implements EventInterface
 {
     public function __construct(
+        DateTimeImmutable $occuredOn,
         public readonly RecurringDonationId $id,
         public readonly DateTimeImmutable $nextRenewalTime,
     ) {
-        parent::__construct();
+        parent::__construct($occuredOn);
     }
 
 }

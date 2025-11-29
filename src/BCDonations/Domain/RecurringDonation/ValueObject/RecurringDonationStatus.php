@@ -6,9 +6,9 @@ namespace ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringDonation\ValueOb
 
 enum RecurringDonationStatus: String
 {
-    case Pending = 'pending'; // temporary status during initiation
+    case Pending = 'pending'; // allowed transition to: failed, active, canceled
     case Failed = 'failed'; // allowed transition to: none
-    case Active = 'active'; // allowed transition to: failing, expired, canceled
+    case Active = 'active'; // allowed transition to: failed, failing, expired, canceled
     case Failing = 'failing'; // allowed transition to: failed, active, expired, canceled
     case Expired = 'expired'; // allowed transition to: none
     case Canceled = 'canceled'; // allowed transition to: none

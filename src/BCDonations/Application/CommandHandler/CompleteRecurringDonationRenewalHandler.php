@@ -20,7 +20,7 @@ class CompleteRecurringDonationRenewalHandler implements CommandHandlerInterface
     public function __invoke(CompleteRecurringDonationRenewal $command): void
     {
         $recurringDonation = $this->recurringDonationRepository->load($command->recurringDonationId);
-        $recurringDonation->completeRenewal($this->clock);
+        $recurringDonation->completeRenewal($this->clock->now());
         $this->recurringDonationRepository->save($recurringDonation);
     }
 }

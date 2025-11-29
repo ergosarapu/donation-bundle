@@ -11,17 +11,17 @@ use ErgoSarapu\DonationBundle\SharedApplication\Port\Event\EventInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\AbstractTimestampedEvent;
 use Patchlevel\EventSourcing\Attribute\Event;
 
-#[Event(name: 'recurring_donation.failing')]
-class RecurringDonationFailing extends AbstractTimestampedEvent implements EventInterface
+#[Event(name: 'recurring_donation.expired')]
+class RecurringDonationExpired extends AbstractTimestampedEvent implements EventInterface
 {
     public readonly RecurringDonationStatus $status;
 
     public function __construct(
-        DateTimeImmutable $occuredOn,
+        DateTimeImmutable $occurredOn,
         public readonly RecurringDonationId $id,
     ) {
-        parent::__construct($occuredOn);
-        $this->status = RecurringDonationStatus::Failing;
+        parent::__construct($occurredOn);
+        $this->status = RecurringDonationStatus::Expired;
     }
 
 }

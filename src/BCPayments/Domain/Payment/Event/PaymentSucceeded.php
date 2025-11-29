@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event;
 
+use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\AbstractTimestampedEvent;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
@@ -14,11 +15,12 @@ use Patchlevel\EventSourcing\Attribute\Event;
 class PaymentSucceeded extends AbstractTimestampedEvent
 {
     public function __construct(
+        DateTimeImmutable $occuredOn,
         public readonly PaymentId $paymentId,
         public readonly Money $amount,
         public readonly ?PaymentAppliedToId $appliedTo = null,
     ) {
-        parent::__construct();
+        parent::__construct($occuredOn);
     }
 
 }

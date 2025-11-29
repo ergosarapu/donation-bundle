@@ -10,17 +10,20 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Donation;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\CommandHandlerInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
+use Psr\Clock\ClockInterface;
 
 class InitiateDonationHandler implements CommandHandlerInterface
 {
     public function __construct(
-        private readonly DonationRepositoryInterface $donationRepository
+        private readonly DonationRepositoryInterface $donationRepository,
+        private readonly ClockInterface $clock,
     ) {
     }
 
     public function __invoke(InitiateDonation $command): void
     {
         $donation = Donation::initiate(
+            $this->clock->now(),
             $command->donationId,
             $command->campaignId,
             PaymentId::generate(),

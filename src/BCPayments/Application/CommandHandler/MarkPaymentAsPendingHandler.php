@@ -7,17 +7,20 @@ namespace ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsPending;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentRepositoryInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\CommandHandlerInterface;
+use Psr\Clock\ClockInterface;
 
 class MarkPaymentAsPendingHandler implements CommandHandlerInterface
 {
-    public function __construct(private readonly PaymentRepositoryInterface $paymentRepository)
-    {
+    public function __construct(
+        private readonly PaymentRepositoryInterface $paymentRepository,
+        private readonly ClockInterface $clock,
+    ) {
     }
 
     public function __invoke(MarkPaymentAsPending $command): void
     {
         $payment = $this->paymentRepository->load($command->paymentId);
-        $payment->markPending();
+        $payment->markPending($this->clock->now());
         $this->paymentRepository->save($payment);
     }
 }

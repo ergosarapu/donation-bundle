@@ -7,11 +7,13 @@ namespace ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\MarkRecurringDonationAsFailed;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Port\RecurringDonationRepositoryInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\CommandHandlerInterface;
+use Psr\Clock\ClockInterface;
 
 class MarkRecurringDonationAsFailedHandler implements CommandHandlerInterface
 {
     public function __construct(
-        private readonly RecurringDonationRepositoryInterface $recurringDonationRepository
+        private readonly RecurringDonationRepositoryInterface $recurringDonationRepository,
+        private readonly ClockInterface $clock,
     ) {
     }
 
@@ -24,7 +26,7 @@ class MarkRecurringDonationAsFailedHandler implements CommandHandlerInterface
         }
 
         $recurringDonation = $this->recurringDonationRepository->load($command->recurringDonationId);
-        $recurringDonation->markFailed();
+        $recurringDonation->markFailed($this->clock->now());
         $this->recurringDonationRepository->save($recurringDonation);
     }
 }
