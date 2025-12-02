@@ -48,7 +48,8 @@
         "twig/extra-bundle": "^3.15",
         "symfony/messenger": "^6.4|^7.2|^7.3",
         "patchlevel/event-sourcing-bundle": "^3.12",
-        "symfony/doctrine-messenger": "^7.4"
+        "patchlevel/event-sourcing": "3.13.1",
+        "symfony/doctrine-messenger": "^6.4|^7.2|^7.3"
     },
     "require-dev": {
         "symfony/yaml": "^6.4|^7.2|^7.3",
