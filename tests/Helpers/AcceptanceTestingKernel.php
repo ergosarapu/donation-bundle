@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\Tests\Helpers;
 
+use ErgoSarapu\DonationBundle\Tests\Helpers\DependencyInjection\Compiler\FrozenClockCompilerPass;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
@@ -19,6 +20,8 @@ class AcceptanceTestingKernel extends DonationBundleTestingKernel
                 'transports' => [
                     'event' => 'test://?intercept=false&catch_exceptions=false',
                     'command' => 'test://?intercept=false&catch_exceptions=false',
+                    // Intercept delayed messages to avoid triggering immediate handling
+                    'delayed_command' => 'test://?intercept=true&catch_exceptions=false&support_delay_stamp=true',
                     // Intercept integration messages and avoid triggering handlers outside of bounded context
                     'integration_event' => 'test://?intercept=true&catch_exceptions=false',
                     'integration_command' => 'test://?intercept=true&catch_exceptions=false',
@@ -36,5 +39,7 @@ class AcceptanceTestingKernel extends DonationBundleTestingKernel
                 'type' => 'in_memory',
             ]
         ]);
+
+        $builder->addCompilerPass(new FrozenClockCompilerPass());
     }
 }

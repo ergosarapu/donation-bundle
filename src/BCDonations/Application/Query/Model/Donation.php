@@ -9,22 +9,23 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\ValueObject\DonationSt
 
 class Donation
 {
-    private string $id;
+    private string $donationId;
     private string $paymentId;
     private int $amount;
     private string $currency;
     private DonationStatus $status;
+    private ?string $recurringDonationId = null;
     private DateTimeImmutable $createdAt;
     private DateTimeImmutable $updatedAt;
 
-    public function getId(): string
+    public function getDonationId(): string
     {
-        return $this->id;
+        return $this->donationId;
     }
 
-    public function setId(string $id): void
+    public function setDonationId(string $donationId): void
     {
-        $this->id = $id;
+        $this->donationId = $donationId;
     }
 
     public function getPaymentId(): string
@@ -85,5 +86,15 @@ class Donation
     public function setUpdatedAt(DateTimeImmutable $updatedAt): void
     {
         $this->updatedAt = $updatedAt;
+    }
+
+    public function getRecurringDonationId(): ?string
+    {
+        return $this->recurringDonationId;
+    }
+
+    public function setRecurringDonationId(?string $recurringDonationId): void
+    {
+        $this->recurringDonationId = $recurringDonationId;
     }
 }

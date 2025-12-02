@@ -9,9 +9,10 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringDonation\ValueObject\R
 
 class RecurringDonation
 {
-    private string $id;
+    private string $recurringDonationId;
     private string $activationDonationId;
     private int $amount;
+    private int $cumulativeReceivedAmount = 0;
     private string $currency;
     private string $interval;
     private RecurringDonationStatus $status;
@@ -19,14 +20,14 @@ class RecurringDonation
     private DateTimeImmutable $createdAt;
     private DateTimeImmutable $updatedAt;
 
-    public function getId(): string
+    public function getRecurringDonationId(): string
     {
-        return $this->id;
+        return $this->recurringDonationId;
     }
 
-    public function setId(string $id): void
+    public function setRecurringDonationId(string $recurringDonationId): void
     {
-        $this->id = $id;
+        $this->recurringDonationId = $recurringDonationId;
     }
 
     public function getActivationDonationId(): string
@@ -108,5 +109,15 @@ class RecurringDonation
     public function setDonorEmail(string $donorEmail): void
     {
         $this->donorEmail = $donorEmail;
+    }
+
+    public function getCumulativeReceivedAmount(): int
+    {
+        return $this->cumulativeReceivedAmount;
+    }
+
+    public function setCumulativeReceivedAmount(int $cumulativeReceivedAmount): void
+    {
+        $this->cumulativeReceivedAmount = $cumulativeReceivedAmount;
     }
 }

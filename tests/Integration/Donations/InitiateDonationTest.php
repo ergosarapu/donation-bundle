@@ -7,6 +7,7 @@ namespace ErgoSarapu\DonationBundle\Tests\Integration\Donations;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\InitiateDonation;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\InitiateRecurringDonation;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetDonation;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetDonations;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetPendingDonation;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetPendingRecurringDonation;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetRecurringDonation;
@@ -32,13 +33,13 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\Tests\Helpers\DonationBundleTestingKernel;
 use Patchlevel\EventSourcing\Subscription\Engine\SubscriptionEngine;
+use Psr\Clock\ClockInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
-use Zenstruck\Messenger\Test\InteractsWithMessenger;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\ConsoleOutput;
 
 class InitiateDonationTest extends KernelTestCase
 {
-    use InteractsWithMessenger;
-
     private CommandBusInterface $commandBus;
 
     private QueryBusInterface $queryBus;
@@ -124,46 +125,115 @@ class InitiateDonationTest extends KernelTestCase
         $this->assertEquals(DonationStatus::Failed, $donation->getStatus());
     }
 
-    public function testInitiateAndActivateRecurringDonation(): void
+    public function testRecurringDonationActivateAndRenewal(): void
     {
+
+        // Create a short interval for testing
+        // We could mock ClockInterface, but messenger consume and DelayStamp does not support it yet
+        // https://github.com/symfony/symfony/issues/62548
+        $interval = new RecurringInterval('PT3S'); // 3 seconds
+
         // Initiate recurring donation
         $amount = new Money(100, new Currency('EUR'));
         $initiateRecurringDonation = new InitiateRecurringDonation(
             $amount,
             CampaignId::generate(),
             new Gateway('test'),
-            new RecurringInterval(RecurringInterval::Monthly),
+            $interval,
             new Email('example@example.com')
         );
         $this->commandBus->dispatch($initiateRecurringDonation);
 
+        // Recurring Donation is pending
         /** @var ?RecurringDonation $recurringDonation */
         $recurringDonation = $this->queryBus->ask(new GetPendingRecurringDonation($initiateRecurringDonation->recurringDonationId));
         $this->assertNotNull($recurringDonation);
         $this->assertEquals(RecurringDonationStatus::Pending, $recurringDonation->getStatus());
+        $this->assertEquals(0, $recurringDonation->getCumulativeReceivedAmount());
 
-        /** @var ?Donation $donation */
-        $donation = $this->queryBus->ask(new GetPendingDonation(DonationId::fromString($recurringDonation->getActivationDonationId())));
-        $this->assertNotNull($donation);
-        $this->assertEquals(DonationStatus::Pending, $donation->getStatus());
+        // Activation donation is pending
+        /** @var ?Donation $activationDonation */
+        $activationDonation = $this->queryBus->ask(new GetPendingDonation(DonationId::fromString($recurringDonation->getActivationDonationId())));
+        $this->assertNotNull($activationDonation);
+        $this->assertEquals(DonationStatus::Pending, $activationDonation->getStatus());
 
         // Mark payment as captured and expect donation to be accepted
-        $this->commandBus->dispatch(new MarkPaymentAsCaptured(PaymentId::fromString($donation->getPaymentId()), $amount));
+        $this->commandBus->dispatch(new MarkPaymentAsCaptured(PaymentId::fromString($activationDonation->getPaymentId()), $amount));
 
+        // Payment is captured
         /** @var ?Payment $payment */
-        $payment = $this->queryBus->ask(new GetPayment(PaymentId::fromString($donation->getPaymentId())));
+        $payment = $this->queryBus->ask(new GetPayment(PaymentId::fromString($activationDonation->getPaymentId())));
         $this->assertNotNull($payment);
         $this->assertEquals(PaymentStatus::Captured, $payment->getStatus());
 
-        /** @var ?Donation $donation */
-        $donation = $this->queryBus->ask(new GetDonation(DonationId::fromString($donation->getId())));
-        $this->assertNotNull($donation);
-        $this->assertEquals(DonationStatus::Accepted, $donation->getStatus());
+        // Activation Donation is accepted
+        /** @var ?Donation $activationDonation */
+        $activationDonation = $this->queryBus->ask(new GetDonation(DonationId::fromString($activationDonation->getDonationId())));
+        $this->assertNotNull($activationDonation);
+        $this->assertEquals(DonationStatus::Accepted, $activationDonation->getStatus());
 
+        // Recurring Donation is active
         /** @var ?RecurringDonation $recurringDonation */
         $recurringDonation = $this->queryBus->ask(new GetRecurringDonation($initiateRecurringDonation->recurringDonationId));
         $this->assertNotNull($recurringDonation);
         $this->assertEquals(RecurringDonationStatus::Active, $recurringDonation->getStatus());
+        $this->assertEquals($amount->amount(), $recurringDonation->getCumulativeReceivedAmount());
+
+        // Assuming there is initiate renewal command delayed
+
+        // Consume messenger transport 'delayed_command', this should not consume message yet since we do not pass interval yet
+        $this->consumeMessagesFromTransport('delayed_command', 1);
+        /** @var array<Donation> $donations */
+        $donations = $this->queryBus->ask(new GetDonations($initiateRecurringDonation->recurringDonationId));
+        $this->assertCount(1, $donations, 'No renewal should be initiated yet. If this happens, it can mean the interval set for testing is too short and may cause the test to be flaky.');
+
+        // Consume messenger transport 'delayed_command', should consume message initiate renewal command
+        $this->consumeMessagesFromTransport('delayed_command', 2);
+        /** @var array<Donation> $donations */
+        $donations = $this->queryBus->ask(new GetDonations($initiateRecurringDonation->recurringDonationId));
+        $this->assertCount(2, $donations);
+        $donations = array_filter($donations, fn (Donation $d) => $d->getDonationId() != $activationDonation->getDonationId());
+        $this->assertCount(1, $donations); // This contains only the renewal donation
+        $renewalDonation = array_pop($donations);
+        $this->assertNotNull($renewalDonation);
+
+        // Mark payment as captured and expect donation to be accepted
+        $this->commandBus->dispatch(new MarkPaymentAsCaptured(PaymentId::fromString($renewalDonation->getPaymentId()), $amount));
+
+        // Payment is captured
+        /** @var ?Payment $payment */
+        $payment = $this->queryBus->ask(new GetPayment(PaymentId::fromString($renewalDonation->getPaymentId())));
+        $this->assertNotNull($payment);
+        $this->assertEquals(PaymentStatus::Captured, $payment->getStatus());
+
+        // Renewal Donation is accepted
+        /** @var ?Donation $renewalDonation */
+        $renewalDonation = $this->queryBus->ask(new GetDonation(DonationId::fromString($renewalDonation->getDonationId())));
+        $this->assertNotNull($renewalDonation);
+        $this->assertEquals(DonationStatus::Accepted, $renewalDonation->getStatus());
+
+        // Recurring Donation is active and has cumulative amount updated
+        /** @var ?RecurringDonation $recurringDonation */
+        $recurringDonation = $this->queryBus->ask(new GetRecurringDonation($initiateRecurringDonation->recurringDonationId));
+        $this->assertNotNull($recurringDonation);
+        $this->assertEquals(RecurringDonationStatus::Active, $recurringDonation->getStatus());
+        $this->assertEquals(2 * $amount->amount(), $recurringDonation->getCumulativeReceivedAmount());
     }
 
+    private function consumeMessagesFromTransport(string $transportName, int $timeLimit): void
+    {
+        error_log("Consuming messages from transport '$transportName' for up to $timeLimit seconds.");
+        $this->assertNotNull(self::$kernel);
+        $application = new \Symfony\Bundle\FrameworkBundle\Console\Application(self::bootKernel());
+        $command = $application->find('messenger:consume');
+
+        $input = new ArrayInput([
+            'receivers' => [$transportName],
+            '--limit' => 1,
+            '--time-limit' => $timeLimit,
+            '--failure-limit' => 1,
+        ]);
+
+        $command->run($input, new ConsoleOutput());
+    }
 }

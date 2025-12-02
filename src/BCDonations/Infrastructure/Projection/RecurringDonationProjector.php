@@ -6,7 +6,9 @@ namespace ErgoSarapu\DonationBundle\BCDonations\Infrastructure\Projection;
 
 use Doctrine\ORM\EntityManagerInterface;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\RecurringDonation;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\RecurringDonationTracking;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Port\RecurringDonationProjectionRepositoryInterface;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Event\DonationAccepted;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Event\RecurringDonationActivated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Event\RecurringDonationInitiated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringDonation\ValueObject\RecurringDonationId;
@@ -56,7 +58,7 @@ class RecurringDonationProjector implements RecurringDonationProjectionRepositor
     {
         $criteria = [];
         if ($id !== null) {
-            $criteria['id'] = $id->toString();
+            $criteria['recurringDonationId'] = $id->toString();
         }
         if ($status !== null) {
             $criteria['status'] = $status->value;
@@ -73,7 +75,7 @@ class RecurringDonationProjector implements RecurringDonationProjectionRepositor
         }
 
         $recurringDonation = new RecurringDonation();
-        $recurringDonation->setId($event->id->toString());
+        $recurringDonation->setRecurringDonationId($event->id->toString());
         $recurringDonation->setCreatedAt($event->occuredOn);
         $recurringDonation->setUpdatedAt($event->occuredOn);
         $recurringDonation->setActivationDonationId($event->activationDonationId->toString());
@@ -96,9 +98,44 @@ class RecurringDonationProjector implements RecurringDonationProjectionRepositor
         $this->projectionEntityManager->flush();
     }
 
+    #[Subscribe(DonationAccepted::class)]
+    public function onDonationAccepted(DonationAccepted $event): void
+    {
+        if ($event->recurringDonationId === null) {
+            // Not needed for our projection
+            return;
+        }
+
+        $this->projectionEntityManager->wrapInTransaction(function (EntityManagerInterface $em) use ($event) {
+            $tracking = $em->find(RecurringDonationTracking::class, $event->donationId->toString());
+            if ($tracking !== null && $tracking->isDonationAcceptedSeen()) {
+                // This event has already been processed for this recurring donation
+                return;
+            }
+
+            if ($tracking === null) {
+                $tracking = new RecurringDonationTracking();
+                $tracking->setDonationId($event->donationId->toString());
+                $em->persist($tracking);
+            }
+            $tracking->setDonationAcceptedSeen(true);
+
+            $recurringDonation = $this->findOneOrThrow($event->recurringDonationId);
+            $cumulativeAmount = $recurringDonation->getCumulativeReceivedAmount() + $event->acceptedAmount->amount();
+            $recurringDonation->setCumulativeReceivedAmount($cumulativeAmount);
+            $recurringDonation->setUpdatedAt($event->occuredOn);
+            $em->flush();
+        });
+    }
+
+
+
     #[Teardown]
     public function teardown(): void
     {
-        $this->projectionEntityManager->createQuery('DELETE FROM ' . RecurringDonation::class)->execute();
+        $this->projectionEntityManager->wrapInTransaction(function (EntityManagerInterface $em) {
+            $em->createQuery('DELETE FROM ' . RecurringDonation::class)->execute();
+            $em->createQuery('DELETE FROM ' . RecurringDonationTracking::class)->execute();
+        });
     }
 }

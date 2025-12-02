@@ -69,6 +69,15 @@ class DonationBundleTestingKernel extends Kernel
 
         $builder->loadFromExtension('framework', [
             'test' => true,
+            'messenger' => [
+                'transports' => [
+                    'delayed_command' => [
+                        'retry_strategy' => [
+                            'max_retries' => 0,
+                        ]
+                    ],
+                ],
+            ]
         ]);
 
         $builder->loadFromExtension('payum', [

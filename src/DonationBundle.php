@@ -8,12 +8,8 @@ use DateInterval;
 use ErgoSarapu\DonationBundle\DependencyInjection\Compiler\RegisterQueryCompilerPass;
 use ErgoSarapu\DonationBundle\Entity\Payment;
 use ErgoSarapu\DonationBundle\Entity\PaymentToken;
-use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Command\IntegrationCommandInterface;
-use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\IntegrationEventInterface;
 use ErgoSarapu\DonationBundle\Payum\PHPSerializeType;
 use ErgoSarapu\DonationBundle\Repository\ResetPasswordRequestRepository;
-use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandInterface;
-use ErgoSarapu\DonationBundle\SharedApplication\Port\Event\EventInterface;
 use Exception;
 use Symfony\Component\AssetMapper\AssetMapperInterface;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
@@ -201,6 +197,10 @@ class DonationBundle extends AbstractBundle
                     // Different connection for projections to enable write access to read models
                     'projection' => [
                         'url' => '%env(DATABASE_URL)%',
+                    ],
+                    // Different connection for messenger transport
+                    'messenger' => [
+                        'url' => '%env(DATABASE_URL)%',
                     ]
                 ],
                 'types' => [
@@ -269,7 +269,6 @@ class DonationBundle extends AbstractBundle
                 'buses' => [
                     'message.bus' => null,
                     'command.bus' => null,
-                    // 'integration.command.bus' => null,
                     'query.bus' => null,
                     'event.bus' => [
                         'default_middleware' => [
@@ -280,14 +279,14 @@ class DonationBundle extends AbstractBundle
                 'transports' => [
                     'event' => 'sync://',
                     'command' => 'sync://',
+                    'delayed_command' => [
+                        'dsn' => 'doctrine://messenger',
+                        'options' => [
+                            'queue_name' => 'delayed_command',
+                        ],
+                    ],
                     'integration_event' => 'sync://',
                     'integration_command' => 'sync://',
-                ],
-                'routing' => [
-                    EventInterface::class => 'event',
-                    CommandInterface::class => 'command',
-                    IntegrationEventInterface::class => 'integration_event',
-                    IntegrationCommandInterface::class => 'integration_command',
                 ],
             ]
         ]);

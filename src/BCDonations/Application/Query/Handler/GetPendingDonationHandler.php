@@ -18,6 +18,6 @@ class GetPendingDonationHandler implements QueryHandlerInterface
 
     public function __invoke(GetPendingDonation $query): ?Donation
     {
-        return $this->repository->findOne($query->donationId, DonationStatus::Pending);
+        return $this->repository->findOneBy($query->donationId, DonationStatus::Pending);
     }
 }
