@@ -222,8 +222,6 @@ class InitiateDonationTest extends KernelTestCase
 
     private function consumeMessagesFromTransport(string $transportName, int $timeLimit): void
     {
-        error_log("Consuming messages from transport '$transportName' for up to $timeLimit seconds.");
-        $this->assertNotNull(self::$kernel);
         $application = new \Symfony\Bundle\FrameworkBundle\Console\Application(self::bootKernel());
         $command = $application->find('messenger:consume');
 
