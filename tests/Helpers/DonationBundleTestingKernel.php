@@ -49,7 +49,7 @@ class DonationBundleTestingKernel extends Kernel
 
     protected function configureRoutes(RoutingConfigurator $routes): void
     {
-        $routes->import(__DIR__.'/../../config/routes.xml')->prefix('/');
+        $routes->import(__DIR__.'/../../config/routes.php')->prefix('/');
     }
 
     protected function configureContainer(ContainerConfigurator $container, LoaderInterface $loader, ContainerBuilder $builder): void
