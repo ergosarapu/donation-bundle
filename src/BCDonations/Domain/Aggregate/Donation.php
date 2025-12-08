@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCDonations\Domain\Aggregate;
 
 use DateTimeImmutable;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Event\DonationAccepted;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Event\DonationFailed;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Event\DonationInitiated;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\DonationId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\DonationStatus;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\RecurringPlanId;

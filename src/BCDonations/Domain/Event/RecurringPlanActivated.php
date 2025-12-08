@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCDonations\Domain\Event;
 
 use DateTimeImmutable;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\RecurringInterval;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\RecurringPlanId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\RecurringPlanStatus;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\RecurringInterval;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Event\EventInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\AbstractTimestampedEvent;
 use Patchlevel\EventSourcing\Attribute\Event;

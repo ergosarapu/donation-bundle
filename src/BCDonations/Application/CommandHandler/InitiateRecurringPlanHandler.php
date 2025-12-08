@@ -6,8 +6,8 @@ namespace ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler;
 
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\InitiateRecurringPlan;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Port\RecurringPlanRepositoryInterface;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\DonationId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Aggregate\RecurringPlan;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\DonationId;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\CommandHandlerInterface;
 use Psr\Clock\ClockInterface;
