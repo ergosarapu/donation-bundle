@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\BCDonations\Application\Command;
 
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\ValueObject\CampaignId;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\ValueObject\DonationId;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringDonation\ValueObject\RecurringDonationId;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\CampaignId;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\DonationId;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\RecurringPlanId;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
@@ -22,7 +22,7 @@ final class InitiateDonation implements CommandInterface
         public readonly CampaignId $campaignId,
         public readonly Gateway $gateway,
         public readonly bool $recurringActivation = false,
-        public readonly ?RecurringDonationId $recurringDonationId = null,
+        public readonly ?RecurringPlanId $recurringPlanId = null,
         public readonly ?PersonName $donorName = null,
         public readonly ?Email $donorEmail = null,
         public readonly ?NationalIdCode $donorNationalIdCode = null,

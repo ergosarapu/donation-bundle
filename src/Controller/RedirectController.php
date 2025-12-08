@@ -4,8 +4,8 @@ namespace ErgoSarapu\DonationBundle\Controller;
 
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetDonation;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\Donation;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\ValueObject\DonationId;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\ValueObject\DonationStatus;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\DonationId;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\DonationStatus;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetPayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model\Payment;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\ValueObject\PaymentStatus;
@@ -26,7 +26,7 @@ class RedirectController extends AbstractController
     {
     }
     
-    public function __invoke(?string $donationId = null, ?string $recurringDonationId = null): Response
+    public function __invoke(?string $donationId = null, ?string $recurringPlanId = null): Response
     {
         // TODO: Recurring donations
         // if ($recurringDonationId !== null){

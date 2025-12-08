@@ -5,19 +5,19 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\Tests\Integration\Donations;
 
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\InitiateDonation;
-use ErgoSarapu\DonationBundle\BCDonations\Application\Command\InitiateRecurringDonation;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Command\InitiateRecurringPlan;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetDonation;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetDonations;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetPendingDonation;
-use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetPendingRecurringDonation;
-use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetRecurringDonation;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetPendingRecurringPlan;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetRecurringPlan;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\Donation;
-use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\RecurringDonation;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\ValueObject\CampaignId;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\ValueObject\DonationId;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\ValueObject\DonationStatus;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringDonation\ValueObject\RecurringDonationStatus;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringDonation\ValueObject\RecurringInterval;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\RecurringPlan;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\CampaignId;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\DonationId;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\DonationStatus;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\RecurringPlanStatus;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\RecurringInterval;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsCaptured;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsFailed;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetPayment;
@@ -125,7 +125,7 @@ class InitiateDonationTest extends KernelTestCase
         $this->assertEquals(DonationStatus::Failed, $donation->getStatus());
     }
 
-    public function testRecurringDonationActivateAndRenewal(): void
+    public function testRecurringPlanActivateAndRenewal(): void
     {
 
         // Create a short interval for testing
@@ -135,25 +135,25 @@ class InitiateDonationTest extends KernelTestCase
 
         // Initiate recurring donation
         $amount = new Money(100, new Currency('EUR'));
-        $initiateRecurringDonation = new InitiateRecurringDonation(
+        $initiateRecurringPlan = new InitiateRecurringPlan(
             $amount,
             CampaignId::generate(),
             new Gateway('test'),
             $interval,
             new Email('example@example.com')
         );
-        $this->commandBus->dispatch($initiateRecurringDonation);
+        $this->commandBus->dispatch($initiateRecurringPlan);
 
         // Recurring Donation is pending
-        /** @var ?RecurringDonation $recurringDonation */
-        $recurringDonation = $this->queryBus->ask(new GetPendingRecurringDonation($initiateRecurringDonation->recurringDonationId));
-        $this->assertNotNull($recurringDonation);
-        $this->assertEquals(RecurringDonationStatus::Pending, $recurringDonation->getStatus());
-        $this->assertEquals(0, $recurringDonation->getCumulativeReceivedAmount());
+        /** @var ?RecurringPlan $recurringPlan */
+        $recurringPlan = $this->queryBus->ask(new GetPendingRecurringPlan($initiateRecurringPlan->recurringPlanId));
+        $this->assertNotNull($recurringPlan);
+        $this->assertEquals(RecurringPlanStatus::Pending, $recurringPlan->getStatus());
+        $this->assertEquals(0, $recurringPlan->getCumulativeReceivedAmount());
 
         // Activation donation is pending
         /** @var ?Donation $activationDonation */
-        $activationDonation = $this->queryBus->ask(new GetPendingDonation(DonationId::fromString($recurringDonation->getActivationDonationId())));
+        $activationDonation = $this->queryBus->ask(new GetPendingDonation(DonationId::fromString($recurringPlan->getActivationDonationId())));
         $this->assertNotNull($activationDonation);
         $this->assertEquals(DonationStatus::Pending, $activationDonation->getStatus());
 
@@ -173,24 +173,24 @@ class InitiateDonationTest extends KernelTestCase
         $this->assertEquals(DonationStatus::Accepted, $activationDonation->getStatus());
 
         // Recurring Donation is active
-        /** @var ?RecurringDonation $recurringDonation */
-        $recurringDonation = $this->queryBus->ask(new GetRecurringDonation($initiateRecurringDonation->recurringDonationId));
-        $this->assertNotNull($recurringDonation);
-        $this->assertEquals(RecurringDonationStatus::Active, $recurringDonation->getStatus());
-        $this->assertEquals($amount->amount(), $recurringDonation->getCumulativeReceivedAmount());
+        /** @var ?RecurringPlan $recurringPlan */
+        $recurringPlan = $this->queryBus->ask(new GetRecurringPlan($initiateRecurringPlan->recurringPlanId));
+        $this->assertNotNull($recurringPlan);
+        $this->assertEquals(RecurringPlanStatus::Active, $recurringPlan->getStatus());
+        $this->assertEquals($amount->amount(), $recurringPlan->getCumulativeReceivedAmount());
 
         // Assuming there is initiate renewal command delayed
 
         // Consume messenger transport 'delayed_command', this should not consume message yet since we do not pass interval yet
         $this->consumeMessagesFromTransport('delayed_command', 1);
         /** @var array<Donation> $donations */
-        $donations = $this->queryBus->ask(new GetDonations($initiateRecurringDonation->recurringDonationId));
+        $donations = $this->queryBus->ask(new GetDonations($initiateRecurringPlan->recurringPlanId));
         $this->assertCount(1, $donations, 'No renewal should be initiated yet. If this happens, it can mean the interval set for testing is too short and may cause the test to be flaky.');
 
         // Consume messenger transport 'delayed_command', should consume message initiate renewal command
         $this->consumeMessagesFromTransport('delayed_command', 2);
         /** @var array<Donation> $donations */
-        $donations = $this->queryBus->ask(new GetDonations($initiateRecurringDonation->recurringDonationId));
+        $donations = $this->queryBus->ask(new GetDonations($initiateRecurringPlan->recurringPlanId));
         $this->assertCount(2, $donations);
         $donations = array_filter($donations, fn (Donation $d) => $d->getDonationId() != $activationDonation->getDonationId());
         $this->assertCount(1, $donations); // This contains only the renewal donation
@@ -213,11 +213,11 @@ class InitiateDonationTest extends KernelTestCase
         $this->assertEquals(DonationStatus::Accepted, $renewalDonation->getStatus());
 
         // Recurring Donation is active and has cumulative amount updated
-        /** @var ?RecurringDonation $recurringDonation */
-        $recurringDonation = $this->queryBus->ask(new GetRecurringDonation($initiateRecurringDonation->recurringDonationId));
-        $this->assertNotNull($recurringDonation);
-        $this->assertEquals(RecurringDonationStatus::Active, $recurringDonation->getStatus());
-        $this->assertEquals(2 * $amount->amount(), $recurringDonation->getCumulativeReceivedAmount());
+        /** @var ?RecurringPlan $recurringPlan */
+        $recurringPlan = $this->queryBus->ask(new GetRecurringPlan($initiateRecurringPlan->recurringPlanId));
+        $this->assertNotNull($recurringPlan);
+        $this->assertEquals(RecurringPlanStatus::Active, $recurringPlan->getStatus());
+        $this->assertEquals(2 * $amount->amount(), $recurringPlan->getCumulativeReceivedAmount());
     }
 
     private function consumeMessagesFromTransport(string $transportName, int $timeLimit): void

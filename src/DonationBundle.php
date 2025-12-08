@@ -300,12 +300,11 @@ class DonationBundle extends AbstractBundle
                 'merge_orm_schema' => true,
             ],
             'aggregates' => [
-                __DIR__ . '/BCDonations/Domain/Donation',
-                __DIR__ . '/BCDonations/Domain/RecurringDonation',
+                __DIR__ . '/BCDonations/Domain/Aggregate',
                 __DIR__ . '/BCPayments/Domain/Payment',
             ],
             'events' => [
-                __DIR__ . '/BCDonations/Domain/Donation/Event',
+                __DIR__ . '/BCDonations/Domain/Event',
                 __DIR__ . '/BCPayments/Domain/Payment/Event',
             ]
         ]);

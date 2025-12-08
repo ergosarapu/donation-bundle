@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\BCDonations\Application\EventHandler\Domain;
 
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Event\DonationInitiated;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Event\DonationInitiated;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Command\InitiatePaymentIntegrationCommand;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\EventHandlerInterface;

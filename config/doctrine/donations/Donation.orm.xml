@@ -11,12 +11,12 @@
         <field name="paymentId" type="string" column="payment_id" nullable="false"/>
         <field name="amount" type="integer" column="amount" nullable="false"/>
         <field name="currency" type="string" column="currency" nullable="false"/>
-        <field name="status" type="string" column="status" length="16" nullable="false" enum-type="ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\ValueObject\DonationStatus"/>
-        <field name="recurringDonationId" type="string" column="recurring_donation_id" nullable="true"/>
+        <field name="status" type="string" column="status" length="16" nullable="false" enum-type="ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\DonationStatus"/>
+        <field name="recurringPlanId" type="string" column="recurring_plan_id" nullable="true"/>
         <field name="createdAt" type="datetime_immutable" column="created_at" nullable="false"/>
         <field name="updatedAt" type="datetime_immutable" column="updated_at" nullable="false"/>
         <unique-constraints>
-            <unique-constraint name="UNIQ_donation_id_payment_id_recurring_donation_id" columns="donation_id,payment_id,recurring_donation_id"/>
+            <unique-constraint name="UNIQ_donation_id_payment_id_recurring_plan_id" columns="donation_id,payment_id,recurring_plan_id"/>
         </unique-constraints>
     </entity>
 

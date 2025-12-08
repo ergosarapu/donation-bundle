@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\BCDonations\Application\Port;
 
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Donation;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\ValueObject\DonationId;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Aggregate\Donation;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\DonationId;
 
 interface DonationRepositoryInterface
 {

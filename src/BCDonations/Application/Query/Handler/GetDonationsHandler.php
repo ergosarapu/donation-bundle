@@ -20,6 +20,6 @@ class GetDonationsHandler implements QueryHandlerInterface
      */
     public function __invoke(GetDonations $query): array
     {
-        return $this->repository->findBy(recurringDonationId:$query->recurringDonationId);
+        return $this->repository->findBy(recurringPlanId:$query->recurringPlanId);
     }
 }

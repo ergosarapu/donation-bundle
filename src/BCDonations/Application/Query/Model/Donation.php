@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model;
 
 use DateTimeImmutable;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\ValueObject\DonationStatus;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\DonationStatus;
 
 class Donation
 {
@@ -14,7 +14,7 @@ class Donation
     private int $amount;
     private string $currency;
     private DonationStatus $status;
-    private ?string $recurringDonationId = null;
+    private ?string $recurringPlanId = null;
     private DateTimeImmutable $createdAt;
     private DateTimeImmutable $updatedAt;
 
@@ -88,13 +88,13 @@ class Donation
         $this->updatedAt = $updatedAt;
     }
 
-    public function getRecurringDonationId(): ?string
+    public function getRecurringPlanId(): ?string
     {
-        return $this->recurringDonationId;
+        return $this->recurringPlanId;
     }
 
-    public function setRecurringDonationId(?string $recurringDonationId): void
+    public function setRecurringPlanId(?string $recurringPlanId): void
     {
-        $this->recurringDonationId = $recurringDonationId;
+        $this->recurringPlanId = $recurringPlanId;
     }
 }

@@ -6,7 +6,7 @@ namespace ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler;
 
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\InitiateDonation;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Port\DonationRepositoryInterface;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Donation;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Aggregate\Donation;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\CommandHandlerInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
@@ -30,7 +30,7 @@ class InitiateDonationHandler implements CommandHandlerInterface
             $command->amount,
             $command->gateway,
             $command->recurringActivation,
-            $command->recurringDonationId,
+            $command->recurringPlanId,
             $command->donorName,
             $command->donorEmail,
             $command->donorNationalIdCode,

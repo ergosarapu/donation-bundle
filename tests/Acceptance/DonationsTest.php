@@ -6,21 +6,21 @@ namespace ErgoSarapu\DonationBundle\Tests\Acceptance;
 
 use DateInterval;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\InitiateDonation;
-use ErgoSarapu\DonationBundle\BCDonations\Application\Command\InitiateRecurringDonation;
-use ErgoSarapu\DonationBundle\BCDonations\Application\Command\InitiateRecurringDonationRenewal;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\ValueObject\CampaignId;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Event\DonationAccepted;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Event\DonationFailed;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Event\DonationInitiated;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Event\RecurringDonationActivated;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Event\RecurringDonationFailed;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Event\RecurringDonationFailing;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Event\RecurringDonationInitiated;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Event\RecurringDonationRenewalCompleted;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Event\RecurringDonationRenewalInitiated;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\ValueObject\DonationId;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringDonation\ValueObject\RecurringDonationId;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringDonation\ValueObject\RecurringInterval;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Command\InitiateRecurringPlan;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Command\InitiateRecurringPlanRenewal;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\CampaignId;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Event\DonationAccepted;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Event\DonationFailed;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Event\DonationInitiated;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Event\RecurringPlanActivated;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Event\RecurringPlanFailed;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Event\RecurringPlanFailing;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Event\RecurringPlanInitiated;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Event\RecurringPlanRenewalCompleted;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Event\RecurringPlanRenewalInitiated;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\DonationId;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\RecurringPlanId;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\RecurringInterval;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Command\InitiatePaymentIntegrationCommand;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\PaymentDidNotSucceedIntegrationEvent;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\PaymentSucceededIntegrationEvent;
@@ -37,7 +37,7 @@ class DonationsTest extends AcceptanceTestCase
 {
     private CampaignId $campaignId;
 
-    private RecurringDonationId $recurringDonationId;
+    private RecurringPlanId $recurringPlanId;
 
     private RecurringInterval $recurringInterval;
 
@@ -58,7 +58,7 @@ class DonationsTest extends AcceptanceTestCase
     public function tearDown(): void
     {
         unset($this->campaignId);
-        unset($this->recurringDonationId);
+        unset($this->recurringPlanId);
         unset($this->recurringInterval);
         unset($this->paymentId);
         unset($this->donationId);
@@ -70,9 +70,9 @@ class DonationsTest extends AcceptanceTestCase
         $this->givenDonationInitiated(new Money(100, new Currency('EUR')));
     }
 
-    public function testRecurringDonationInitiated(): void
+    public function testRecurringPlanInitiated(): void
     {
-        $this->givenRecurringDonationInitiated(new Money(100, new Currency('EUR')), new RecurringInterval(RecurringInterval::Monthly));
+        $this->givenRecurringPlanInitiated(new Money(100, new Currency('EUR')), new RecurringInterval(RecurringInterval::Monthly));
     }
 
     public function testPaymentSucceededAcceptsDonation(): void
@@ -80,7 +80,7 @@ class DonationsTest extends AcceptanceTestCase
         $this->givenDonationInitiated(new Money(100, new Currency('EUR')));
         $this->whenPaymentSucceeded(new Money(100, new Currency('EUR')));
         $this->thenDonationAccepted();
-        $this->thenRecurringDonationNotActivated();
+        $this->thenRecurringPlanNotActivated();
     }
 
     public function testPaymentDidNotSucceedFailsDonation(): void
@@ -90,41 +90,41 @@ class DonationsTest extends AcceptanceTestCase
         $this->thenDonationFailed();
     }
 
-    public function testPaymentSucceededActivatesRecurringDonation(): void
+    public function testPaymentSucceededActivatesRecurringPlan(): void
     {
-        $this->givenRecurringDonationActivated(new Money(100, new Currency('EUR')), new RecurringInterval(RecurringInterval::Monthly));
+        $this->givenRecurringPlanActivated(new Money(100, new Currency('EUR')), new RecurringInterval(RecurringInterval::Monthly));
     }
 
-    public function testPaymentDidNotSucceedFailsRecurringDonation(): void
+    public function testPaymentDidNotSucceedFailsRecurringPlan(): void
     {
-        $this->givenRecurringDonationInitiated(new Money(100, new Currency('EUR')), new RecurringInterval(RecurringInterval::Monthly));
+        $this->givenRecurringPlanInitiated(new Money(100, new Currency('EUR')), new RecurringInterval(RecurringInterval::Monthly));
         $this->whenPaymentDidNotSucceed();
         $this->thenDonationFailed();
-        $this->thenRecurringDonationFailed();
+        $this->thenRecurringPlanFailed();
     }
 
-    public function testRecurringDonationRenewed(): void
+    public function testRecurringPlanRenewed(): void
     {
-        $this->givenRecurringDonationActivated(new Money(100, new Currency('EUR')), new RecurringInterval(RecurringInterval::Monthly));
+        $this->givenRecurringPlanActivated(new Money(100, new Currency('EUR')), new RecurringInterval(RecurringInterval::Monthly));
         $this->whenTimeAdvancesBy($this->recurringInterval->toDateInterval());
-        $this->thenRecurringDonationRenewalInitiated();
+        $this->thenRecurringPlanRenewalInitiated();
         $this->thenDonationInitiated(new Money(100, new Currency('EUR')));
         $this->thenInitiatePaymentDispatched(new Money(100, new Currency('EUR')));
         $this->whenPaymentSucceeded(new Money(100, new Currency('EUR')));
         $this->thenDonationAccepted();
-        $this->thenRecurringDonationRenewalCompleted();
+        $this->thenRecurringPlanRenewalCompleted();
     }
 
-    public function testRecurringDonationFailing(): void
+    public function testRecurringPlanFailing(): void
     {
-        $this->givenRecurringDonationActivated(new Money(100, new Currency('EUR')), new RecurringInterval(RecurringInterval::Monthly));
+        $this->givenRecurringPlanActivated(new Money(100, new Currency('EUR')), new RecurringInterval(RecurringInterval::Monthly));
         $this->whenTimeAdvancesBy($this->recurringInterval->toDateInterval());
-        $this->thenRecurringDonationRenewalInitiated();
+        $this->thenRecurringPlanRenewalInitiated();
         $this->thenDonationInitiated(new Money(100, new Currency('EUR')));
         $this->thenInitiatePaymentDispatched(new Money(100, new Currency('EUR')));
         $this->whenPaymentDidNotSucceed();
         $this->thenDonationFailed();
-        $this->thenRecurringDonationFailing();
+        $this->thenRecurringPlanFailing();
     }
 
     private function clearTransports(): void
@@ -147,22 +147,22 @@ class DonationsTest extends AcceptanceTestCase
         $this->thenInitiatePaymentDispatched($amount);
     }
 
-    private function givenRecurringDonationInitiated(Money $amount, RecurringInterval $interval): void
+    private function givenRecurringPlanInitiated(Money $amount, RecurringInterval $interval): void
     {
         $this->givenCampaignExists();
-        $this->whenInitiateRecurringDonation($amount, $interval);
-        $this->thenRecurringDonationInitiated($amount);
+        $this->whenInitiateRecurringPlan($amount, $interval);
+        $this->thenRecurringPlanInitiated($amount);
         $this->thenDonationInitiated($amount);
         $this->thenInitiatePaymentDispatched($amount);
     }
 
-    private function givenRecurringDonationActivated(Money $amount, RecurringInterval $interval): void
+    private function givenRecurringPlanActivated(Money $amount, RecurringInterval $interval): void
     {
-        $this->givenRecurringDonationInitiated($amount, $interval);
+        $this->givenRecurringPlanInitiated($amount, $interval);
         $this->whenPaymentSucceeded($amount);
         $this->thenDonationAccepted();
-        $this->thenRecurringDonationActivated();
-        $this->thenRecurringDonationRenewalDelayed();
+        $this->thenRecurringPlanActivated();
+        $this->thenRecurringPlanRenewalDelayed();
     }
 
     private function whenInitiateDonation(Money $amount): void
@@ -177,18 +177,18 @@ class DonationsTest extends AcceptanceTestCase
         $this->transport('command')->send($initiateDonation);
     }
 
-    private function whenInitiateRecurringDonation(Money $amount, RecurringInterval $interval): void
+    private function whenInitiateRecurringPlan(Money $amount, RecurringInterval $interval): void
     {
         $this->clearTransports();
-        $initiateRecurringDonation = new InitiateRecurringDonation(
+        $initiateRecurringPlan = new InitiateRecurringPlan(
             $amount,
             $this->campaignId,
             new Gateway('test'),
             $interval,
             new Email('example@example.com')
         );
-        $this->commandBus->dispatch($initiateRecurringDonation);
-        $this->transport('command')->dispatched()->assertContains(InitiateRecurringDonation::class, 1);
+        $this->commandBus->dispatch($initiateRecurringPlan);
+        $this->transport('command')->dispatched()->assertContains(InitiateRecurringPlan::class, 1);
     }
 
     private function whenTimeAdvancesBy(DateInterval $dateInterval): void
@@ -227,11 +227,11 @@ class DonationsTest extends AcceptanceTestCase
         $this->assertEquals($amount, $event->amount);
         $this->donationId = $event->donationId;
     }
-    private function thenRecurringDonationInitiated(Money $amount): void
+    private function thenRecurringPlanInitiated(Money $amount): void
     {
-        $event = $this->bus('event.bus')->dispatched()->assertContains(RecurringDonationInitiated::class, 1)->messages(RecurringDonationInitiated::class)[0];
+        $event = $this->bus('event.bus')->dispatched()->assertContains(RecurringPlanInitiated::class, 1)->messages(RecurringPlanInitiated::class)[0];
         $this->assertEquals($amount, $event->amount);
-        $this->recurringDonationId = $event->id;
+        $this->recurringPlanId = $event->id;
         $this->recurringInterval = $event->interval;
     }
 
@@ -250,43 +250,43 @@ class DonationsTest extends AcceptanceTestCase
         $this->transport('event')->dispatched()->assertContains(DonationFailed::class, 1);
     }
 
-    private function thenRecurringDonationActivated(): void
+    private function thenRecurringPlanActivated(): void
     {
-        $this->transport('event')->dispatched()->assertContains(RecurringDonationActivated::class, 1);
+        $this->transport('event')->dispatched()->assertContains(RecurringPlanActivated::class, 1);
     }
 
-    private function thenRecurringDonationRenewalDelayed(): void
+    private function thenRecurringPlanRenewalDelayed(): void
     {
-        $this->transport('delayed_command')->dispatched()->assertContains(InitiateRecurringDonationRenewal::class, 1);
+        $this->transport('delayed_command')->dispatched()->assertContains(InitiateRecurringPlanRenewal::class, 1);
         $this->transport('delayed_command')->acknowledged()->assertCount(0);
-        $this->transport('delayed_command')->queue()->assertContains(InitiateRecurringDonationRenewal::class, 1);
+        $this->transport('delayed_command')->queue()->assertContains(InitiateRecurringPlanRenewal::class, 1);
     }
 
-    private function thenRecurringDonationFailed(): void
+    private function thenRecurringPlanFailed(): void
     {
-        $this->transport('event')->dispatched()->assertContains(RecurringDonationFailed::class, 1);
+        $this->transport('event')->dispatched()->assertContains(RecurringPlanFailed::class, 1);
     }
 
-    private function thenRecurringDonationFailing(): void
+    private function thenRecurringPlanFailing(): void
     {
-        $this->transport('event')->dispatched()->assertContains(RecurringDonationFailing::class, 1);
+        $this->transport('event')->dispatched()->assertContains(RecurringPlanFailing::class, 1);
     }
 
-    private function thenRecurringDonationNotActivated(): void
+    private function thenRecurringPlanNotActivated(): void
     {
-        $this->transport('event')->dispatched()->assertNotContains(RecurringDonationActivated::class);
+        $this->transport('event')->dispatched()->assertNotContains(RecurringPlanActivated::class);
     }
 
 
 
-    private function thenRecurringDonationRenewalInitiated(): void
+    private function thenRecurringPlanRenewalInitiated(): void
     {
-        $event = $this->transport('event')->dispatched()->assertContains(RecurringDonationRenewalInitiated::class, 1)->messages(RecurringDonationRenewalInitiated::class)[0];
+        $event = $this->transport('event')->dispatched()->assertContains(RecurringPlanRenewalInitiated::class, 1)->messages(RecurringPlanRenewalInitiated::class)[0];
     }
 
-    private function thenRecurringDonationRenewalCompleted(): void
+    private function thenRecurringPlanRenewalCompleted(): void
     {
-        $this->transport('event')->dispatched()->assertContains(RecurringDonationRenewalCompleted::class, 1);
+        $this->transport('event')->dispatched()->assertContains(RecurringPlanRenewalCompleted::class, 1);
     }
 
     private function thenInitiatePaymentDispatched(Money $amount): void
