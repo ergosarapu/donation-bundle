@@ -29,12 +29,11 @@ class InitiateDonationHandler implements CommandHandlerInterface
             PaymentId::generate(),
             $command->amount,
             $command->gateway,
-            $command->recurringActivation,
             $command->recurringPlanId,
+            $command->recurringToken,
             $command->donorName,
             $command->donorEmail,
             $command->donorNationalIdCode,
-            $command->parentRecurringActivationDonationId,
         );
         try {
             $this->donationRepository->save($donation);

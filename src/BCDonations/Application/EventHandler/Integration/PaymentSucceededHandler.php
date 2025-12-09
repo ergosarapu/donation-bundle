@@ -6,6 +6,7 @@ namespace ErgoSarapu\DonationBundle\BCDonations\Application\EventHandler\Integra
 
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\MarkDonationAsAccepted;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringToken;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\PaymentSucceededIntegrationEvent;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\EventHandlerInterface;
@@ -23,6 +24,10 @@ class PaymentSucceededHandler implements EventHandlerInterface
             return;
         }
 
-        $this->commandBus->dispatch(new MarkDonationAsAccepted(DonationId::fromString($event->appliedTo->toString()), $event->amount));
+        $this->commandBus->dispatch(new MarkDonationAsAccepted(
+            DonationId::fromString($event->appliedTo->toString()),
+            $event->amount,
+            RecurringToken::fromString($event->paymentId->toString())
+        ));
     }
 }

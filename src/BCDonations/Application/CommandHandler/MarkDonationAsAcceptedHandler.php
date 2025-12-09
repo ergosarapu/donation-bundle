@@ -26,7 +26,7 @@ class MarkDonationAsAcceptedHandler implements CommandHandlerInterface
         }
 
         $donation = $this->donationRepository->load($command->donationId);
-        $donation->markAccepted($this->clock->now(), $command->acceptedAmount);
+        $donation->markAccepted($this->clock->now(), $command->acceptedAmount, $command->recurringToken);
         $this->donationRepository->save($donation);
     }
 }

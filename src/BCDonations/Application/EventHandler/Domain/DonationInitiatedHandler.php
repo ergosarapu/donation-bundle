@@ -9,6 +9,7 @@ use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Command\InitiatePaym
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\EventHandlerInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 
 class DonationInitiatedHandler implements EventHandlerInterface
 {
@@ -19,8 +20,9 @@ class DonationInitiatedHandler implements EventHandlerInterface
     public function __invoke(DonationInitiated $event): void
     {
         $useAgreementFrom = null;
-        if ($event->parentRecurringActivationDonationId !== null) {
-            $useAgreementFrom = PaymentAppliedToId::fromString($event->parentRecurringActivationDonationId->toString());
+        if ($event->recurringToken !== null) {
+            // Assuming the recurring token is payment id
+            $useAgreementFrom = PaymentId::fromString($event->recurringToken->toString());
         }
         $this->commandBus->dispatch(new InitiatePaymentIntegrationCommand(
             $event->paymentId,

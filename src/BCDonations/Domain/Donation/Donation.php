@@ -7,6 +7,7 @@ namespace ErgoSarapu\DonationBundle\BCDonations\Domain\Donation;
 use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringToken;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
@@ -27,7 +28,6 @@ class Donation extends BasicAggregateRoot
     private DonationId $id;
     private Money $amount;
     private DonationStatus $status;
-    private bool $recurringActivation = false;
     private ?RecurringPlanId $recurringPlanId = null;
 
     public static function initiate(
@@ -37,12 +37,11 @@ class Donation extends BasicAggregateRoot
         PaymentId $paymentId,
         Money $amount,
         Gateway $gateway,
-        bool $recurringActivation,
         ?RecurringPlanId $recurringPlanId = null,
+        ?RecurringToken $recurringToken = null,
         ?PersonName $donorName = null,
         ?Email $donorEmail = null,
         ?NationalIdCode $donorNationalIdCode = null,
-        ?DonationId $parentRecurringActivationDonationId = null,
     ): self {
         $donation = new self();
         $donation->recordThat(new DonationInitiated(
@@ -54,12 +53,11 @@ class Donation extends BasicAggregateRoot
             $paymentId,
             $gateway,
             new ShortDescription('TODO: Add description'),
-            $recurringActivation,
             $recurringPlanId,
+            $recurringToken,
             $donorName,
             $donorEmail,
             $donorNationalIdCode,
-            $parentRecurringActivationDonationId,
         ));
         return $donation;
     }
@@ -71,7 +69,6 @@ class Donation extends BasicAggregateRoot
         $this->status = $event->status;
         $this->amount = $event->amount;
         $this->recurringPlanId = $event->recurringPlanId;
-        $this->recurringActivation = $event->recurringActivation;
     }
 
     #[Apply]
@@ -87,7 +84,7 @@ class Donation extends BasicAggregateRoot
         $this->status = $event->status;
     }
 
-    public function markAccepted(DateTimeImmutable $currentTime, Money $acceptedAmount): void
+    public function markAccepted(DateTimeImmutable $currentTime, Money $acceptedAmount, ?RecurringToken $recurringToken): void
     {
         // Idempotency guard
         if ($this->status === DonationStatus::Accepted) {
@@ -97,7 +94,7 @@ class Donation extends BasicAggregateRoot
             return;
         }
         $this->canTransitionToAccepted(true);
-        $this->recordThat(new DonationAccepted($currentTime, $this->id, $acceptedAmount, $this->recurringActivation, $this->recurringPlanId));
+        $this->recordThat(new DonationAccepted($currentTime, $this->id, $acceptedAmount, $this->recurringPlanId, $recurringToken));
     }
 
     public function canTransitionToAccepted(bool $throw = false): bool
@@ -105,14 +102,14 @@ class Donation extends BasicAggregateRoot
         return $this->canTransition($this->status, DonationStatus::Accepted, [DonationStatus::Pending], $throw);
     }
 
-    public function markFailed(DateTimeImmutable $currentTime): void
+    public function markFailed(DateTimeImmutable $currentTime, bool $temporalFailure = false): void
     {
         // Idempotency guard
         if ($this->status === DonationStatus::Failed) {
             return;
         }
         $this->canTransitionToFailed(true);
-        $this->recordThat(new DonationFailed($currentTime, $this->id, $this->recurringActivation, $this->recurringPlanId));
+        $this->recordThat(new DonationFailed($currentTime, $this->id, $temporalFailure, $this->recurringPlanId));
     }
 
     public function canTransitionToFailed(bool $throw = false): bool

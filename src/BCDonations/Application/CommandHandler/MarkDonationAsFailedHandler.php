@@ -26,7 +26,7 @@ class MarkDonationAsFailedHandler implements CommandHandlerInterface
         }
 
         $donation = $this->donationRepository->load($command->donationId);
-        $donation->markFailed($this->clock->now());
+        $donation->markFailed($this->clock->now(), $command->temporalFailure);
         $this->donationRepository->save($donation);
     }
 }

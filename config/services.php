@@ -189,19 +189,10 @@ return function (ContainerConfigurator $container) {
     $services->set('donation_bundle.donations.application.donation.command_handler.initiate_recurring_plan', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\InitiateRecurringPlanHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
-    $services->set('donation_bundle.donations.application.donation.command_handler.activate_recurring_plan', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\ActivateRecurringPlanHandler::class)
-        ->autoconfigure(true)
-        ->autowire(true);
-    $services->set('donation_bundle.donations.application.donation.command_handler.mark_recurring_plan_as_failed', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\MarkRecurringPlanAsFailedHandler::class)
-        ->autoconfigure(true)
-        ->autowire(true);
-    $services->set('donation_bundle.donations.application.donation.command_handler.mark_recurring_plan_as_failing', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\MarkRecurringPlanAsFailingHandler::class)
+    $services->set('donation_bundle.donations.application.donation.command_handler.complete_recurring_donation_attempt', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\CompleteRecurringDonationAttemptHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
     $services->set('donation_bundle.donations.application.donation.command_handler.initiate_recurring_plan_renewal', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\InitiateRecurringPlanRenewalHandler::class)
-        ->autoconfigure(true)
-        ->autowire(true);
-    $services->set('donation_bundle.donations.application.donation.command_handler.complete_recurring_plan_renewal', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\CompleteRecurringPlanRenewalHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
 

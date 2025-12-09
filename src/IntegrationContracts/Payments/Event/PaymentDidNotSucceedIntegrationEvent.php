@@ -12,6 +12,7 @@ class PaymentDidNotSucceedIntegrationEvent implements IntegrationEventInterface
     public function __construct(
         public readonly PaymentId $paymentId,
         public readonly ?PaymentAppliedToId $appliedTo,
+        public readonly bool $temporalFailure = false,
     ) {
     }
 }

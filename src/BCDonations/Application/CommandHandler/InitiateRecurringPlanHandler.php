@@ -6,7 +6,6 @@ namespace ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler;
 
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\InitiateRecurringPlan;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Port\RecurringPlanRepositoryInterface;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlan;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\CommandHandlerInterface;
@@ -25,7 +24,7 @@ class InitiateRecurringPlanHandler implements CommandHandlerInterface
         $recurringPlan = RecurringPlan::initiate(
             $this->clock->now(),
             $command->recurringPlanId,
-            DonationId::generate(),
+            $command->activationDonationId,
             $command->campaignId,
             $command->amount,
             $command->interval,

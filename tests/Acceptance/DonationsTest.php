@@ -122,7 +122,7 @@ class DonationsTest extends AcceptanceTestCase
         $this->thenRecurringPlanRenewalInitiated();
         $this->thenDonationInitiated(new Money(100, new Currency('EUR')));
         $this->thenInitiatePaymentDispatched(new Money(100, new Currency('EUR')));
-        $this->whenPaymentDidNotSucceed();
+        $this->whenPaymentDidNotSucceed(true);
         $this->thenDonationFailed();
         $this->thenRecurringPlanFailing();
     }
@@ -206,17 +206,17 @@ class DonationsTest extends AcceptanceTestCase
                 PaymentAppliedToId::fromString($this->donationId->toString())
             )
         );
-        // $this->transport('command')->intercept(); // Expect delayed command to be intercepted
         $this->transport('integration_event')->processOrFail();
     }
 
-    private function whenPaymentDidNotSucceed(): void
+    private function whenPaymentDidNotSucceed(bool $temporalFailure = false): void
     {
         $this->clearTransports();
         $this->transport('integration_event')->send(
             new PaymentDidNotSucceedIntegrationEvent(
                 $this->paymentId,
-                PaymentAppliedToId::fromString($this->donationId->toString())
+                PaymentAppliedToId::fromString($this->donationId->toString()),
+                $temporalFailure,
             )
         );
         $this->transport('integration_event')->processOrFail();
@@ -242,7 +242,8 @@ class DonationsTest extends AcceptanceTestCase
 
     private function thenDonationAccepted(): void
     {
-        $this->transport('event')->dispatched()->assertContains(DonationAccepted::class, 1);
+        $event = $this->transport('event')->dispatched()->assertContains(DonationAccepted::class, 1)->messages(DonationAccepted::class)[0];
+        $this->donationId = $event->donationId;
     }
 
     private function thenDonationFailed(): void
@@ -276,8 +277,6 @@ class DonationsTest extends AcceptanceTestCase
     {
         $this->transport('event')->dispatched()->assertNotContains(RecurringPlanActivated::class);
     }
-
-
 
     private function thenRecurringPlanRenewalInitiated(): void
     {

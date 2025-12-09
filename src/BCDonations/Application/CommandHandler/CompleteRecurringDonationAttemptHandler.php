@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler;
 
-use ErgoSarapu\DonationBundle\BCDonations\Application\Command\MarkRecurringPlanAsFailed;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Command\CompleteRecurringDonationAttempt;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Port\RecurringPlanRepositoryInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\CommandHandlerInterface;
 use Psr\Clock\ClockInterface;
 
-class MarkRecurringPlanAsFailedHandler implements CommandHandlerInterface
+class CompleteRecurringDonationAttemptHandler implements CommandHandlerInterface
 {
     public function __construct(
         private readonly RecurringPlanRepositoryInterface $recurringPlanRepository,
@@ -17,16 +17,16 @@ class MarkRecurringPlanAsFailedHandler implements CommandHandlerInterface
     ) {
     }
 
-    public function __invoke(MarkRecurringPlanAsFailed $command): void
+    public function __invoke(CompleteRecurringDonationAttempt $command): void
     {
-
-        if (!$this->recurringPlanRepository->has($command->recurringPlanId)) {
-            // TODO: log warning about missing donation?
-            return;
-        }
-
         $recurringPlan = $this->recurringPlanRepository->load($command->recurringPlanId);
-        $recurringPlan->markFailed($this->clock->now());
+        $recurringPlan->completeRecurringAttempt(
+            $this->clock->now(),
+            $command->donationId,
+            $command->donationStatus,
+            $command->recurringToken,
+            $command->temporalFailure
+        );
         $this->recurringPlanRepository->save($recurringPlan);
     }
 }

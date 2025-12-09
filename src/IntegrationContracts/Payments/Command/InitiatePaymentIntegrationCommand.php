@@ -20,7 +20,7 @@ class InitiatePaymentIntegrationCommand implements IntegrationCommandInterface
         public readonly ShortDescription $description,
         public readonly ?PaymentAppliedToId $appliedTo = null,
         public readonly ?Email $email = null,
-        public readonly ?PaymentAppliedToId $useAgreementFrom = null,
+        public readonly ?PaymentId $useAgreementFrom = null,
     ) {
     }
 }

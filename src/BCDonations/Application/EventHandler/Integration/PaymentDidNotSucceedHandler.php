@@ -23,6 +23,6 @@ class PaymentDidNotSucceedHandler implements EventHandlerInterface
             return;
         }
 
-        $this->commandBus->dispatch(new MarkDonationAsFailed(DonationId::fromString($event->appliedTo->toString())));
+        $this->commandBus->dispatch(new MarkDonationAsFailed(DonationId::fromString($event->appliedTo->toString()), $event->temporalFailure));
     }
 }

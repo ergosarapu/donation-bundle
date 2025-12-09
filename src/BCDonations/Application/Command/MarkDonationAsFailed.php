@@ -10,7 +10,8 @@ use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandInterface;
 final class MarkDonationAsFailed implements CommandInterface
 {
     public function __construct(
-        public readonly DonationId $donationId
+        public readonly DonationId $donationId,
+        public readonly bool $temporalFailure = false,
     ) {
     }
 }
