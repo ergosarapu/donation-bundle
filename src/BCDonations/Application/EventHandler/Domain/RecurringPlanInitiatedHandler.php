@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCDonations\Application\EventHandler\Domain;
 
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\InitiateDonation;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Event\RecurringPlanInitiated;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanInitiated;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\EventHandlerInterface;
 

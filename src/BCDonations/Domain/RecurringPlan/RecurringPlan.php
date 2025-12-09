@@ -2,30 +2,19 @@
 
 declare(strict_types=1);
 
-namespace ErgoSarapu\DonationBundle\BCDonations\Domain\Aggregate;
+namespace ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan;
 
 use DateTimeImmutable;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Event\RecurringPlanActivated;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Event\RecurringPlanCanceled;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Event\RecurringPlanExpired;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Event\RecurringPlanFailed;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Event\RecurringPlanFailing;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Event\RecurringPlanInitiated;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Event\RecurringPlanRenewalCompleted;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Event\RecurringPlanRenewalInitiated;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Exception\RecurringPlanActivateNotAllowedException;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Exception\RecurringPlanMarkCanceledNotAllowedException;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Exception\RecurringPlanMarkFailedNotAllowedException;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Exception\RecurringPlanMarkFailingNotAllowedException;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Exception\RecurringPlanRenewalAlreadyInitiatedException;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Exception\RecurringPlanRenewalNotAllowedException;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Exception\RecurringPlanRenewalNotDueYetException;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Exception\RecurringPlanRenewalNotInitiatedException;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\CampaignId;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\DonationId;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\RecurringInterval;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\RecurringPlanId;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\RecurringPlanStatus;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanActivateNotAllowedException;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanMarkCanceledNotAllowedException;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanMarkFailedNotAllowedException;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanMarkFailingNotAllowedException;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanRenewalAlreadyInitiatedException;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanRenewalNotAllowedException;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanRenewalNotDueYetException;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanRenewalNotInitiatedException;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;

@@ -7,7 +7,7 @@ namespace ErgoSarapu\DonationBundle\BCDonations\Application\Query\Handler;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetPendingRecurringPlan;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\RecurringPlan;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Port\RecurringPlanProjectionRepositoryInterface;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\RecurringPlanStatus;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanStatus;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\QueryHandlerInterface;
 
 class GetPendingRecurringPlanHandler implements QueryHandlerInterface

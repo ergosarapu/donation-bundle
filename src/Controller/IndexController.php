@@ -5,7 +5,7 @@ namespace ErgoSarapu\DonationBundle\Controller;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\InitiateDonation;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentGatewayInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\CampaignId;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\Dto\DonationDto;

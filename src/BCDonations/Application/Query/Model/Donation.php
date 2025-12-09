@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model;
 
 use DateTimeImmutable;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\DonationStatus;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationStatus;
 
 class Donation
 {

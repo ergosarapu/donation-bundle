@@ -4,8 +4,8 @@ namespace ErgoSarapu\DonationBundle\Controller;
 
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetDonation;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\Donation;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\DonationId;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\DonationStatus;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationStatus;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetPayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model\Payment;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\ValueObject\PaymentStatus;

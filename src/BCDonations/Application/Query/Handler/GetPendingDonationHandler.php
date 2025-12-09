@@ -7,7 +7,7 @@ namespace ErgoSarapu\DonationBundle\BCDonations\Application\Query\Handler;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetPendingDonation;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\Donation;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Port\DonationProjectionRepositoryInterface;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\DonationStatus;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationStatus;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\QueryHandlerInterface;
 
 class GetPendingDonationHandler implements QueryHandlerInterface

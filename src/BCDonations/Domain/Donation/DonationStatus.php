@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject;
+namespace ErgoSarapu\DonationBundle\BCDonations\Domain\Donation;
 
 enum DonationStatus: String
 {

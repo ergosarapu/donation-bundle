@@ -13,11 +13,11 @@ use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetPendingRecurringP
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetRecurringPlan;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\Donation;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\RecurringPlan;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\CampaignId;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\DonationId;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\DonationStatus;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\RecurringInterval;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\RecurringPlanStatus;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationStatus;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringInterval;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanStatus;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsCaptured;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsFailed;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetPayment;

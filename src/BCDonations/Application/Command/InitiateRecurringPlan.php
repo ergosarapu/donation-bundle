@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\BCDonations\Application\Command;
 
-use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\CampaignId;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\RecurringInterval;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\RecurringPlanId;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringInterval;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCDonations\Application\Query\Port;
 
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\RecurringPlan;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\RecurringPlanId;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\RecurringPlanStatus;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanStatus;
 
 interface RecurringPlanProjectionRepositoryInterface
 {

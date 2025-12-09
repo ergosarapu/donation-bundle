@@ -6,7 +6,7 @@ namespace ErgoSarapu\DonationBundle\BCDonations\Application\EventHandler\Domain;
 
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\ActivateRecurringPlan;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\CompleteRecurringPlanRenewal;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Event\DonationAccepted;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationAccepted;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\EventHandlerInterface;
 

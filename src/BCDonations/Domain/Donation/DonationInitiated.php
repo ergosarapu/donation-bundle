@@ -2,13 +2,11 @@
 
 declare(strict_types=1);
 
-namespace ErgoSarapu\DonationBundle\BCDonations\Domain\Event;
+namespace ErgoSarapu\DonationBundle\BCDonations\Domain\Donation;
 
 use DateTimeImmutable;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\CampaignId;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\DonationId;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\DonationStatus;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\ValueObject\RecurringPlanId;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Event\EventInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\AbstractTimestampedEvent;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;

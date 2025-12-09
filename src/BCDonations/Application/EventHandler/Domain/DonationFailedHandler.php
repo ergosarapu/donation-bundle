@@ -6,7 +6,7 @@ namespace ErgoSarapu\DonationBundle\BCDonations\Application\EventHandler\Domain;
 
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\MarkRecurringPlanAsFailed;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\MarkRecurringPlanAsFailing;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Event\DonationFailed;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationFailed;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\EventHandlerInterface;
 
