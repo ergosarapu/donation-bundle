@@ -10,7 +10,7 @@ phpunit: phpunit-unit phpunit-acceptance phpunit-integration phpunit-functional 
 
 .PHONY: phpunit-unit
 phpunit-unit:																		## run phpunit unit tests
-	vendor/bin/phpunit --testdox --testsuite=Unit										
+	XDEBUG_MODE=coverage vendor/bin/phpunit --testdox --testsuite=Unit --coverage-text --coverage-html .coverage --path-coverage
 
 .PHONY: phpunit-acceptance
 phpunit-acceptance:																	## run phpunit acceptance tests

@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan;
 
 use DateInterval;
-use Exception;
-use InvalidArgumentException;
 use Patchlevel\Hydrator\Normalizer\ObjectNormalizer;
 
 #[ObjectNormalizer]
@@ -21,11 +19,7 @@ final class RecurringInterval
     public function __construct(
         private readonly string $interval
     ) {
-        try {
-            new DateInterval($interval);
-        } catch (Exception $e) {
-            throw new InvalidArgumentException('Invalid interval format', previous: $e);
-        }
+        new DateInterval($interval);
     }
 
     public function toDateInterval(): DateInterval

@@ -173,9 +173,11 @@ composer update
 ## Testing
 To run tests, use:
 ```sh
+make phpunit-unit
+make phpunit-acceptance
 export DATABASE_URL=pdo-mysql://db:db@db/db
 make migrate
-make phpunit
+make phpunit-integration
 ```
 
 ## Set up app integrated dev environment

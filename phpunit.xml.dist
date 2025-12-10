@@ -29,7 +29,8 @@
   </extensions>
   <source>
     <include>
-      <directory>./src</directory>
+      <directory>./src/BCDonations/Domain</directory>
+      <directory>./src/BCPayments/Domain</directory>
     </include>
   </source>
 </phpunit>
