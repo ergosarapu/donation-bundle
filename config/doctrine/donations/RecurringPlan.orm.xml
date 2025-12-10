@@ -13,6 +13,7 @@
         <field name="cumulativeReceivedAmount" type="integer" column="cumulative_received_amount" nullable="false"/>
         <field name="currency" type="string" column="currency" nullable="false"/>
         <field name="interval" type="string" column="`interval`" nullable="false"/>
+        <field name="donorEmail" type="string" column="donor_email" nullable="true"/>
         <field name="status" type="string" column="status" length="16" nullable="false" enum-type="ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanStatus"/>
         <field name="createdAt" type="datetime_immutable" column="created_at" nullable="false"/>
         <field name="updatedAt" type="datetime_immutable" column="updated_at" nullable="false"/>

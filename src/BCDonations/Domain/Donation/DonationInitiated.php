@@ -11,11 +11,8 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringToken;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Event\EventInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\AbstractTimestampedEvent;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use Patchlevel\EventSourcing\Attribute\Event;
 
@@ -34,9 +31,7 @@ final class DonationInitiated extends AbstractTimestampedEvent implements EventI
         public readonly ShortDescription $description,
         public readonly ?RecurringPlanId $recurringPlanId,
         public readonly ?RecurringToken $recurringToken,
-        public readonly ?PersonName $donorName,
-        public readonly ?Email $donorEmail,
-        public readonly ?NationalIdCode $donorNationalIdCode,
+        public readonly DonorIdentity $donorIdentity,
     ) {
         parent::__construct($occuredOn);
         $this->status = DonationStatus::Pending;

@@ -16,7 +16,7 @@ class RecurringPlan
     private string $currency;
     private string $interval;
     private RecurringPlanStatus $status;
-    private string $donorEmail;
+    private ?string $donorEmail;
     private DateTimeImmutable $createdAt;
     private DateTimeImmutable $updatedAt;
 
@@ -101,12 +101,12 @@ class RecurringPlan
         $this->updatedAt = $updatedAt;
     }
 
-    public function getDonorEmail(): string
+    public function getDonorEmail(): ?string
     {
         return $this->donorEmail;
     }
 
-    public function setDonorEmail(string $donorEmail): void
+    public function setDonorEmail(?string $donorEmail): void
     {
         $this->donorEmail = $donorEmail;
     }

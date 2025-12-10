@@ -83,7 +83,7 @@ class RecurringPlanProjector implements RecurringPlanProjectionRepositoryInterfa
         $recurringPlan->setCurrency($event->amount->currency()->code());
         $recurringPlan->setInterval($event->interval->toString());
         $recurringPlan->setStatus($event->status);
-        $recurringPlan->setDonorEmail($event->donorEmail->toString());
+        $recurringPlan->setDonorEmail($event->donorIdentity->email?->toString());
         $this->projectionEntityManager->persist($recurringPlan);
         $this->projectionEntityManager->flush();
     }

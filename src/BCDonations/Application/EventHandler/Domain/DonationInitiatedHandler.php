@@ -30,7 +30,7 @@ class DonationInitiatedHandler implements EventHandlerInterface
             $event->gateway,
             $event->description,
             PaymentAppliedToId::fromString($event->donationId->toString()),
-            $event->donorEmail,
+            $event->donorIdentity->email,
             $useAgreementFrom,
         ));
     }

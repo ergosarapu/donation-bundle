@@ -23,9 +23,7 @@ class RecurringPlanInitiatedHandler implements EventHandlerInterface
             $event->campaignId,
             $event->amount,
             $event->gateway,
-            $event->donorEmail,
-            $event->donorName,
-            $event->donorNationalIdCode,
+            $event->donorIdentity,
         );
 
         $this->commandBus->dispatch(new InitiateDonation(

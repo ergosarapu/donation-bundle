@@ -41,9 +41,7 @@ class Donation extends BasicAggregateRoot
             new ShortDescription('TODO: Add description'),
             $recurringPlanId,
             $recurringToken,
-            $donationRequest->donorName,
-            $donationRequest->donorEmail,
-            $donationRequest->donorNationalIdCode,
+            $donationRequest->donorIdentity,
         ));
         return $donation;
     }

@@ -10,6 +10,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationRequest;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationStatus;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorIdentity;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanActivateNotAllowedException;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanMarkCanceledNotAllowedException;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanRenewalNotAllowedException;
@@ -76,7 +77,7 @@ class RecurringPlanTest extends AggregateRootTestCase
             $this->campaignId,
             $this->amount,
             $this->gateway,
-            $this->email,
+            new DonorIdentity($this->email),
         );
         $this->when(fn () => RecurringPlan::initiate(
             $this->now,
@@ -90,8 +91,8 @@ class RecurringPlanTest extends AggregateRootTestCase
             $this->campaignId,
             $this->amount,
             $this->interval,
-            $this->email,
-            $this->gateway
+            $this->gateway,
+            new DonorIdentity($this->email),
         ));
     }
 
@@ -103,7 +104,7 @@ class RecurringPlanTest extends AggregateRootTestCase
             $this->campaignId,
             $this->amount,
             $this->gateway,
-            null,
+            new DonorIdentity(),
         );
         $this->when(fn () => RecurringPlan::initiate(
             $this->now,
@@ -126,8 +127,8 @@ class RecurringPlanTest extends AggregateRootTestCase
             $this->campaignId,
             $this->amount,
             $this->interval,
-            $this->email,
-            $this->gateway
+            $this->gateway,
+            new DonorIdentity($this->email),
         ))
         ->when(fn (RecurringPlan $plan) => $plan->completeRecurringAttempt(
             $this->now,
@@ -169,7 +170,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->campaignId,
                 $this->amount,
                 $this->gateway,
-                $this->email,
+                new DonorIdentity($this->email),
                 RecurringToken::fromString('recurring-token-123'),
             )
         )
@@ -217,7 +218,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->campaignId,
                 $this->amount,
                 $this->gateway,
-                $this->email,
+                new DonorIdentity($this->email),
                 RecurringToken::fromString('recurring-token-123'),
             ),
             $terminalEvent
@@ -254,8 +255,8 @@ class RecurringPlanTest extends AggregateRootTestCase
             $this->campaignId,
             $this->amount,
             $this->interval,
-            $this->email,
-            $this->gateway
+            $this->gateway,
+            new DonorIdentity($this->email),
         ))
         ->when(fn (RecurringPlan $plan) => $plan->completeRecurringAttempt(
             $this->now,
@@ -377,7 +378,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->campaignId,
                 $this->amount,
                 $this->gateway,
-                $this->email,
+                new DonorIdentity($this->email),
                 RecurringToken::fromString('recurring-token-123'),
             )
         )->when(fn (RecurringPlan $plan) => $plan->completeRecurringAttempt(
@@ -411,7 +412,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->campaignId,
                 $this->amount,
                 $this->gateway,
-                $this->email,
+                new DonorIdentity($this->email),
                 RecurringToken::fromString('recurring-token-123'),
             )
         )->when(fn (RecurringPlan $plan) => $plan->completeRecurringAttempt(
@@ -436,8 +437,8 @@ class RecurringPlanTest extends AggregateRootTestCase
             $this->campaignId,
             $this->amount,
             $this->interval,
-            $this->email,
-            $this->gateway
+            $this->gateway,
+            new DonorIdentity($this->email),
         ))->when(fn (RecurringPlan $plan) => $plan->cancel($this->now))
         ->then(new RecurringPlanCanceled(
             $this->now,
@@ -514,8 +515,8 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->campaignId,
                 $this->amount,
                 $this->interval,
-                $this->email,
-                $this->gateway
+                $this->gateway,
+                new DonorIdentity($this->email),
             ),
             new RecurringPlanActivated(
                 $this->now,
@@ -532,7 +533,7 @@ class RecurringPlanTest extends AggregateRootTestCase
             $this->campaignId,
             $this->amount,
             $this->gateway,
-            $this->email,
+            new DonorIdentity($this->email),
             RecurringToken::fromString($recurringToken),
         ));
     }
@@ -549,8 +550,8 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->campaignId,
                 $this->amount,
                 $this->interval,
-                $this->email,
-                $this->gateway
+                $this->gateway,
+                new DonorIdentity($this->email),
             ),
             new RecurringPlanActivated(
                 $this->now,
@@ -571,7 +572,7 @@ class RecurringPlanTest extends AggregateRootTestCase
             $this->campaignId,
             $this->amount,
             $this->gateway,
-            $this->email,
+            new DonorIdentity($this->email),
             RecurringToken::fromString('recurring-token-123'),
         ));
     }
@@ -588,8 +589,8 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->campaignId,
                 $this->amount,
                 $this->interval,
-                $this->email,
-                $this->gateway
+                $this->gateway,
+                new DonorIdentity($this->email),
             ),
             new RecurringPlanActivated(
                 $this->now,
@@ -614,8 +615,8 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->campaignId,
                 $this->amount,
                 $this->interval,
-                $this->email,
-                $this->gateway
+                $this->gateway,
+                new DonorIdentity($this->email),
             ),
             new RecurringPlanActivated(
                 $this->now,
@@ -646,7 +647,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->campaignId,
                 $this->amount,
                 $this->gateway,
-                $this->email,
+                new DonorIdentity($this->email),
                 RecurringToken::fromString('recurring-token-123'),
             )
         )->when(fn (RecurringPlan $plan) => $plan->initiateRenewal($this->now, DonationId::generate()))
@@ -663,8 +664,8 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->campaignId,
                 $this->amount,
                 $this->interval,
-                $this->email,
-                $this->gateway
+                $this->gateway,
+                new DonorIdentity($this->email),
             ),
         )->when(fn (RecurringPlan $plan) => $plan->initiateRenewal($this->now, DonationId::generate()))
         ->expectsException(LogicException::class);
@@ -681,8 +682,8 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->campaignId,
                 $this->amount,
                 $this->interval,
-                $this->email,
-                $this->gateway
+                $this->gateway,
+                new DonorIdentity($this->email),
             ),
             new RecurringPlanFailed(
                 $this->now,
@@ -747,7 +748,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->campaignId,
                 $this->amount,
                 $this->gateway,
-                $this->email,
+                new DonorIdentity($this->email),
                 RecurringToken::fromString('recurring-token-123'),
             ),
         )->when(fn (RecurringPlan $plan) => $plan->completeRecurringAttempt(
@@ -801,7 +802,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->campaignId,
                 $this->amount,
                 $this->gateway,
-                $this->email,
+                new DonorIdentity($this->email),
                 RecurringToken::fromString('recurring-token-123'),
             ),
         )->when(fn (RecurringPlan $plan) => $plan->completeRecurringAttempt(
@@ -833,7 +834,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->campaignId,
                 $this->amount,
                 $this->gateway,
-                $this->email,
+                new DonorIdentity($this->email),
                 RecurringToken::fromString('recurring-token-123'),
             ),
         )->when(fn (RecurringPlan $plan) => $plan->completeRecurringAttempt(

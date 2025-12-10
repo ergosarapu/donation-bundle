@@ -9,11 +9,11 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationRequest;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationStatus;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorIdentity;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanActivateNotAllowedException;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanMarkCanceledNotAllowedException;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanRenewalNotAllowedException;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanRenewalNotDueYetException;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use InvalidArgumentException;
@@ -35,7 +35,7 @@ class RecurringPlan extends BasicAggregateRoot
     private RecurringInterval $interval;
     private RecurringPlanStatus $status;
     private ?DateTimeImmutable $nextRenewalTime;
-    private Email $donorEmail;
+    private DonorIdentity $donorIdentity;
     private ?RecurringToken $recurringToken;
 
     public static function initiate(
@@ -44,7 +44,7 @@ class RecurringPlan extends BasicAggregateRoot
         DonationRequest $activationDonationRequest,
         RecurringInterval $interval,
     ): self {
-        if ($activationDonationRequest->donorEmail === null) {
+        if ($activationDonationRequest->donorIdentity->email === null) {
             throw new InvalidArgumentException('Recurring plan requires donor email');
         }
 
@@ -56,10 +56,8 @@ class RecurringPlan extends BasicAggregateRoot
             $activationDonationRequest->campaignId,
             $activationDonationRequest->amount,
             $interval,
-            $activationDonationRequest->donorEmail,
             $activationDonationRequest->gateway,
-            $activationDonationRequest->donorName,
-            $activationDonationRequest->donorNationalIdCode,
+            $activationDonationRequest->donorIdentity,
         ));
         return $donation;
     }
@@ -74,7 +72,7 @@ class RecurringPlan extends BasicAggregateRoot
         $this->campaignId = $event->campaignId;
         $this->amount = $event->amount;
         $this->gateway = $event->gateway;
-        $this->donorEmail = $event->donorEmail;
+        $this->donorIdentity = $event->donorIdentity;
         $this->nextRenewalTime = null;
         $this->recurringToken = null;
     }
@@ -140,7 +138,7 @@ class RecurringPlan extends BasicAggregateRoot
                 $this->campaignId,
                 $this->amount,
                 $this->gateway,
-                $this->donorEmail,
+                $this->donorIdentity,
                 $this->recurringToken,
             )),
             default =>  throw new RecurringPlanRenewalNotAllowedException('Only active and failing recurring donations can be renewed.'),

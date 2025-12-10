@@ -10,6 +10,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Donation;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationInitiated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationRequest;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorIdentity;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
@@ -51,7 +52,7 @@ class DonationTest extends AggregateRootTestCase
             $this->campaignId,
             $this->amount,
             $this->gateway,
-            $this->email,
+            new DonorIdentity($this->email),
         );
 
         $this->when(fn () => Donation::initiate(
@@ -68,9 +69,7 @@ class DonationTest extends AggregateRootTestCase
                 new ShortDescription('TODO: Add description'),
                 null,
                 null,
-                null,
-                $this->email,
-                null,
+                new DonorIdentity($this->email),
             )
         );
 

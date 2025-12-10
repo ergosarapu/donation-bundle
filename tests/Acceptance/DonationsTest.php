@@ -14,6 +14,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationFailed;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationInitiated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationRequest;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorIdentity;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringInterval;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanActivated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanFailed;
@@ -174,7 +175,7 @@ class DonationsTest extends AcceptanceTestCase
             $this->campaignId,
             $amount,
             new Gateway('test'),
-            null, // donorEmail
+            new DonorIdentity(),
         );
         $initiateDonation = new InitiateDonation(
             $donationRequest,
@@ -190,7 +191,7 @@ class DonationsTest extends AcceptanceTestCase
             $this->campaignId,
             $amount,
             new Gateway('test'),
-            new Email('example@example.com'),
+            new DonorIdentity(new Email('example@example.com')),
         );
         $initiateRecurringPlan = new InitiateRecurringPlan(
             $interval,
