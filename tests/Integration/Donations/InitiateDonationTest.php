@@ -15,6 +15,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\Donation;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\RecurringPlan;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationRequest;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationStatus;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringInterval;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanStatus;
@@ -71,11 +72,18 @@ class InitiateDonationTest extends KernelTestCase
     {
         // Initiate donation
         $amount = new Money(100, new Currency('EUR'));
-        $initiateDonation = new InitiateDonation(DonationId::generate(), $amount, CampaignId::generate(), new Gateway('test'));
+        $donationRequest = new DonationRequest(
+            DonationId::generate(),
+            CampaignId::generate(),
+            $amount,
+            new Gateway('test'),
+            null, // donorEmail
+        );
+        $initiateDonation = new InitiateDonation($donationRequest);
         $this->commandBus->dispatch($initiateDonation);
 
         /** @var ?Donation $donation */
-        $donation = $this->queryBus->ask(new GetPendingDonation($initiateDonation->donationId));
+        $donation = $this->queryBus->ask(new GetPendingDonation($donationRequest->donationId));
         $this->assertNotNull($donation);
         $this->assertEquals(DonationStatus::Pending, $donation->getStatus());
 
@@ -94,7 +102,7 @@ class InitiateDonationTest extends KernelTestCase
         $this->assertEquals(PaymentStatus::Captured, $payment->getStatus());
 
         /** @var ?Donation $donation */
-        $donation = $this->queryBus->ask(new GetDonation($initiateDonation->donationId));
+        $donation = $this->queryBus->ask(new GetDonation($donationRequest->donationId));
         $this->assertNotNull($donation);
         $this->assertEquals(DonationStatus::Accepted, $donation->getStatus());
     }
@@ -103,11 +111,18 @@ class InitiateDonationTest extends KernelTestCase
     {
         // Initiate donation
         $amount = new Money(100, new Currency('EUR'));
-        $initiateDonation = new InitiateDonation(DonationId::generate(), $amount, CampaignId::generate(), new Gateway('test'));
+        $donationRequest = new DonationRequest(
+            DonationId::generate(),
+            CampaignId::generate(),
+            $amount,
+            new Gateway('test'),
+            null, // donorEmail
+        );
+        $initiateDonation = new InitiateDonation($donationRequest);
         $this->commandBus->dispatch($initiateDonation);
 
         /** @var ?Donation $donation */
-        $donation = $this->queryBus->ask(new GetPendingDonation($initiateDonation->donationId));
+        $donation = $this->queryBus->ask(new GetPendingDonation($donationRequest->donationId));
         $this->assertNotNull($donation);
         $this->assertEquals(DonationStatus::Pending, $donation->getStatus());
 
@@ -120,7 +135,7 @@ class InitiateDonationTest extends KernelTestCase
         $this->assertEquals(PaymentStatus::Failed, $payment->getStatus());
 
         /** @var ?Donation $donation */
-        $donation = $this->queryBus->ask(new GetDonation($initiateDonation->donationId));
+        $donation = $this->queryBus->ask(new GetDonation($donationRequest->donationId));
         $this->assertNotNull($donation);
         $this->assertEquals(DonationStatus::Failed, $donation->getStatus());
     }
@@ -135,12 +150,16 @@ class InitiateDonationTest extends KernelTestCase
 
         // Initiate recurring donation
         $amount = new Money(100, new Currency('EUR'));
-        $initiateRecurringPlan = new InitiateRecurringPlan(
-            $amount,
+        $donationRequest = new DonationRequest(
+            DonationId::generate(),
             CampaignId::generate(),
+            $amount,
             new Gateway('test'),
+            new Email('example@example.com'),
+        );
+        $initiateRecurringPlan = new InitiateRecurringPlan(
             $interval,
-            new Email('example@example.com')
+            $donationRequest,
         );
         $this->commandBus->dispatch($initiateRecurringPlan);
 

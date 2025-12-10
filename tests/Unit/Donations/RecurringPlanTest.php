@@ -8,6 +8,7 @@ use DateInterval;
 use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationRequest;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationStatus;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanActivateNotAllowedException;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanMarkCanceledNotAllowedException;
@@ -70,15 +71,18 @@ class RecurringPlanTest extends AggregateRootTestCase
     public function testInitiate(): void
     {
         $donationId = DonationId::generate();
-        $this->when(fn () => RecurringPlan::initiate(
-            $this->now,
-            $this->recurringPlanId,
+        $donationRequest = new DonationRequest(
             $donationId,
             $this->campaignId,
             $this->amount,
-            $this->interval,
+            $this->gateway,
             $this->email,
-            $this->gateway
+        );
+        $this->when(fn () => RecurringPlan::initiate(
+            $this->now,
+            $this->recurringPlanId,
+            $donationRequest,
+            $this->interval,
         ))->then(new RecurringPlanInitiated(
             $this->now,
             $this->recurringPlanId,
@@ -89,6 +93,25 @@ class RecurringPlanTest extends AggregateRootTestCase
             $this->email,
             $this->gateway
         ));
+    }
+
+    public function testInitiateWithoutEmailThrows(): void
+    {
+        $donationId = DonationId::generate();
+        $donationRequest = new DonationRequest(
+            $donationId,
+            $this->campaignId,
+            $this->amount,
+            $this->gateway,
+            null,
+        );
+        $this->when(fn () => RecurringPlan::initiate(
+            $this->now,
+            $this->recurringPlanId,
+            $donationRequest,
+            $this->interval,
+        ))->expectsException(InvalidArgumentException::class)
+        ->expectsExceptionMessage('Recurring plan requires donor email');
     }
 
     public function testSuccessfulRecurringAttemptActivatesInitiated(): void

@@ -9,7 +9,6 @@ use ErgoSarapu\DonationBundle\BCDonations\Application\Port\DonationRepositoryInt
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Donation;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\CommandHandlerInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use Psr\Clock\ClockInterface;
 
 class InitiateDonationHandler implements CommandHandlerInterface
@@ -24,16 +23,9 @@ class InitiateDonationHandler implements CommandHandlerInterface
     {
         $donation = Donation::initiate(
             $this->clock->now(),
-            $command->donationId,
-            $command->campaignId,
-            PaymentId::generate(),
-            $command->amount,
-            $command->gateway,
+            $command->donationRequest,
             $command->recurringPlanId,
             $command->recurringToken,
-            $command->donorName,
-            $command->donorEmail,
-            $command->donorNationalIdCode,
         );
         try {
             $this->donationRepository->save($donation);

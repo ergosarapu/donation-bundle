@@ -5,15 +5,9 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCDonations\Domain\Donation;
 
 use DateTimeImmutable;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringToken;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use LogicException;
 use Patchlevel\EventSourcing\Aggregate\BasicAggregateRoot;
@@ -32,32 +26,24 @@ class Donation extends BasicAggregateRoot
 
     public static function initiate(
         DateTimeImmutable $currentTime,
-        DonationId $id,
-        CampaignId $campaignId,
-        PaymentId $paymentId,
-        Money $amount,
-        Gateway $gateway,
+        DonationRequest $donationRequest,
         ?RecurringPlanId $recurringPlanId = null,
         ?RecurringToken $recurringToken = null,
-        ?PersonName $donorName = null,
-        ?Email $donorEmail = null,
-        ?NationalIdCode $donorNationalIdCode = null,
     ): self {
         $donation = new self();
         $donation->recordThat(new DonationInitiated(
             $currentTime,
-            $id,
-            $amount,
-            DonationStatus::Pending,
-            $campaignId,
-            $paymentId,
-            $gateway,
+            $donationRequest->donationId,
+            $donationRequest->amount,
+            $donationRequest->campaignId,
+            $donationRequest->paymentId,
+            $donationRequest->gateway,
             new ShortDescription('TODO: Add description'),
             $recurringPlanId,
             $recurringToken,
-            $donorName,
-            $donorEmail,
-            $donorNationalIdCode,
+            $donationRequest->donorName,
+            $donationRequest->donorEmail,
+            $donationRequest->donorNationalIdCode,
         ));
         return $donation;
     }

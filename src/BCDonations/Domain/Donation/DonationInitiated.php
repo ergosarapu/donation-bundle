@@ -22,11 +22,12 @@ use Patchlevel\EventSourcing\Attribute\Event;
 #[Event(name: 'donation.initiated')]
 final class DonationInitiated extends AbstractTimestampedEvent implements EventInterface
 {
+    public readonly DonationStatus $status;
+
     public function __construct(
         DateTimeImmutable $occuredOn,
         public readonly DonationId $donationId,
         public readonly Money $amount,
-        public readonly DonationStatus $status,
         public readonly CampaignId $campaignId,
         public readonly PaymentId $paymentId,
         public readonly Gateway $gateway,
@@ -38,5 +39,7 @@ final class DonationInitiated extends AbstractTimestampedEvent implements EventI
         public readonly ?NationalIdCode $donorNationalIdCode,
     ) {
         parent::__construct($occuredOn);
+        $this->status = DonationStatus::Pending;
+
     }
 }

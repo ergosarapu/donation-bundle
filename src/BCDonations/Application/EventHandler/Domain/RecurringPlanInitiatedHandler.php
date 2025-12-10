@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCDonations\Application\EventHandler\Domain;
 
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\InitiateDonation;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationRequest;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanInitiated;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\EventHandlerInterface;
@@ -17,16 +18,20 @@ class RecurringPlanInitiatedHandler implements EventHandlerInterface
 
     public function __invoke(RecurringPlanInitiated $event): void
     {
-        $this->commandBus->dispatch(new InitiateDonation(
+        $donationRequest = new DonationRequest(
             $event->activationDonationId,
-            $event->amount,
             $event->campaignId,
+            $event->amount,
             $event->gateway,
+            $event->donorEmail,
+            $event->donorName,
+            $event->donorNationalIdCode,
+        );
+
+        $this->commandBus->dispatch(new InitiateDonation(
+            $donationRequest,
             $event->id,
             null,
-            $event->donorName,
-            $event->donorEmail,
-            $event->donorNationalIdCode,
         ));
     }
 }

@@ -7,6 +7,7 @@ namespace ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan;
 use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationRequest;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationStatus;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanActivateNotAllowedException;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanMarkCanceledNotAllowedException;
@@ -15,8 +16,6 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\Recurri
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
 use InvalidArgumentException;
 use LogicException;
 use Patchlevel\EventSourcing\Aggregate\BasicAggregateRoot;
@@ -42,27 +41,25 @@ class RecurringPlan extends BasicAggregateRoot
     public static function initiate(
         DateTimeImmutable $currentTime,
         RecurringPlanId $id,
-        DonationId $activationDonationId,
-        CampaignId $campaignId,
-        Money $amount,
+        DonationRequest $activationDonationRequest,
         RecurringInterval $interval,
-        Email $donorEmail,
-        Gateway $gateway,
-        ?PersonName $donorName = null,
-        ?NationalIdCode $donorNationalIdCode = null,
     ): self {
+        if ($activationDonationRequest->donorEmail === null) {
+            throw new InvalidArgumentException('Recurring plan requires donor email');
+        }
+
         $donation = new self();
         $donation->recordThat(new RecurringPlanInitiated(
             $currentTime,
             $id,
-            $activationDonationId,
-            $campaignId,
-            $amount,
+            $activationDonationRequest->donationId,
+            $activationDonationRequest->campaignId,
+            $activationDonationRequest->amount,
             $interval,
-            $donorEmail,
-            $gateway,
-            $donorName,
-            $donorNationalIdCode,
+            $activationDonationRequest->donorEmail,
+            $activationDonationRequest->gateway,
+            $activationDonationRequest->donorName,
+            $activationDonationRequest->donorNationalIdCode,
         ));
         return $donation;
     }

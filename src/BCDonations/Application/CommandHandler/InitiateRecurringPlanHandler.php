@@ -24,14 +24,8 @@ class InitiateRecurringPlanHandler implements CommandHandlerInterface
         $recurringPlan = RecurringPlan::initiate(
             $this->clock->now(),
             $command->recurringPlanId,
-            $command->activationDonationId,
-            $command->campaignId,
-            $command->amount,
+            $command->donationRequest,
             $command->interval,
-            $command->donorEmail,
-            $command->gateway,
-            $command->donorName,
-            $command->donorNationalIdCode,
         );
         try {
             $this->recurringPlanRepository->save($recurringPlan);

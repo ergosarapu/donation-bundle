@@ -13,6 +13,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationAccepted;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationFailed;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationInitiated;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationRequest;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringInterval;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanActivated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanFailed;
@@ -168,11 +169,15 @@ class DonationsTest extends AcceptanceTestCase
     private function whenInitiateDonation(Money $amount): void
     {
         $this->clearTransports();
-        $initiateDonation = new InitiateDonation(
+        $donationRequest = new DonationRequest(
             DonationId::generate(),
-            $amount,
             $this->campaignId,
-            new Gateway('test')
+            $amount,
+            new Gateway('test'),
+            null, // donorEmail
+        );
+        $initiateDonation = new InitiateDonation(
+            $donationRequest,
         );
         $this->transport('command')->send($initiateDonation);
     }
@@ -180,12 +185,16 @@ class DonationsTest extends AcceptanceTestCase
     private function whenInitiateRecurringPlan(Money $amount, RecurringInterval $interval): void
     {
         $this->clearTransports();
-        $initiateRecurringPlan = new InitiateRecurringPlan(
-            $amount,
+        $donationRequest = new DonationRequest(
+            DonationId::generate(),
             $this->campaignId,
+            $amount,
             new Gateway('test'),
+            new Email('example@example.com'),
+        );
+        $initiateRecurringPlan = new InitiateRecurringPlan(
             $interval,
-            new Email('example@example.com')
+            $donationRequest,
         );
         $this->commandBus->dispatch($initiateRecurringPlan);
         $this->transport('command')->dispatched()->assertContains(InitiateRecurringPlan::class, 1);
