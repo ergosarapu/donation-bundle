@@ -121,14 +121,9 @@ class RecurringPlan extends BasicAggregateRoot
         $this->nextRenewalTime = null;
     }
 
-    private function isDonationInProgress(): bool
-    {
-        return $this->donationInProgress !== null;
-    }
-
     public function initiateRenewal(DateTimeImmutable $currentTime, DonationId $renewalDonationId): void
     {
-        if ($this->isDonationInProgress()) {
+        if ($this->donationInProgress !== null) {
             throw new LogicException('Donation is in progress.');
         }
 
@@ -270,7 +265,7 @@ class RecurringPlan extends BasicAggregateRoot
     }
 
 
-    public function markCanceled(DateTimeImmutable $currentTime): void
+    public function cancel(DateTimeImmutable $currentTime): void
     {
         match ($this->status) {
             RecurringPlanStatus::Failing => $this->recordThat(new RecurringPlanCanceled($currentTime, $this->id)),
