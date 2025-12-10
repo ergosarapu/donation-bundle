@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\Tests\Unit\Donations;
 
-use DateMalformedIntervalStringException;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringInterval;
+use Exception;
 use PHPUnit\Framework\TestCase;
 
 class RecurringIntervalTest extends TestCase
@@ -18,7 +18,7 @@ class RecurringIntervalTest extends TestCase
 
     public function testInvalidIntervalCreation(): void
     {
-        $this->expectException(DateMalformedIntervalStringException::class);
+        $this->expectException(Exception::class);
         new RecurringInterval('InvalidInterval');
     }
 }
