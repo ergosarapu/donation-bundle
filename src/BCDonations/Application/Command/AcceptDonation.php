@@ -9,11 +9,11 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringToken;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 
-final class MarkDonationAsAccepted implements CommandInterface
+final class AcceptDonation implements CommandInterface
 {
     public function __construct(
         public readonly DonationId $donationId,
-        public readonly Money $acceptedAmount,
+        public readonly Money $amount,
         public readonly ?RecurringToken $recurringToken = null,
     ) {
     }

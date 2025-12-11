@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\BCDonations\Application\EventHandler\Integration;
 
-use ErgoSarapu\DonationBundle\BCDonations\Application\Command\MarkDonationAsFailed;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Command\FailDonation;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\PaymentDidNotSucceedIntegrationEvent;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
@@ -23,6 +23,6 @@ class PaymentDidNotSucceedHandler implements EventHandlerInterface
             return;
         }
 
-        $this->commandBus->dispatch(new MarkDonationAsFailed(DonationId::fromString($event->appliedTo->toString()), $event->temporalFailure));
+        $this->commandBus->dispatch(new FailDonation(DonationId::fromString($event->appliedTo->toString()), $event->temporalFailure));
     }
 }

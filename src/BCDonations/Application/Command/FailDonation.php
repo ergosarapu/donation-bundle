@@ -7,7 +7,7 @@ namespace ErgoSarapu\DonationBundle\BCDonations\Application\Command;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandInterface;
 
-final class MarkDonationAsFailed implements CommandInterface
+final class FailDonation implements CommandInterface
 {
     public function __construct(
         public readonly DonationId $donationId,

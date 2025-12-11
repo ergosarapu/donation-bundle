@@ -20,7 +20,6 @@ class Donation extends BasicAggregateRoot
 {
     #[Id]
     private DonationId $id;
-    private Money $amount;
     private DonationStatus $status;
     private ?RecurringPlanId $recurringPlanId = null;
 
@@ -51,7 +50,6 @@ class Donation extends BasicAggregateRoot
     {
         $this->id = $event->donationId;
         $this->status = $event->status;
-        $this->amount = $event->amount;
         $this->recurringPlanId = $event->recurringPlanId;
     }
 
@@ -59,7 +57,6 @@ class Donation extends BasicAggregateRoot
     protected function applyAccepted(DonationAccepted $event): void
     {
         $this->status = $event->status;
-        $this->amount = $event->acceptedAmount;
     }
 
     #[Apply]
@@ -68,48 +65,31 @@ class Donation extends BasicAggregateRoot
         $this->status = $event->status;
     }
 
-    public function markAccepted(DateTimeImmutable $currentTime, Money $acceptedAmount, ?RecurringToken $recurringToken): void
+    public function accept(DateTimeImmutable $currentTime, Money $acceptedAmount, ?RecurringToken $recurringToken): void
     {
-        // Idempotency guard
         if ($this->status === DonationStatus::Accepted) {
-            if (!$this->amount->equals($acceptedAmount)) {
-                throw new LogicException('Donation already Accepted with different amount, existing: ' . $this->amount . ', new: ' . $acceptedAmount);
-            }
             return;
         }
-        $this->canTransitionToAccepted(true);
-        $this->recordThat(new DonationAccepted($currentTime, $this->id, $acceptedAmount, $this->recurringPlanId, $recurringToken));
+
+        if ($this->status === DonationStatus::Pending) {
+            $this->recordThat(new DonationAccepted($currentTime, $this->id, $acceptedAmount, $this->recurringPlanId, $recurringToken));
+            return;
+        }
+
+        throw new LogicException('Cannot transition from ' . $this->status->value . ' to ' . DonationStatus::Accepted->value . '.');
     }
 
-    public function canTransitionToAccepted(bool $throw = false): bool
+    public function fail(DateTimeImmutable $currentTime, bool $temporalFailure = false): void
     {
-        return $this->canTransition($this->status, DonationStatus::Accepted, [DonationStatus::Pending], $throw);
-    }
-
-    public function markFailed(DateTimeImmutable $currentTime, bool $temporalFailure = false): void
-    {
-        // Idempotency guard
         if ($this->status === DonationStatus::Failed) {
             return;
         }
-        $this->canTransitionToFailed(true);
-        $this->recordThat(new DonationFailed($currentTime, $this->id, $temporalFailure, $this->recurringPlanId));
-    }
 
-    public function canTransitionToFailed(bool $throw = false): bool
-    {
-        return $this->canTransition($this->status, DonationStatus::Failed, [DonationStatus::Pending], $throw);
-    }
-
-    /**
-     * @param array<DonationStatus> $allowedFrom
-     */
-    private function canTransition(DonationStatus $from, DonationStatus $to, array $allowedFrom, bool $throw = false): bool
-    {
-        $canTransition = in_array($from, $allowedFrom);
-        if ($throw && !$canTransition) {
-            throw new LogicException('Cannot transition from ' . $from->value . ' to ' . $to->value . '.');
+        if ($this->status === DonationStatus::Pending) {
+            $this->recordThat(new DonationFailed($currentTime, $this->id, $temporalFailure, $this->recurringPlanId));
+            return;
         }
-        return $canTransition;
+
+        throw new LogicException('Cannot transition from ' . $this->status->value . ' to ' . DonationStatus::Failed->value . '.');
     }
 }
