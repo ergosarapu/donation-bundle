@@ -180,10 +180,10 @@ return function (ContainerConfigurator $container) {
     $services->set('donation_bundle.donations.application.donation.command_handler.initiate_donation', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\InitiateDonationHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
-    $services->set('donation_bundle.donations.application.donation.command_handler.mark_donation_as_accepted', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\MarkDonationAsAcceptedHandler::class)
+    $services->set('donation_bundle.donations.application.donation.command_handler.mark_donation_as_accepted', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\AcceptDonationHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
-    $services->set('donation_bundle.donations.application.donation.command_handler.mark_donation_as_failed', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\MarkDonationAsFailedHandler::class)
+    $services->set('donation_bundle.donations.application.donation.command_handler.mark_donation_as_failed', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\FailDonationHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
     $services->set('donation_bundle.donations.application.donation.command_handler.initiate_recurring_plan', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\InitiateRecurringPlanHandler::class)
