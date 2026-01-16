@@ -61,7 +61,7 @@
         "payum/offline": "^1.7",
         "php-http/guzzle7-adapter": "^1.1",
         "php-http/message-factory": "^1.1",
-        "phpunit/phpunit": "^11",
+        "phpunit/phpunit": "^12",
         "phpstan/phpstan": "^2.1",
         "patchlevel/event-sourcing-phpunit": "^1.2",
         "friendsofphp/php-cs-fixer": "^3.89",
