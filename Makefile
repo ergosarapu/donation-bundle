@@ -14,7 +14,7 @@ phpunit-unit:																		## run phpunit unit tests
 
 .PHONY: phpunit-unit-coverage
 phpunit-unit-coverage:																## run phpunit unit tests and check code coverage is 100%
-	XDEBUG_MODE=coverage vendor/bin/phpunit --testdox --testsuite=Unit --coverage-text --coverage-html .coverage --path-coverage --only-summary-for-coverage-text | ./check-coverage.sh 100
+	XDEBUG_MODE=coverage php -dopcache.enable=0 vendor/bin/phpunit --testdox --testsuite=Unit --coverage-text --coverage-html .coverage --path-coverage --only-summary-for-coverage-text | ./check-coverage.sh 100
 
 .PHONY: phpunit-acceptance
 phpunit-acceptance:																	## run phpunit acceptance tests

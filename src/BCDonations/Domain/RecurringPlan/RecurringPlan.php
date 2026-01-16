@@ -199,9 +199,13 @@ class RecurringPlan extends BasicAggregateRoot
 
     private function completeUnsuccessfulRecurringAttempt(DateTimeImmutable $currentTime): void
     {
-        if ($this->status === RecurringPlanStatus::Failed ||
-            $this->status === RecurringPlanStatus::Expired ||
-            $this->status === RecurringPlanStatus::Canceled) {
+        if ($this->status === RecurringPlanStatus::Failed) {
+            return;
+        }
+        if ($this->status === RecurringPlanStatus::Expired) {
+            return;
+        }
+        if ($this->status === RecurringPlanStatus::Canceled) {
             return;
         }
         $this->recordThat(new RecurringPlanFailing($currentTime, $this->id));

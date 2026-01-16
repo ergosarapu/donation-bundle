@@ -40,9 +40,10 @@ class Payment extends BasicAggregateRoot
         ?PaymentMethodAction $paymentMethodAction,
     ): self {
         $payment = new self();
-        if ($paymentMethodAction !== null && $paymentMethodAction->paymentId !== $paymentRequest->paymentId) {
-            throw new LogicException('Payment method action paymentId does not match payment request paymentId.');
+        if ($paymentMethodAction !== null) {
+            self::validatePaymentIds($paymentMethodAction, $paymentRequest);
         }
+
         $payment->recordThat(new PaymentInitiated(
             $currentTime,
             $paymentRequest->paymentId,
@@ -54,6 +55,13 @@ class Payment extends BasicAggregateRoot
             $paymentMethodAction,
         ));
         return $payment;
+    }
+
+    private static function validatePaymentIds(PaymentMethodAction $paymentMethodAction, PaymentRequest $paymentRequest): void
+    {
+        if ($paymentMethodAction->paymentId !== $paymentRequest->paymentId) {
+            throw new LogicException('Payment method action paymentId does not match payment request paymentId.');
+        }
     }
 
     #[Apply(PaymentInitiated::class)]
@@ -178,7 +186,10 @@ class Payment extends BasicAggregateRoot
 
     public function validateTransitionToCaptured(): void
     {
-        if ($this->status === PaymentStatus::Pending || $this->status === PaymentStatus::Authorized) {
+        if ($this->status === PaymentStatus::Pending) {
+            return;
+        }
+        if ($this->status === PaymentStatus::Authorized) {
             return;
         }
         $this->failTransitionValidation($this->status, PaymentStatus::Captured);
@@ -216,7 +227,10 @@ class Payment extends BasicAggregateRoot
 
     public function validateTransitionToFailed(): void
     {
-        if ($this->status === PaymentStatus::Pending || $this->status === PaymentStatus::Authorized) {
+        if ($this->status === PaymentStatus::Pending) {
+            return;
+        }
+        if ($this->status === PaymentStatus::Authorized) {
             return;
         }
         $this->failTransitionValidation($this->status, PaymentStatus::Failed);
