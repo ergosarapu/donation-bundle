@@ -22,7 +22,7 @@ phpunit-acceptance:																	## run phpunit acceptance tests
 
 .PHONY: behat
 behat:																				## run behat acceptance tests
-	behat
+	vendor/bin/behat
 
 .PHONY: phpunit-integration
 phpunit-integration:																## run phpunit integration tests
