@@ -65,6 +65,9 @@ jobs:
       - name: Check Code Style
         run: make cs-check
 
+      - name: Debug coverage
+        run: XDEBUG_MODE=coverage vendor/bin/phpunit --testdox --testsuite=Unit --coverage-text --coverage-html .coverage --path-coverage
+
       - name: Run Unit Tests with coverage
         run: make phpunit-unit-coverage
       
