@@ -12,11 +12,13 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationRequest;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationStatus;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorIdentity;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanActivateNotAllowedException;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanMarkCanceledNotAllowedException;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanCancelNotAllowedException;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanFailNotAllowedException;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanRenewalNotAllowedException;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanRenewalNotDueYetException;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringInterval;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlan;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanAction;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanActivated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanCanceled;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanExpired;
@@ -26,7 +28,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanInitiated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanRenewalCompleted;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanRenewalInitiated;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringToken;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodlId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
@@ -40,7 +42,7 @@ class RecurringPlanTest extends AggregateRootTestCase
 {
     private DateTimeImmutable $now;
 
-    private RecurringPlanId $recurringPlanId;
+    private RecurringPlanAction $recurringPlanActionForInit;
 
     private RecurringInterval $interval;
 
@@ -56,7 +58,7 @@ class RecurringPlanTest extends AggregateRootTestCase
     {
         parent::setUp();
         $this->now = new DateTimeImmutable('2024-02-01 00:00:00');
-        $this->recurringPlanId = RecurringPlanId::generate();
+        $this->recurringPlanActionForInit = RecurringPlanAction::forInit();
         $this->interval = new RecurringInterval(RecurringInterval::Monthly);
         $this->campaignId = CampaignId::generate();
         $this->amount = new Money(100, new Currency('EUR'));
@@ -81,12 +83,12 @@ class RecurringPlanTest extends AggregateRootTestCase
         );
         $this->when(fn () => RecurringPlan::initiate(
             $this->now,
-            $this->recurringPlanId,
+            $this->recurringPlanActionForInit,
             $donationRequest,
             $this->interval,
         ))->then(new RecurringPlanInitiated(
             $this->now,
-            $this->recurringPlanId,
+            $this->recurringPlanActionForInit,
             $donationId,
             $this->campaignId,
             $this->amount,
@@ -108,90 +110,55 @@ class RecurringPlanTest extends AggregateRootTestCase
         );
         $this->when(fn () => RecurringPlan::initiate(
             $this->now,
-            $this->recurringPlanId,
+            RecurringPlanAction::forInit(),
             $donationRequest,
             $this->interval,
         ))->expectsException(InvalidArgumentException::class)
         ->expectsExceptionMessage('Recurring plan requires donor email');
     }
 
-    public function testSuccessfulRecurringAttemptActivatesInitiated(): void
-    {
-        $activationDonationId = DonationId::generate()->toString();
-        $recurringToken = RecurringToken::fromString('recurring-token-123')->toString();
-
-        $this->given(new RecurringPlanInitiated(
-            $this->now,
-            $this->recurringPlanId,
-            DonationId::fromString($activationDonationId),
-            $this->campaignId,
-            $this->amount,
-            $this->interval,
-            $this->gateway,
-            new DonorIdentity($this->email),
-        ))
-        ->when(fn (RecurringPlan $plan) => $plan->completeRecurringAttempt(
-            $this->now,
-            DonationId::fromString($activationDonationId),
-            DonationStatus::Accepted,
-            RecurringToken::fromString($recurringToken)
-        ))
-        ->then(new RecurringPlanActivated(
-            $this->now,
-            $this->recurringPlanId,
-            $this->now->add($this->interval->toDateInterval()),
-            $this->interval,
-            RecurringToken::fromString($recurringToken),
-        ));
-    }
-
     public function testSuccessfulRecurringAttemptReActivatesFailing(): void
     {
         $renewalDonationId = DonationId::generate()->toString();
-        $recurringToken = RecurringToken::fromString('recurring-token-123')->toString();
         $nextRenewalTime = $this->now->add($this->interval->toDateInterval());
 
         $this->given(
             new RecurringPlanActivated(
                 $this->now,
-                $this->recurringPlanId,
+                $this->recurringPlanActionForInit->recurringPlanId,
                 $nextRenewalTime,
                 $this->interval,
-                RecurringToken::fromString('recurring-token-123'),
             ),
             new RecurringPlanFailing(
                 $this->now,
-                $this->recurringPlanId
+                $this->recurringPlanActionForInit->recurringPlanId,
             ),
             new RecurringPlanRenewalInitiated(
                 $this->now,
-                $this->recurringPlanId,
+                RecurringPlanAction::forRenew($this->recurringPlanActionForInit->recurringPlanId, PaymentMethodlId::generate()),
                 DonationId::fromString($renewalDonationId),
                 $this->campaignId,
                 $this->amount,
                 $this->gateway,
                 new DonorIdentity($this->email),
-                RecurringToken::fromString('recurring-token-123'),
             )
         )
         ->when(fn (RecurringPlan $plan) => $plan->completeRecurringAttempt(
             $this->now,
             DonationId::fromString($renewalDonationId),
             DonationStatus::Accepted,
-            RecurringToken::fromString($recurringToken)
         ))
         ->then(
             new RecurringPlanRenewalCompleted(
                 $this->now,
-                $this->recurringPlanId,
+                $this->recurringPlanActionForInit->recurringPlanId,
                 $nextRenewalTime,
             ),
             new RecurringPlanActivated(
                 $this->now,
-                $this->recurringPlanId,
+                $this->recurringPlanActionForInit->recurringPlanId,
                 $nextRenewalTime,
                 $this->interval,
-                RecurringToken::fromString($recurringToken),
             )
         );
     }
@@ -200,7 +167,6 @@ class RecurringPlanTest extends AggregateRootTestCase
     public function testSuccessfulRecurringAttemptDoesntChangeTerminalStatus(object $terminalEvent, DateTimeImmutable $now, string $recurringPlanId): void
     {
         $renewalDonationId = DonationId::generate()->toString();
-        $recurringToken = RecurringToken::fromString('recurring-token-123')->toString();
         $nextRenewalTime = $now->add($this->interval->toDateInterval());
 
         $this->given(
@@ -209,17 +175,15 @@ class RecurringPlanTest extends AggregateRootTestCase
                 RecurringPlanId::fromString($recurringPlanId),
                 $nextRenewalTime,
                 $this->interval,
-                RecurringToken::fromString('recurring-token-123'),
             ),
             new RecurringPlanRenewalInitiated(
                 $now,
-                RecurringPlanId::fromString($recurringPlanId),
+                RecurringPlanAction::forRenew($this->recurringPlanActionForInit->recurringPlanId, PaymentMethodlId::generate()),
                 DonationId::fromString($renewalDonationId),
                 $this->campaignId,
                 $this->amount,
                 $this->gateway,
                 new DonorIdentity($this->email),
-                RecurringToken::fromString('recurring-token-123'),
             ),
             $terminalEvent
         )
@@ -227,7 +191,6 @@ class RecurringPlanTest extends AggregateRootTestCase
             $now,
             DonationId::fromString($renewalDonationId),
             DonationStatus::Accepted,
-            RecurringToken::fromString($recurringToken)
         ))
         ->then();
     }
@@ -244,40 +207,13 @@ class RecurringPlanTest extends AggregateRootTestCase
         yield 'canceled' => [new RecurringPlanCanceled($now, $recurringPlanId), $now, $recurringPlanId->toString()];
     }
 
-    public function testSuccessfulRecurringAttemptWithoutTokenFailsInitiated(): void
-    {
-        $activationDonationId = DonationId::generate()->toString();
-
-        $this->given(new RecurringPlanInitiated(
-            $this->now,
-            $this->recurringPlanId,
-            DonationId::fromString($activationDonationId),
-            $this->campaignId,
-            $this->amount,
-            $this->interval,
-            $this->gateway,
-            new DonorIdentity($this->email),
-        ))
-        ->when(fn (RecurringPlan $plan) => $plan->completeRecurringAttempt(
-            $this->now,
-            DonationId::fromString($activationDonationId),
-            DonationStatus::Accepted,
-            null
-        ))
-        ->then(new RecurringPlanFailed(
-            $this->now,
-            $this->recurringPlanId,
-        ));
-    }
-
     public function testActivateActiveThrows(): void
     {
         $this->given(new RecurringPlanActivated(
             $this->now,
-            $this->recurringPlanId,
+            $this->recurringPlanActionForInit->recurringPlanId,
             $this->now->add($this->interval->toDateInterval()),
             $this->interval,
-            null,
         ))->when(fn (RecurringPlan $plan) => $plan->activate($this->now))
         ->expectsException(RecurringPlanActivateNotAllowedException::class);
     }
@@ -285,7 +221,7 @@ class RecurringPlanTest extends AggregateRootTestCase
     public function testActivateFailedThrows(): void
     {
         $this
-        ->given(new RecurringPlanFailed($this->now, $this->recurringPlanId))
+        ->given(new RecurringPlanFailed($this->now, $this->recurringPlanActionForInit->recurringPlanId))
         ->when(fn (RecurringPlan $plan) => $plan->activate($this->now))
         ->expectsException(RecurringPlanActivateNotAllowedException::class);
     }
@@ -293,7 +229,7 @@ class RecurringPlanTest extends AggregateRootTestCase
     public function testActivateExpiredThrows(): void
     {
         $this
-        ->given(new RecurringPlanExpired($this->now, $this->recurringPlanId))
+        ->given(new RecurringPlanExpired($this->now, $this->recurringPlanActionForInit->recurringPlanId))
         ->when(fn (RecurringPlan $plan) => $plan->activate($this->now))
         ->expectsException(RecurringPlanActivateNotAllowedException::class);
     }
@@ -301,9 +237,29 @@ class RecurringPlanTest extends AggregateRootTestCase
     public function testActivateCanceledThrows(): void
     {
         $this
-        ->given(new RecurringPlanCanceled($this->now, $this->recurringPlanId))
+        ->given(new RecurringPlanCanceled($this->now, $this->recurringPlanActionForInit->recurringPlanId))
         ->when(fn (RecurringPlan $plan) => $plan->activate($this->now))
         ->expectsException(RecurringPlanActivateNotAllowedException::class);
+    }
+
+    public function testActivateInitiated(): void
+    {
+        $this->given(new RecurringPlanInitiated(
+            $this->now,
+            $this->recurringPlanActionForInit,
+            DonationId::generate(),
+            $this->campaignId,
+            $this->amount,
+            $this->interval,
+            $this->gateway,
+            new DonorIdentity($this->email),
+        ))->when(fn (RecurringPlan $plan) => $plan->activate($this->now))
+        ->then(new RecurringPlanActivated(
+            $this->now,
+            $this->recurringPlanActionForInit->recurringPlanId,
+            $this->now->add($this->interval->toDateInterval()),
+            $this->interval,
+        ));
     }
 
     #[DataProvider('reActivationProvider')]
@@ -312,23 +268,21 @@ class RecurringPlanTest extends AggregateRootTestCase
         $this->given(
             new RecurringPlanActivated(
                 $activatedAt,
-                $this->recurringPlanId,
+                $this->recurringPlanActionForInit->recurringPlanId,
                 $activationNextRenewalTime,
                 $this->interval,
-                null,
             ),
             new RecurringPlanFailing(
                 $activatedAt,
-                $this->recurringPlanId
+                $this->recurringPlanActionForInit->recurringPlanId,
             )
         )->when(fn (RecurringPlan $plan) => $plan->activate($reActivationTime))
         ->then(
             new RecurringPlanActivated(
                 $reActivationTime,
-                $this->recurringPlanId,
+                $this->recurringPlanActionForInit->recurringPlanId,
                 $expectedNextRenewalTime,
                 $this->interval,
-                null,
             )
         );
     }
@@ -366,73 +320,68 @@ class RecurringPlanTest extends AggregateRootTestCase
         $this->given(
             new RecurringPlanActivated(
                 $this->now,
-                $this->recurringPlanId,
+                $this->recurringPlanActionForInit->recurringPlanId,
                 $this->now->add($this->interval->toDateInterval()),
                 $this->interval,
-                null,
             ),
             new RecurringPlanRenewalInitiated(
                 $this->now,
-                $this->recurringPlanId,
+                RecurringPlanAction::forRenew($this->recurringPlanActionForInit->recurringPlanId, PaymentMethodlId::generate()),
                 DonationId::fromString($renewalDonationId),
                 $this->campaignId,
                 $this->amount,
                 $this->gateway,
                 new DonorIdentity($this->email),
-                RecurringToken::fromString('recurring-token-123'),
             )
         )->when(fn (RecurringPlan $plan) => $plan->completeRecurringAttempt(
             $this->now,
             DonationId::fromString($renewalDonationId),
             DonationStatus::Failed,
-            null,
-            true,
         ))
         ->then(new RecurringPlanFailing(
             $this->now,
-            $this->recurringPlanId
+            $this->recurringPlanActionForInit->recurringPlanId
         ));
     }
 
-    public function testFailedRecurringAttemptResultsFailed(): void
+
+    #[DataProvider('terminalEventsProvider')]
+    public function testFailedRecurringAttemptDoesntChangeTerminalStatus(object $terminalEvent, DateTimeImmutable $now, string $recurringPlanId): void
     {
         $renewalDonationId = DonationId::generate()->toString();
+        $nextRenewalTime = $now->add($this->interval->toDateInterval());
+
         $this->given(
             new RecurringPlanActivated(
-                $this->now,
-                $this->recurringPlanId,
-                $this->now->add($this->interval->toDateInterval()),
+                $now,
+                RecurringPlanId::fromString($recurringPlanId),
+                $nextRenewalTime,
                 $this->interval,
-                null,
             ),
             new RecurringPlanRenewalInitiated(
-                $this->now,
-                $this->recurringPlanId,
+                $now,
+                RecurringPlanAction::forRenew($this->recurringPlanActionForInit->recurringPlanId, PaymentMethodlId::generate()),
                 DonationId::fromString($renewalDonationId),
                 $this->campaignId,
                 $this->amount,
                 $this->gateway,
                 new DonorIdentity($this->email),
-                RecurringToken::fromString('recurring-token-123'),
-            )
-        )->when(fn (RecurringPlan $plan) => $plan->completeRecurringAttempt(
-            $this->now,
+            ),
+            $terminalEvent
+        )
+        ->when(fn (RecurringPlan $plan) => $plan->completeRecurringAttempt(
+            $now,
             DonationId::fromString($renewalDonationId),
             DonationStatus::Failed,
-            null,
-            false,
         ))
-        ->then(new RecurringPlanFailed(
-            $this->now,
-            $this->recurringPlanId
-        ));
+        ->then();
     }
 
-    public function testMarkPendingAsCanceled(): void
+    public function testCancelInitiated(): void
     {
         $this->given(new RecurringPlanInitiated(
             $this->now,
-            $this->recurringPlanId,
+            $this->recurringPlanActionForInit,
             DonationId::generate(),
             $this->campaignId,
             $this->amount,
@@ -442,76 +391,145 @@ class RecurringPlanTest extends AggregateRootTestCase
         ))->when(fn (RecurringPlan $plan) => $plan->cancel($this->now))
         ->then(new RecurringPlanCanceled(
             $this->now,
-            $this->recurringPlanId
+            $this->recurringPlanActionForInit->recurringPlanId,
         ));
     }
 
-    public function testMarkActiveAsCanceled(): void
+    public function testCancelActive(): void
     {
         $this->given(new RecurringPlanActivated(
             $this->now,
-            $this->recurringPlanId,
+            $this->recurringPlanActionForInit->recurringPlanId,
             $this->now->add($this->interval->toDateInterval()),
             $this->interval,
-            null,
         ))->when(fn (RecurringPlan $plan) => $plan->cancel($this->now))
         ->then(new RecurringPlanCanceled(
             $this->now,
-            $this->recurringPlanId
+            $this->recurringPlanActionForInit->recurringPlanId
         ));
     }
 
-    public function testMarkFailingAsCanceled(): void
+    public function testCancelFailing(): void
     {
         $this->given(new RecurringPlanFailing(
             $this->now,
-            $this->recurringPlanId,
+            $this->recurringPlanActionForInit->recurringPlanId,
         ))->when(fn (RecurringPlan $plan) => $plan->cancel($this->now))
         ->then(new RecurringPlanCanceled(
             $this->now,
-            $this->recurringPlanId
+            $this->recurringPlanActionForInit->recurringPlanId
+        ));
+    }
+
+    public function testCancelFailedThrows(): void
+    {
+        $this->given(new RecurringPlanFailed(
+            $this->now,
+            $this->recurringPlanActionForInit->recurringPlanId,
+        ))->when(fn (RecurringPlan $plan) => $plan->cancel($this->now))
+        ->expectsException(RecurringPlanCancelNotAllowedException::class);
+    }
+
+    public function testCancelExpiredThrows(): void
+    {
+        $this->given(new RecurringPlanExpired(
+            $this->now,
+            $this->recurringPlanActionForInit->recurringPlanId,
+        ))->when(fn (RecurringPlan $plan) => $plan->cancel($this->now))
+        ->expectsException(RecurringPlanCancelNotAllowedException::class);
+    }
+
+    public function testCancelCanceledThrows(): void
+    {
+        $this->given(new RecurringPlanCanceled(
+            $this->now,
+            $this->recurringPlanActionForInit->recurringPlanId,
+        ))->when(fn (RecurringPlan $plan) => $plan->cancel($this->now))
+        ->expectsException(RecurringPlanCancelNotAllowedException::class);
+    }
+
+    public function testFailInitiated(): void
+    {
+        $this->given(new RecurringPlanInitiated(
+            $this->now,
+            $this->recurringPlanActionForInit,
+            DonationId::generate(),
+            $this->campaignId,
+            $this->amount,
+            $this->interval,
+            $this->gateway,
+            new DonorIdentity($this->email),
+        ))->when(fn (RecurringPlan $plan) => $plan->fail($this->now))
+        ->then(new RecurringPlanFailed(
+            $this->now,
+            $this->recurringPlanActionForInit->recurringPlanId,
+        ));
+    }
+
+    public function testFailActive(): void
+    {
+        $this->given(new RecurringPlanActivated(
+            $this->now,
+            $this->recurringPlanActionForInit->recurringPlanId,
+            $this->now->add($this->interval->toDateInterval()),
+            $this->interval,
+        ))->when(fn (RecurringPlan $plan) => $plan->fail($this->now))
+        ->then(new RecurringPlanFailed(
+            $this->now,
+            $this->recurringPlanActionForInit->recurringPlanId
+        ));
+    }
+
+    public function testFailFailing(): void
+    {
+        $this->given(new RecurringPlanFailing(
+            $this->now,
+            $this->recurringPlanActionForInit->recurringPlanId,
+        ))->when(fn (RecurringPlan $plan) => $plan->fail($this->now))
+        ->then(new RecurringPlanFailed(
+            $this->now,
+            $this->recurringPlanActionForInit->recurringPlanId
         ));
     }
 
 
-    public function testMarkFailedAsCanceledThrows(): void
+    public function testFailFailedThrows(): void
     {
         $this->given(new RecurringPlanFailed(
             $this->now,
-            $this->recurringPlanId,
-        ))->when(fn (RecurringPlan $plan) => $plan->cancel($this->now))
-        ->expectsException(RecurringPlanMarkCanceledNotAllowedException::class);
+            $this->recurringPlanActionForInit->recurringPlanId,
+        ))->when(fn (RecurringPlan $plan) => $plan->fail($this->now))
+        ->expectsException(RecurringPlanFailNotAllowedException::class);
     }
 
-    public function testMarkExpiredAsCanceledThrows(): void
+    public function testFailExpiredThrows(): void
     {
         $this->given(new RecurringPlanExpired(
             $this->now,
-            $this->recurringPlanId,
-        ))->when(fn (RecurringPlan $plan) => $plan->cancel($this->now))
-        ->expectsException(RecurringPlanMarkCanceledNotAllowedException::class);
+            $this->recurringPlanActionForInit->recurringPlanId,
+        ))->when(fn (RecurringPlan $plan) => $plan->fail($this->now))
+        ->expectsException(RecurringPlanFailNotAllowedException::class);
     }
 
-    public function testMarkCanceledAsCanceledThrows(): void
+    public function testFailCanceledThrows(): void
     {
         $this->given(new RecurringPlanCanceled(
             $this->now,
-            $this->recurringPlanId,
-        ))->when(fn (RecurringPlan $plan) => $plan->cancel($this->now))
-        ->expectsException(RecurringPlanMarkCanceledNotAllowedException::class);
+            $this->recurringPlanActionForInit->recurringPlanId,
+        ))->when(fn (RecurringPlan $plan) => $plan->fail($this->now))
+        ->expectsException(RecurringPlanFailNotAllowedException::class);
     }
 
     public function testInitiateRenewalOnActive(): void
     {
-        $activationDonationId = DonationId::generate()->toString();
+        $initialDonationId = DonationId::generate()->toString();
         $renewalDonationId = DonationId::generate()->toString();
         $renewalTime = $this->now->add($this->interval->toDateInterval());
-        $recurringToken = RecurringToken::fromString('recurring-token-123')->toString();
         $this->given(
             new RecurringPlanInitiated(
                 $this->now,
-                $this->recurringPlanId,
-                DonationId::fromString($activationDonationId),
+                $this->recurringPlanActionForInit,
+                DonationId::fromString($initialDonationId),
                 $this->campaignId,
                 $this->amount,
                 $this->interval,
@@ -520,21 +538,19 @@ class RecurringPlanTest extends AggregateRootTestCase
             ),
             new RecurringPlanActivated(
                 $this->now,
-                $this->recurringPlanId,
+                $this->recurringPlanActionForInit->recurringPlanId,
                 $this->now->add($this->interval->toDateInterval()),
                 $this->interval,
-                RecurringToken::fromString($recurringToken),
             )
         )->when(fn (RecurringPlan $plan) => $plan->initiateRenewal($renewalTime, DonationId::fromString($renewalDonationId)))
         ->then(new RecurringPlanRenewalInitiated(
             $renewalTime,
-            $this->recurringPlanId,
+            RecurringPlanAction::forRenew($this->recurringPlanActionForInit->recurringPlanId, $this->recurringPlanActionForInit->paymentMethodId),
             DonationId::fromString($renewalDonationId),
             $this->campaignId,
             $this->amount,
             $this->gateway,
             new DonorIdentity($this->email),
-            RecurringToken::fromString($recurringToken),
         ));
     }
 
@@ -545,7 +561,7 @@ class RecurringPlanTest extends AggregateRootTestCase
         $this->given(
             new RecurringPlanInitiated(
                 $this->now,
-                $this->recurringPlanId,
+                $this->recurringPlanActionForInit,
                 DonationId::generate(),
                 $this->campaignId,
                 $this->amount,
@@ -555,52 +571,24 @@ class RecurringPlanTest extends AggregateRootTestCase
             ),
             new RecurringPlanActivated(
                 $this->now,
-                $this->recurringPlanId,
+                $this->recurringPlanActionForInit->recurringPlanId,
                 $this->now->add($this->interval->toDateInterval()),
                 $this->interval,
-                RecurringToken::fromString('recurring-token-123'),
             ),
             new RecurringPlanFailing(
                 $this->now,
-                $this->recurringPlanId,
+                $this->recurringPlanActionForInit->recurringPlanId,
             )
         )->when(fn (RecurringPlan $plan) => $plan->initiateRenewal($renewalTime, DonationId::fromString($renewalDonationId)))
         ->then(new RecurringPlanRenewalInitiated(
             $renewalTime,
-            $this->recurringPlanId,
+            RecurringPlanAction::forRenew($this->recurringPlanActionForInit->recurringPlanId, $this->recurringPlanActionForInit->paymentMethodId),
             DonationId::fromString($renewalDonationId),
             $this->campaignId,
             $this->amount,
             $this->gateway,
             new DonorIdentity($this->email),
-            RecurringToken::fromString('recurring-token-123'),
         ));
-    }
-
-    public function testInitiateRenewalThrowsWhenMissingToken(): void
-    {
-        $activationDonationId = DonationId::generate();
-        $renewalTime = $this->now->add($this->interval->toDateInterval())->sub(DateInterval::createFromDateString('1 millisecond'));
-        $this->given(
-            new RecurringPlanInitiated(
-                $this->now,
-                $this->recurringPlanId,
-                $activationDonationId,
-                $this->campaignId,
-                $this->amount,
-                $this->interval,
-                $this->gateway,
-                new DonorIdentity($this->email),
-            ),
-            new RecurringPlanActivated(
-                $this->now,
-                $this->recurringPlanId,
-                $this->now->add($this->interval->toDateInterval()),
-                $this->interval,
-                null,
-            )
-        )->when(fn (RecurringPlan $plan) => $plan->initiateRenewal($renewalTime, DonationId::generate()))
-        ->expectsException(RecurringPlanRenewalNotAllowedException::class)->expectsExceptionMessage('Missing recurring token.');
     }
 
     public function testInitiateRenewalThrowsWhenNotDueYet(): void
@@ -610,7 +598,7 @@ class RecurringPlanTest extends AggregateRootTestCase
         $this->given(
             new RecurringPlanInitiated(
                 $this->now,
-                $this->recurringPlanId,
+                $this->recurringPlanActionForInit,
                 $activationDonationId,
                 $this->campaignId,
                 $this->amount,
@@ -620,35 +608,31 @@ class RecurringPlanTest extends AggregateRootTestCase
             ),
             new RecurringPlanActivated(
                 $this->now,
-                $this->recurringPlanId,
+                $this->recurringPlanActionForInit->recurringPlanId,
                 $this->now->add($this->interval->toDateInterval()),
                 $this->interval,
-                RecurringToken::fromString('recurring-token-123'),
             )
         )->when(fn (RecurringPlan $plan) => $plan->initiateRenewal($renewalTime, DonationId::generate()))
         ->expectsException(RecurringPlanRenewalNotDueYetException::class);
     }
 
-    public function testInitiateRenewalThrowsWhenDonationInProgress(): void
+    public function testInitiateRenewalThrowsWhenRenewalInProgress(): void
     {
-        $activationDonationId = DonationId::generate();
         $this->given(
             new RecurringPlanActivated(
                 $this->now,
-                $this->recurringPlanId,
+                $this->recurringPlanActionForInit->recurringPlanId,
                 $this->now->add($this->interval->toDateInterval()),
                 $this->interval,
-                RecurringToken::fromString('recurring-token-123'),
             ),
             new RecurringPlanRenewalInitiated(
                 $this->now,
-                $this->recurringPlanId,
-                $activationDonationId,
+                $this->recurringPlanActionForInit,
+                DonationId::generate(),
                 $this->campaignId,
                 $this->amount,
                 $this->gateway,
                 new DonorIdentity($this->email),
-                RecurringToken::fromString('recurring-token-123'),
             )
         )->when(fn (RecurringPlan $plan) => $plan->initiateRenewal($this->now, DonationId::generate()))
         ->expectsException(LogicException::class)->expectsExceptionMessage('Donation is in progress.');
@@ -659,7 +643,7 @@ class RecurringPlanTest extends AggregateRootTestCase
         $this->given(
             new RecurringPlanInitiated(
                 $this->now,
-                $this->recurringPlanId,
+                $this->recurringPlanActionForInit,
                 DonationId::generate(),
                 $this->campaignId,
                 $this->amount,
@@ -668,7 +652,8 @@ class RecurringPlanTest extends AggregateRootTestCase
                 new DonorIdentity($this->email),
             ),
         )->when(fn (RecurringPlan $plan) => $plan->initiateRenewal($this->now, DonationId::generate()))
-        ->expectsException(LogicException::class);
+        ->expectsException(RecurringPlanRenewalNotAllowedException::class)
+        ->expectsExceptionMessage('Only active and failing recurring donations can be renewed.');
     }
 
     public function testInitiateRenewalOnFailedThrows(): void
@@ -677,7 +662,7 @@ class RecurringPlanTest extends AggregateRootTestCase
         $this->given(
             new RecurringPlanInitiated(
                 $this->now,
-                $this->recurringPlanId,
+                $this->recurringPlanActionForInit,
                 DonationId::generate(),
                 $this->campaignId,
                 $this->amount,
@@ -687,43 +672,51 @@ class RecurringPlanTest extends AggregateRootTestCase
             ),
             new RecurringPlanFailed(
                 $this->now,
-                $this->recurringPlanId,
+                $this->recurringPlanActionForInit->recurringPlanId,
             )
         )->when(fn (RecurringPlan $plan) => $plan->initiateRenewal($this->now, DonationId::generate()))
-        ->expectsException(LogicException::class);
+        ->expectsException(RecurringPlanRenewalNotAllowedException::class)
+        ->expectsExceptionMessage('Only active and failing recurring donations can be renewed.');
     }
 
     public function testInitiateRenewalOnExpiredThrows(): void
     {
         $this->given(
-            new RecurringPlanActivated(
+            new RecurringPlanInitiated(
                 $this->now,
-                $this->recurringPlanId,
-                $this->now->add($this->interval->toDateInterval()),
+                $this->recurringPlanActionForInit,
+                DonationId::generate(),
+                $this->campaignId,
+                $this->amount,
                 $this->interval,
-                RecurringToken::fromString('recurring-token-123'),
+                $this->gateway,
+                new DonorIdentity($this->email),
             ),
             new RecurringPlanExpired(
                 $this->now,
-                $this->recurringPlanId,
+                $this->recurringPlanActionForInit->recurringPlanId,
             )
         )->when(fn (RecurringPlan $plan) => $plan->initiateRenewal($this->now, DonationId::generate()))
-        ->expectsException(RecurringPlanRenewalNotAllowedException::class);
+        ->expectsException(RecurringPlanRenewalNotAllowedException::class)
+        ->expectsExceptionMessage('Only active and failing recurring donations can be renewed.');
     }
 
     public function testInitiateRenewalOnCanceledThrows(): void
     {
         $this->given(
-            new RecurringPlanActivated(
+            new RecurringPlanInitiated(
                 $this->now,
-                $this->recurringPlanId,
-                $this->now->add($this->interval->toDateInterval()),
+                $this->recurringPlanActionForInit,
+                DonationId::generate(),
+                $this->campaignId,
+                $this->amount,
                 $this->interval,
-                RecurringToken::fromString('recurring-token-123'),
+                $this->gateway,
+                new DonorIdentity($this->email),
             ),
             new RecurringPlanCanceled(
                 $this->now,
-                $this->recurringPlanId,
+                $this->recurringPlanActionForInit->recurringPlanId,
             )
         )->when(fn (RecurringPlan $plan) => $plan->initiateRenewal($this->now, DonationId::generate()))
         ->expectsException(RecurringPlanRenewalNotAllowedException::class);
@@ -736,80 +729,72 @@ class RecurringPlanTest extends AggregateRootTestCase
         $this->given(
             new RecurringPlanActivated(
                 $this->now,
-                $this->recurringPlanId,
+                $this->recurringPlanActionForInit->recurringPlanId,
                 $renewalTime,
                 $this->interval,
-                null,
             ),
             new RecurringPlanRenewalInitiated(
                 $this->now,
-                $this->recurringPlanId,
+                RecurringPlanAction::forRenew($this->recurringPlanActionForInit->recurringPlanId, PaymentMethodlId::generate()),
                 DonationId::fromString($renewalDonationId),
                 $this->campaignId,
                 $this->amount,
                 $this->gateway,
                 new DonorIdentity($this->email),
-                RecurringToken::fromString('recurring-token-123'),
             ),
         )->when(fn (RecurringPlan $plan) => $plan->completeRecurringAttempt(
             $renewalTime,
             DonationId::fromString($renewalDonationId),
             DonationStatus::Accepted,
-            null
         ))
         ->then(new RecurringPlanRenewalCompleted(
             $renewalTime,
-            $this->recurringPlanId,
+            $this->recurringPlanActionForInit->recurringPlanId,
             $renewalTime->add($this->interval->toDateInterval()),
         ));
     }
 
-    public function testCompleteRecurringAttemptNotInProgressThrows(): void
+    public function testCompleteRecurringAttemptRenewalNotInProgressThrows(): void
     {
         $renewalTime = $this->now->add($this->interval->toDateInterval());
         $this->given(
             new RecurringPlanActivated(
                 $this->now,
-                $this->recurringPlanId,
+                $this->recurringPlanActionForInit->recurringPlanId,
                 $renewalTime,
                 $this->interval,
-                null,
             )
         )->when(fn (RecurringPlan $plan) => $plan->completeRecurringAttempt(
             $renewalTime,
             DonationId::generate(),
             DonationStatus::Accepted,
-            null
         ))
         ->expectsException(LogicException::class);
     }
 
-    public function testCompleteRecurringAttemptMismatchInProgressThrows(): void
+    public function testCompleteRecurringAttemptRenewalIdMismatchThrows(): void
     {
         $renewalTime = $this->now->add($this->interval->toDateInterval());
         $this->given(
             new RecurringPlanActivated(
                 $this->now,
-                $this->recurringPlanId,
+                $this->recurringPlanActionForInit->recurringPlanId,
                 $renewalTime,
                 $this->interval,
-                null,
             ),
             new RecurringPlanRenewalInitiated(
                 $this->now,
-                $this->recurringPlanId,
+                RecurringPlanAction::forRenew($this->recurringPlanActionForInit->recurringPlanId, PaymentMethodlId::generate()),
                 DonationId::generate(),
                 $this->campaignId,
                 $this->amount,
                 $this->gateway,
                 new DonorIdentity($this->email),
-                RecurringToken::fromString('recurring-token-123'),
             ),
         )->when(fn (RecurringPlan $plan) => $plan->completeRecurringAttempt(
             $renewalTime,
             DonationId::generate(),
             DonationStatus::Accepted,
-            null
         ))
         ->expectsException(LogicException::class);
     }
@@ -822,29 +807,25 @@ class RecurringPlanTest extends AggregateRootTestCase
         $this->given(
             new RecurringPlanActivated(
                 $this->now,
-                $this->recurringPlanId,
+                $this->recurringPlanActionForInit->recurringPlanId,
                 $renewalTime,
                 $this->interval,
-                null,
             ),
             new RecurringPlanRenewalInitiated(
                 $this->now,
-                $this->recurringPlanId,
+                RecurringPlanAction::forRenew($this->recurringPlanActionForInit->recurringPlanId, PaymentMethodlId::generate()),
                 DonationId::fromString($renewalDonationId),
                 $this->campaignId,
                 $this->amount,
                 $this->gateway,
                 new DonorIdentity($this->email),
-                RecurringToken::fromString('recurring-token-123'),
             ),
         )->when(fn (RecurringPlan $plan) => $plan->completeRecurringAttempt(
             $renewalTime,
             DonationId::fromString($renewalDonationId),
             $status,
-            null
         ))
-        ->expectsException(InvalidArgumentException::class)->expectsExceptionMessage('Unsupported donation status: ' . $status->value)
-        ;
+        ->expectsException(InvalidArgumentException::class)->expectsExceptionMessage('Unsupported donation status: ' . $status->value);
     }
 
     /**

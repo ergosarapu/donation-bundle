@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCDonations\Application\EventHandler\Domain;
 
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationInitiated;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanActionIntent;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodAction;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Command\InitiatePaymentIntegrationCommand;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\EventHandlerInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodlId;
 
 class DonationInitiatedHandler implements EventHandlerInterface
 {
@@ -19,11 +21,15 @@ class DonationInitiatedHandler implements EventHandlerInterface
 
     public function __invoke(DonationInitiated $event): void
     {
-        $useAgreementFrom = null;
-        if ($event->recurringToken !== null) {
-            // Assuming the recurring token is payment id
-            $useAgreementFrom = PaymentId::fromString($event->recurringToken->toString());
+        $paymentMethodAction = null;
+        if ($event->recurringPlanAction !== null) {
+            $paymentMethodAction = match ($event->recurringPlanAction->intent) {
+                // TODO: Can PaymentMethodlId be generated in PaymentMethodAction factory method?
+                RecurringPlanActionIntent::Init => PaymentMethodAction::forRequest(PaymentMethodlId::generate(), $event->paymentId),
+                RecurringPlanActionIntent::Renew => PaymentMethodAction::forUse($event->recurringPlanAction->paymentMethodId, $event->paymentId),
+            };
         }
+
         $this->commandBus->dispatch(new InitiatePaymentIntegrationCommand(
             $event->paymentId,
             $event->amount,
@@ -31,7 +37,7 @@ class DonationInitiatedHandler implements EventHandlerInterface
             $event->description,
             PaymentAppliedToId::fromString($event->donationId->toString()),
             $event->donorIdentity->email,
-            $useAgreementFrom,
+            $paymentMethodAction,
         ));
     }
 }

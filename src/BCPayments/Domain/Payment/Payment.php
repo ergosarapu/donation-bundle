@@ -5,18 +5,9 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCPayments\Domain\Payment;
 
 use DateTimeImmutable;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentAuthorized;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentCanceled;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentCaptured;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentDidNotSucceed;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentFailed;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentInitiated;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentPending;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentRefunded;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentSucceeded;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\ValueObject\PaymentStatus;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
@@ -27,35 +18,40 @@ use Patchlevel\EventSourcing\Attribute\Aggregate;
 use Patchlevel\EventSourcing\Attribute\Apply;
 use Patchlevel\EventSourcing\Attribute\Id;
 
+/** @package ErgoSarapu\DonationBundle\BCPayments\Domain\Payment */
 #[Aggregate(name: 'payment')]
 class Payment extends BasicAggregateRoot
 {
     #[Id]
     private PaymentId $id;
     private Money $amount;
+    private Gateway $gateway;
+    private ShortDescription $description;
+    private ?Email $email;
     private PaymentStatus $status;
     private ?PaymentAppliedToId $appliedTo = null;
     private bool $succeedRecorded = false;
+    private bool $gatewayCallReserved = false;
+    private ?PaymentMethodAction $paymentMethodAction;
 
     public static function initiate(
         DateTimeImmutable $currentTime,
-        PaymentId $id,
-        Money $amount,
-        Gateway $gateway,
-        ShortDescription $description,
-        URL $redirectUrl,
-        ?PaymentAppliedToId $appliedTo = null,
+        PaymentRequest $paymentRequest,
+        ?PaymentMethodAction $paymentMethodAction,
     ): self {
         $payment = new self();
+        if ($paymentMethodAction !== null && $paymentMethodAction->paymentId !== $paymentRequest->paymentId) {
+            throw new LogicException('Payment method action paymentId does not match payment request paymentId.');
+        }
         $payment->recordThat(new PaymentInitiated(
             $currentTime,
-            $id,
-            $amount,
-            PaymentStatus::Pending,
-            $gateway,
-            $description,
-            $redirectUrl,
-            $appliedTo,
+            $paymentRequest->paymentId,
+            $paymentRequest->amount,
+            $paymentRequest->gateway,
+            $paymentRequest->description,
+            $paymentRequest->appliedTo,
+            $paymentRequest->email,
+            $paymentMethodAction,
         ));
         return $payment;
     }
@@ -67,16 +63,17 @@ class Payment extends BasicAggregateRoot
         $this->amount = $event->amount;
         $this->status = $event->status;
         $this->appliedTo = $event->appliedTo;
-        // $this->gateway = $event->gateway;
-        // $this->description = $event->description;
-        // $this->captureUrl = $event->captureUrl;
+        $this->gateway = $event->gateway;
+        $this->description = $event->description;
+        $this->email = $event->email;
+        $this->paymentMethodAction = $event->paymentMethodAction;
     }
 
-    #[Apply]
-    protected function applyPaymentPending(PaymentPending $event): void
-    {
-        $this->status = $event->status;
-    }
+    // #[Apply]
+    // protected function applyPaymentPending(PaymentPending $event): void
+    // {
+    //     $this->status = $event->status;
+    // }
 
     #[Apply]
     protected function applyPaymentAuthorized(PaymentAuthorized $event): void
@@ -122,32 +119,32 @@ class Payment extends BasicAggregateRoot
     {
     }
 
-    public function markPending(DateTimeImmutable $currentTime): void
+
+    #[Apply]
+    protected function applyReservedForGatewayCall(PaymentReservedForGatewayCall $event): void
     {
-        // Idempotency guard
-        if ($this->status === PaymentStatus::Pending) {
-            return;
-        }
-        $this->canTransitionToPending(true);
-        $this->recordThat(new PaymentPending($currentTime, $this->id));
+        $this->gatewayCallReserved = true;
     }
 
-    public function canTransitionToPending(bool $throw = false): bool
+    #[Apply]
+    protected function applyReleasedForGatewayCall(PaymentReleasedForGatewayCall $event): void
     {
-        return $this->canTransition($this->status, PaymentStatus::Pending, [], $throw);
+        $this->gatewayCallReserved = false;
     }
 
-    public function markAuthorized(DateTimeImmutable $currentTime, Money $authorizedAmount): void
+    #[Apply]
+    protected function applyRedirectURLCaptureInitiated(PaymentRedirectUrlSetUp $event): void
+    {
+    }
+
+    public function markAuthorized(DateTimeImmutable $currentTime, Money $authorizedAmount, ?PaymentMethodResult $paymentMethodResult): void
     {
         // Idempotency guard
         if ($this->status === PaymentStatus::Authorized) {
-            if (!$this->amount->equals($authorizedAmount)) {
-                throw new LogicException('Payment already Authorized with different amount, existing: ' . $this->amount . ', new: ' . $authorizedAmount);
-            }
             return;
         }
-        $this->canTransitionToAuthorized(true);
-        $this->recordThat(new PaymentAuthorized($currentTime, $this->id, $authorizedAmount));
+        $this->validateTransitionToAuthorized();
+        $this->recordThat(new PaymentAuthorized($currentTime, $this->id, $authorizedAmount, $this->appliedTo, $this->paymentMethodAction, $paymentMethodResult));
         $this->recordSucceeded($currentTime);
     }
 
@@ -160,28 +157,31 @@ class Payment extends BasicAggregateRoot
         $this->recordThat(new PaymentSucceeded($currentTime, $this->id, $this->amount, $this->appliedTo));
     }
 
-    public function canTransitionToAuthorized(bool $throw = false): bool
+    public function validateTransitionToAuthorized(): void
     {
-        return $this->canTransition($this->status, PaymentStatus::Authorized, [PaymentStatus::Pending], $throw);
+        if ($this->status === PaymentStatus::Pending) {
+            return;
+        }
+        $this->failTransitionValidation($this->status, PaymentStatus::Authorized);
     }
 
-    public function markCaptured(DateTimeImmutable $currentTime, Money $capturedAmount): void
+    public function markCaptured(DateTimeImmutable $currentTime, Money $capturedAmount, ?PaymentMethodResult $paymentMethodResult): void
     {
         // Idempotency guard
         if ($this->status === PaymentStatus::Captured) {
-            if (!$this->amount->equals($capturedAmount)) {
-                throw new LogicException('Payment already Captured with different amount, existing: ' . $this->amount . ', new: ' . $capturedAmount);
-            }
             return;
         }
-        $this->canTransitionToCaptured(true);
-        $this->recordThat(new PaymentCaptured($currentTime, $this->id, $capturedAmount, $this->appliedTo));
+        $this->validateTransitionToCaptured();
+        $this->recordThat(new PaymentCaptured($currentTime, $this->id, $capturedAmount, $this->appliedTo, $this->paymentMethodAction, $paymentMethodResult));
         $this->recordSucceeded($currentTime);
     }
 
-    public function canTransitionToCaptured(bool $throw = false): bool
+    public function validateTransitionToCaptured(): void
     {
-        return $this->canTransition($this->status, PaymentStatus::Captured, [PaymentStatus::Pending, PaymentStatus::Authorized], $throw);
+        if ($this->status === PaymentStatus::Pending || $this->status === PaymentStatus::Authorized) {
+            return;
+        }
+        $this->failTransitionValidation($this->status, PaymentStatus::Captured);
     }
 
     public function markCanceled(DateTimeImmutable $currentTime): void
@@ -190,59 +190,91 @@ class Payment extends BasicAggregateRoot
         if ($this->status === PaymentStatus::Canceled) {
             return;
         }
-        $this->canTransitionToCanceled(true);
+        $this->validateTransitionToCanceled();
         $this->recordThat(new PaymentCanceled($currentTime, $this->id));
         $this->recordThat(new PaymentDidNotSucceed($currentTime, $this->id, $this->appliedTo));
     }
 
-    public function canTransitionToCanceled(bool $throw = false): bool
+    public function validateTransitionToCanceled(): void
     {
-        return $this->canTransition($this->status, PaymentStatus::Canceled, [PaymentStatus::Pending, PaymentStatus::Authorized], $throw);
+        if ($this->status === PaymentStatus::Pending) {
+            return;
+        }
+        $this->failTransitionValidation($this->status, PaymentStatus::Canceled);
     }
 
-    public function markFailed(DateTimeImmutable $currentTime): void
+    public function markFailed(DateTimeImmutable $currentTime, ?PaymentMethodResult $paymentMethodResult): void
     {
         // Idempotency guard
         if ($this->status === PaymentStatus::Failed) {
             return;
         }
-        $this->canTransitionToFailed(true);
-        $this->recordThat(new PaymentFailed($currentTime, $this->id, $this->appliedTo));
+        $this->validateTransitionToFailed();
+        $this->recordThat(new PaymentFailed($currentTime, $this->id, $this->appliedTo, $this->paymentMethodAction, $paymentMethodResult));
         $this->recordThat(new PaymentDidNotSucceed($currentTime, $this->id, $this->appliedTo));
     }
 
-    public function canTransitionToFailed(bool $throw = false): bool
+    public function validateTransitionToFailed(): void
     {
-        return $this->canTransition($this->status, PaymentStatus::Failed, [PaymentStatus::Pending, PaymentStatus::Authorized], $throw);
+        if ($this->status === PaymentStatus::Pending || $this->status === PaymentStatus::Authorized) {
+            return;
+        }
+        $this->failTransitionValidation($this->status, PaymentStatus::Failed);
     }
 
     public function markRefunded(DateTimeImmutable $currentTime, Money $remainingAmount): void
     {
         // Idempotency guard
         if ($this->status === PaymentStatus::Refunded) {
-            if (!$this->amount->equals($remainingAmount)) {
-                throw new LogicException('Payment already Refunded with different amount, existing: ' . $this->amount . ', new: ' . $remainingAmount);
-            }
             return;
         }
-        $this->canTransitionToRefunded(true);
+        $this->validateTransitionToRefunded();
         $this->recordThat(new PaymentRefunded($currentTime, $this->id, $remainingAmount));
     }
 
-    public function canTransitionToRefunded(bool $throw = false): bool
+    public function validateTransitionToRefunded(): void
     {
-        return $this->canTransition($this->status, PaymentStatus::Refunded, [PaymentStatus::Captured], $throw);
+        if ($this->status === PaymentStatus::Captured) {
+            return;
+        }
+        $this->failTransitionValidation($this->status, PaymentStatus::Refunded);
     }
 
-    /**
-     * @param array<PaymentStatus> $allowedFrom
-     */
-    private function canTransition(PaymentStatus $from, PaymentStatus $to, array $allowedFrom, bool $throw = false): bool
+    private function failTransitionValidation(PaymentStatus $from, PaymentStatus $to): void
     {
-        $canTransition = in_array($from, $allowedFrom);
-        if ($throw && !$canTransition) {
-            throw new LogicException('Cannot transition from ' . $from->value . ' to ' . $to->value . '.');
+        throw new LogicException('Cannot transition from ' . $from->value . ' to ' . $to->value . '.');
+    }
+
+    public function reserveGatewayCall(DateTimeImmutable $currentTime): ?GatewayPaymentRequest
+    {
+        if ($this->gatewayCallReserved) {
+            return null;
         }
-        return $canTransition;
+
+        if ($this->status !== PaymentStatus::Pending) {
+            throw new LogicException('Can only initiate gateway call for pending payment.');
+        }
+
+        $this->recordThat(new PaymentReservedForGatewayCall($currentTime, $this->id));
+        return new GatewayPaymentRequest(
+            $this->id,
+            $this->amount,
+            $this->gateway,
+            $this->description,
+            $this->email,
+        );
+    }
+
+    public function releaseGatewayCall(DateTimeImmutable $currentTime): void
+    {
+        if (!$this->gatewayCallReserved) {
+            return;
+        }
+        $this->recordThat(new PaymentReleasedForGatewayCall($currentTime, $this->id));
+    }
+
+    public function setRedirectURL(DateTimeImmutable $currentTime, URL $redirectUrl): void
+    {
+        $this->recordThat(new PaymentRedirectUrlSetUp($currentTime, $this->id, $redirectUrl));
     }
 }

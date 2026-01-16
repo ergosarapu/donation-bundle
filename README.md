@@ -174,10 +174,11 @@ composer update
 To run tests, use:
 ```sh
 make phpunit-unit
-make phpunit-acceptance
 export DATABASE_URL=pdo-mysql://db:db@db/db
 make migrate
+make behat
 make phpunit-integration
+make phpunit-functional
 ```
 
 ## Set up app integrated dev environment

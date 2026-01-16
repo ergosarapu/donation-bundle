@@ -20,7 +20,7 @@ class FailDonationHandler implements CommandHandlerInterface
     public function __invoke(FailDonation $command): void
     {
         $donation = $this->donationRepository->load($command->donationId);
-        $donation->fail($this->clock->now(), $command->temporalFailure);
+        $donation->fail($this->clock->now());
         $this->donationRepository->save($donation);
     }
 }

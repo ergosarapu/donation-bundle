@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\BCPayments\Application\Port;
 
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\GatewayPaymentRequest;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCredentialValue;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\URL;
 
 interface PaymentGatewayInterface
 {
-    public function createPaymentRedirectUrl(Gateway $gateway, PaymentId $paymentId, Money $amount, ShortDescription $description, ?Email $email): URL;
+    public function createCaptureRedirectUrl(GatewayPaymentRequest $gatewayPaymentRequest, bool $requestPaymentMethod): ?URL;
+
+    public function capture(GatewayPaymentRequest $gatewayPaymentRequest, PaymentCredentialValue $credentialValue): GatewayCaptureResult;
 }

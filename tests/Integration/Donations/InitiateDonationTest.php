@@ -25,7 +25,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsFailed
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetPayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetPendingPayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model\Payment;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\ValueObject\PaymentStatus;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\QueryBusInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
@@ -35,7 +35,6 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\Tests\Helpers\DonationBundleTestingKernel;
 use Patchlevel\EventSourcing\Subscription\Engine\SubscriptionEngine;
-use Psr\Clock\ClockInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\ConsoleOutput;
@@ -95,7 +94,7 @@ class InitiateDonationTest extends KernelTestCase
         $this->assertEquals(PaymentStatus::Pending, $payment->getStatus());
 
         // Mark payment as captured and expect donation to be accepted
-        $this->commandBus->dispatch(new MarkPaymentAsCaptured(PaymentId::fromString($donation->getPaymentId()), $amount));
+        $this->commandBus->dispatch(new MarkPaymentAsCaptured(PaymentId::fromString($donation->getPaymentId()), $amount, null));
 
         /** @var ?Payment $payment */
         $payment = $this->queryBus->ask(new GetPayment(PaymentId::fromString($donation->getPaymentId())));
@@ -128,7 +127,7 @@ class InitiateDonationTest extends KernelTestCase
         $this->assertEquals(DonationStatus::Pending, $donation->getStatus());
 
         // Mark payment as not succeeded and expect donation to be failed
-        $this->commandBus->dispatch(new MarkPaymentAsFailed(PaymentId::fromString($donation->getPaymentId())));
+        $this->commandBus->dispatch(new MarkPaymentAsFailed(PaymentId::fromString($donation->getPaymentId()), null));
 
         /** @var ?Payment $payment */
         $payment = $this->queryBus->ask(new GetPayment(PaymentId::fromString($donation->getPaymentId())));
@@ -173,12 +172,12 @@ class InitiateDonationTest extends KernelTestCase
 
         // Activation donation is pending
         /** @var ?Donation $activationDonation */
-        $activationDonation = $this->queryBus->ask(new GetPendingDonation(DonationId::fromString($recurringPlan->getActivationDonationId())));
+        $activationDonation = $this->queryBus->ask(new GetPendingDonation(DonationId::fromString($recurringPlan->getInitialDonationId())));
         $this->assertNotNull($activationDonation);
         $this->assertEquals(DonationStatus::Pending, $activationDonation->getStatus());
 
         // Mark payment as captured and expect donation to be accepted
-        $this->commandBus->dispatch(new MarkPaymentAsCaptured(PaymentId::fromString($activationDonation->getPaymentId()), $amount));
+        $this->commandBus->dispatch(new MarkPaymentAsCaptured(PaymentId::fromString($activationDonation->getPaymentId()), $amount, null));
 
         // Payment is captured
         /** @var ?Payment $payment */
@@ -218,7 +217,7 @@ class InitiateDonationTest extends KernelTestCase
         $this->assertNotNull($renewalDonation);
 
         // Mark payment as captured and expect donation to be accepted
-        $this->commandBus->dispatch(new MarkPaymentAsCaptured(PaymentId::fromString($renewalDonation->getPaymentId()), $amount));
+        $this->commandBus->dispatch(new MarkPaymentAsCaptured(PaymentId::fromString($renewalDonation->getPaymentId()), $amount, null));
 
         // Payment is captured
         /** @var ?Payment $payment */

@@ -6,3 +6,5 @@ composer.lock
 .vscode
 /migrations/
 /var/testdb.sqlite
+.phpunit.cache
+.coverage

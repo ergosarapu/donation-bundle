@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model;
 
 use DateTimeImmutable;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\ValueObject\PaymentStatus;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
 
 class Payment
 {

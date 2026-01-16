@@ -8,6 +8,7 @@ use DAMA\DoctrineTestBundle\DAMADoctrineTestBundle;
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
 use ErgoSarapu\DonationBundle\DonationBundle;
 use ErgoSarapu\DonationBundle\Entity\Payment;
+use ErgoSarapu\DonationBundle\Tests\Helpers\DependencyInjection\Compiler\TestingCompilerPass;
 use Patchlevel\EventSourcingBundle\PatchlevelEventSourcingBundle;
 use Payum\Bundle\PayumBundle\PayumBundle;
 use Stof\DoctrineExtensionsBundle\StofDoctrineExtensionsBundle;
@@ -118,6 +119,8 @@ class DonationBundleTestingKernel extends Kernel
                 ],
             ],
         ]);
+
+        $builder->addCompilerPass(new TestingCompilerPass());
     }
 
     public function getCacheDir(): string

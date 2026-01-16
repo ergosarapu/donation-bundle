@@ -18,7 +18,7 @@ class MarkPaymentAsFailedHandler implements CommandHandlerInterface
     public function __invoke(MarkPaymentAsFailed $command): void
     {
         $payment = $this->paymentRepository->load($command->paymentId);
-        $payment->markFailed($this->clock->now());
+        $payment->markFailed($this->clock->now(), $command->paymentMethodResult);
         $this->paymentRepository->save($payment);
     }
 }

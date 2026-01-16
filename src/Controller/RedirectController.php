@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\Controller;
 
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetDonation;
@@ -8,7 +10,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationStatus;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetPayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model\Payment;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\ValueObject\PaymentStatus;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\QueryBusInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -19,13 +21,13 @@ use Symfony\Component\HttpKernel\Exception\ServiceUnavailableHttpException;
 class RedirectController extends AbstractController
 {
     /**
-     * @param QueryBusInterface<mixed> $queryBus 
+     * @param QueryBusInterface<mixed> $queryBus
      */
     public function __construct(
-        private readonly QueryBusInterface $queryBus)
-    {
+        private readonly QueryBusInterface $queryBus
+    ) {
     }
-    
+
     public function __invoke(?string $donationId = null, ?string $recurringPlanId = null): Response
     {
         // TODO: Recurring donations
@@ -33,14 +35,15 @@ class RedirectController extends AbstractController
         //     return $this->handleRecurringDonationRedirection(RecurringDonationId::fromString($recurringDonationId));
         // }
 
-        if ($donationId !== null){
+        if ($donationId !== null) {
             return $this->handleDonationRedirection(DonationId::fromString($donationId));
         }
 
         throw new BadRequestHttpException('Id must be provided');
     }
 
-    private function handleDonationRedirection(DonationId $donationId): Response {
+    private function handleDonationRedirection(DonationId $donationId): Response
+    {
         $selfUrl = $this->generateUrl('donation_redirect', ['donationId' => $donationId->toString()]);
         /** @var ?Donation $donation  */
         $donation = $this->queryBus->ask(new GetDonation($donationId));

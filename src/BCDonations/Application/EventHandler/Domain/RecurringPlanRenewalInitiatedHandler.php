@@ -28,8 +28,7 @@ class RecurringPlanRenewalInitiatedHandler implements EventHandlerInterface
 
         $this->commandBus->dispatch(new InitiateDonation(
             $donationRequest,
-            $event->recurringPlanId,
-            $event->recurringToken,
+            $event->recurringPlanAction,
         ));
     }
 }

@@ -20,7 +20,7 @@ class MarkPaymentAsCapturedHandler implements CommandHandlerInterface
     public function __invoke(MarkPaymentAsCaptured $command): void
     {
         $payment = $this->paymentRepository->load($command->paymentId);
-        $payment->markCaptured($this->clock->now(), $command->capturedAmount);
+        $payment->markCaptured($this->clock->now(), $command->capturedAmount, $command->paymentMethodResult);
         $this->paymentRepository->save($payment);
     }
 }

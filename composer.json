@@ -65,7 +65,10 @@
         "phpstan/phpstan": "^2.1",
         "patchlevel/event-sourcing-phpunit": "^1.2",
         "friendsofphp/php-cs-fixer": "^3.89",
-        "phpstan/phpstan-symfony": "^2.0"
+        "phpstan/phpstan-symfony": "^2.0",
+        "behat/behat": "^3.29",
+        "friends-of-behat/symfony-extension": "^2.6",
+        "webmozart/assert": "^2.1"
     },
     "extra": {
         "symfony": {

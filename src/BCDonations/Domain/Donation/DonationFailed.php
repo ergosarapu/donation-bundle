@@ -18,7 +18,6 @@ final class DonationFailed extends AbstractTimestampedEvent implements EventInte
     public function __construct(
         DateTimeImmutable $occuredOn,
         public readonly DonationId $donationId,
-        public readonly bool $temporalFailure = false,
         public readonly ?RecurringPlanId $recurringPlanId = null,
     ) {
         parent::__construct($occuredOn);

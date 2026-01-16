@@ -24,8 +24,6 @@ class CompleteRecurringDonationAttemptHandler implements CommandHandlerInterface
             $this->clock->now(),
             $command->donationId,
             $command->donationStatus,
-            $command->recurringToken,
-            $command->temporalFailure
         );
         $this->recurringPlanRepository->save($recurringPlan);
     }

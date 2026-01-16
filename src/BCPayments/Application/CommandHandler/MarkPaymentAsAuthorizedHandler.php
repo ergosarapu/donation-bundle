@@ -20,7 +20,7 @@ class MarkPaymentAsAuthorizedHandler implements CommandHandlerInterface
     public function __invoke(MarkPaymentAsAuthorized $command): void
     {
         $payment = $this->paymentRepository->load($command->paymentId);
-        $payment->markAuthorized($this->clock->now(), $command->authorizedAmount);
+        $payment->markAuthorized($this->clock->now(), $command->authorizedAmount, $command->paymentMethodResult);
         $this->paymentRepository->save($payment);
     }
 }

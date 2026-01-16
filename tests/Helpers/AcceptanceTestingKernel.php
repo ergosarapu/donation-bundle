@@ -4,13 +4,19 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\Tests\Helpers;
 
-use ErgoSarapu\DonationBundle\Tests\Helpers\DependencyInjection\Compiler\FrozenClockCompilerPass;
+use FriendsOfBehat\SymfonyExtension\Bundle\FriendsOfBehatSymfonyExtensionBundle;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
 class AcceptanceTestingKernel extends DonationBundleTestingKernel
 {
+    public function registerBundles(): iterable
+    {
+        yield from parent::registerBundles();
+        yield new FriendsOfBehatSymfonyExtensionBundle();
+    }
+
     protected function configureContainer(ContainerConfigurator $container, LoaderInterface $loader, ContainerBuilder $builder): void
     {
         parent::configureContainer($container, $loader, $builder);
@@ -39,7 +45,5 @@ class AcceptanceTestingKernel extends DonationBundleTestingKernel
                 'type' => 'in_memory',
             ]
         ]);
-
-        $builder->addCompilerPass(new FrozenClockCompilerPass());
     }
 }

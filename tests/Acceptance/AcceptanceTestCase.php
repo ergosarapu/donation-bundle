@@ -27,11 +27,27 @@ abstract class AcceptanceTestCase extends KernelTestCase
         $this->commandBus = static::getContainer()->get(CommandBusInterface::class);
         $this->eventBus = static::getContainer()->get(EventBusInterface::class);
         $this->subscriptionEngine = static::getContainer()->get(SubscriptionEngine::class);
+        $this->subscriptionEngine->setup();
         $this->subscriptionEngine->boot();
+    }
+
+    public function tearDown(): void
+    {
+        $this->subscriptionEngine->remove();
+        parent::tearDown();
     }
 
     protected static function getKernelClass(): string
     {
         return AcceptanceTestingKernel::class;
     }
+
+    protected function clearTransports(): void
+    {
+        $this->transport('command')->reset();
+        $this->transport('event')->reset();
+        $this->transport('integration_command')->reset();
+        $this->transport('integration_event')->reset();
+    }
+
 }

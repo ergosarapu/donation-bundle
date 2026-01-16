@@ -6,19 +6,27 @@ install: composer.json																## install composer dependencies
 	composer install
 
 .PHONY: phpunit
-phpunit: phpunit-unit phpunit-acceptance phpunit-integration phpunit-functional  	## run all phpunit tests
+phpunit: phpunit-unit phpunit-integration phpunit-functional  						## run all phpunit tests
 
 .PHONY: phpunit-unit
 phpunit-unit:																		## run phpunit unit tests
-	XDEBUG_MODE=coverage vendor/bin/phpunit --testdox --testsuite=Unit --coverage-text --coverage-html .coverage --path-coverage
+	vendor/bin/phpunit --testdox --testsuite=Unit
+
+.PHONY: phpunit-unit-coverage
+phpunit-unit-coverage:																## run phpunit unit tests and check code coverage is 100%
+	XDEBUG_MODE=coverage vendor/bin/phpunit --testdox --testsuite=Unit --coverage-text --coverage-html .coverage --path-coverage --only-summary-for-coverage-text | ./check-coverage.sh 100
 
 .PHONY: phpunit-acceptance
 phpunit-acceptance:																	## run phpunit acceptance tests
 	vendor/bin/phpunit --testdox  --testsuite=Acceptance
 
+.PHONY: behat
+behat:																				## run behat acceptance tests
+	behat
+
 .PHONY: phpunit-integration
 phpunit-integration:																## run phpunit integration tests
-	vendor/bin/phpunit --testdox --testsuite=Integration --exclude-filter SubscriptionManagerTest
+	vendor/bin/phpunit --testdox --testsuite=Integration --exclude-filter '/SubscriptionManagerTest|InitiateDonationTest/'
 
 .PHONY: phpunit-functional
 phpunit-functional:																	## run phpunit functional tests

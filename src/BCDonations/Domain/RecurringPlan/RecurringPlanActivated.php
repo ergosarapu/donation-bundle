@@ -19,7 +19,6 @@ class RecurringPlanActivated extends AbstractTimestampedEvent implements EventIn
         public readonly RecurringPlanId $id,
         public readonly DateTimeImmutable $nextRenewalTime,
         public readonly RecurringInterval $interval,
-        public readonly ?RecurringToken $recurringToken,
     ) {
         parent::__construct($occuredOn);
         $this->status = RecurringPlanStatus::Active;

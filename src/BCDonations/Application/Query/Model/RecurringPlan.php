@@ -10,13 +10,14 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanStat
 class RecurringPlan
 {
     private string $recurringPlanId;
-    private string $activationDonationId;
+    private string $initialDonationId;
     private int $amount;
     private int $cumulativeReceivedAmount = 0;
     private string $currency;
     private string $interval;
     private RecurringPlanStatus $status;
     private ?string $donorEmail;
+    private ?string $paymentMethodId;
     private DateTimeImmutable $createdAt;
     private DateTimeImmutable $updatedAt;
 
@@ -30,14 +31,14 @@ class RecurringPlan
         $this->recurringPlanId = $recurringPlanId;
     }
 
-    public function getActivationDonationId(): string
+    public function getInitialDonationId(): string
     {
-        return $this->activationDonationId;
+        return $this->initialDonationId;
     }
 
-    public function setActivationDonationId(string $activationDonationId): void
+    public function setInitialDonationId(string $initialDonationId): void
     {
-        $this->activationDonationId = $activationDonationId;
+        $this->initialDonationId = $initialDonationId;
     }
 
 
@@ -119,5 +120,15 @@ class RecurringPlan
     public function setCumulativeReceivedAmount(int $cumulativeReceivedAmount): void
     {
         $this->cumulativeReceivedAmount = $cumulativeReceivedAmount;
+    }
+
+    public function getPaymentMethodId(): ?string
+    {
+        return $this->paymentMethodId;
+    }
+
+    public function setPaymentMethodId(?string $paymentMethodId): void
+    {
+        $this->paymentMethodId = $paymentMethodId;
     }
 }

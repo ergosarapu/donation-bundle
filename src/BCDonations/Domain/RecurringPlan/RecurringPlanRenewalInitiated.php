@@ -19,13 +19,12 @@ class RecurringPlanRenewalInitiated extends AbstractTimestampedEvent implements 
 {
     public function __construct(
         DateTimeImmutable $occuredOn,
-        public readonly RecurringPlanId $recurringPlanId,
+        public readonly RecurringPlanAction $recurringPlanAction,
         public readonly DonationId $renewalDonationId,
         public readonly CampaignId $campaignId,
         public readonly Money $amount,
         public readonly Gateway $gateway,
         public readonly DonorIdentity $donorIdentity,
-        public readonly RecurringToken $recurringToken,
     ) {
         parent::__construct($occuredOn);
     }

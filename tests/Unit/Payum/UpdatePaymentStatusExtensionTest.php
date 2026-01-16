@@ -9,8 +9,12 @@ use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsCancel
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsCaptured;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsFailed;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsRefunded;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCredentialValue;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodResult;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodUnusableReason;
 use ErgoSarapu\DonationBundle\Entity\Payment;
 use ErgoSarapu\DonationBundle\Entity\Payment\Status;
+use ErgoSarapu\DonationBundle\Payum\Request\GetPaymentMethodResult;
 use ErgoSarapu\DonationBundle\Payum\Request\GetStandingAmount;
 use ErgoSarapu\DonationBundle\Payum\UpdatePaymentStatusExtension;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
@@ -56,7 +60,8 @@ class UpdatePaymentStatusExtensionTest extends TestCase
 
     public function testStatusCaptured(): void
     {
-        $this->gatewayMock->expects($this->exactly(2))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex) {
+        $paymentMethodResult = PaymentMethodResult::usable(new PaymentCredentialValue('test-credential'));
+        $this->gatewayMock->expects($this->exactly(3))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex, $paymentMethodResult) {
             $callIndex++;
             if ($callIndex === 1 && $request instanceof GetHumanStatus) {
                 $request->markCaptured();
@@ -66,15 +71,20 @@ class UpdatePaymentStatusExtensionTest extends TestCase
                 $request->setAmount(new Money(100, new Currency('EUR')));
                 return;
             }
+            if ($callIndex === 3 && $request instanceof GetPaymentMethodResult) {
+                $request->setResult($paymentMethodResult);
+                return;
+            }
             $this->fail('Unexpected invocation');
         });
         $this->commandBusMock->expects($this->once())
             ->method('dispatch')
-            ->with($this->callback(function ($command) {
+            ->with($this->callback(function ($command) use ($paymentMethodResult) {
                 return $command instanceof MarkPaymentAsCaptured
                     && $command->paymentId->toString() === $this->payment->getNumber()
                     && $command->capturedAmount->amount() === 100
-                    && $command->capturedAmount->currency()->code() === 'EUR';
+                    && $command->capturedAmount->currency()->code() === 'EUR'
+                    && $command->paymentMethodResult === $paymentMethodResult;
             }));
         $this->extension->onPostExecute($this->context);
         $this->assertEquals(Status::Captured, $this->payment->getStatus());
@@ -82,7 +92,8 @@ class UpdatePaymentStatusExtensionTest extends TestCase
 
     public function testStatusAuthorized(): void
     {
-        $this->gatewayMock->expects($this->exactly(2))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex) {
+        $paymentMethodResult = PaymentMethodResult::usable(new PaymentCredentialValue('test-credential'));
+        $this->gatewayMock->expects($this->exactly(3))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex, $paymentMethodResult) {
             $callIndex++;
             if ($callIndex === 1 && $request instanceof GetHumanStatus) {
                 $request->markAuthorized();
@@ -92,15 +103,20 @@ class UpdatePaymentStatusExtensionTest extends TestCase
                 $request->setAmount(new Money(100, new Currency('EUR')));
                 return;
             }
+            if ($callIndex === 3 && $request instanceof GetPaymentMethodResult) {
+                $request->setResult($paymentMethodResult);
+                return;
+            }
             $this->fail('Unexpected invocation');
         });
         $this->commandBusMock->expects($this->once())
             ->method('dispatch')
-            ->with($this->callback(function ($command) {
+            ->with($this->callback(function ($command) use ($paymentMethodResult) {
                 return $command instanceof MarkPaymentAsAuthorized
                     && $command->paymentId->toString() === $this->payment->getNumber()
                     && $command->authorizedAmount->amount() === 100
-                    && $command->authorizedAmount->currency()->code() === 'EUR';
+                    && $command->authorizedAmount->currency()->code() === 'EUR'
+                    && $command->paymentMethodResult === $paymentMethodResult;
             }));
         $this->extension->onPostExecute($this->context);
         $this->assertEquals(Status::Authorized, $this->payment->getStatus());
@@ -108,7 +124,7 @@ class UpdatePaymentStatusExtensionTest extends TestCase
 
     public function testStatusCanceled(): void
     {
-        $this->gatewayMock->expects($this->exactly(2))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex) {
+        $this->gatewayMock->expects($this->exactly(3))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex) {
             $callIndex++;
             if ($callIndex === 1 && $request instanceof GetHumanStatus) {
                 $request->markCanceled();
@@ -116,6 +132,10 @@ class UpdatePaymentStatusExtensionTest extends TestCase
             }
             if ($callIndex === 2 && $request instanceof GetStandingAmount) {
                 // Don't set standing amount
+                return;
+            }
+            if ($callIndex === 3 && $request instanceof GetPaymentMethodResult) {
+                // Don't set payment method result
                 return;
             }
             $this->fail('Unexpected invocation');
@@ -132,7 +152,8 @@ class UpdatePaymentStatusExtensionTest extends TestCase
 
     public function testStatusExpired(): void
     {
-        $this->gatewayMock->expects($this->exactly(2))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex) {
+        $paymentMethodResult = PaymentMethodResult::unusable(PaymentMethodUnusableReason::RequestFailed);
+        $this->gatewayMock->expects($this->exactly(3))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex, $paymentMethodResult) {
             $callIndex++;
             if ($callIndex === 1 && $request instanceof GetHumanStatus) {
                 $request->markExpired();
@@ -142,13 +163,18 @@ class UpdatePaymentStatusExtensionTest extends TestCase
                 // Don't set standing amount
                 return;
             }
+            if ($callIndex === 3 && $request instanceof GetPaymentMethodResult) {
+                $request->setResult($paymentMethodResult);
+                return;
+            }
             $this->fail('Unexpected invocation');
         });
         $this->commandBusMock->expects($this->once())
             ->method('dispatch')
-            ->with($this->callback(function ($command) {
+            ->with($this->callback(function ($command) use ($paymentMethodResult) {
                 return $command instanceof MarkPaymentAsFailed
-                    && $command->paymentId->toString() === $this->payment->getNumber();
+                    && $command->paymentId->toString() === $this->payment->getNumber()
+                    && $command->paymentMethodResult === $paymentMethodResult;
             }));
         $this->extension->onPostExecute($this->context);
         $this->assertEquals(Status::Expired, $this->payment->getStatus());
@@ -156,7 +182,8 @@ class UpdatePaymentStatusExtensionTest extends TestCase
 
     public function testStatusFailed(): void
     {
-        $this->gatewayMock->expects($this->exactly(2))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex) {
+        $paymentMethodResult = PaymentMethodResult::unusable(PaymentMethodUnusableReason::RequestFailed);
+        $this->gatewayMock->expects($this->exactly(3))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex, $paymentMethodResult) {
             $callIndex++;
             if ($callIndex === 1 && $request instanceof GetHumanStatus) {
                 $request->markFailed();
@@ -166,13 +193,18 @@ class UpdatePaymentStatusExtensionTest extends TestCase
                 // Don't set standing amount
                 return;
             }
+            if ($callIndex === 3 && $request instanceof GetPaymentMethodResult) {
+                $request->setResult($paymentMethodResult);
+                return;
+            }
             $this->fail('Unexpected invocation');
         });
         $this->commandBusMock->expects($this->once())
             ->method('dispatch')
-            ->with($this->callback(function ($command) {
+            ->with($this->callback(function ($command) use ($paymentMethodResult) {
                 return $command instanceof MarkPaymentAsFailed
-                    && $command->paymentId->toString() === $this->payment->getNumber();
+                    && $command->paymentId->toString() === $this->payment->getNumber()
+                    && $command->paymentMethodResult === $paymentMethodResult;
             }));
         $this->extension->onPostExecute($this->context);
         $this->assertEquals(Status::Failed, $this->payment->getStatus());
@@ -180,7 +212,7 @@ class UpdatePaymentStatusExtensionTest extends TestCase
 
     public function testStatusNew(): void
     {
-        $this->gatewayMock->expects($this->exactly(2))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex) {
+        $this->gatewayMock->expects($this->exactly(3))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex) {
             $callIndex++;
             if ($callIndex === 1 && $request instanceof GetHumanStatus) {
                 $request->markNew();
@@ -188,6 +220,10 @@ class UpdatePaymentStatusExtensionTest extends TestCase
             }
             if ($callIndex === 2 && $request instanceof GetStandingAmount) {
                 // Don't set standing amount
+                return;
+            }
+            if ($callIndex === 3 && $request instanceof GetPaymentMethodResult) {
+                // Don't set payment method result
                 return;
             }
             $this->fail('Unexpected invocation');
@@ -213,7 +249,7 @@ class UpdatePaymentStatusExtensionTest extends TestCase
 
     public function testStatusPending(): void
     {
-        $this->gatewayMock->expects($this->exactly(2))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex) {
+        $this->gatewayMock->expects($this->exactly(3))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex) {
             $callIndex++;
             if ($callIndex === 1 && $request instanceof GetHumanStatus) {
                 $request->markPending();
@@ -221,6 +257,10 @@ class UpdatePaymentStatusExtensionTest extends TestCase
             }
             if ($callIndex === 2 && $request instanceof GetStandingAmount) {
                 // Don't set standing amount
+                return;
+            }
+            if ($callIndex === 3 && $request instanceof GetPaymentMethodResult) {
+                // Don't set payment method result
                 return;
             }
             $this->fail('Unexpected invocation');
@@ -231,7 +271,7 @@ class UpdatePaymentStatusExtensionTest extends TestCase
 
     public function testStatusRefunded(): void
     {
-        $this->gatewayMock->expects($this->exactly(2))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex) {
+        $this->gatewayMock->expects($this->exactly(3))->method('execute')->willReturnCallback(function (Generic $request) use (&$callIndex) {
             $callIndex++;
             if ($callIndex === 1 && $request instanceof GetHumanStatus) {
                 $request->markRefunded();
@@ -239,6 +279,10 @@ class UpdatePaymentStatusExtensionTest extends TestCase
             }
             if ($callIndex === 2 && $request instanceof GetStandingAmount) {
                 $request->setAmount(new Money(100, new Currency('EUR')));
+                return;
+            }
+            if ($callIndex === 3 && $request instanceof GetPaymentMethodResult) {
+                // Don't set payment method result
                 return;
             }
             $this->fail('Unexpected invocation');

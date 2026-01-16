@@ -11,9 +11,11 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationRequest;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationStatus;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorIdentity;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanActivateNotAllowedException;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanMarkCanceledNotAllowedException;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanCancelNotAllowedException;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanFailNotAllowedException;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanRenewalNotAllowedException;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanRenewalNotDueYetException;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodlId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use InvalidArgumentException;
@@ -28,7 +30,7 @@ class RecurringPlan extends BasicAggregateRoot
 {
     #[Id]
     private RecurringPlanId $id;
-    private ?DonationId $donationInProgress;
+    private ?DonationId $renwalDonationInProgress;
     private CampaignId $campaignId;
     private Money $amount;
     private Gateway $gateway;
@@ -36,28 +38,28 @@ class RecurringPlan extends BasicAggregateRoot
     private RecurringPlanStatus $status;
     private ?DateTimeImmutable $nextRenewalTime;
     private DonorIdentity $donorIdentity;
-    private ?RecurringToken $recurringToken;
+    private PaymentMethodlId $paymentMethodId;
 
     public static function initiate(
         DateTimeImmutable $currentTime,
-        RecurringPlanId $id,
-        DonationRequest $activationDonationRequest,
+        RecurringPlanAction $recurringPlanAction,
+        DonationRequest $initialDonationRequest,
         RecurringInterval $interval,
     ): self {
-        if ($activationDonationRequest->donorIdentity->email === null) {
+        if ($initialDonationRequest->donorIdentity->email === null) {
             throw new InvalidArgumentException('Recurring plan requires donor email');
         }
 
         $donation = new self();
         $donation->recordThat(new RecurringPlanInitiated(
             $currentTime,
-            $id,
-            $activationDonationRequest->donationId,
-            $activationDonationRequest->campaignId,
-            $activationDonationRequest->amount,
+            $recurringPlanAction,
+            $initialDonationRequest->donationId,
+            $initialDonationRequest->campaignId,
+            $initialDonationRequest->amount,
             $interval,
-            $activationDonationRequest->gateway,
-            $activationDonationRequest->donorIdentity,
+            $initialDonationRequest->gateway,
+            $initialDonationRequest->donorIdentity,
         ));
         return $donation;
     }
@@ -65,8 +67,8 @@ class RecurringPlan extends BasicAggregateRoot
     #[Apply]
     protected function applyInitiated(RecurringPlanInitiated $event): void
     {
-        $this->id = $event->id;
-        $this->donationInProgress = $event->activationDonationId;
+        $this->id = $event->recurringPlanAction->recurringPlanId;
+        $this->renwalDonationInProgress = null;
         $this->status = $event->status;
         $this->interval = $event->interval;
         $this->campaignId = $event->campaignId;
@@ -74,7 +76,7 @@ class RecurringPlan extends BasicAggregateRoot
         $this->gateway = $event->gateway;
         $this->donorIdentity = $event->donorIdentity;
         $this->nextRenewalTime = null;
-        $this->recurringToken = null;
+        $this->paymentMethodId = $event->recurringPlanAction->paymentMethodId;
     }
 
     #[Apply]
@@ -84,8 +86,7 @@ class RecurringPlan extends BasicAggregateRoot
         $this->nextRenewalTime = $event->nextRenewalTime;
         $this->status = $event->status;
         $this->interval = $event->interval;
-        $this->donationInProgress = null;
-        $this->recurringToken = $event->recurringToken;
+        $this->renwalDonationInProgress = null;
     }
 
     #[Apply]
@@ -118,12 +119,8 @@ class RecurringPlan extends BasicAggregateRoot
 
     public function initiateRenewal(DateTimeImmutable $currentTime, DonationId $renewalDonationId): void
     {
-        if ($this->donationInProgress !== null) {
-            throw new LogicException('Donation is in progress.');
-        }
-
-        if ($this->recurringToken === null) {
-            throw new RecurringPlanRenewalNotAllowedException('Missing recurring token.');
+        if ($this->renwalDonationInProgress !== null) {
+            throw new LogicException('Renewal Donation is in progress.');
         }
 
         if ($this->nextRenewalTime > $currentTime) {
@@ -133,13 +130,12 @@ class RecurringPlan extends BasicAggregateRoot
         match ($this->status) {
             RecurringPlanStatus::Active, RecurringPlanStatus::Failing => $this->recordThat(new RecurringPlanRenewalInitiated(
                 $currentTime,
-                $this->id,
+                RecurringPlanAction::forRenew($this->id, $this->paymentMethodId),
                 $renewalDonationId,
                 $this->campaignId,
                 $this->amount,
                 $this->gateway,
                 $this->donorIdentity,
-                $this->recurringToken,
             )),
             default =>  throw new RecurringPlanRenewalNotAllowedException('Only active and failing recurring donations can be renewed.'),
         };
@@ -148,7 +144,7 @@ class RecurringPlan extends BasicAggregateRoot
     #[Apply]
     protected function applyRenewalInitiated(RecurringPlanRenewalInitiated $event): void
     {
-        $this->donationInProgress = $event->renewalDonationId;
+        $this->renwalDonationInProgress = $event->renewalDonationId;
     }
 
     private function completeRenewal(DateTimeImmutable $currentTime): void
@@ -165,7 +161,7 @@ class RecurringPlan extends BasicAggregateRoot
     #[Apply]
     protected function applyRenewalCompleted(RecurringPlanRenewalCompleted $event): void
     {
-        $this->donationInProgress = null;
+        $this->renwalDonationInProgress = null;
         $this->nextRenewalTime = $event->nextRenewalTime;
     }
 
@@ -173,66 +169,54 @@ class RecurringPlan extends BasicAggregateRoot
         DateTimeImmutable $currentTime,
         DonationId $donationId,
         DonationStatus $donationStatus,
-        ?RecurringToken $recurringToken,
-        bool $temporalFailure = false,
     ): void {
 
         // Validate donation is in progress
-        if ($donationId->toString() !== $this->donationInProgress?->toString()) {
+        if ($donationId->toString() !== $this->renwalDonationInProgress?->toString()) {
             // Note that we may get here if the same donation was already processed due to retries, in this case it is safe to ignore the exception
-            throw new InvalidArgumentException('Donation id ' . $donationId->toString() . ' does not match in progress id: ' . $this->donationInProgress?->toString());
+            throw new InvalidArgumentException('Donation id ' . $donationId->toString() . ' does not match in progress id: ' . $this->renwalDonationInProgress?->toString());
         }
 
         match($donationStatus) {
-            DonationStatus::Accepted => $this->completeSuccessfulRecurringAttempt($currentTime, $recurringToken),
-            DonationStatus::Failed => $this->completeUnsuccessfulRecurringAttempt($currentTime, $temporalFailure),
+            DonationStatus::Accepted => $this->completeSuccessfulRecurringAttempt($currentTime),
+            DonationStatus::Failed => $this->completeUnsuccessfulRecurringAttempt($currentTime),
             default => throw new InvalidArgumentException('Unsupported donation status: ' . $donationStatus->value),
         };
     }
 
-    private function completeSuccessfulRecurringAttempt(DateTimeImmutable $currentTime, ?RecurringToken $recurringToken): void
+    private function completeSuccessfulRecurringAttempt(DateTimeImmutable $currentTime): void
     {
-        if ($this->status === RecurringPlanStatus::Pending) {
-            if ($recurringToken === null) {
-                // $this->markFailed($currentTime);
-                $this->recordThat(new RecurringPlanFailed($currentTime, $this->id));
-            } else {
-                $this->activate($currentTime, $recurringToken);
-            }
-            return;
-        }
         if ($this->status === RecurringPlanStatus::Active) {
             $this->completeRenewal($currentTime);
             return;
         }
         if ($this->status === RecurringPlanStatus::Failing) {
             $this->completeRenewal($currentTime);
-            $this->activate($currentTime, $this->recurringToken);
+            $this->activate($currentTime);
             return;
         }
     }
 
-    private function completeUnsuccessfulRecurringAttempt(DateTimeImmutable $currentTime, bool $temporalFailure): void
+    private function completeUnsuccessfulRecurringAttempt(DateTimeImmutable $currentTime): void
     {
-        if ($temporalFailure) {
-            // $this->markFailing($currentTime);
-            $this->recordThat(new RecurringPlanFailing($currentTime, $this->id));
-        } else {
-            $this->recordThat(new RecurringPlanFailed($currentTime, $this->id));
-            // $this->markFailed($currentTime);
+        if ($this->status === RecurringPlanStatus::Failed ||
+            $this->status === RecurringPlanStatus::Expired ||
+            $this->status === RecurringPlanStatus::Canceled) {
+            return;
         }
+        $this->recordThat(new RecurringPlanFailing($currentTime, $this->id));
     }
 
-    public function activate(DateTimeImmutable $currentTime, ?RecurringToken $recurringToken = null): void
+    public function activate(DateTimeImmutable $currentTime): void
     {
         match ($this->status) {
-            RecurringPlanStatus::Pending => $this->calculateNextRenewalTimeAndActivate($currentTime, $recurringToken),
-            RecurringPlanStatus::Failing => $this->calculateNextRenewalTimeAndActivate($currentTime, $recurringToken),
+            RecurringPlanStatus::Pending,
+            RecurringPlanStatus::Failing => $this->calculateNextRenewalTimeAndActivate($currentTime),
             default => throw new RecurringPlanActivateNotAllowedException('Activate not allowed from status: ' . $this->status->value),
         };
     }
 
-    private function calculateNextRenewalTimeAndActivate(DateTimeImmutable $now, ?RecurringToken $recurringToken): void
+    private function calculateNextRenewalTimeAndActivate(DateTimeImmutable $now): void
     {
         $this->recordThat(
             new RecurringPlanActivated(
@@ -240,7 +224,6 @@ class RecurringPlan extends BasicAggregateRoot
                 $this->id,
                 $this->calculateNextRenewalTime($now),
                 $this->interval,
-                $recurringToken,
             )
         );
     }
@@ -263,11 +246,20 @@ class RecurringPlan extends BasicAggregateRoot
     public function cancel(DateTimeImmutable $currentTime): void
     {
         match ($this->status) {
-            RecurringPlanStatus::Failing => $this->recordThat(new RecurringPlanCanceled($currentTime, $this->id)),
-            RecurringPlanStatus::Pending => $this->recordThat(new RecurringPlanCanceled($currentTime, $this->id)),
+            RecurringPlanStatus::Failing,
+            RecurringPlanStatus::Pending,
             RecurringPlanStatus::Active => $this->recordThat(new RecurringPlanCanceled($currentTime, $this->id)),
-            default => throw new RecurringPlanMarkCanceledNotAllowedException('Mark Canceled not allowed from status: ' . $this->status->value),
+            default => throw new RecurringPlanCancelNotAllowedException('Cancelling not allowed from status: ' . $this->status->value),
         };
     }
 
+    public function fail(DateTimeImmutable $currentTime): void
+    {
+        match ($this->status) {
+            RecurringPlanStatus::Failing,
+            RecurringPlanStatus::Pending,
+            RecurringPlanStatus::Active => $this->recordThat(new RecurringPlanFailed($currentTime, $this->id)),
+            default => throw new RecurringPlanFailNotAllowedException('Failing not allowed from status: ' . $this->status->value),
+        };
+    }
 }

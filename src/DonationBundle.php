@@ -301,11 +301,11 @@ class DonationBundle extends AbstractBundle
             ],
             'aggregates' => [
                 __DIR__ . '/BCDonations/Domain',
-                __DIR__ . '/BCPayments/Domain/Payment',
+                __DIR__ . '/BCPayments/Domain',
             ],
             'events' => [
                 __DIR__ . '/BCDonations/Domain',
-                __DIR__ . '/BCPayments/Domain/Payment/Event',
+                __DIR__ . '/BCPayments/Domain',
             ]
         ]);
 

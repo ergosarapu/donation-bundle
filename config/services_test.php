@@ -7,6 +7,11 @@ use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigura
 return function (ContainerConfigurator $container) {
     $services = $container->services();
 
+    // Register Behat contexts for autowiring
+    $services->set(ErgoSarapu\DonationBundle\Tests\Acceptance\Payments\Behat\PaymentsContext::class)
+        ->class(ErgoSarapu\DonationBundle\Tests\Acceptance\Payments\Behat\PaymentsContext::class)
+        ->public(true)->autowire();
+
     $services->set('donation_bundle.test.payum.action.get_standing_amount', ErgoSarapu\DonationBundle\Tests\Helpers\Payum\TestStandingAmountAction::class)
         ->public(true)
         ->tag('payum.action', ['all' => true]);

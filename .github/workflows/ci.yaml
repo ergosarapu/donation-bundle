@@ -65,14 +65,17 @@ jobs:
       - name: Check Code Style
         run: make cs-check
 
-      - name: Run Unit Tests
-        run: make phpunit-unit
+      - name: Run Unit Tests with coverage
+        run: make phpunit-unit-coverage
       
       - name: Migrate Database
         run: make migrate
 
-      - name: Run Acceptance Tests
+      - name: Run Acceptance Tests (legacy)
         run: make phpunit-acceptance
+
+      - name: Run Acceptance Tests
+        run: make behat
 
       - name: Run Integration Tests
         run: make phpunit-integration

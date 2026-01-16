@@ -22,8 +22,6 @@ class DonationFailedHandler implements EventHandlerInterface
                 $event->recurringPlanId,
                 $event->donationId,
                 $event->status,
-                null,
-                $event->temporalFailure
             ));
         }
     }

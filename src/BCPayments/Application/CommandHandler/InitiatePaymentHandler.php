@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler;
 
-use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentGatewayInterface;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRequest;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Command\InitiatePaymentIntegrationCommand;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\CommandHandlerInterface;
@@ -16,7 +16,6 @@ class InitiatePaymentHandler implements CommandHandlerInterface
 {
     public function __construct(
         private readonly PaymentRepositoryInterface $paymentRepository,
-        private readonly PaymentGatewayInterface $paymentGateway,
         private readonly ClockInterface $clock,
     ) {
     }
@@ -28,32 +27,25 @@ class InitiatePaymentHandler implements CommandHandlerInterface
             return;
         }
 
-        // Create payment gateway session (external side effect)
-        // Note: This may create duplicate gateway sessions on retry if save fails
-        // Consider using idempotency keys at gateway level for production
-        $redirectUrl = $this->paymentGateway->createPaymentRedirectUrl(
-            $command->gateway,
+        $paymentRequest = new PaymentRequest(
             $command->paymentId,
             $command->amount,
+            $command->gateway,
             $command->description,
+            $command->appliedTo,
             $command->email,
         );
 
-        // Create new aggregate
+        // Initiate payment aggregate
         $payment = Payment::initiate(
             $this->clock->now(),
-            $command->paymentId,
-            $command->amount,
-            $command->gateway,
-            $command->description,
-            $redirectUrl,
-            $command->appliedTo,
+            $paymentRequest,
+            $command->paymentMethodAction,
         );
         try {
             $this->paymentRepository->save($payment);
         } catch (AggregateAlreadyExistsException $e) {
-            // Race condition: Another process created it between has() check and save()
-            // This is acceptable - payment exists, goal achieved
+            // Idempotency: Another process created the payment concurrently
             return;
         }
     }

@@ -1,8 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * Doctrine CLI Configuration for ORM Migrations
- * 
+ *
  * This configuration uses IntegrationTestingKernel to load all required bundles and extensions,
  * including Patchlevel EventSourcing with 'merge_orm_schema' => true configuration.
  * This ensures that the EventStore schema is merged with the ORM schema for migrations.
@@ -27,6 +29,6 @@ $entityManager = $kernel->getContainer()->get('doctrine.orm.entity_manager');
 
 // Create and return the DependencyFactory for Doctrine Migrations
 return DependencyFactory::fromEntityManager(
-    new PhpFile('migrations.php'), 
+    new PhpFile('migrations.php'),
     new ExistingEntityManager($entityManager)
 );

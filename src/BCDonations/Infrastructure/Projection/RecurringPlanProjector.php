@@ -13,12 +13,13 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanActi
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanInitiated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanStatus;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodlId;
 use Patchlevel\EventSourcing\Attribute\Projector;
 use Patchlevel\EventSourcing\Attribute\Subscribe;
 use Patchlevel\EventSourcing\Attribute\Teardown;
 use Patchlevel\EventSourcing\Subscription\Subscriber\SubscriberUtil;
 
-#[Projector('recurring_donation')]
+#[Projector('recurring_plan')]
 class RecurringPlanProjector implements RecurringPlanProjectionRepositoryInterface
 {
     use SubscriberUtil;
@@ -28,9 +29,9 @@ class RecurringPlanProjector implements RecurringPlanProjectionRepositoryInterfa
     ) {
     }
 
-    public function findOne(?RecurringPlanId $id = null, ?RecurringPlanStatus $status = null): ?RecurringPlan
+    public function findOne(?RecurringPlanId $id = null, ?RecurringPlanStatus $status = null, ?PaymentMethodlId $paymentMethodId = null): ?RecurringPlan
     {
-        return $this->findOneByCriteria($this->buildCriteria($id, $status));
+        return $this->findOneByCriteria($this->buildCriteria($id, $status, $paymentMethodId));
     }
 
     private function findOneOrThrow(?RecurringPlanId $id = null, ?RecurringPlanStatus $status = null): RecurringPlan
@@ -54,7 +55,7 @@ class RecurringPlanProjector implements RecurringPlanProjectionRepositoryInterfa
     /**
      * @return array<string, string>
      */
-    private function buildCriteria(?RecurringPlanId $id = null, ?RecurringPlanStatus $status = null): array
+    private function buildCriteria(?RecurringPlanId $id = null, ?RecurringPlanStatus $status = null, ?PaymentMethodlId $paymentMethodId = null): array
     {
         $criteria = [];
         if ($id !== null) {
@@ -63,27 +64,31 @@ class RecurringPlanProjector implements RecurringPlanProjectionRepositoryInterfa
         if ($status !== null) {
             $criteria['status'] = $status->value;
         }
+        if ($paymentMethodId !== null) {
+            $criteria['paymentMethodId'] = $paymentMethodId->toString();
+        }
         return $criteria;
     }
 
     #[Subscribe(RecurringPlanInitiated::class)]
     public function onRecurringPlanInitiated(RecurringPlanInitiated $event): void
     {
-        if ($this->findOne($event->id) !== null) {
+        if ($this->findOne($event->recurringPlanAction->recurringPlanId) !== null) {
             // Idempotency guard
             return;
         }
 
         $recurringPlan = new RecurringPlan();
-        $recurringPlan->setRecurringPlanId($event->id->toString());
+        $recurringPlan->setRecurringPlanId($event->recurringPlanAction->recurringPlanId->toString());
         $recurringPlan->setCreatedAt($event->occuredOn);
         $recurringPlan->setUpdatedAt($event->occuredOn);
-        $recurringPlan->setActivationDonationId($event->activationDonationId->toString());
+        $recurringPlan->setInitialDonationId($event->activationDonationId->toString());
         $recurringPlan->setAmount($event->amount->amount());
         $recurringPlan->setCurrency($event->amount->currency()->code());
         $recurringPlan->setInterval($event->interval->toString());
         $recurringPlan->setStatus($event->status);
         $recurringPlan->setDonorEmail($event->donorIdentity->email?->toString());
+        $recurringPlan->setPaymentMethodId($event->recurringPlanAction->paymentMethodId->toString());
         $this->projectionEntityManager->persist($recurringPlan);
         $this->projectionEntityManager->flush();
     }

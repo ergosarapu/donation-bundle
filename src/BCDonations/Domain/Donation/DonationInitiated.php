@@ -6,8 +6,7 @@ namespace ErgoSarapu\DonationBundle\BCDonations\Domain\Donation;
 
 use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringToken;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanAction;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Event\EventInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\AbstractTimestampedEvent;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
@@ -29,12 +28,10 @@ final class DonationInitiated extends AbstractTimestampedEvent implements EventI
         public readonly PaymentId $paymentId,
         public readonly Gateway $gateway,
         public readonly ShortDescription $description,
-        public readonly ?RecurringPlanId $recurringPlanId,
-        public readonly ?RecurringToken $recurringToken,
+        public readonly ?RecurringPlanAction $recurringPlanAction,
         public readonly DonorIdentity $donorIdentity,
     ) {
         parent::__construct($occuredOn);
         $this->status = DonationStatus::Pending;
-
     }
 }

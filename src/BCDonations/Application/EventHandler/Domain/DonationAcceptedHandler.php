@@ -18,7 +18,11 @@ class DonationAcceptedHandler implements EventHandlerInterface
     public function __invoke(DonationAccepted $event): void
     {
         if ($event->recurringPlanId !== null) {
-            $this->commandBus->dispatch(new CompleteRecurringDonationAttempt($event->recurringPlanId, $event->donationId, $event->status, $event->recurringToken));
+            $this->commandBus->dispatch(new CompleteRecurringDonationAttempt(
+                $event->recurringPlanId,
+                $event->donationId,
+                $event->status
+            ));
         }
 
     }

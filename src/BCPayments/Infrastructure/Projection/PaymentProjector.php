@@ -7,14 +7,14 @@ namespace ErgoSarapu\DonationBundle\BCPayments\Infrastructure\Projection;
 use Doctrine\ORM\EntityManagerInterface;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model\Payment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\Port\PaymentProjectionRepositoryInterface;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentAuthorized;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentCanceled;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentCaptured;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentFailed;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentInitiated;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentPending;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Event\PaymentRefunded;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\ValueObject\PaymentStatus;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentAuthorized;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCanceled;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCaptured;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentFailed;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentInitiated;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRedirectUrlSetUp;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRefunded;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use Patchlevel\EventSourcing\Attribute\Projector;
 use Patchlevel\EventSourcing\Attribute\Subscribe;
@@ -83,18 +83,17 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         $payment->setAmount($event->amount->amount());
         $payment->setCurrency($event->amount->currency()->code());
         $payment->setStatus($event->status);
-        $payment->setRedirectUrl($event->redirectUrl->value());
         $this->projectionEntityManager->persist($payment);
         $this->projectionEntityManager->flush();
     }
 
-    #[Subscribe(PaymentPending::class)]
-    public function onPaymentPending(
-        PaymentPending $event
+    #[Subscribe(PaymentRedirectUrlSetUp::class)]
+    public function onPaymentRedirectURLSetUp(
+        PaymentRedirectUrlSetUp $event
     ): void {
         $payment = $this->findOneOrThrow($event->paymentId);
         $payment->setUpdatedAt($event->occuredOn);
-        $payment->setStatus($event->status);
+        $payment->setRedirectUrl($event->redirectUrl->value());
         $this->projectionEntityManager->flush();
     }
 

@@ -21,7 +21,7 @@ class RecurringPlanInitiated extends AbstractTimestampedEvent implements EventIn
 
     public function __construct(
         DateTimeImmutable $occuredOn,
-        public readonly RecurringPlanId $id,
+        public readonly RecurringPlanAction $recurringPlanAction,
         public readonly DonationId $activationDonationId,
         public readonly CampaignId $campaignId,
         public readonly Money $amount,
