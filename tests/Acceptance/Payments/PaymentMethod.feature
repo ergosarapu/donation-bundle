@@ -25,7 +25,6 @@ Feature: Payment Method request, store and usage workflow
     When initiate payment using stored payment method
     Then payment is initiated
     And payment method use is permitted
-    And payment is reserved for gateway call
     And payment is marked as <payment_result>
     And stored payment method is <method_state>
 

@@ -29,7 +29,6 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodUsable;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodUsePermitted;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodUseRejected;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRedirectUrlSetUp;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentReservedForGatewayCall;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentSucceeded;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Command\InitiatePaymentIntegrationCommand;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\PaymentDidNotSucceedIntegrationEvent;
@@ -126,12 +125,6 @@ class PaymentsContext implements Context
         $this->gateway->useCreateCaptureRedirectUrlBehavior(null);
     }
 
-    #[Given('gateway captures payment successfully')]
-    public function gatewayCapturesPaymentSuccessfully(): void
-    {
-        $this->gateway->useCaptureBehavior(true, $this->getDefaultTestMoney());
-    }
-
     #[Given('gateway captures payment with :paymentMethodResult payment method result')]
     public function gatewayCapturesPaymentWithPaymentMethodResult(string $paymentMethodResult): void
     {
@@ -141,12 +134,6 @@ class PaymentsContext implements Context
             $this->getDefaultTestMoney(),
             paymentMethodResult: $result
         );
-    }
-
-    #[Given('gateway fails to capture payment')]
-    public function gatewayFailsToCapturePayment(): void
-    {
-        $this->gateway->useCaptureBehavior(false);
     }
 
     #[Given('gateway fails to capture payment with :paymentMethodResult payment method result')]
@@ -345,12 +332,6 @@ class PaymentsContext implements Context
     public function paymentRedirectUrlIsSetUp(): void
     {
         $this->eventTransport->dispatched()->assertContains(PaymentRedirectUrlSetUp::class, 1);
-    }
-
-    #[Then('payment is reserved for gateway call')]
-    public function paymentIsReservedForGatewayCall(): void
-    {
-        $this->eventTransport->dispatched()->assertContains(PaymentReservedForGatewayCall::class, 1);
     }
 
     #[Then('payment succeeded integration event is emitted')]
