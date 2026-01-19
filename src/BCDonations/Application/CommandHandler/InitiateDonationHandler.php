@@ -21,6 +21,11 @@ class InitiateDonationHandler implements CommandHandlerInterface
 
     public function __invoke(InitiateDonation $command): void
     {
+        // Idempotency: Check if donation already initiated
+        if ($this->donationRepository->has($command->donationRequest->donationId)) {
+            return;
+        }
+
         $donation = Donation::initiate(
             $this->clock->now(),
             $command->donationRequest,
@@ -29,7 +34,7 @@ class InitiateDonationHandler implements CommandHandlerInterface
         try {
             $this->donationRepository->save($donation);
         } catch (AggregateAlreadyExistsException $e) {
-            // Idempotency: donation already exists, do nothing
+            // Idempotency: Another process created the donation concurrently
             return;
         }
     }

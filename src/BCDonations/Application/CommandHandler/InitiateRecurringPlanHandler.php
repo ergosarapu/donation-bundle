@@ -22,6 +22,11 @@ class InitiateRecurringPlanHandler implements CommandHandlerInterface
 
     public function __invoke(InitiateRecurringPlan $command): void
     {
+        // Idempotency: Check if recurring plan already initiated
+        if ($this->recurringPlanRepository->has($command->recurringPlanId)) {
+            return;
+        }
+
         $recurringPlan = RecurringPlan::initiate(
             $this->clock->now(),
             RecurringPlanAction::forInit(),
@@ -31,7 +36,7 @@ class InitiateRecurringPlanHandler implements CommandHandlerInterface
         try {
             $this->recurringPlanRepository->save($recurringPlan);
         } catch (AggregateAlreadyExistsException $e) {
-            // Idempotency: recurring donation already exists, do nothing
+            // Idempotency: Another process created the recurring plan concurrently
             return;
         }
     }

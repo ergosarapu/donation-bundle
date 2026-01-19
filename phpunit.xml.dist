@@ -30,6 +30,7 @@
   <source>
     <include>
       <directory>./src/BCDonations/Domain</directory>
+      <directory>./src/BCDonations/Application/CommandHandler</directory>
       <directory>./src/BCPayments/Domain</directory>
       <directory>./src/BCPayments/Application/CommandHandler</directory>
     </include>
