@@ -6,7 +6,7 @@ namespace ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event;
 
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 
-class PaymentMethodUnusableIntegrationEvent implements IntegrationEventInterface
+class UnusablePaymentMethodCreatedIntegrationEvent implements IntegrationEventInterface
 {
     public function __construct(
         public readonly PaymentMethodId $paymentMethodId,

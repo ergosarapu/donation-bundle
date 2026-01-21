@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCDonations\Application\Query;
 
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\Query;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodlId;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 
 class GetRecurringPlanByPaymentMethod implements Query
 {
-    public function __construct(public readonly PaymentMethodlId $paymentMethodId)
+    public function __construct(public readonly PaymentMethodId $paymentMethodId)
     {
     }
 }

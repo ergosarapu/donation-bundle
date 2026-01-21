@@ -14,6 +14,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationInitiated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationRequest;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorIdentity;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanAction;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
@@ -39,6 +40,8 @@ class DonationTest extends AggregateRootTestCase
 
     private DonorIdentity $donorIdentity;
 
+    private RecurringPlanAction $recurringPlanAction;
+
     protected function aggregateClass(): string
     {
         return Donation::class;
@@ -53,12 +56,11 @@ class DonationTest extends AggregateRootTestCase
         $this->donorIdentity = new DonorIdentity($this->email);
         $this->gateway = new Gateway('test');
         $this->donationId = DonationId::generate();
+        $this->recurringPlanAction = RecurringPlanAction::forInit(RecurringPlanId::generate());
     }
 
     public function testInitiate(): void
     {
-        $recurringPlanAction = RecurringPlanAction::forInit();
-
         $donationRequest = new DonationRequest(
             $this->donationId,
             $this->campaignId,
@@ -70,7 +72,7 @@ class DonationTest extends AggregateRootTestCase
         $this->when(fn () => Donation::initiate(
             $this->now,
             $donationRequest,
-            $recurringPlanAction,
+            $this->recurringPlanAction,
         ))->then(
             new DonationInitiated(
                 $this->now,
@@ -80,7 +82,7 @@ class DonationTest extends AggregateRootTestCase
                 $donationRequest->paymentId,
                 $this->gateway,
                 new ShortDescription('TODO: Add description'),
-                $recurringPlanAction,
+                $this->recurringPlanAction,
                 $this->donorIdentity,
             )
         );
@@ -88,8 +90,6 @@ class DonationTest extends AggregateRootTestCase
 
     public function testAccept(): void
     {
-        $recurringPlanAction = RecurringPlanAction::forInit();
-
         $donationRequest = new DonationRequest(
             $this->donationId,
             $this->campaignId,
@@ -107,7 +107,7 @@ class DonationTest extends AggregateRootTestCase
                 $donationRequest->paymentId,
                 $this->gateway,
                 new ShortDescription('TODO: Add description'),
-                $recurringPlanAction,
+                $this->recurringPlanAction,
                 $this->donorIdentity,
             )
         )
@@ -120,7 +120,7 @@ class DonationTest extends AggregateRootTestCase
                 $this->now,
                 $this->donationId,
                 $this->amount,
-                $recurringPlanAction->recurringPlanId,
+                $this->recurringPlanAction->recurringPlanId,
             )
         );
     }
@@ -161,8 +161,6 @@ class DonationTest extends AggregateRootTestCase
 
     public function testFail(): void
     {
-        $recurringPlanAction = RecurringPlanAction::forInit();
-
         $donationRequest = new DonationRequest(
             $this->donationId,
             $this->campaignId,
@@ -180,7 +178,7 @@ class DonationTest extends AggregateRootTestCase
                 $donationRequest->paymentId,
                 $this->gateway,
                 new ShortDescription('TODO: Add description'),
-                $recurringPlanAction,
+                $this->recurringPlanAction,
                 new DonorIdentity($this->email),
             )
         )
@@ -189,7 +187,7 @@ class DonationTest extends AggregateRootTestCase
             new DonationFailed(
                 $this->now,
                 $this->donationId,
-                $recurringPlanAction->recurringPlanId,
+                $this->recurringPlanAction->recurringPlanId,
             )
         );
     }

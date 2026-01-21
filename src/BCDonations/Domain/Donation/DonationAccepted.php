@@ -6,13 +6,13 @@ namespace ErgoSarapu\DonationBundle\BCDonations\Domain\Donation;
 
 use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
-use ErgoSarapu\DonationBundle\SharedApplication\Port\Event\EventInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\AbstractTimestampedEvent;
+use ErgoSarapu\DonationBundle\SharedKernel\Event\DomainEventInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use Patchlevel\EventSourcing\Attribute\Event;
 
 #[Event(name: 'donation.accepted')]
-final class DonationAccepted extends AbstractTimestampedEvent implements EventInterface
+final class DonationAccepted extends AbstractTimestampedEvent implements DomainEventInterface
 {
     public readonly DonationStatus $status;
 

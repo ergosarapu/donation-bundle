@@ -28,7 +28,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanInitiated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanRenewalCompleted;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanRenewalInitiated;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodlId;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
@@ -58,7 +58,7 @@ class RecurringPlanTest extends AggregateRootTestCase
     {
         parent::setUp();
         $this->now = new DateTimeImmutable('2024-02-01 00:00:00');
-        $this->recurringPlanActionForInit = RecurringPlanAction::forInit();
+        $this->recurringPlanActionForInit = RecurringPlanAction::forInit(RecurringPlanId::generate());
         $this->interval = new RecurringInterval(RecurringInterval::Monthly);
         $this->campaignId = CampaignId::generate();
         $this->amount = new Money(100, new Currency('EUR'));
@@ -110,7 +110,7 @@ class RecurringPlanTest extends AggregateRootTestCase
         );
         $this->when(fn () => RecurringPlan::initiate(
             $this->now,
-            RecurringPlanAction::forInit(),
+            $this->recurringPlanActionForInit,
             $donationRequest,
             $this->interval,
         ))->expectsException(InvalidArgumentException::class)
@@ -135,7 +135,7 @@ class RecurringPlanTest extends AggregateRootTestCase
             ),
             new RecurringPlanRenewalInitiated(
                 $this->now,
-                RecurringPlanAction::forRenew($this->recurringPlanActionForInit->recurringPlanId, PaymentMethodlId::generate()),
+                RecurringPlanAction::forRenew($this->recurringPlanActionForInit->recurringPlanId, PaymentMethodId::generate()),
                 DonationId::fromString($renewalDonationId),
                 $this->campaignId,
                 $this->amount,
@@ -178,7 +178,7 @@ class RecurringPlanTest extends AggregateRootTestCase
             ),
             new RecurringPlanRenewalInitiated(
                 $now,
-                RecurringPlanAction::forRenew($this->recurringPlanActionForInit->recurringPlanId, PaymentMethodlId::generate()),
+                RecurringPlanAction::forRenew($this->recurringPlanActionForInit->recurringPlanId, PaymentMethodId::generate()),
                 DonationId::fromString($renewalDonationId),
                 $this->campaignId,
                 $this->amount,
@@ -326,7 +326,7 @@ class RecurringPlanTest extends AggregateRootTestCase
             ),
             new RecurringPlanRenewalInitiated(
                 $this->now,
-                RecurringPlanAction::forRenew($this->recurringPlanActionForInit->recurringPlanId, PaymentMethodlId::generate()),
+                RecurringPlanAction::forRenew($this->recurringPlanActionForInit->recurringPlanId, PaymentMethodId::generate()),
                 DonationId::fromString($renewalDonationId),
                 $this->campaignId,
                 $this->amount,
@@ -360,7 +360,7 @@ class RecurringPlanTest extends AggregateRootTestCase
             ),
             new RecurringPlanRenewalInitiated(
                 $now,
-                RecurringPlanAction::forRenew($this->recurringPlanActionForInit->recurringPlanId, PaymentMethodlId::generate()),
+                RecurringPlanAction::forRenew($this->recurringPlanActionForInit->recurringPlanId, PaymentMethodId::generate()),
                 DonationId::fromString($renewalDonationId),
                 $this->campaignId,
                 $this->amount,
@@ -735,7 +735,7 @@ class RecurringPlanTest extends AggregateRootTestCase
             ),
             new RecurringPlanRenewalInitiated(
                 $this->now,
-                RecurringPlanAction::forRenew($this->recurringPlanActionForInit->recurringPlanId, PaymentMethodlId::generate()),
+                RecurringPlanAction::forRenew($this->recurringPlanActionForInit->recurringPlanId, PaymentMethodId::generate()),
                 DonationId::fromString($renewalDonationId),
                 $this->campaignId,
                 $this->amount,
@@ -784,7 +784,7 @@ class RecurringPlanTest extends AggregateRootTestCase
             ),
             new RecurringPlanRenewalInitiated(
                 $this->now,
-                RecurringPlanAction::forRenew($this->recurringPlanActionForInit->recurringPlanId, PaymentMethodlId::generate()),
+                RecurringPlanAction::forRenew($this->recurringPlanActionForInit->recurringPlanId, PaymentMethodId::generate()),
                 DonationId::generate(),
                 $this->campaignId,
                 $this->amount,
@@ -813,7 +813,7 @@ class RecurringPlanTest extends AggregateRootTestCase
             ),
             new RecurringPlanRenewalInitiated(
                 $this->now,
-                RecurringPlanAction::forRenew($this->recurringPlanActionForInit->recurringPlanId, PaymentMethodlId::generate()),
+                RecurringPlanAction::forRenew($this->recurringPlanActionForInit->recurringPlanId, PaymentMethodId::generate()),
                 DonationId::fromString($renewalDonationId),
                 $this->campaignId,
                 $this->amount,

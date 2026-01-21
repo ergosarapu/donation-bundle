@@ -13,7 +13,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanActi
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanInitiated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanStatus;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodlId;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use Patchlevel\EventSourcing\Attribute\Projector;
 use Patchlevel\EventSourcing\Attribute\Subscribe;
 use Patchlevel\EventSourcing\Attribute\Teardown;
@@ -29,7 +29,7 @@ class RecurringPlanProjector implements RecurringPlanProjectionRepositoryInterfa
     ) {
     }
 
-    public function findOne(?RecurringPlanId $id = null, ?RecurringPlanStatus $status = null, ?PaymentMethodlId $paymentMethodId = null): ?RecurringPlan
+    public function findOne(?RecurringPlanId $id = null, ?RecurringPlanStatus $status = null, ?PaymentMethodId $paymentMethodId = null): ?RecurringPlan
     {
         return $this->findOneByCriteria($this->buildCriteria($id, $status, $paymentMethodId));
     }
@@ -55,7 +55,7 @@ class RecurringPlanProjector implements RecurringPlanProjectionRepositoryInterfa
     /**
      * @return array<string, string>
      */
-    private function buildCriteria(?RecurringPlanId $id = null, ?RecurringPlanStatus $status = null, ?PaymentMethodlId $paymentMethodId = null): array
+    private function buildCriteria(?RecurringPlanId $id = null, ?RecurringPlanStatus $status = null, ?PaymentMethodId $paymentMethodId = null): array
     {
         $criteria = [];
         if ($id !== null) {
@@ -82,7 +82,7 @@ class RecurringPlanProjector implements RecurringPlanProjectionRepositoryInterfa
         $recurringPlan->setRecurringPlanId($event->recurringPlanAction->recurringPlanId->toString());
         $recurringPlan->setCreatedAt($event->occuredOn);
         $recurringPlan->setUpdatedAt($event->occuredOn);
-        $recurringPlan->setInitialDonationId($event->activationDonationId->toString());
+        $recurringPlan->setInitialDonationId($event->initialDonationId->toString());
         $recurringPlan->setAmount($event->amount->amount());
         $recurringPlan->setCurrency($event->amount->currency()->code());
         $recurringPlan->setInterval($event->interval->toString());

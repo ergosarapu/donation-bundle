@@ -6,10 +6,11 @@ namespace ErgoSarapu\DonationBundle\BCPayments\Domain\Payment;
 
 use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\AbstractTimestampedEvent;
+use ErgoSarapu\DonationBundle\SharedKernel\Event\DomainEventInterface;
 use Patchlevel\EventSourcing\Attribute\Event;
 
-#[Event(name: 'payment.method_usable')]
-class PaymentMethodUsable extends AbstractTimestampedEvent
+#[Event(name: 'payment_method.created_usable')]
+class UsablePaymentMethodCreated extends AbstractTimestampedEvent implements DomainEventInterface
 {
     public function __construct(
         DateTimeImmutable $occuredOn,

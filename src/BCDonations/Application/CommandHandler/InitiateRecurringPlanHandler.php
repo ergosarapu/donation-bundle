@@ -29,7 +29,7 @@ class InitiateRecurringPlanHandler implements CommandHandlerInterface
 
         $recurringPlan = RecurringPlan::initiate(
             $this->clock->now(),
-            RecurringPlanAction::forInit(),
+            RecurringPlanAction::forInit($command->recurringPlanId),
             $command->donationRequest,
             $command->interval,
         );

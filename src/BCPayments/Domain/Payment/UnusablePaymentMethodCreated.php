@@ -9,13 +9,13 @@ use ErgoSarapu\DonationBundle\SharedKernel\Event\AbstractTimestampedEvent;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\DomainEventInterface;
 use Patchlevel\EventSourcing\Attribute\Event;
 
-#[Event(name: 'payment.method_use_permitted')]
-class PaymentMethodUsePermitted extends AbstractTimestampedEvent implements DomainEventInterface
+#[Event(name: 'payment_method.created_unusable')]
+class UnusablePaymentMethodCreated extends AbstractTimestampedEvent implements DomainEventInterface
 {
     public function __construct(
         DateTimeImmutable $occuredOn,
         public readonly PaymentMethodAction $paymentMethodAction,
-        public readonly PaymentCredentialValue $credentialValue,
+        public readonly PaymentMethodUnusableReason $reason,
     ) {
         parent::__construct($occuredOn);
     }

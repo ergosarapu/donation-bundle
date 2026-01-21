@@ -13,7 +13,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethod;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodAction;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodlId;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
@@ -46,7 +46,7 @@ class UsePaymentMethodHandlerTest extends TestCase
         );
 
         $methodAction = PaymentMethodAction::forUse(
-            PaymentMethodlId::generate(),
+            PaymentMethodId::generate(),
             PaymentId::generate()
         );
         $this->command = new UsePaymentMethod($methodAction);

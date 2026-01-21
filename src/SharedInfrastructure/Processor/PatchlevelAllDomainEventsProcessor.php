@@ -12,8 +12,9 @@ use Patchlevel\EventSourcing\Message\Message;
 #[Processor('all_events')]
 class PatchlevelAllDomainEventsProcessor
 {
-    public function __construct(private readonly EventBusInterface $eventBus)
-    {
+    public function __construct(
+        private readonly EventBusInterface $eventBus,
+    ) {
     }
 
     #[Subscribe('*')]

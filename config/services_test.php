@@ -11,6 +11,10 @@ return function (ContainerConfigurator $container) {
     $services->set(ErgoSarapu\DonationBundle\Tests\Acceptance\Payments\Behat\PaymentsContext::class)
         ->class(ErgoSarapu\DonationBundle\Tests\Acceptance\Payments\Behat\PaymentsContext::class)
         ->public(true)->autowire();
+    $services->set(ErgoSarapu\DonationBundle\Tests\Acceptance\Donations\Behat\DonationsContext::class)
+        ->class(ErgoSarapu\DonationBundle\Tests\Acceptance\Donations\Behat\DonationsContext::class)
+        ->public(true)->autowire();
+
 
     $services->set('donation_bundle.test.payum.action.get_standing_amount', ErgoSarapu\DonationBundle\Tests\Helpers\Payum\TestStandingAmountAction::class)
         ->public(true)

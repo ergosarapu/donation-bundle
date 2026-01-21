@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\BCPayments\Application\EventHandler\Domain;
 
-use ErgoSarapu\DonationBundle\BCPayments\Application\Command\StorePaymentMethod;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Command\CreatePaymentMethod;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\UpdatePaymentMethod;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCaptured;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodAction;
@@ -39,7 +39,7 @@ class PaymentCapturedHandler implements EventHandlerInterface
         if ($paymentMethodResult === null) {
             $paymentMethodResult = PaymentMethodResult::unusable(PaymentMethodUnusableReason::RequestFailed);
         }
-        $this->commandBus->dispatch(new StorePaymentMethod(
+        $this->commandBus->dispatch(new CreatePaymentMethod(
             $action,
             $paymentMethodResult,
         ));

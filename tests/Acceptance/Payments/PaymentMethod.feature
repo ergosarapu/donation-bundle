@@ -8,8 +8,9 @@ Feature: Payment Method request, store and usage workflow
     When initiate payment with request to store payment method
     And mark payment as <payment_state> with <method_result> payment method result
     Then payment is marked as <payment_state>
-    And <method_state> payment method is stored
-    
+    And <method_state> payment method is created
+    And <method_state> payment method created integration event is emitted
+
     Examples:
       | payment_state  | method_result | method_state |
       | captured       | usable        | usable       |
@@ -27,15 +28,16 @@ Feature: Payment Method request, store and usage workflow
     And payment method use is permitted
     And payment is marked as <payment_result>
     And stored payment method is <method_state>
+    And <method_integration_event> payment method integration event is emitted 
 
     Examples:
-      | gateway_result   | method_result | method_state | payment_result |
-      | captures         | no            | usable       | captured       |
-      | captures         | usable        | usable       | captured       |
-      | captures         | unusable      | unusable     | captured       |
-      | fails to capture | no            | usable       | failed         |
-      | fails to capture | usable        | usable       | failed         |
-      | fails to capture | unusable      | unusable     | failed         |
+      | gateway_result   | method_result | method_state | payment_result | method_integration_event |
+      | captures         | no            | usable       | captured       | no                       |
+      | captures         | usable        | usable       | captured       | no                       |
+      | captures         | unusable      | unusable     | captured       | unusable                 |
+      | fails to capture | no            | usable       | failed         | no                       |
+      | fails to capture | usable        | usable       | failed         | no                       |
+      | fails to capture | unusable      | unusable     | failed         | unusable                 |
 
   Scenario: Payment capture fails with unusable stored payment method
     Given unusable payment method exists

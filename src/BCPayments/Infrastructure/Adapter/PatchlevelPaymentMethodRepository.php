@@ -7,7 +7,7 @@ namespace ErgoSarapu\DonationBundle\BCPayments\Infrastructure\Adapter;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentMethodRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethod;
 use ErgoSarapu\DonationBundle\SharedInfrastructure\Repository\PatchlevelRepositoryWrapperTrait;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodlId;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 
 final class PatchlevelPaymentMethodRepository implements PaymentMethodRepositoryInterface
 {
@@ -18,14 +18,14 @@ final class PatchlevelPaymentMethodRepository implements PaymentMethodRepository
         $this->saveAggregate($paymentMethod);
     }
 
-    public function load(PaymentMethodlId $paymentMethodId): PaymentMethod
+    public function load(PaymentMethodId $paymentMethodId): PaymentMethod
     {
         /** @var PaymentMethod $paymentMethod */
         $paymentMethod = $this->loadAggregate($paymentMethodId);
         return $paymentMethod;
     }
 
-    public function has(PaymentMethodlId $paymentMethodId): bool
+    public function has(PaymentMethodId $paymentMethodId): bool
     {
         return $this->hasAggregate($paymentMethodId);
     }

@@ -9,11 +9,11 @@ use Behat\Hook\BeforeScenario;
 use Behat\Step\Given;
 use Behat\Step\Then;
 use Behat\Step\When;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Command\CreatePaymentMethod;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsAuthorized;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsCanceled;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsCaptured;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsFailed;
-use ErgoSarapu\DonationBundle\BCPayments\Application\Command\StorePaymentMethod;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentAuthorized;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCanceled;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCaptured;
@@ -25,17 +25,22 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodAction;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodResult;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodUnusable;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodUnusableReason;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodUsable;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodUsePermitted;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodUseRejected;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRedirectUrlSetUp;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentSucceeded;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\UnusablePaymentMethodCreated;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\UsablePaymentMethodCreated;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Command\InitiatePaymentIntegrationCommand;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\PaymentDidNotSucceedIntegrationEvent;
+use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\PaymentMethodUnusableIntegrationEvent;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\PaymentSucceededIntegrationEvent;
+use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\UnusablePaymentMethodCreatedIntegrationEvent;
+use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\UsablePaymentMethodCreatedIntegrationEvent;
+use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodlId;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
@@ -52,7 +57,7 @@ use Zenstruck\Messenger\Test\Transport\TestTransport;
 class PaymentsContext implements Context
 {
     private PaymentId $lastPaymentId;
-    private PaymentMethodlId $lastPaymentMethodId;
+    private PaymentMethodId $lastPaymentMethodId;
 
     public function __construct(
         #[Autowire(service: 'messenger.transport.command')]
@@ -65,6 +70,7 @@ class PaymentsContext implements Context
         private readonly TestTransport $integrationEventTransport,
         private readonly SubscriptionEngine $subscriptionEngine,
         private readonly FakeGateway $gateway,
+        private readonly CommandBusInterface $commandBus,
     ) {
         $this->subscriptionEngine->setup();
         $this->subscriptionEngine->boot();
@@ -79,9 +85,9 @@ class PaymentsContext implements Context
         $this->integrationCommandTransport->reset();
     }
 
-    private function sendInitiatePaymentCommand(InitiatePaymentIntegrationCommand $command): void
+    private function dispatchInitiatePaymentCommand(InitiatePaymentIntegrationCommand $command): void
     {
-        $this->integrationCommandTransport->send($command);
+        $this->commandBus->dispatch($command);
         $this->integrationCommandTransport->processOrFail();
     }
 
@@ -146,45 +152,45 @@ class PaymentsContext implements Context
     #[Given('usable payment method exists')]
     public function usablePaymentMethodExists(): void
     {
-        $this->lastPaymentMethodId = PaymentMethodlId::generate();
+        $this->lastPaymentMethodId = PaymentMethodId::generate();
         $action = PaymentMethodAction::forRequest(
             $this->lastPaymentMethodId,
             PaymentId::generate(),
         );
-        $this->commandTransport->send(new StorePaymentMethod(
+        $this->commandBus->dispatch(new CreatePaymentMethod(
             $action,
             PaymentMethodResult::usable(new PaymentCredentialValue('credential-value')),
         ));
-        $this->usablePaymentMethodIsStored();
+        $this->usablePaymentMethodIsCreated();
     }
 
     #[Given('unusable payment method exists')]
     public function unusablePaymentMethodExists(): void
     {
-        $this->lastPaymentMethodId = PaymentMethodlId::generate();
+        $this->lastPaymentMethodId = PaymentMethodId::generate();
         $action = PaymentMethodAction::forRequest(
             $this->lastPaymentMethodId,
             PaymentId::generate(),
         );
-        $this->commandTransport->send(new StorePaymentMethod(
+        $this->commandBus->dispatch(new CreatePaymentMethod(
             $action,
             PaymentMethodResult::unusable(PaymentMethodUnusableReason::Expired),
         ));
-        $this->unusablePaymentMethodIsStored();
+        $this->unusablePaymentMethodIsCreated();
     }
 
     #[Given('payment method does not exist')]
     public function paymentMethodDoesNotExist(): void
     {
         // Generate payment method ID that is not stored
-        $this->lastPaymentMethodId = PaymentMethodlId::generate();
+        $this->lastPaymentMethodId = PaymentMethodId::generate();
         // Store a different payment method to ensure the specified one does not exist,
         // allowing to test the non-existence scenario.
         $action = PaymentMethodAction::forRequest(
-            PaymentMethodlId::generate(),
+            PaymentMethodId::generate(),
             PaymentId::generate(),
         );
-        $this->commandTransport->send(new StorePaymentMethod(
+        $this->commandBus->dispatch(new CreatePaymentMethod(
             $action,
             PaymentMethodResult::usable(new PaymentCredentialValue('credential-value')),
         ));
@@ -202,15 +208,15 @@ class PaymentsContext implements Context
     public function initiatePayment(): void
     {
         $this->lastPaymentId = PaymentId::generate();
-        $this->sendInitiatePaymentCommand($this->createInitiatePaymentCommand());
+        $this->dispatchInitiatePaymentCommand($this->createInitiatePaymentCommand());
     }
 
     #[When('initiate payment with request to store payment method')]
     public function initiatePaymentWithRequestToStorePaymentMethod(): void
     {
         $this->lastPaymentId = PaymentId::generate();
-        $action = PaymentMethodAction::forRequest(PaymentMethodlId::generate(), $this->lastPaymentId);
-        $this->sendInitiatePaymentCommand($this->createInitiatePaymentCommand($action));
+        $action = PaymentMethodAction::forRequest(PaymentMethodId::generate(), $this->lastPaymentId);
+        $this->dispatchInitiatePaymentCommand($this->createInitiatePaymentCommand($action));
     }
 
     #[When('initiate payment using stored payment method')]
@@ -218,13 +224,13 @@ class PaymentsContext implements Context
     {
         $this->lastPaymentId = PaymentId::generate();
         $action = PaymentMethodAction::forUse($this->lastPaymentMethodId, $this->lastPaymentId);
-        $this->sendInitiatePaymentCommand($this->createInitiatePaymentCommand($action));
+        $this->dispatchInitiatePaymentCommand($this->createInitiatePaymentCommand($action));
     }
 
     #[When('mark payment as authorized')]
     public function markPaymentAsAuthorized(): void
     {
-        $this->commandTransport->send(
+        $this->commandBus->dispatch(
             new MarkPaymentAsAuthorized(
                 $this->lastPaymentId,
                 $this->getDefaultTestMoney(),
@@ -236,7 +242,7 @@ class PaymentsContext implements Context
     #[When('mark payment as captured')]
     public function markPaymentAsCaptured(): void
     {
-        $this->commandTransport->send(
+        $this->commandBus->dispatch(
             new MarkPaymentAsCaptured(
                 $this->lastPaymentId,
                 $this->getDefaultTestMoney(),
@@ -249,7 +255,7 @@ class PaymentsContext implements Context
     public function markPaymentAsCapturedWithPaymentMethodResult(?string $paymentMethodResult = null): void
     {
         $result = $paymentMethodResult ? $this->parsePaymentMethodResult($paymentMethodResult) : null;
-        $this->commandTransport->send(
+        $this->commandBus->dispatch(
             new MarkPaymentAsCaptured(
                 $this->lastPaymentId,
                 $this->getDefaultTestMoney(),
@@ -268,7 +274,7 @@ class PaymentsContext implements Context
     public function markPaymentAsFailedWithPaymentMethodResult(?string $paymentMethodResult = null): void
     {
         $result = $paymentMethodResult ? $this->parsePaymentMethodResult($paymentMethodResult) : null;
-        $this->commandTransport->send(
+        $this->commandBus->dispatch(
             new MarkPaymentAsFailed(
                 $this->lastPaymentId,
                 $result,
@@ -279,7 +285,7 @@ class PaymentsContext implements Context
     #[When('mark payment as canceled')]
     public function markPaymentAsCanceled(): void
     {
-        $this->commandTransport->send(
+        $this->commandBus->dispatch(
             new MarkPaymentAsCanceled(
                 $this->lastPaymentId
             )
@@ -346,18 +352,48 @@ class PaymentsContext implements Context
         $this->integrationEventTransport->queue()->assertContains(PaymentDidNotSucceedIntegrationEvent::class, 1);
     }
 
-    #[Then('usable payment method is stored')]
+    #[Then('usable payment method is created')]
     #[Then('stored payment method is usable')]
-    public function usablePaymentMethodIsStored(): void
+    public function usablePaymentMethodIsCreated(): void
     {
-        $this->eventTransport->dispatched()->assertContains(PaymentMethodUsable::class, 1);
+        $this->eventTransport->dispatched()->assertContains(UsablePaymentMethodCreated::class, 1);
     }
 
-    #[Then('unusable payment method is stored')]
+    #[Then('unusable payment method is created')]
+    public function unusablePaymentMethodIsCreated(): void
+    {
+        $this->eventTransport->dispatched()->assertContains(UnusablePaymentMethodCreated::class, 1);
+    }
+
     #[Then('stored payment method is unusable')]
-    public function unusablePaymentMethodIsStored(): void
+    public function storedPaymentMethodIsUnusable(): void
     {
         $this->eventTransport->dispatched()->assertContains(PaymentMethodUnusable::class, 1);
+    }
+
+    #[Then('no payment method integration event is emitted')]
+    public function noPaymentMethodIntegrationEventIsEmitted(): void
+    {
+        $this->integrationEventTransport->dispatched()->assertNotContains(PaymentMethodUnusableIntegrationEvent::class);
+    }
+
+    #[Then('unusable payment method integration event is emitted')]
+    public function unusablePaymentMethodIntegrationEventIsEmitted(): void
+    {
+        $this->integrationEventTransport->dispatched()->assertContains(PaymentMethodUnusableIntegrationEvent::class, 1);
+    }
+
+
+    #[Then('usable payment method created integration event is emitted')]
+    public function usablePaymentMethodCreatedIntegrationEventIsEmitted(): void
+    {
+        $this->integrationEventTransport->dispatched()->assertContains(UsablePaymentMethodCreatedIntegrationEvent::class, 1);
+    }
+
+    #[Then('unusable payment method created integration event is emitted')]
+    public function unusablePaymentMethodCreatedIntegrationEventIsEmitted(): void
+    {
+        $this->integrationEventTransport->dispatched()->assertContains(UnusablePaymentMethodCreatedIntegrationEvent::class, 1);
     }
 
     #[Then('payment method use is permitted')]
@@ -375,7 +411,7 @@ class PaymentsContext implements Context
     #[Then('no payment method is stored')]
     public function noPaymentMethodIsStored(): void
     {
-        $this->eventTransport->dispatched()->assertNotContains(PaymentMethodUsable::class);
+        $this->eventTransport->dispatched()->assertNotContains(UsablePaymentMethodCreated::class);
         $this->eventTransport->dispatched()->assertNotContains(PaymentMethodUnusable::class);
     }
 

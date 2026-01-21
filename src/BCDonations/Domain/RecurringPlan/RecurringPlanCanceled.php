@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan;
 
 use DateTimeImmutable;
-use ErgoSarapu\DonationBundle\SharedApplication\Port\Event\EventInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\AbstractTimestampedEvent;
+use ErgoSarapu\DonationBundle\SharedKernel\Event\DomainEventInterface;
 use Patchlevel\EventSourcing\Attribute\Event;
 
 #[Event(name: 'recurring_plan.canceled')]
-class RecurringPlanCanceled extends AbstractTimestampedEvent implements EventInterface
+class RecurringPlanCanceled extends AbstractTimestampedEvent implements DomainEventInterface
 {
     public readonly RecurringPlanStatus $status;
 

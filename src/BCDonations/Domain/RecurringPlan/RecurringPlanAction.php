@@ -4,29 +4,30 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan;
 
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodlId;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 
 class RecurringPlanAction
 {
     private function __construct(
         public readonly RecurringPlanId $recurringPlanId,
-        public readonly PaymentMethodlId $paymentMethodId,
+        public readonly PaymentMethodId $paymentMethodId,
         public readonly RecurringPlanActionIntent $intent,
     ) {
     }
 
     public static function forInit(
+        RecurringPlanId $recurringPlanId
     ): self {
         return new self(
-            RecurringPlanId::generate(),
-            PaymentMethodlId::generate(),
+            $recurringPlanId,
+            PaymentMethodId::generate(),
             RecurringPlanActionIntent::Init,
         );
     }
 
     public static function forRenew(
         RecurringPlanId $recurringPlanId,
-        PaymentMethodlId $paymentMethodId,
+        PaymentMethodId $paymentMethodId,
     ): self {
         return new self(
             $recurringPlanId,

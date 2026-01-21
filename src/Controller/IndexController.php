@@ -1,13 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\Controller;
 
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\InitiateDonation;
-use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentGatewayInterface;
-use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Command\InitiateRecurringPlan;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationRequest;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorIdentity;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringInterval;
 use ErgoSarapu\DonationBundle\Dto\DonationDto;
 use ErgoSarapu\DonationBundle\Entity\Campaign;
 use ErgoSarapu\DonationBundle\Form\DonationFormStep1Type;
@@ -15,7 +18,10 @@ use ErgoSarapu\DonationBundle\Form\DonationFormStep2Type;
 use ErgoSarapu\DonationBundle\Form\DonationFormStep3Type;
 use ErgoSarapu\DonationBundle\Form\FormOptionsProvider;
 use ErgoSarapu\DonationBundle\Repository\CampaignRepository;
+use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormInterface;
@@ -24,20 +30,19 @@ use Symfony\Component\HttpFoundation\Response;
 
 class IndexController extends AbstractController
 {
-
     public function __construct(
         private FormOptionsProvider $formOptions,
         private readonly CampaignRepository $campaignRepository,
-        private readonly CommandBusInterface $commandBus)
-    {
+        private readonly CommandBusInterface $commandBus
+    ) {
     }
 
     public function __invoke(
         Request $request,
         string $campaign,
         string $template,
-        int $step = 1): Response
-    {
+        int $step = 1
+    ): Response {
         $campaign = $this->getDefaultCampaign();
         $donation = $this->getDonationData($request);
 
@@ -47,43 +52,39 @@ class IndexController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             /** @var DonationDto $donation */
             $donation = $form->getData();
-            
+
             if ($step === 3) {
                 /** @var DonationDto $donation */
                 $donation = $form->getData();
                 $gateway = new Gateway($donation->getGateway());
 
                 $amount = new Money($donation->getAmount(), new Currency($donation->getCurrencyCode()));
-                
+
                 $redirectParams = [];
                 $redirectRoute = null;
                 $campaignId = CampaignId::generate(); // TODO: use active campaign id
-                
-                // TODO: Recurring donations
-                // if ($donation->getFrequency() === null){
-                    $initiateDonation = new InitiateDonation(
-                        $amount,
-                        $campaignId,
-                        $gateway,
-                        // TODO: donor info if available
-                    );
-                    $redirectParams['donationId'] = $initiateDonation->donationId->toString();
+
+                $donationRequest = new DonationRequest(
+                    donationId: DonationId::generate(),
+                    campaignId: $campaignId,
+                    amount: $amount,
+                    gateway: $gateway,
+                    donorIdentity: new DonorIdentity(), // TODO: donor info if available
+                );
+                if ($donation->getFrequency() === null) {
+                    $command = new InitiateDonation($donationRequest);
+                    $redirectParams['donationId'] = $command->donationRequest->donationId->toString();
                     $redirectRoute = 'donation_redirect';
-                // } else {
-                //     $interval = new RecurringInterval($donation->getFrequency());
-                //     $createRecurringDonation = new CreateRecurringDonationByDonor(
-                //         $campaignId,
-                //         $amount,
-                //         $interval,
-                //         // TODO: donor info if available
-                //     );
-                //     $redirectParams['recurringDonationId'] = $createRecurringDonation->recurringDonationId->toString();
-                // }
-                
-                $this->commandBus->dispatch($initiateDonation);
-                
+                } else {
+                    $interval = new RecurringInterval($donation->getFrequency());
+                    $command = new InitiateRecurringPlan($interval, $donationRequest);
+                    $redirectParams['recurringDonationId'] = $command->recurringPlanId->toString();
+                }
+
+                $this->commandBus->dispatch($command);
+
                 $request->getSession()->remove('donation');
-                
+
                 return $this->redirectToRoute($redirectRoute, $redirectParams);
             }
 
@@ -102,12 +103,14 @@ class IndexController extends AbstractController
         ]);
     }
 
-    private function getFormUrl(string $template, int $step): string {
+    private function getFormUrl(string $template, int $step): string
+    {
         return $this->generateUrl('donation_' . $template, ['template' => $template, 'step' => $step]);
     }
 
-    private function getDonationFormStep(int $step, DonationDto $donation, Request $request): FormInterface {
-        if ($step === 1){
+    private function getDonationFormStep(int $step, DonationDto $donation, Request $request): FormInterface
+    {
+        if ($step === 1) {
             return $this->createForm(
                 DonationFormStep1Type::class,
                 $donation,
@@ -115,23 +118,26 @@ class IndexController extends AbstractController
                     'currencies' => $this->formOptions->getCurrencies(),
                     'locale' => $request->getLocale(),
                     'frequencies' => $this->formOptions->getFrequencies(),
-                ]);
-        } else if ($step === 2){
+                ]
+            );
+        } elseif ($step === 2) {
             return $this->createForm(DonationFormStep2Type::class, $donation);
-        } else if ($step === 3){
+        } elseif ($step === 3) {
             $frequency = $donation->getFrequency();
             return $this->createForm(
                 DonationFormStep3Type::class,
-                $donation, 
+                $donation,
                 [
                     'frequency' => $frequency,
                     'gateways' => $this->formOptions->getGateways($frequency),
-                ]);
+                ]
+            );
         }
         throw new InvalidArgumentException('Unsupported form step ' . $step);
     }
 
-    private function getDonationData(Request $request): DonationDto {
+    private function getDonationData(Request $request): DonationDto
+    {
         $session = $request->getSession();
         $donation = $session->get('donation');
         if ($donation === null) {
@@ -149,7 +155,8 @@ class IndexController extends AbstractController
         return $donation;
     }
 
-    private function getDefaultCampaign(): Campaign {
+    private function getDefaultCampaign(): Campaign
+    {
         $campaigns = $this->campaignRepository->findBy(['default' => true]);
         if (count($campaigns) === 0) {
             throw new InvalidArgumentException('No default campaign found');

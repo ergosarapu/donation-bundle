@@ -6,6 +6,7 @@ namespace ErgoSarapu\DonationBundle\BCPayments\Domain\Payment;
 
 use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\AbstractTimestampedEvent;
+use ErgoSarapu\DonationBundle\SharedKernel\Event\DomainEventInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
@@ -15,7 +16,7 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use Patchlevel\EventSourcing\Attribute\Event;
 
 #[Event(name: 'payment.initiated')]
-class PaymentInitiated extends AbstractTimestampedEvent
+class PaymentInitiated extends AbstractTimestampedEvent implements DomainEventInterface
 {
     public readonly PaymentStatus $status;
 

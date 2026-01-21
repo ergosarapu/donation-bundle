@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\Tests\Unit\Payments\Application\CommandHandler;
 
 use DateTimeImmutable;
-use ErgoSarapu\DonationBundle\BCPayments\Application\Command\StorePaymentMethod;
-use ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\StorePaymentMethodHandler;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Command\CreatePaymentMethod;
+use ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\CreatePaymentMethodHandler;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentMethodRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCredentialValue;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethod;
@@ -14,17 +14,17 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodAction;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodResult;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodlId;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
 
 class StorePaymentMethodHandlerTest extends TestCase
 {
-    private StorePaymentMethodHandler $handler;
+    private CreatePaymentMethodHandler $handler;
     private PaymentMethodRepositoryInterface&MockObject $paymentMethodRepository;
     private DateTimeImmutable $now;
-    private StorePaymentMethod $command;
+    private CreatePaymentMethod $command;
 
     protected function setUp(): void
     {
@@ -36,19 +36,19 @@ class StorePaymentMethodHandlerTest extends TestCase
         $clock = $this->createMock(ClockInterface::class);
         $clock->method('now')->willReturn($this->now);
 
-        $this->handler = new StorePaymentMethodHandler(
+        $this->handler = new CreatePaymentMethodHandler(
             $this->paymentMethodRepository,
             $clock
         );
 
         $methodAction = PaymentMethodAction::forRequest(
-            PaymentMethodlId::generate(),
+            PaymentMethodId::generate(),
             PaymentId::generate()
         );
         $methodResult = PaymentMethodResult::usable(
             new PaymentCredentialValue('token_123')
         );
-        $this->command = new StorePaymentMethod($methodAction, $methodResult);
+        $this->command = new CreatePaymentMethod($methodAction, $methodResult);
     }
 
     public function testCreatesPaymentMethod(): void

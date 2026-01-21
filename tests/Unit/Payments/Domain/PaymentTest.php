@@ -24,7 +24,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentReservedForGatewa
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentSucceeded;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodlId;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
@@ -50,7 +50,7 @@ class PaymentTest extends AggregateRootTestCase
 
     private PaymentAppliedToId $appliedTo;
 
-    private PaymentMethodlId $paymentMethodId;
+    private PaymentMethodId $paymentMethodId;
 
     protected function aggregateClass(): string
     {
@@ -67,7 +67,7 @@ class PaymentTest extends AggregateRootTestCase
         $this->email = new Email('example@example.com');
         $this->description = new ShortDescription('Test payment');
         $this->appliedTo = PaymentAppliedToId::generate();
-        $this->paymentMethodId = PaymentMethodlId::generate();
+        $this->paymentMethodId = PaymentMethodId::generate();
     }
 
     public function testInitiate(): void

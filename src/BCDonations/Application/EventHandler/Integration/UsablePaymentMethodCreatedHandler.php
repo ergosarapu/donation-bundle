@@ -8,12 +8,12 @@ use ErgoSarapu\DonationBundle\BCDonations\Application\Command\ActivateRecurringP
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetRecurringPlanByPaymentMethod;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\RecurringPlan;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
-use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\PaymentMethodUsableIntegrationEvent;
+use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\UsablePaymentMethodCreatedIntegrationEvent;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\QueryBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\EventHandlerInterface;
 
-class PaymentMethodUsableHandler implements EventHandlerInterface
+class UsablePaymentMethodCreatedHandler implements EventHandlerInterface
 {
     public function __construct(
         private readonly CommandBusInterface $commandBus,
@@ -21,7 +21,7 @@ class PaymentMethodUsableHandler implements EventHandlerInterface
     ) {
     }
 
-    public function __invoke(PaymentMethodUsableIntegrationEvent $event): void
+    public function __invoke(UsablePaymentMethodCreatedIntegrationEvent $event): void
     {
         /** @var ?RecurringPlan $plan */
         $plan = $this->queryBus->ask(new GetRecurringPlanByPaymentMethod(

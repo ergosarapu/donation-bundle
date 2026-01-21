@@ -19,7 +19,7 @@ class RecurringPlanInitiatedHandler implements EventHandlerInterface
     public function __invoke(RecurringPlanInitiated $event): void
     {
         $donationRequest = new DonationRequest(
-            $event->activationDonationId,
+            $event->initialDonationId,
             $event->campaignId,
             $event->amount,
             $event->gateway,

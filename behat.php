@@ -5,6 +5,7 @@ use Behat\Config\Config;
 use Behat\Config\Extension;
 use Behat\Config\Profile;
 use Behat\Config\Suite;
+use ErgoSarapu\DonationBundle\Tests\Acceptance\Donations\Behat\DonationsContext;
 use ErgoSarapu\DonationBundle\Tests\Acceptance\Payments\Behat\PaymentsContext;
 use ErgoSarapu\DonationBundle\Tests\Helpers\AcceptanceTestingKernel;
 use FriendsOfBehat\SymfonyExtension\ServiceContainer\SymfonyExtension;
@@ -24,6 +25,14 @@ return (new Config())
                         'paths' => ['%paths.base%/tests/Acceptance/Payments']
                     ]
                 ))->withContexts(PaymentsContext::class)
+            )
+            ->withSuite(
+                (new Suite(
+                    'donations',
+                    [
+                        'paths' => ['%paths.base%/tests/Acceptance/Donations']
+                    ]
+                ))->withContexts(DonationsContext::class)
             )
     )
 ;

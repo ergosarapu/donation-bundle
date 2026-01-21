@@ -176,11 +176,9 @@ return function (ContainerConfigurator $container) {
     // *** Command Handlers ***
     // ************************
 
-    // All services implementing the CommandHandlerInterface  will be registered to handle commands from transports
+    // Register command handlers on command bus
     $services->instanceof(\ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\CommandHandlerInterface::class)
-        ->tag('messenger.message_handler', ['from_transport' => 'command'])
-        ->tag('messenger.message_handler', ['from_transport' => 'delayed_command'])
-        ->tag('messenger.message_handler', ['from_transport' => 'integration_command']);
+        ->tag('messenger.message_handler', ['bus' => 'command.bus']);
 
     // Donations
     $services->set('donation_bundle.donations.application.donation.command_handler.initiate_donation', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\InitiateDonationHandler::class)
@@ -233,7 +231,7 @@ return function (ContainerConfigurator $container) {
     $services->set('donation_bundle.payments.application.payment.command_handler.use_payment_method', \ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\UsePaymentMethodHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
-    $services->set('donation_bundle.payments.application.payment.command_handler.store_payment_method', \ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\StorePaymentMethodHandler::class)
+    $services->set('donation_bundle.payments.application.payment.command_handler.store_payment_method', \ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\CreatePaymentMethodHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
     $services->set('donation_bundle.payments.application.payment.command_handler.update_payment_method', \ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\UpdatePaymentMethodHandler::class)
@@ -247,7 +245,7 @@ return function (ContainerConfigurator $container) {
     // *** Query Handlers ***
     // **********************
 
-    // All services implementing the QueryHandlerInterface will be registered on the query.bus bus
+    // Register query handlers on query bus
     $services->instanceof(\ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\QueryHandlerInterface::class)
         ->tag('messenger.message_handler', ['bus' => 'query.bus']);
 
@@ -283,10 +281,9 @@ return function (ContainerConfigurator $container) {
     // *** Event Handlers ***
     // **********************
 
-    // All services implementing the EventHandlerInterface will be registered to handle events from transports
+    // Register event handlers on event bus
     $services->instanceof(\ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\EventHandlerInterface::class)
-        ->tag('messenger.message_handler', ['from_transport' => 'event'])
-        ->tag('messenger.message_handler', ['from_transport' => 'integration_event']);
+        ->tag('messenger.message_handler', ['bus' => 'event.bus']);
 
     // Donations
     $services->set('donation_bundle.application.donations.domain_event_handler.donation_initiated', \ErgoSarapu\DonationBundle\BCDonations\Application\EventHandler\Domain\DonationInitiatedHandler::class)
@@ -298,10 +295,13 @@ return function (ContainerConfigurator $container) {
     $services->set('donation_bundle.application.donations.integration_event_handler.payment_did_not_succeed', \ErgoSarapu\DonationBundle\BCDonations\Application\EventHandler\Integration\PaymentDidNotSucceedHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
-    $services->set('donation_bundle.application.donations.integration_event_handler.payment_method_usable', \ErgoSarapu\DonationBundle\BCDonations\Application\EventHandler\Integration\PaymentMethodUsableHandler::class)
+    $services->set('donation_bundle.application.donations.integration_event_handler.payment_method_usable', \ErgoSarapu\DonationBundle\BCDonations\Application\EventHandler\Integration\UsablePaymentMethodCreatedHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
-    $services->set('donation_bundle.application.donations.integration_event_handler.payment_method_unusable', \ErgoSarapu\DonationBundle\BCDonations\Application\EventHandler\Integration\PaymentMethodUnusableHandler::class)
+    $services->set('donation_bundle.application.donations.integration_event_handler.payment_method_unusable', \ErgoSarapu\DonationBundle\BCDonations\Application\EventHandler\Integration\UnusablePaymentMethodCreatedHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.application.donations.integration_event_handler.payment_method_became_unusable', \ErgoSarapu\DonationBundle\BCDonations\Application\EventHandler\Integration\PaymentMethodUnusableHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
     $services->set('donation_bundle.application.donations.domain_event_handler.recurring_plan_initiated', \ErgoSarapu\DonationBundle\BCDonations\Application\EventHandler\Domain\RecurringPlanInitiatedHandler::class)
@@ -317,6 +317,9 @@ return function (ContainerConfigurator $container) {
         ->autoconfigure(true)
         ->autowire(true);
     $services->set('donation_bundle.application.donations.domain_event_handler.recurring_plan_renewal_initiated', \ErgoSarapu\DonationBundle\BCDonations\Application\EventHandler\Domain\RecurringPlanRenewalInitiatedHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.application.donations.domain_event_handler.recurring_plan_renewal_completed', \ErgoSarapu\DonationBundle\BCDonations\Application\EventHandler\Domain\RecurringPlanRenewalCompletedHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
 
@@ -341,6 +344,15 @@ return function (ContainerConfigurator $container) {
         ->autoconfigure(true)
         ->autowire(true);
     $services->set('donation_bundle.application.payments.domain_event_handler.payment_failed', \ErgoSarapu\DonationBundle\BCPayments\Application\EventHandler\Domain\PaymentFailedHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.application.payments.domain_event_handler.usable_payment_method_created', \ErgoSarapu\DonationBundle\BCPayments\Application\EventHandler\Domain\UsablePaymentMethodCreatedHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.application.payments.domain_event_handler.unusable_payment_method_created', \ErgoSarapu\DonationBundle\BCPayments\Application\EventHandler\Domain\UnusablePaymentMethodCreatedHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.application.payments.domain_event_handler.payment_method_unusable', \ErgoSarapu\DonationBundle\BCPayments\Application\EventHandler\Domain\PaymentMethodUnusableHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
 

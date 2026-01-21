@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\SharedInfrastructure\Adapter\Bus;
 
-use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Command\IntegrationCommandInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Message\DelayedMessage;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -22,19 +21,11 @@ class SymfonyMessengerCommandBus implements CommandBusInterface
         if ($command instanceof DelayedMessage) {
             $this->commandBus->dispatch(
                 $command->message,
-                [DelayStamp::delayUntil($command->delayUntil), new TransportNamesStamp('delayed_command')]
+                [DelayStamp::delayUntil($command->delayUntil), new TransportNamesStamp('delayed')]
             );
             return;
         }
 
-        if ($command instanceof IntegrationCommandInterface) {
-            $this->commandBus->dispatch(
-                $command,
-                [new TransportNamesStamp('integration_command')]
-            );
-            return;
-        }
-
-        $this->commandBus->dispatch($command, [new TransportNamesStamp('command')]);
+        $this->commandBus->dispatch($command);
     }
 }

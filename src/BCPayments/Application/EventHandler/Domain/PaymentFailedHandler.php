@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\BCPayments\Application\EventHandler\Domain;
 
-use ErgoSarapu\DonationBundle\BCPayments\Application\Command\StorePaymentMethod;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Command\CreatePaymentMethod;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\UpdatePaymentMethod;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentFailed;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodAction;
@@ -34,7 +34,7 @@ class PaymentFailedHandler implements EventHandlerInterface
 
     private function handleRequestIntent(PaymentMethodAction $action): void
     {
-        $this->commandBus->dispatch(new StorePaymentMethod(
+        $this->commandBus->dispatch(new CreatePaymentMethod(
             $action,
             PaymentMethodResult::unusable(PaymentMethodUnusableReason::RequestFailed),
         ));

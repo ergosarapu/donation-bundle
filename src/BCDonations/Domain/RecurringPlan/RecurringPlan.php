@@ -15,7 +15,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\Recurri
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanFailNotAllowedException;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanRenewalNotAllowedException;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanRenewalNotDueYetException;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodlId;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use InvalidArgumentException;
@@ -38,7 +38,7 @@ class RecurringPlan extends BasicAggregateRoot
     private RecurringPlanStatus $status;
     private ?DateTimeImmutable $nextRenewalTime;
     private DonorIdentity $donorIdentity;
-    private PaymentMethodlId $paymentMethodId;
+    private PaymentMethodId $paymentMethodId;
 
     public static function initiate(
         DateTimeImmutable $currentTime,

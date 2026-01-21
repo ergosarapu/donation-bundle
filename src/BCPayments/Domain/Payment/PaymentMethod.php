@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCPayments\Domain\Payment;
 
 use DateTimeImmutable;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodlId;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use InvalidArgumentException;
 use Patchlevel\EventSourcing\Aggregate\BasicAggregateRoot;
 use Patchlevel\EventSourcing\Attribute\Aggregate;
@@ -16,7 +16,7 @@ use Patchlevel\EventSourcing\Attribute\Id;
 class PaymentMethod extends BasicAggregateRoot
 {
     #[Id]
-    private PaymentMethodlId $id;
+    private PaymentMethodId $id;
     private ?PaymentCredentialValue $value;
 
     public static function create(
@@ -26,13 +26,13 @@ class PaymentMethod extends BasicAggregateRoot
     ): self {
         $paymentMethod = new self();
         if (!$paymentMethodResult->isUsable()) {
-            $paymentMethod->recordThat(new PaymentMethodUnusable(
+            $paymentMethod->recordThat(new UnusablePaymentMethodCreated(
                 $currentTime,
                 $paymentMethodAction,
                 $paymentMethodResult->unusableReason(),
             ));
         } else {
-            $paymentMethod->recordThat(new PaymentMethodUsable(
+            $paymentMethod->recordThat(new UsablePaymentMethodCreated(
                 $currentTime,
                 $paymentMethodAction,
                 $paymentMethodResult->value(),
@@ -68,10 +68,17 @@ class PaymentMethod extends BasicAggregateRoot
     }
 
     #[Apply]
-    protected function applyActivated(PaymentMethodUsable $event): void
+    protected function applyActivated(UsablePaymentMethodCreated $event): void
     {
         $this->id = $event->paymentMethodAction->paymentMethodId;
         $this->value = $event->credentialValue;
+    }
+
+    #[Apply]
+    protected function applyUnusableCreated(UnusablePaymentMethodCreated $event): void
+    {
+        $this->id = $event->paymentMethodAction->paymentMethodId;
+        $this->value = null;
     }
 
     #[Apply]

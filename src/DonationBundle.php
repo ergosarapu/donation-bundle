@@ -8,8 +8,12 @@ use DateInterval;
 use ErgoSarapu\DonationBundle\DependencyInjection\Compiler\RegisterQueryCompilerPass;
 use ErgoSarapu\DonationBundle\Entity\Payment;
 use ErgoSarapu\DonationBundle\Entity\PaymentToken;
+use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Command\IntegrationCommandInterface;
+use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\IntegrationEventInterface;
 use ErgoSarapu\DonationBundle\Payum\PHPSerializeType;
 use ErgoSarapu\DonationBundle\Repository\ResetPasswordRequestRepository;
+use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandInterface;
+use ErgoSarapu\DonationBundle\SharedKernel\Event\DomainEventInterface;
 use Exception;
 use Symfony\Component\AssetMapper\AssetMapperInterface;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
@@ -279,14 +283,18 @@ class DonationBundle extends AbstractBundle
                 'transports' => [
                     'event' => 'sync://',
                     'command' => 'sync://',
-                    'delayed_command' => [
+                    'delayed' => [
                         'dsn' => 'doctrine://messenger',
                         'options' => [
-                            'queue_name' => 'delayed_command',
+                            'queue_name' => 'delayed',
                         ],
                     ],
-                    'integration_event' => 'sync://',
-                    'integration_command' => 'sync://',
+                ],
+                'routing' => [
+                    CommandInterface::class => 'command',
+                    IntegrationCommandInterface::class => 'command',
+                    DomainEventInterface::class => 'event',
+                    IntegrationEventInterface::class => 'event',
                 ],
             ]
         ]);
