@@ -147,11 +147,10 @@ class PaymentsContext implements Context
     #[Given('usable payment method exists')]
     public function usablePaymentMethodExists(): void
     {
-        $this->lastPaymentMethodId = PaymentMethodId::generate();
         $action = PaymentMethodAction::forRequest(
-            $this->lastPaymentMethodId,
             PaymentId::generate(),
         );
+        $this->lastPaymentMethodId = $action->paymentMethodId;
         $this->commandBus->send(new CreatePaymentMethod(
             $action,
             PaymentMethodResult::usable(new PaymentCredentialValue('credential-value')),
@@ -162,11 +161,10 @@ class PaymentsContext implements Context
     #[Given('unusable payment method exists')]
     public function unusablePaymentMethodExists(): void
     {
-        $this->lastPaymentMethodId = PaymentMethodId::generate();
         $action = PaymentMethodAction::forRequest(
-            $this->lastPaymentMethodId,
             PaymentId::generate(),
         );
+        $this->lastPaymentMethodId = $action->paymentMethodId;
         $this->commandBus->send(new CreatePaymentMethod(
             $action,
             PaymentMethodResult::unusable(PaymentMethodUnusableReason::Expired),
@@ -182,7 +180,6 @@ class PaymentsContext implements Context
         // Store a different payment method to ensure the specified one does not exist,
         // allowing to test the non-existence scenario.
         $action = PaymentMethodAction::forRequest(
-            PaymentMethodId::generate(),
             PaymentId::generate(),
         );
         $this->commandBus->send(new CreatePaymentMethod(
@@ -210,7 +207,7 @@ class PaymentsContext implements Context
     public function initiatePaymentWithRequestToStorePaymentMethod(): void
     {
         $this->lastPaymentId = PaymentId::generate();
-        $action = PaymentMethodAction::forRequest(PaymentMethodId::generate(), $this->lastPaymentId);
+        $action = PaymentMethodAction::forRequest($this->lastPaymentId);
         $this->sendInitiatePaymentCommand($this->createInitiatePaymentCommand($action));
     }
 

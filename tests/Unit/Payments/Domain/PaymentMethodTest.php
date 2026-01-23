@@ -39,9 +39,7 @@ class PaymentMethodTest extends AggregateRootTestCase
 
     public function testCreateUsable(): void
     {
-        $credentialId = PaymentMethodId::generate();
         $paymentMethodAction = PaymentMethodAction::forRequest(
-            $credentialId,
             PaymentId::generate(),
         );
         $paymentMethodResult = PaymentMethodResult::usable(new PaymentCredentialValue('value'));
@@ -62,9 +60,7 @@ class PaymentMethodTest extends AggregateRootTestCase
     #[DataProvider('unusableReasons')]
     public function testCreateUnusable(PaymentMethodUnusableReason $reason): void
     {
-        $credentialId = PaymentMethodId::generate();
         $paymentMethodAction = PaymentMethodAction::forRequest(
-            $credentialId,
             PaymentId::generate(),
         );
         $paymentMethodResult = PaymentMethodResult::unusable($reason);
@@ -94,9 +90,7 @@ class PaymentMethodTest extends AggregateRootTestCase
 
     public function testUpdateToUsableIgnored(): void
     {
-        $credentialId = PaymentMethodId::generate();
         $paymentMethodAction = PaymentMethodAction::forRequest(
-            $credentialId,
             PaymentId::generate(),
         );
         $paymentMethodResult = PaymentMethodResult::usable(new PaymentCredentialValue('new value'));
@@ -118,9 +112,7 @@ class PaymentMethodTest extends AggregateRootTestCase
 
     public function testUpdateUsableToUnusable(): void
     {
-        $credentialId = PaymentMethodId::generate();
         $paymentMethodAction = PaymentMethodAction::forRequest(
-            $credentialId,
             PaymentId::generate(),
         );
         $paymentMethodResult = PaymentMethodResult::unusable(PaymentMethodUnusableReason::Revoked);
@@ -148,9 +140,7 @@ class PaymentMethodTest extends AggregateRootTestCase
     #[DataProvider('unusableReasons')]
     public function testUpdateUnusableIdempotent(PaymentMethodUnusableReason $reason): void
     {
-        $credentialId = PaymentMethodId::generate();
         $creadentialAction = PaymentMethodAction::forRequest(
-            $credentialId,
             PaymentId::generate(),
         );
         $paymentMethodResult = PaymentMethodResult::unusable($reason);
@@ -171,9 +161,7 @@ class PaymentMethodTest extends AggregateRootTestCase
 
     public function testUpdateIdMismatchThrows(): void
     {
-        $credentialId = PaymentMethodId::generate();
         $creadentialAction = PaymentMethodAction::forRequest(
-            $credentialId,
             PaymentId::generate(),
         );
         $value = new PaymentCredentialValue('value');
@@ -199,13 +187,11 @@ class PaymentMethodTest extends AggregateRootTestCase
 
     public function testUsePermitted(): void
     {
-        $credentialId = PaymentMethodId::generate();
         $paymentMethodActionForRequest = PaymentMethodAction::forRequest(
-            $credentialId,
             PaymentId::generate(),
         );
         $paymentMethodActionForUse = PaymentMethodAction::forUse(
-            $credentialId,
+            $paymentMethodActionForRequest->paymentMethodId,
             PaymentId::generate(),
         );
         $value = new PaymentCredentialValue('value');
@@ -233,13 +219,11 @@ class PaymentMethodTest extends AggregateRootTestCase
     #[DataProvider('unusableReasons')]
     public function testUseRejected(PaymentMethodUnusableReason $reason): void
     {
-        $credentialId = PaymentMethodId::generate();
         $paymentMethodActionForRequest = PaymentMethodAction::forRequest(
-            $credentialId,
             PaymentId::generate(),
         );
         $paymentMethodActionForUse = PaymentMethodAction::forUse(
-            $credentialId,
+            $paymentMethodActionForRequest->paymentMethodId,
             PaymentId::generate(),
         );
 
@@ -265,7 +249,6 @@ class PaymentMethodTest extends AggregateRootTestCase
     public function testUseWithMismatchedIdThrows(): void
     {
         $paymentMethodActionForRequest = PaymentMethodAction::forRequest(
-            PaymentMethodId::generate(),
             PaymentId::generate(),
         );
         $paymentMethodActionForUse = PaymentMethodAction::forUse(

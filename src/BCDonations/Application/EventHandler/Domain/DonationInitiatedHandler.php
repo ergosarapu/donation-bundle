@@ -12,7 +12,6 @@ use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Command\InitiatePaym
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\EventHandlerInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 
 class DonationInitiatedHandler implements EventHandlerInterface
 {
@@ -25,8 +24,7 @@ class DonationInitiatedHandler implements EventHandlerInterface
         $paymentMethodAction = null;
         if ($event->recurringPlanAction !== null) {
             $paymentMethodAction = match ($event->recurringPlanAction->intent) {
-                // TODO: Can PaymentMethodlId be generated in PaymentMethodAction factory method?
-                RecurringPlanActionIntent::Init => PaymentMethodAction::forRequest(PaymentMethodId::generate(), $event->paymentId),
+                RecurringPlanActionIntent::Init => PaymentMethodAction::forRequest($event->paymentId),
                 RecurringPlanActionIntent::Renew => PaymentMethodAction::forUse($event->recurringPlanAction->paymentMethodId, $event->paymentId),
             };
         }

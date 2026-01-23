@@ -24,7 +24,6 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentReservedForGatewa
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentSucceeded;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
@@ -50,8 +49,6 @@ class PaymentTest extends AggregateRootTestCase
 
     private PaymentAppliedToId $appliedTo;
 
-    private PaymentMethodId $paymentMethodId;
-
     protected function aggregateClass(): string
     {
         return Payment::class;
@@ -67,7 +64,6 @@ class PaymentTest extends AggregateRootTestCase
         $this->email = new Email('example@example.com');
         $this->description = new ShortDescription('Test payment');
         $this->appliedTo = PaymentAppliedToId::generate();
-        $this->paymentMethodId = PaymentMethodId::generate();
     }
 
     public function testInitiate(): void
@@ -101,7 +97,6 @@ class PaymentTest extends AggregateRootTestCase
     public function testInitiateWithPaymentMethodAction(): void
     {
         $methodAction = PaymentMethodAction::forRequest(
-            $this->paymentMethodId,
             $this->paymentId,
         );
         $paymentRequest = new PaymentRequest(
@@ -133,7 +128,6 @@ class PaymentTest extends AggregateRootTestCase
     public function testInitiatePaymentMethodActionPaymentIdMismatchThrows(): void
     {
         $methodAction = PaymentMethodAction::forRequest(
-            $this->paymentMethodId,
             PaymentId::generate(),
         );
         $paymentRequest = new PaymentRequest(
@@ -154,7 +148,6 @@ class PaymentTest extends AggregateRootTestCase
     public function testMarkCapturedOnInitiated(): void
     {
         $methodAction = PaymentMethodAction::forRequest(
-            $this->paymentMethodId,
             $this->paymentId,
         );
         $methodResult = PaymentMethodResult::usable(new PaymentCredentialValue('token'));
@@ -194,7 +187,6 @@ class PaymentTest extends AggregateRootTestCase
     public function testMarkCapturedOnAuthorized(): void
     {
         $methodAction = PaymentMethodAction::forRequest(
-            $this->paymentMethodId,
             $this->paymentId,
         );
         $methodResult = PaymentMethodResult::usable(new PaymentCredentialValue('token'));
@@ -290,7 +282,6 @@ class PaymentTest extends AggregateRootTestCase
     public function testMarkAuthoriszedOnInitiated(): void
     {
         $methodAction = PaymentMethodAction::forRequest(
-            $this->paymentMethodId,
             $this->paymentId,
         );
         $methodResult = PaymentMethodResult::usable(new PaymentCredentialValue('token'));
@@ -382,7 +373,6 @@ class PaymentTest extends AggregateRootTestCase
     public function testMarkFailedOnInitiated(): void
     {
         $methodAction = PaymentMethodAction::forRequest(
-            $this->paymentMethodId,
             $this->paymentId,
         );
         $methodResult = PaymentMethodResult::unusable(PaymentMethodUnusableReason::RequestFailed);
@@ -502,7 +492,6 @@ class PaymentTest extends AggregateRootTestCase
     public function testMarkCanceledOnInitiated(): void
     {
         $methodAction = PaymentMethodAction::forRequest(
-            $this->paymentMethodId,
             $this->paymentId,
         );
         $this->given(new PaymentInitiated(
@@ -612,7 +601,6 @@ class PaymentTest extends AggregateRootTestCase
                 $this->appliedTo,
                 $this->email,
                 PaymentMethodAction::forRequest(
-                    $this->paymentMethodId,
                     $this->paymentId,
                 ),
             ),

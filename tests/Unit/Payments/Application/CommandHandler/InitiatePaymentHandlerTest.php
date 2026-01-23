@@ -14,7 +14,6 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRequest;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
@@ -53,7 +52,6 @@ class InitiatePaymentHandlerTest extends TestCase
         $appliedTo = PaymentAppliedToId::generate();
         $email = new Email('donor@example.com');
         $methodAction = PaymentMethodAction::forRequest(
-            PaymentMethodId::generate(),
             $paymentId
         );
 

@@ -17,11 +17,10 @@ class PaymentMethodAction
     }
 
     public static function forRequest(
-        PaymentMethodId $paymentMethodId,
         PaymentId $paymentId,
     ): self {
         return new self(
-            $paymentMethodId,
+            PaymentMethodId::generate(),
             $paymentId,
             PaymentMethodActionIntent::Request,
         );
