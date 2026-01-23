@@ -51,11 +51,11 @@ The bundle uses Payum for payment gateway abstraction. In order to use a gateway
 ```yaml
 // config/services.yaml
 
-app.montonio_gateway_factory:
+app.test_gateway_factory:
     class: Payum\Core\Bridge\Symfony\Builder\GatewayFactoryBuilder
-    arguments: [ErgoSarapu\PayumMontonio\MontonioGatewayFactory]
+    arguments: [ErgoSarapu\PayumTestGateway\TestGatewayFactory]
     tags:
-        - { name: payum.gateway_factory_builder, factory: montonio }
+        - { name: payum.gateway_factory_builder, factory: test-gateway }
 ```
 
 Then configure [PayumBundle](https://github.com/Payum/PayumBundle) and gateways.

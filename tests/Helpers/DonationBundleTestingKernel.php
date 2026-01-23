@@ -8,8 +8,6 @@ use DAMA\DoctrineTestBundle\DAMADoctrineTestBundle;
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
 use ErgoSarapu\DonationBundle\DonationBundle;
 use ErgoSarapu\DonationBundle\Entity\Payment;
-use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Command\IntegrationCommandInterface;
-use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\IntegrationEventInterface;
 use ErgoSarapu\DonationBundle\Tests\Helpers\DependencyInjection\Compiler\TestingCompilerPass;
 use Patchlevel\EventSourcingBundle\PatchlevelEventSourcingBundle;
 use Payum\Bundle\PayumBundle\PayumBundle;
@@ -79,13 +77,6 @@ class DonationBundleTestingKernel extends Kernel
                             'max_retries' => 0,
                         ]
                     ],
-                    // Helper transports for testing integration messages crossing bounded context boundaries
-                    'integration_event' => 'sync://',
-                    'integration_command' => 'sync://',
-                ],
-                'routing' => [
-                    IntegrationCommandInterface::class => 'integration_command',
-                    IntegrationEventInterface::class => 'integration_event',
                 ],
             ]
         ]);

@@ -65,7 +65,7 @@ class CapturePaymentHandlerTest extends TestCase
         $this->gatewayRequest = new GatewayPaymentRequest(
             $paymentId,
             new Money(5000, new Currency('EUR')),
-            new Gateway('montonio'),
+            new Gateway('test-gateway'),
             new ShortDescription('Test donation'),
             new Email('donor@example.com'),
         );

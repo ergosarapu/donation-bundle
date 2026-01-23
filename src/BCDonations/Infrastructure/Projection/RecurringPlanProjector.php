@@ -10,8 +10,12 @@ use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\RecurringPlanT
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Port\RecurringPlanProjectionRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationAccepted;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanActivated;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanFailed;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanFailing;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanInitiated;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanRenewalCompleted;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanRenewalInitiated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanStatus;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use Patchlevel\EventSourcing\Attribute\Projector;
@@ -99,9 +103,53 @@ class RecurringPlanProjector implements RecurringPlanProjectionRepositoryInterfa
         $recurringPlan = $this->findOneOrThrow($event->id);
         $recurringPlan->setUpdatedAt($event->occuredOn);
         $recurringPlan->setStatus($event->status);
+        $recurringPlan->setNextRenewalTime($event->nextRenewalTime);
         $this->projectionEntityManager->persist($recurringPlan);
         $this->projectionEntityManager->flush();
     }
+
+    #[Subscribe(RecurringPlanFailed::class)]
+    public function onRecurringPlanFailed(RecurringPlanFailed $event): void
+    {
+        $recurringPlan = $this->findOneOrThrow($event->id);
+        $recurringPlan->setUpdatedAt($event->occuredOn);
+        $recurringPlan->setStatus($event->status);
+        $recurringPlan->setNextRenewalTime(null);
+        $this->projectionEntityManager->persist($recurringPlan);
+        $this->projectionEntityManager->flush();
+    }
+
+    #[Subscribe(RecurringPlanFailing::class)]
+    public function onRecurringPlanFailing(RecurringPlanFailing $event): void
+    {
+        $recurringPlan = $this->findOneOrThrow($event->id);
+        $recurringPlan->setUpdatedAt($event->occuredOn);
+        $recurringPlan->setStatus($event->status);
+        $this->projectionEntityManager->persist($recurringPlan);
+        $this->projectionEntityManager->flush();
+    }
+
+    #[Subscribe(RecurringPlanRenewalInitiated::class)]
+    public function onRecurringPlanRenewalInitiated(RecurringPlanRenewalInitiated $event): void
+    {
+        $recurringPlan = $this->findOneOrThrow($event->recurringPlanAction->recurringPlanId);
+        $recurringPlan->setUpdatedAt($event->occuredOn);
+        $recurringPlan->setRenewalInProgressDonationId($event->renewalDonationId->toString());
+        $this->projectionEntityManager->persist($recurringPlan);
+        $this->projectionEntityManager->flush();
+    }
+
+    #[Subscribe(RecurringPlanRenewalCompleted::class)]
+    public function onRecurringPlanRenewalCompleted(RecurringPlanRenewalCompleted $event): void
+    {
+        $recurringPlan = $this->findOneOrThrow($event->id);
+        $recurringPlan->setUpdatedAt($event->occuredOn);
+        $recurringPlan->setRenewalInProgressDonationId(null);
+        $recurringPlan->setNextRenewalTime($event->nextRenewalTime);
+        $this->projectionEntityManager->persist($recurringPlan);
+        $this->projectionEntityManager->flush();
+    }
+
 
     #[Subscribe(DonationAccepted::class)]
     public function onDonationAccepted(DonationAccepted $event): void

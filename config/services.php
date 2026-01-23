@@ -184,6 +184,9 @@ return function (ContainerConfigurator $container) {
     $services->set('donation_bundle.donations.application.donation.command_handler.initiate_donation', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\InitiateDonationHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
+    $services->set('donation_bundle.donations.application.donation.command_handler.initiate_donation_integration', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\Integration\InitiateDonationHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
     $services->set('donation_bundle.donations.application.donation.command_handler.mark_donation_as_accepted', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\AcceptDonationHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
@@ -205,9 +208,18 @@ return function (ContainerConfigurator $container) {
     $services->set('donation_bundle.donations.application.donation.command_handler.initiate_recurring_plan_renewal', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\InitiateRecurringPlanRenewalHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
+    $services->set('donation_bundle.donations.application.donation.command_handler.reactivate_recurring_plan', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\ReActivateRecurringPlanHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.donations.application.donation.command_handler.reactivate_recurring_plan_integration', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\Integration\ReActivateRecurringPlanHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
 
     // Payments
     $services->set('donation_bundle.payments.application.payment.command_handler.initiate_payment', \ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\InitiatePaymentHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.payments.application.payment.command_handler.initiate_payment_integration', \ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\Integration\InitiatePaymentHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
     $services->set('donation_bundle.payments.application.payment.command_handler.generate_redirect_capture_url', \ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\GenerateRedirectCaptureURLHandler::class)

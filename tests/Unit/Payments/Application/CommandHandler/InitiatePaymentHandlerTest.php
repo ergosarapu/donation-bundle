@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\Tests\Unit\Payments\Application\CommandHandler;
 
 use DateTimeImmutable;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Command\InitiatePayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\InitiatePaymentHandler;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodAction;
-use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Command\InitiatePaymentIntegrationCommand;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
@@ -28,7 +28,7 @@ class InitiatePaymentHandlerTest extends TestCase
     private InitiatePaymentHandler $handler;
     private PaymentRepositoryInterface&MockObject $paymentRepository;
     private DateTimeImmutable $now;
-    private InitiatePaymentIntegrationCommand $command;
+    private InitiatePayment $command;
 
     protected function setUp(): void
     {
@@ -47,7 +47,7 @@ class InitiatePaymentHandlerTest extends TestCase
 
         $paymentId = PaymentId::generate();
         $amount = new Money(5000, new Currency('EUR'));
-        $gateway = new Gateway('montonio');
+        $gateway = new Gateway('test-gateway');
         $description = new ShortDescription('Test donation');
         $appliedTo = PaymentAppliedToId::generate();
         $email = new Email('donor@example.com');
@@ -56,7 +56,7 @@ class InitiatePaymentHandlerTest extends TestCase
             $paymentId
         );
 
-        $this->command = new InitiatePaymentIntegrationCommand(
+        $this->command = new InitiatePayment(
             $paymentId,
             $amount,
             $gateway,

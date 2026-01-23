@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler;
 
+use ErgoSarapu\DonationBundle\BCPayments\Application\Command\InitiatePayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRequest;
-use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Command\InitiatePaymentIntegrationCommand;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\CommandHandlerInterface;
 use Psr\Clock\ClockInterface;
@@ -20,7 +20,7 @@ class InitiatePaymentHandler implements CommandHandlerInterface
     ) {
     }
 
-    public function __invoke(InitiatePaymentIntegrationCommand $command): void
+    public function __invoke(InitiatePayment $command): void
     {
         // Idempotency: Check if payment already initiated
         if ($this->paymentRepository->has($command->paymentId)) {

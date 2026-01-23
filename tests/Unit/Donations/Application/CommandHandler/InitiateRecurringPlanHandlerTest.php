@@ -49,7 +49,7 @@ class InitiateRecurringPlanHandlerTest extends TestCase
             DonationId::generate(),
             CampaignId::generate(),
             new Money(5000, new Currency('EUR')),
-            new Gateway('montonio'),
+            new Gateway('test-gateway'),
             new DonorIdentity(new Email('donor@example.com'))
         );
 

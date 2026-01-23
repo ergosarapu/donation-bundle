@@ -14,6 +14,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorIdentity;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanActivateNotAllowedException;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanCancelNotAllowedException;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanFailNotAllowedException;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanReActivateNotAllowedException;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanRenewalNotAllowedException;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanRenewalNotDueYetException;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringInterval;
@@ -276,7 +277,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $activatedAt,
                 $this->recurringPlanActionForInit->recurringPlanId,
             )
-        )->when(fn (RecurringPlan $plan) => $plan->activate($reActivationTime))
+        )->when(fn (RecurringPlan $plan) => $plan->reActivate($reActivationTime))
         ->then(
             new RecurringPlanActivated(
                 $reActivationTime,
@@ -312,6 +313,56 @@ class RecurringPlanTest extends AggregateRootTestCase
             ];
 
         }
+    }
+
+    public function testReActivatePendingThrows(): void
+    {
+        $this->given(new RecurringPlanInitiated(
+            $this->now,
+            $this->recurringPlanActionForInit,
+            DonationId::generate(),
+            $this->campaignId,
+            $this->amount,
+            $this->interval,
+            $this->gateway,
+            new DonorIdentity($this->email),
+        ))->when(fn (RecurringPlan $plan) => $plan->reActivate($this->now))
+        ->expectsException(RecurringPlanReActivateNotAllowedException::class);
+    }
+
+    public function testReActivateActiveThrows(): void
+    {
+        $this->given(new RecurringPlanActivated(
+            $this->now,
+            $this->recurringPlanActionForInit->recurringPlanId,
+            $this->now->add($this->interval->toDateInterval()),
+            $this->interval,
+        ))->when(fn (RecurringPlan $plan) => $plan->reActivate($this->now))
+        ->expectsException(RecurringPlanReActivateNotAllowedException::class);
+    }
+
+    public function testReActivateFailedThrows(): void
+    {
+        $this
+        ->given(new RecurringPlanFailed($this->now, $this->recurringPlanActionForInit->recurringPlanId))
+        ->when(fn (RecurringPlan $plan) => $plan->reActivate($this->now))
+        ->expectsException(RecurringPlanReActivateNotAllowedException::class);
+    }
+
+    public function testReActivateExpiredThrows(): void
+    {
+        $this
+        ->given(new RecurringPlanExpired($this->now, $this->recurringPlanActionForInit->recurringPlanId))
+        ->when(fn (RecurringPlan $plan) => $plan->reActivate($this->now))
+        ->expectsException(RecurringPlanReActivateNotAllowedException::class);
+    }
+
+    public function testReActivateCanceledThrows(): void
+    {
+        $this
+        ->given(new RecurringPlanCanceled($this->now, $this->recurringPlanActionForInit->recurringPlanId))
+        ->when(fn (RecurringPlan $plan) => $plan->reActivate($this->now))
+        ->expectsException(RecurringPlanReActivateNotAllowedException::class);
     }
 
     public function testFailedRecurringAttemptResultsFailing(): void

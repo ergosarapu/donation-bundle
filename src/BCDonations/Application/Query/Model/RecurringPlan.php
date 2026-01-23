@@ -20,6 +20,8 @@ class RecurringPlan
     private ?string $paymentMethodId;
     private DateTimeImmutable $createdAt;
     private DateTimeImmutable $updatedAt;
+    private ?DateTimeImmutable $nextRenewalTime;
+    private ?string $renewalInProgressDonationId;
 
     public function getRecurringPlanId(): string
     {
@@ -130,5 +132,24 @@ class RecurringPlan
     public function setPaymentMethodId(?string $paymentMethodId): void
     {
         $this->paymentMethodId = $paymentMethodId;
+    }
+    public function getNextRenewalTime(): ?DateTimeImmutable
+    {
+        return $this->nextRenewalTime;
+    }
+
+    public function setNextRenewalTime(?DateTimeImmutable $nextRenewalTime): void
+    {
+        $this->nextRenewalTime = $nextRenewalTime;
+    }
+
+    public function getRenewalInProgressDonationId(): ?string
+    {
+        return $this->renewalInProgressDonationId;
+    }
+
+    public function setRenewalInProgressDonationId(?string $renewalInProgressDonationId): void
+    {
+        $this->renewalInProgressDonationId = $renewalInProgressDonationId;
     }
 }

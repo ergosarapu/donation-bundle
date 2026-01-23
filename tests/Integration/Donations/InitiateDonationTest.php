@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\Tests\Integration\Donations;
 
-use ErgoSarapu\DonationBundle\BCDonations\Application\Command\InitiateDonation;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\InitiateRecurringPlan;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetDonation;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetDonations;
@@ -26,6 +25,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetPayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetPendingPayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model\Payment;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
+use ErgoSarapu\DonationBundle\IntegrationContracts\Donations\Command\InitiateDonationIntegrationCommand;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\QueryBusInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
@@ -79,7 +79,7 @@ class InitiateDonationTest extends KernelTestCase
             new Gateway('test'),
             new DonorIdentity(),
         );
-        $initiateDonation = new InitiateDonation($donationRequest);
+        $initiateDonation = new InitiateDonationIntegrationCommand($donationRequest);
         $this->commandBus->dispatch($initiateDonation);
 
         /** @var ?Donation $donation */
@@ -118,7 +118,7 @@ class InitiateDonationTest extends KernelTestCase
             new Gateway('test'),
             new DonorIdentity(),
         );
-        $initiateDonation = new InitiateDonation($donationRequest);
+        $initiateDonation = new InitiateDonationIntegrationCommand($donationRequest);
         $this->commandBus->dispatch($initiateDonation);
 
         /** @var ?Donation $donation */

@@ -24,13 +24,8 @@ class AcceptanceTestingKernel extends DonationBundleTestingKernel
         $builder->loadFromExtension('framework', [
             'messenger' => [
                 'transports' => [
-                    'event' => 'test://?intercept=false&catch_exceptions=false',
-                    'command' => 'test://?intercept=false&catch_exceptions=false',
                     // Intercept delayed messages to avoid triggering immediate handling
                     'delayed' => 'test://?intercept=true&catch_exceptions=false&support_delay_stamp=true',
-                    // Intercept integration messages and avoid triggering handlers outside of bounded context
-                    'integration_event' => 'test://?intercept=true&catch_exceptions=false',
-                    'integration_command' => 'test://?intercept=true&catch_exceptions=false',
                 ],
             ]
         ]);

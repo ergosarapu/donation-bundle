@@ -57,7 +57,7 @@ class GenerateRedirectCaptureURLHandlerTest extends TestCase
 
         $paymentId = PaymentId::generate();
         $amount = new Money(5000, new Currency('EUR'));
-        $gateway = new Gateway('montonio');
+        $gateway = new Gateway('test-gateway');
         $description = new ShortDescription('Test donation');
         $email = new Email('donor@example.com');
         $this->command = new GenerateRedirectCaptureUrl($paymentId, $amount, $gateway, $description, $email, false);

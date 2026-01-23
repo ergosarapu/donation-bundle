@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event;
+namespace ErgoSarapu\DonationBundle\IntegrationContracts;
 
 interface IntegrationEventInterface
 {

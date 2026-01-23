@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\Controller;
 
-use ErgoSarapu\DonationBundle\BCDonations\Application\Command\InitiateDonation;
-use ErgoSarapu\DonationBundle\BCDonations\Application\Command\InitiateRecurringPlan;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationRequest;
@@ -17,6 +15,7 @@ use ErgoSarapu\DonationBundle\Form\DonationFormStep1Type;
 use ErgoSarapu\DonationBundle\Form\DonationFormStep2Type;
 use ErgoSarapu\DonationBundle\Form\DonationFormStep3Type;
 use ErgoSarapu\DonationBundle\Form\FormOptionsProvider;
+use ErgoSarapu\DonationBundle\IntegrationContracts\Donations\Command\InitiateDonationIntegrationCommand;
 use ErgoSarapu\DonationBundle\Repository\CampaignRepository;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
@@ -60,8 +59,6 @@ class IndexController extends AbstractController
 
                 $amount = new Money($donation->getAmount(), new Currency($donation->getCurrencyCode()));
 
-                $redirectParams = [];
-                $redirectRoute = null;
                 $campaignId = CampaignId::generate(); // TODO: use active campaign id
 
                 $donationRequest = new DonationRequest(
@@ -71,21 +68,15 @@ class IndexController extends AbstractController
                     gateway: $gateway,
                     donorIdentity: new DonorIdentity(), // TODO: donor info if available
                 );
-                if ($donation->getFrequency() === null) {
-                    $command = new InitiateDonation($donationRequest);
-                    $redirectParams['donationId'] = $command->donationRequest->donationId->toString();
-                    $redirectRoute = 'donation_redirect';
-                } else {
+
+                $interval = null;
+                if ($donation->getFrequency() !== null) {
                     $interval = new RecurringInterval($donation->getFrequency());
-                    $command = new InitiateRecurringPlan($interval, $donationRequest);
-                    $redirectParams['recurringDonationId'] = $command->recurringPlanId->toString();
                 }
-
+                $command = new InitiateDonationIntegrationCommand($donationRequest, $interval);
                 $this->commandBus->dispatch($command);
-
                 $request->getSession()->remove('donation');
-
-                return $this->redirectToRoute($redirectRoute, $redirectParams);
+                return $this->redirectToRoute('donation_redirect', ['donationId' => $command->donationRequest->donationId->toString()]);
             }
 
             $request->getSession()->set('donation', $donation);

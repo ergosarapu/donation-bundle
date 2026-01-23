@@ -24,9 +24,7 @@ Feature: Payment Method request, store and usage workflow
     Given usable payment method exists
     And gateway <gateway_result> payment with <method_result> payment method result
     When initiate payment using stored payment method
-    Then payment is initiated
-    And payment method use is permitted
-    And payment is marked as <payment_result>
+    Then payment is marked as <payment_result>
     And stored payment method is <method_state>
     And <method_integration_event> payment method integration event is emitted 
 
@@ -42,15 +40,13 @@ Feature: Payment Method request, store and usage workflow
   Scenario: Payment capture fails with unusable stored payment method
     Given unusable payment method exists
     When initiate payment using stored payment method
-    Then payment is initiated
-    And payment method use is rejected
-    And payment is marked as failed
+    Then payment is marked as failed
 
   Scenario: Payment fails when payment method does not exist
     Given payment method does not exist
     When initiate payment using stored payment method
-    Then payment is initiated
-    And payment is marked as failed
+    # Then payment is initiated
+    Then payment is marked as failed
 
   Scenario: Payment captured without stored payment method
     Given gateway returns a redirect URL

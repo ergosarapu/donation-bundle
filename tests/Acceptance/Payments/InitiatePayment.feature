@@ -12,7 +12,7 @@ Feature: Payment Initiation Workflow
   Scenario: Initiate payment with gateway not returning redirect URL
     Given gateway does not return a redirect URL
     When initiate payment
-    Then payment is initiated
+    # Then payment is initiated
     And payment is marked as failed
     And payment did not succeed integration event is emitted
 

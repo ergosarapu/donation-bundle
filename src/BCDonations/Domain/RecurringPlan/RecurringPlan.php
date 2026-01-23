@@ -13,6 +13,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorIdentity;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanActivateNotAllowedException;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanCancelNotAllowedException;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanFailNotAllowedException;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanReActivateNotAllowedException;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanRenewalNotAllowedException;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanRenewalNotDueYetException;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
@@ -192,7 +193,7 @@ class RecurringPlan extends BasicAggregateRoot
         }
         if ($this->status === RecurringPlanStatus::Failing) {
             $this->completeRenewal($currentTime);
-            $this->activate($currentTime);
+            $this->reActivate($currentTime);
             return;
         }
     }
@@ -214,9 +215,16 @@ class RecurringPlan extends BasicAggregateRoot
     public function activate(DateTimeImmutable $currentTime): void
     {
         match ($this->status) {
-            RecurringPlanStatus::Pending,
-            RecurringPlanStatus::Failing => $this->calculateNextRenewalTimeAndActivate($currentTime),
+            RecurringPlanStatus::Pending => $this->calculateNextRenewalTimeAndActivate($currentTime),
             default => throw new RecurringPlanActivateNotAllowedException('Activate not allowed from status: ' . $this->status->value),
+        };
+    }
+
+    public function reActivate(DateTimeImmutable $currentTime): void
+    {
+        match ($this->status) {
+            RecurringPlanStatus::Failing => $this->calculateNextRenewalTimeAndActivate($currentTime),
+            default => throw new RecurringPlanReActivateNotAllowedException('Re-activate not allowed from status: ' . $this->status->value),
         };
     }
 
