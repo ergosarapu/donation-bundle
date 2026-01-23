@@ -37,11 +37,10 @@ class Payment extends BasicAggregateRoot
     public static function initiate(
         DateTimeImmutable $currentTime,
         PaymentRequest $paymentRequest,
-        ?PaymentMethodAction $paymentMethodAction,
     ): self {
         $payment = new self();
-        if ($paymentMethodAction !== null) {
-            self::validatePaymentIds($paymentMethodAction, $paymentRequest);
+        if ($paymentRequest->paymentMethodAction !== null) {
+            self::validatePaymentIds($paymentRequest->paymentMethodAction, $paymentRequest);
         }
 
         $payment->recordThat(new PaymentInitiated(
@@ -52,7 +51,7 @@ class Payment extends BasicAggregateRoot
             $paymentRequest->description,
             $paymentRequest->appliedTo,
             $paymentRequest->email,
-            $paymentMethodAction,
+            $paymentRequest->paymentMethodAction,
         ));
         return $payment;
     }
@@ -76,12 +75,6 @@ class Payment extends BasicAggregateRoot
         $this->email = $event->email;
         $this->paymentMethodAction = $event->paymentMethodAction;
     }
-
-    // #[Apply]
-    // protected function applyPaymentPending(PaymentPending $event): void
-    // {
-    //     $this->status = $event->status;
-    // }
 
     #[Apply]
     protected function applyPaymentAuthorized(PaymentAuthorized $event): void

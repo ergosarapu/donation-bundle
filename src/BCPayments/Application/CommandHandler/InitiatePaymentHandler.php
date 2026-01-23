@@ -7,7 +7,6 @@ namespace ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\InitiatePayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRequest;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\CommandHandlerInterface;
 use Psr\Clock\ClockInterface;
@@ -23,24 +22,14 @@ class InitiatePaymentHandler implements CommandHandlerInterface
     public function __invoke(InitiatePayment $command): void
     {
         // Idempotency: Check if payment already initiated
-        if ($this->paymentRepository->has($command->paymentId)) {
+        if ($this->paymentRepository->has($command->paymentRequest->paymentId)) {
             return;
         }
-
-        $paymentRequest = new PaymentRequest(
-            $command->paymentId,
-            $command->amount,
-            $command->gateway,
-            $command->description,
-            $command->appliedTo,
-            $command->email,
-        );
 
         // Initiate payment aggregate
         $payment = Payment::initiate(
             $this->clock->now(),
-            $paymentRequest,
-            $command->paymentMethodAction,
+            $command->paymentRequest,
         );
         try {
             $this->paymentRepository->save($payment);

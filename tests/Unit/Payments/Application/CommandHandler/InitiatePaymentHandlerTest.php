@@ -10,6 +10,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\InitiatePaym
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodAction;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRequest;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
@@ -56,7 +57,7 @@ class InitiatePaymentHandlerTest extends TestCase
             $paymentId
         );
 
-        $this->command = new InitiatePayment(
+        $paymentRequest = new PaymentRequest(
             $paymentId,
             $amount,
             $gateway,
@@ -65,13 +66,17 @@ class InitiatePaymentHandlerTest extends TestCase
             $email,
             $methodAction
         );
+
+        $this->command = new InitiatePayment(
+            $paymentRequest
+        );
     }
 
     public function testInitiatesPayment(): void
     {
         $this->paymentRepository->expects($this->once())
             ->method('has')
-            ->with($this->command->paymentId)
+            ->with($this->command->paymentRequest->paymentId)
             ->willReturn(false);
         $this->paymentRepository->expects($this->once())
             ->method('save')
@@ -86,7 +91,7 @@ class InitiatePaymentHandlerTest extends TestCase
     {
         $this->paymentRepository->expects($this->once())
             ->method('has')
-            ->with($this->command->paymentId)
+            ->with($this->command->paymentRequest->paymentId)
             ->willReturn(true);
         $this->paymentRepository->expects($this->never())
             ->method('save');
@@ -98,7 +103,7 @@ class InitiatePaymentHandlerTest extends TestCase
     {
         $this->paymentRepository->expects($this->once())
             ->method('has')
-            ->with($this->command->paymentId)
+            ->with($this->command->paymentRequest->paymentId)
             ->willReturn(false);
         $this->paymentRepository->expects($this->once())
             ->method('save')

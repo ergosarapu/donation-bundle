@@ -20,6 +20,7 @@ final class PaymentRequest
         public readonly ShortDescription $description,
         public readonly PaymentAppliedToId $appliedTo,
         public readonly ?Email $email = null,
+        public readonly ?PaymentMethodAction $paymentMethodAction = null,
     ) {
     }
 }

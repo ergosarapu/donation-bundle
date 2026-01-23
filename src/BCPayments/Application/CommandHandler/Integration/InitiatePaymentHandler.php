@@ -19,13 +19,7 @@ class InitiatePaymentHandler implements CommandHandlerInterface
     public function __invoke(InitiatePaymentIntegrationCommand $command): void
     {
         $this->commandBus->dispatch(new InitiatePayment(
-            $command->paymentId,
-            $command->amount,
-            $command->gateway,
-            $command->description,
-            $command->appliedTo,
-            $command->email,
-            $command->paymentMethodAction,
+            $command->paymentRequest,
         ));
     }
 }

@@ -79,11 +79,11 @@ class PaymentTest extends AggregateRootTestCase
             $this->description,
             $this->appliedTo,
             $this->email,
+            null,
         );
         $this->when(fn () => Payment::initiate(
             $this->now,
             $paymentRequest,
-            null,
         ))->then(
             new PaymentInitiated(
                 $this->now,
@@ -100,6 +100,10 @@ class PaymentTest extends AggregateRootTestCase
 
     public function testInitiateWithPaymentMethodAction(): void
     {
+        $methodAction = PaymentMethodAction::forRequest(
+            $this->paymentMethodId,
+            $this->paymentId,
+        );
         $paymentRequest = new PaymentRequest(
             $this->paymentId,
             $this->amount,
@@ -107,15 +111,11 @@ class PaymentTest extends AggregateRootTestCase
             $this->description,
             $this->appliedTo,
             $this->email,
-        );
-        $methodAction = PaymentMethodAction::forRequest(
-            $this->paymentMethodId,
-            $this->paymentId,
+            $methodAction,
         );
         $this->when(fn () => Payment::initiate(
             $this->now,
             $paymentRequest,
-            $methodAction,
         ))->then(
             new PaymentInitiated(
                 $this->now,
@@ -132,6 +132,10 @@ class PaymentTest extends AggregateRootTestCase
 
     public function testInitiatePaymentMethodActionPaymentIdMismatchThrows(): void
     {
+        $methodAction = PaymentMethodAction::forRequest(
+            $this->paymentMethodId,
+            PaymentId::generate(),
+        );
         $paymentRequest = new PaymentRequest(
             $this->paymentId,
             $this->amount,
@@ -139,15 +143,11 @@ class PaymentTest extends AggregateRootTestCase
             $this->description,
             $this->appliedTo,
             $this->email,
-        );
-        $methodAction = PaymentMethodAction::forRequest(
-            $this->paymentMethodId,
-            PaymentId::generate(),
+            $methodAction,
         );
         $this->when(fn () => Payment::initiate(
             $this->now,
             $paymentRequest,
-            $methodAction,
         ))->expectsException(LogicException::class)->expectsExceptionMessage('Payment method action paymentId does not match payment request paymentId.');
     }
 

@@ -23,6 +23,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodResult;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodUnusable;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodUnusableReason;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRedirectUrlSetUp;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRequest;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\UnusablePaymentMethodCreated;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\UsablePaymentMethodCreated;
@@ -98,7 +99,7 @@ class PaymentsContext implements Context
 
     private function createInitiatePaymentCommand(?PaymentMethodAction $paymentMethodAction = null): InitiatePaymentIntegrationCommand
     {
-        return new InitiatePaymentIntegrationCommand(
+        $paymentRequest = new PaymentRequest(
             $this->lastPaymentId,
             $this->getDefaultTestMoney(),
             new Gateway('test-gateway'),
@@ -106,6 +107,10 @@ class PaymentsContext implements Context
             PaymentAppliedToId::generate(),
             new Email('test@example.com'),
             $paymentMethodAction,
+        );
+
+        return new InitiatePaymentIntegrationCommand(
+            $paymentRequest
         );
     }
 

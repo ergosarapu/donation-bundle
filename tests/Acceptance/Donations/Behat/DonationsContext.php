@@ -158,8 +158,8 @@ class DonationsContext implements Context
 
         /** @var InitiatePaymentIntegrationCommand $command */
         $command = $messages[0];
-        Assert::notNull($command->paymentMethodAction);
-        Assert::eq($command->paymentMethodAction->intent, PaymentMethodActionIntent::Request);
+        Assert::notNull($command->paymentRequest->paymentMethodAction);
+        Assert::eq($command->paymentRequest->paymentMethodAction->intent, PaymentMethodActionIntent::Request);
         $this->commandBus->resetDispatched();
     }
 
@@ -171,8 +171,8 @@ class DonationsContext implements Context
 
         /** @var InitiatePaymentIntegrationCommand $command */
         $command = $messages[0];
-        Assert::notNull($command->paymentMethodAction);
-        Assert::eq($command->paymentMethodAction->intent, PaymentMethodActionIntent::Use);
+        Assert::notNull($command->paymentRequest->paymentMethodAction);
+        Assert::eq($command->paymentRequest->paymentMethodAction->intent, PaymentMethodActionIntent::Use);
         $this->commandBus->resetDispatched();
     }
 

@@ -7,6 +7,7 @@ namespace ErgoSarapu\DonationBundle\Tests\Unit\Payments\Application\CommandHandl
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\InitiatePayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\Integration\InitiatePaymentHandler;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodAction;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRequest;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Command\InitiatePaymentIntegrationCommand;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
@@ -46,7 +47,7 @@ class InitiatePaymentHandlerTest extends TestCase
             $paymentId
         );
 
-        $integrationCommand = new InitiatePaymentIntegrationCommand(
+        $paymentRequest = new PaymentRequest(
             $paymentId,
             $amount,
             $gateway,
@@ -56,17 +57,15 @@ class InitiatePaymentHandlerTest extends TestCase
             $methodAction
         );
 
+        $integrationCommand = new InitiatePaymentIntegrationCommand(
+            $paymentRequest
+        );
+
         $this->commandBus->expects($this->once())
             ->method('dispatch')
-            ->with($this->callback(function ($command) use ($paymentId, $amount, $gateway, $description, $appliedTo, $email, $methodAction) {
+            ->with($this->callback(function ($command) use ($paymentRequest) {
                 return $command instanceof InitiatePayment
-                    && $command->paymentId === $paymentId
-                    && $command->amount === $amount
-                    && $command->gateway === $gateway
-                    && $command->description === $description
-                    && $command->appliedTo === $appliedTo
-                    && $command->email === $email
-                    && $command->paymentMethodAction === $methodAction;
+                    && $command->paymentRequest === $paymentRequest;
             }));
 
         ($this->handler)($integrationCommand);
