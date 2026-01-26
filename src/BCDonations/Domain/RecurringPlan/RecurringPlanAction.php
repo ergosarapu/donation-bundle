@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan;
 
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
+use Patchlevel\Hydrator\Normalizer\ObjectNormalizer;
 
+#[ObjectNormalizer]
 class RecurringPlanAction
 {
     private function __construct(
