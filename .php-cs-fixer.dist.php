@@ -10,6 +10,7 @@ $finder = (new PhpCsFixer\Finder())
         __DIR__.'/src/SharedApplication',
         __DIR__.'/src/SharedInfrastructure',
         __DIR__.'/tests',
+        __DIR__.'/src/Controller/Admin/CQRS',
     ])
 ;
 

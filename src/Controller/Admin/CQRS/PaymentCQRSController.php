@@ -34,8 +34,13 @@ class PaymentCQRSController extends AbstractCQRSController
     public function dispatchCommandsForUpdate(object $entity, PreUpdateEventArgs $updateEvent): void
     {
         $changes = $updateEvent->getEntityChangeSet();
+        /** @var string $field */
         foreach ($changes as $field => $change) {
-            $this->addFlash('warning', sprintf('No command was dispatched for "%s" field change, old value "%s", new value "%s"', $field, $updateEvent->getOldValue($field), $updateEvent->getNewValue($field)));
+            /** @var string $oldValue */
+            $oldValue = $updateEvent->getOldValue($field);
+            /** @var string $newValue */
+            $newValue = $updateEvent->getNewValue($field);
+            $this->addFlash('warning', sprintf('No command was dispatched for "%s" field change, old value "%s", new value "%s"', $field, $oldValue, $newValue));
         }
     }
 
@@ -48,8 +53,8 @@ class PaymentCQRSController extends AbstractCQRSController
     {
         return [
             IdField::new('id')->setDisabled()->hideOnIndex(),
-            IdField::new('id')->setDisabled()->formatValue(function ($value, $entity) {
-                return substr((string)$value, -12);
+            IdField::new('id')->setDisabled()->formatValue(function (string $value): string {
+                return substr($value, -12);
             })->hideOnDetail()->hideOnForm(),
             MoneyField::new('amount')->setCurrencyPropertyPath('currency'),
             ChoiceField::new('status'),

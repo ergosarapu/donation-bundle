@@ -19,8 +19,11 @@ use ErgoSarapu\DonationBundle\IntegrationContracts\Donations\Command\InitiateDon
 use ErgoSarapu\DonationBundle\Repository\CampaignRepository;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
 use InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormInterface;
@@ -55,8 +58,17 @@ class IndexController extends AbstractController
             if ($step === 3) {
                 /** @var DonationDto $donation */
                 $donation = $form->getData();
+                if ($donation->getGateway() === null) {
+                    throw new InvalidArgumentException('Gateway must be set at this point');
+                }
                 $gateway = new Gateway($donation->getGateway());
 
+                if ($donation->getAmount() === null) {
+                    throw new InvalidArgumentException('Amount must be set at this point');
+                }
+                if ($donation->getCurrencyCode() === null) {
+                    throw new InvalidArgumentException('Currency code must be set at this point');
+                }
                 $amount = new Money($donation->getAmount(), new Currency($donation->getCurrencyCode()));
 
                 $campaignId = CampaignId::generate(); // TODO: use active campaign id
@@ -66,7 +78,11 @@ class IndexController extends AbstractController
                     campaignId: $campaignId,
                     amount: $amount,
                     gateway: $gateway,
-                    donorIdentity: new DonorIdentity(), // TODO: donor info if available
+                    donorIdentity: new DonorIdentity(
+                        $this->getDomainEmail($donation),
+                        $this->getDomainPersonName($donation),
+                        $this->getDomainNationalIdCode($donation),
+                    ),
                 );
 
                 $interval = null;
@@ -156,5 +172,30 @@ class IndexController extends AbstractController
             throw new InvalidArgumentException('Multiple default campaigns found');
         }
         return $campaigns[0];
+    }
+
+
+    private function getDomainPersonName(DonationDto $donation): ?PersonName
+    {
+        if ($donation->getGivenName() === null && $donation->getFamilyName() === null) {
+            return null;
+        }
+        return new PersonName($donation->getGivenName(), $donation->getFamilyName());
+    }
+
+    private function getDomainEmail(DonationDto $donation): ?Email
+    {
+        if ($donation->getEmail() === null) {
+            return null;
+        }
+        return new Email($donation->getEmail());
+    }
+
+    private function getDomainNationalIdCode(DonationDto $donation): ?NationalIdCode
+    {
+        if ($donation->getNationalIdCode() === null) {
+            return null;
+        }
+        return new NationalIdCode($donation->getNationalIdCode());
     }
 }

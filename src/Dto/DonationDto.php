@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\Dto;
 
 use Money\Currencies\ISOCurrencies;
@@ -61,103 +63,128 @@ class DonationDto
 
     private ?string $frequency = null;
 
-    public function getEmail():?string{
+    public function getEmail(): ?string
+    {
         return $this->email;
     }
 
-    public function setEmail(?string $email):void{
+    public function setEmail(?string $email): void
+    {
         $this->email = $email;
     }
 
-    public function getGivenName():?string{
+    public function getGivenName(): ?string
+    {
         return $this->givenName;
     }
 
-    public function setGivenName(?string $givenName):void{
+    public function setGivenName(?string $givenName): void
+    {
         $this->givenName = $givenName;
     }
 
-    public function getFamilyName():?string{
+    public function getFamilyName(): ?string
+    {
         return $this->familyName;
     }
 
-    public function setFamilyName(?string $familyName):void{
+    public function setFamilyName(?string $familyName): void
+    {
         $this->familyName = $familyName;
     }
 
-    public function getNationalIdCode():?string{
+    public function getNationalIdCode(): ?string
+    {
         return $this->nationalIdCode;
     }
 
-    public function setNationalIdCode(?string $nationalIdCode):void{
+    public function setNationalIdCode(?string $nationalIdCode): void
+    {
         $this->nationalIdCode = $nationalIdCode;
     }
 
-    public function getCurrencyCode():?string{
+    public function getCurrencyCode(): ?string
+    {
         return $this->currencyCode;
     }
 
-    public function setCurrencyCode(?string $currencyCode):void{
+    public function setCurrencyCode(?string $currencyCode): void
+    {
         $this->currencyCode = $currencyCode;
     }
 
-    public function getAmount():?int{
+    public function getAmount(): ?int
+    {
         return $this->amount;
     }
 
-    public function setAmount(?int $amount):void{
+    public function setAmount(?int $amount): void
+    {
         $this->amount = $amount;
     }
 
-    public function getChosenAmount():?int{
+    public function getChosenAmount(): ?int
+    {
         return $this->chosenAmount;
     }
 
-    public function setChosenAmount(?int $chosenAmount):void{
+    public function setChosenAmount(?int $chosenAmount): void
+    {
         $this->chosenAmount = $chosenAmount;
     }
 
-    public function isTaxReturn():bool{
+    public function isTaxReturn(): bool
+    {
         return $this->taxReturn;
     }
 
-    public function setTaxReturn(bool $taxReturn):void{
+    public function setTaxReturn(bool $taxReturn): void
+    {
         $this->taxReturn = $taxReturn;
     }
 
-    public function getGatewayCountry():?string{
+    public function getGatewayCountry(): ?string
+    {
         return $this->gatewayCountry;
     }
 
-    public function setGatewayCountry(?string $gatewayCountry):void{
+    public function setGatewayCountry(?string $gatewayCountry): void
+    {
         $this->gatewayCountry = $gatewayCountry;
     }
 
-    public function getGateway():?string{
+    public function getGateway(): ?string
+    {
         return $this->gateway;
     }
 
-    public function setGateway(?string $gateway):void{
+    public function setGateway(?string $gateway): void
+    {
         $this->gateway = $gateway;
     }
 
-    public function getGatewayGroup():?string{
+    public function getGatewayGroup(): ?string
+    {
         return $this->gatewayGroup;
     }
 
-    public function setGatewayGroup(?string $gatewayGroup):void{
+    public function setGatewayGroup(?string $gatewayGroup): void
+    {
         $this->gatewayGroup = $gatewayGroup;
     }
 
-    public function getFrequency():?string{
+    public function getFrequency(): ?string
+    {
         return $this->frequency;
     }
 
-    public function setFrequency(?string $frequency):void{
+    public function setFrequency(?string $frequency): void
+    {
         $this->frequency = $frequency;
     }
 
-    public function decimalAmount():string {
+    public function decimalAmount(): string
+    {
         $money = new Money($this->amount, new Currency($this->currencyCode));
         $moneyFormatter = new DecimalMoneyFormatter(new ISOCurrencies());
         return $moneyFormatter->format($money);

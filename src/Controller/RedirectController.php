@@ -19,9 +19,6 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class RedirectController extends AbstractController
 {
-    /**
-     * @param QueryBusInterface<mixed> $queryBus
-     */
     public function __construct(
         private readonly QueryBusInterface $queryBus
     ) {

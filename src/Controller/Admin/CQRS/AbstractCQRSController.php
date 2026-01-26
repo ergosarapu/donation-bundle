@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\Controller\Admin\CQRS;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Event\PreUpdateEventArgs;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
-use ErgoSarapu\DonationBundle\SharedInfrastructure\Doctrine\PersistEntityInterceptedException;
 use ErgoSarapu\DonationBundle\SharedInfrastructure\Doctrine\DeleteEntityInterceptedException;
+use ErgoSarapu\DonationBundle\SharedInfrastructure\Doctrine\PersistEntityInterceptedException;
 use ErgoSarapu\DonationBundle\SharedInfrastructure\Doctrine\UpdateEntityInterceptedException;
 
 /**
@@ -18,43 +20,49 @@ abstract class AbstractCQRSController extends AbstractCrudController
 {
     public function updateEntity(EntityManagerInterface $entityManager, $entityInstance): void
     {
-        try{
+        try {
             parent::updateEntity($entityManager, $entityInstance);
-        } catch(UpdateEntityInterceptedException $e){
-            $this->dispatchCommandsForUpdate($e->getEntity(), $e->getUpdateEvent());
+        } catch (UpdateEntityInterceptedException $e) {
+            /** @var TEntity $entity */
+            $entity = $e->getEntity();
+            $this->dispatchCommandsForUpdate($entity, $e->getUpdateEvent());
         }
     }
 
     public function persistEntity(EntityManagerInterface $entityManager, $entityInstance): void
     {
-        try{
+        try {
             parent::persistEntity($entityManager, $entityInstance);
-        } catch(PersistEntityInterceptedException $e){
-            $this->dispatchCommandsForPersist($e->getEntity());
+        } catch (PersistEntityInterceptedException $e) {
+            /** @var TEntity $entity */
+            $entity = $e->getEntity();
+            $this->dispatchCommandsForPersist($entity);
         }
     }
 
     public function deleteEntity(EntityManagerInterface $entityManager, $entityInstance): void
     {
-        try{
+        try {
             parent::deleteEntity($entityManager, $entityInstance);
-        } catch(DeleteEntityInterceptedException $e){
-            $this->dispatchCommandsForDelete($e->getEntity());
+        } catch (DeleteEntityInterceptedException $e) {
+            /** @var TEntity $entity */
+            $entity = $e->getEntity();
+            $this->dispatchCommandsForDelete($entity);
         }
     }
 
     /**
      * @param TEntity $entity
      */
-    public abstract function dispatchCommandsForUpdate(object $entity, PreUpdateEventArgs $updateEvent): void;
+    abstract public function dispatchCommandsForUpdate(object $entity, PreUpdateEventArgs $updateEvent): void;
 
     /**
      * @param TEntity $entity
      */
-    public abstract function dispatchCommandsForPersist(object $entity): void;
+    abstract public function dispatchCommandsForPersist(object $entity): void;
 
     /**
      * @param TEntity $entity
      */
-    public abstract function dispatchCommandsForDelete(object $entity): void;
+    abstract public function dispatchCommandsForDelete(object $entity): void;
 }
