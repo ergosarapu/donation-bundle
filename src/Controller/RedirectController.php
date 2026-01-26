@@ -16,7 +16,6 @@ use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
-use Symfony\Component\HttpKernel\Exception\ServiceUnavailableHttpException;
 
 class RedirectController extends AbstractController
 {
@@ -28,18 +27,13 @@ class RedirectController extends AbstractController
     ) {
     }
 
-    public function __invoke(?string $donationId = null, ?string $recurringPlanId = null): Response
+    public function __invoke(?string $donationId = null): Response
     {
-        // TODO: Recurring donations
-        // if ($recurringDonationId !== null){
-        //     return $this->handleRecurringDonationRedirection(RecurringDonationId::fromString($recurringDonationId));
-        // }
-
-        if ($donationId !== null) {
-            return $this->handleDonationRedirection(DonationId::fromString($donationId));
+        if ($donationId === null) {
+            throw new BadRequestHttpException('Id must be provided');
         }
 
-        throw new BadRequestHttpException('Id must be provided');
+        return $this->handleDonationRedirection(DonationId::fromString($donationId));
     }
 
     private function handleDonationRedirection(DonationId $donationId): Response
@@ -63,15 +57,13 @@ class RedirectController extends AbstractController
     {
         /** @var ?Payment $payment  */
         $payment = $this->queryBus->ask(new GetPayment(PaymentId::fromString($donation->getPaymentId())));
-        if ($payment === null) {
+        if ($payment === null || $payment->getRedirectUrl() === null) {
+            // Redirect to self after short delay to allow for projection to complete
             return $this->render('@Donation/redirect.html.twig', ['targetUrl' => $selfUrl, 'redirectAfterMilliseconds' => 1000]);
         }
         if ($payment->getStatus() !== PaymentStatus::Pending) {
             // Maybe redirect to home?
             throw new BadRequestHttpException('Payment is not pending');
-        }
-        if ($payment->getRedirectUrl() === null) {
-            throw new ServiceUnavailableHttpException('Payment capture URL not available');
         }
         return $this->render('@Donation/redirect.html.twig', ['targetUrl' => $payment->getRedirectUrl(), 'redirectAfterMilliseconds' => 0]);
     }
