@@ -9,12 +9,22 @@ use Behat\Hook\BeforeScenario;
 use Behat\Step\Given;
 use Behat\Step\Then;
 use Behat\Step\When;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Command\ActivateCampaign;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Command\ArchiveCampaign;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Command\CreateCampaign;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Command\UpdateCampaignName;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Command\UpdateCampaignPublicTitle;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetCampaign;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetDonation;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetPendingDonation;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetRecurringPlan;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\Campaign;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\Donation;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\RecurringPlan;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignName;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignPublicTitle;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignStatus;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationRequest;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationStatus;
@@ -43,10 +53,12 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\Tests\Helpers\TestCommandBus;
 use ErgoSarapu\DonationBundle\Tests\Helpers\TestEventBus;
+use LogicException;
 use Patchlevel\EventSourcing\Clock\FrozenClock;
 use Patchlevel\EventSourcing\Subscription\Engine\SubscriptionEngine;
 use Psr\Clock\ClockInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Throwable;
 use Webmozart\Assert\Assert;
 use Zenstruck\Messenger\Test\Transport\TestTransport;
 
@@ -58,6 +70,8 @@ class DonationsContext implements Context
     private PaymentMethodId $lastPaymentMethodId;
     private RecurringInterval $lastRecurringInterval;
     private FrozenClock $clock;
+    private CampaignId $lastCampaignId;
+    private ?Throwable $lastException = null;
 
     public function __construct(
         #[Autowire(service: 'messenger.transport.delayed')]
@@ -341,4 +355,179 @@ class DonationsContext implements Context
             $this->lastRecurringPlanId,
         ));
     }
+
+    // Campaign-related steps
+
+    #[When('create campaign with name :name and public title :publicTitle')]
+    public function createCampaignWithNameAndPublicTitle(string $name, string $publicTitle): void
+    {
+        $command = new CreateCampaign(
+            new CampaignName($name),
+            new CampaignPublicTitle($publicTitle)
+        );
+        $this->lastCampaignId = $command->campaignId;
+        $this->commandBus->dispatch($command);
+    }
+
+    #[When('update campaign name to :newName')]
+    public function updateCampaignNameTo(string $newName): void
+    {
+        Assert::notNull($this->lastCampaignId);
+
+        $command = new UpdateCampaignName(
+            $this->lastCampaignId,
+            new CampaignName($newName)
+        );
+
+        $this->commandBus->dispatch($command);
+    }
+
+    #[When('update campaign public title to :newPublicTitle')]
+    public function updateCampaignPublicTitleTo(string $newPublicTitle): void
+    {
+        Assert::notNull($this->lastCampaignId);
+
+        $command = new UpdateCampaignPublicTitle(
+            $this->lastCampaignId,
+            new CampaignPublicTitle($newPublicTitle)
+        );
+
+        $this->commandBus->dispatch($command);
+    }
+
+    #[When('activate campaign')]
+    public function activateCampaign(): void
+    {
+        Assert::notNull($this->lastCampaignId);
+
+        $command = new ActivateCampaign($this->lastCampaignId);
+
+        $this->commandBus->dispatch($command);
+    }
+
+    #[When('archive campaign')]
+    public function archiveCampaign(): void
+    {
+        Assert::notNull($this->lastCampaignId);
+
+        $command = new ArchiveCampaign($this->lastCampaignId);
+
+        $this->commandBus->dispatch($command);
+    }
+
+    #[When('trying to archive campaign')]
+    public function tryingToArchiveCampaign(): void
+    {
+        try {
+            $this->archiveCampaign();
+        } catch (Throwable $e) {
+            $this->lastException = $e;
+        }
+    }
+
+    #[Given('created campaign exists')]
+    public function createdCampaignExists(): void
+    {
+        $this->createCampaignWithNameAndPublicTitle('Test Campaign', 'Test Public Title');
+    }
+
+    #[Given('created and activated campaign exists')]
+    public function createdAndActivatedCampaignExists(): void
+    {
+        $this->createdCampaignExists();
+        $this->activateCampaign();
+    }
+
+    #[Given('created, activated, and archived campaign exists')]
+    public function createdActivatedAndArchivedCampaignExists(): void
+    {
+        $this->createdAndActivatedCampaignExists();
+        $this->archiveCampaign();
+    }
+
+    #[Then('campaign is created with status :status')]
+    public function campaignIsCreated(string $status): void
+    {
+        $campaign = $this->queryBus->ask(new GetCampaign($this->lastCampaignId));
+        Assert::isInstanceOf($campaign, Campaign::class);
+        Assert::notNull($campaign, 'No campaign found');
+        $expectedStatus = CampaignStatus::from($status);
+        Assert::same(
+            $campaign->getStatus(),
+            $expectedStatus,
+            sprintf('Campaign status should be %s, got %s', $status, $campaign->getStatus()->value)
+        );
+    }
+
+    #[Then('campaign name is updated to :newName')]
+    public function campaignNameIsUpdated(string $newName): void
+    {
+        Assert::notNull($this->lastCampaignId);
+        $campaign = $this->queryBus->ask(new GetCampaign($this->lastCampaignId));
+        Assert::isInstanceOf($campaign, Campaign::class);
+        Assert::eq($campaign->getName(), $newName, sprintf('Campaign name should be "%s"', $newName));
+    }
+
+
+    #[Then('campaign public title is updated to :newName')]
+    public function campaignPublicTitleIsUpdated(string $newName): void
+    {
+        Assert::notNull($this->lastCampaignId);
+        $campaign = $this->queryBus->ask(new GetCampaign($this->lastCampaignId));
+        Assert::isInstanceOf($campaign, Campaign::class);
+        Assert::eq($campaign->getPublicTitle(), $newName, sprintf('Campaign public title should be "%s"', $newName));
+    }
+
+
+    #[Then('campaign is activated')]
+    public function campaignIsActivated(): void
+    {
+        Assert::notNull($this->lastCampaignId);
+        $campaign = $this->queryBus->ask(new GetCampaign($this->lastCampaignId));
+        Assert::isInstanceOf($campaign, Campaign::class);
+        Assert::same(
+            $campaign->getStatus(),
+            CampaignStatus::Active,
+            sprintf('Campaign status should be %s, got %s', CampaignStatus::Active->value, $campaign->getStatus()->value)
+        );
+    }
+
+
+    #[Then('campaign is archived')]
+    public function campaignIsArchived(): void
+    {
+        Assert::notNull($this->lastCampaignId);
+        $campaign = $this->queryBus->ask(new GetCampaign($this->lastCampaignId));
+        Assert::isInstanceOf($campaign, Campaign::class);
+        Assert::same(
+            $campaign->getStatus(),
+            CampaignStatus::Archived,
+            sprintf('Campaign status should be %s, got %s', CampaignStatus::Archived->value, $campaign->getStatus()->value)
+        );
+    }
+
+    #[Then('operation fails with error :errorMessage')]
+    public function operationFailsWithError(string $errorMessage): void
+    {
+        Assert::notNull($this->lastException, 'An exception should have been thrown');
+        $exception = $this->lastException;
+        $found = false;
+        while ($exception !== null) {
+            if ($exception instanceof LogicException) {
+                $found = true;
+                Assert::eq(
+                    $exception->getMessage(),
+                    $errorMessage,
+                    sprintf('Exception message should be "%s", was "%s"', $errorMessage, $exception->getMessage())
+                );
+                break;
+            }
+            $exception = $exception->getPrevious();
+        }
+
+        Assert::true($found, 'A LogicException should have been thrown or in the exception chain');
+    }
+
+
+
 }

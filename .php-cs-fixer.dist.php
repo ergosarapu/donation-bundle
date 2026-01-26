@@ -11,7 +11,9 @@ $finder = (new PhpCsFixer\Finder())
         __DIR__.'/src/SharedInfrastructure',
         __DIR__.'/tests',
         __DIR__.'/src/Controller/Admin/CQRS',
-    ])
+    ])->append(
+        [__DIR__.'/src/Controller/IndexController.php']
+    )
 ;
 
 return (new PhpCsFixer\Config())

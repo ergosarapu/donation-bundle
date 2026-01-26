@@ -45,6 +45,12 @@ return function (ContainerConfigurator $container) {
     $services->set(\ErgoSarapu\DonationBundle\Controller\Admin\CQRS\DonationCQRSController::class)
         ->autoconfigure(true)
         ->autowire(true);
+    $services->set(\ErgoSarapu\DonationBundle\Controller\Admin\CQRS\CampaignCQRSController::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set(\ErgoSarapu\DonationBundle\Controller\Admin\CQRS\RecurringPlanCQRSController::class)
+        ->autoconfigure(true)
+        ->autowire(true);
 
     $services->set('donation_bundle.controller.index_controller', \ErgoSarapu\DonationBundle\Controller\IndexController::class)
         ->autoconfigure(true)
@@ -171,6 +177,12 @@ return function (ContainerConfigurator $container) {
             ->addArgument(\ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlan::class));
     $services->alias(\ErgoSarapu\DonationBundle\BCDonations\Application\Port\RecurringPlanRepositoryInterface::class, 'donation_bundle.infrastructure.donations.repository.adapter.patchlevel_recurring_plan_repository');
 
+    $services->set('donation_bundle.infrastructure.donations.repository.adapter.patchlevel_campaign_repository', \ErgoSarapu\DonationBundle\BCDonations\Infrastructure\Adapter\PatchlevelCampaignRepository::class)
+        ->arg(0, (new Definition(\Patchlevel\EventSourcing\Repository\Repository::class))
+            ->setFactory([new Reference(\Patchlevel\EventSourcing\Repository\RepositoryManager::class), 'get'])
+            ->addArgument(\ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\Campaign::class));
+    $services->alias(\ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignRepositoryInterface::class, 'donation_bundle.infrastructure.donations.repository.adapter.patchlevel_campaign_repository');
+
 
     // ************************
     // *** Command Handlers ***
@@ -212,6 +224,23 @@ return function (ContainerConfigurator $container) {
         ->autoconfigure(true)
         ->autowire(true);
     $services->set('donation_bundle.donations.application.donation.command_handler.reactivate_recurring_plan_integration', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\Integration\ReActivateRecurringPlanHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+
+    // Campaigns
+    $services->set('donation_bundle.donations.application.campaign.command_handler.create_campaign', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\CreateCampaignHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.donations.application.campaign.command_handler.update_campaign_name', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\UpdateCampaignNameHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.donations.application.campaign.command_handler.update_campaign_public_title', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\UpdateCampaignPublicTitleHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.donations.application.campaign.command_handler.activate_campaign', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\ActivateCampaignHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.donations.application.campaign.command_handler.archive_campaign', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\ArchiveCampaignHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
 
@@ -278,6 +307,11 @@ return function (ContainerConfigurator $container) {
         ->autoconfigure(true)
         ->autowire(true);
     $services->set('donation_bundle.application.donations.query_handler.get_pending_recurring_plan', \ErgoSarapu\DonationBundle\BCDonations\Application\Query\Handler\GetPendingRecurringPlanHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+
+    // Campaigns
+    $services->set('donation_bundle.application.campaigns.query_handler.get_campaign', \ErgoSarapu\DonationBundle\BCDonations\Application\Query\Handler\GetCampaignHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
 
@@ -409,6 +443,12 @@ return function (ContainerConfigurator $container) {
         ->autowire(true)
         ->tag('event_sourcing.subscriber');
     $services->alias(\ErgoSarapu\DonationBundle\BCDonations\Application\Query\Port\RecurringPlanProjectionRepositoryInterface::class, 'donation_bundle.infrastructure.projector.recurring_plan');
+
+    $services->set('donation_bundle.infrastructure.projector.campaign', \ErgoSarapu\DonationBundle\BCDonations\Infrastructure\Projection\CampaignProjector::class)
+        ->autoconfigure(true)
+        ->autowire(true)
+        ->tag('event_sourcing.subscriber');
+    $services->alias(\ErgoSarapu\DonationBundle\BCDonations\Application\Query\Port\CampaignProjectionRepositoryInterface::class, 'donation_bundle.infrastructure.projector.campaign');
 
     // Payments
 
