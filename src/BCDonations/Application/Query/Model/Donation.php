@@ -15,6 +15,7 @@ class Donation
     private string $currency;
     private DonationStatus $status;
     private ?string $recurringPlanId = null;
+    private string $campaignId;
     private DateTimeImmutable $createdAt;
     private DateTimeImmutable $updatedAt;
 
@@ -96,5 +97,15 @@ class Donation
     public function setRecurringPlanId(?string $recurringPlanId): void
     {
         $this->recurringPlanId = $recurringPlanId;
+    }
+
+    public function getCampaignId(): string
+    {
+        return $this->campaignId;
+    }
+
+    public function setCampaignId(string $campaignId): void
+    {
+        $this->campaignId = $campaignId;
     }
 }

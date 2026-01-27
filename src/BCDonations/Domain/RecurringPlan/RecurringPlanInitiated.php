@@ -12,6 +12,7 @@ use ErgoSarapu\DonationBundle\SharedKernel\Event\AbstractTimestampedEvent;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\DomainEventInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use Patchlevel\EventSourcing\Attribute\Event;
 
 #[Event(name: 'recurring_plan.initiated')]
@@ -28,6 +29,7 @@ class RecurringPlanInitiated extends AbstractTimestampedEvent implements DomainE
         public readonly RecurringInterval $interval,
         public readonly Gateway $gateway,
         public readonly DonorIdentity $donorIdentity,
+        public readonly ShortDescription $description,
     ) {
         parent::__construct($occuredOn);
         $this->status = RecurringPlanStatus::Pending;

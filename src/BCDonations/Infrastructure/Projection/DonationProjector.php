@@ -101,6 +101,7 @@ class DonationProjector implements DonationProjectionRepositoryInterface
         $donation->setCurrency($event->amount->currency()->code());
         $donation->setStatus($event->status);
         $donation->setRecurringPlanId($event->recurringPlanAction?->recurringPlanId->toString());
+        $donation->setCampaignId($event->campaignId->toString());
         $this->projectionEntityManager->persist($donation);
         $this->projectionEntityManager->flush();
     }

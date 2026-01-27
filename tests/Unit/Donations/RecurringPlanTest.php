@@ -34,6 +34,7 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use InvalidArgumentException;
 use LogicException;
 use Patchlevel\EventSourcing\PhpUnit\Test\AggregateRootTestCase;
@@ -55,6 +56,8 @@ class RecurringPlanTest extends AggregateRootTestCase
 
     private Gateway $gateway;
 
+    private ShortDescription $description;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -65,6 +68,7 @@ class RecurringPlanTest extends AggregateRootTestCase
         $this->amount = new Money(100, new Currency('EUR'));
         $this->email = new Email('example@example.com');
         $this->gateway = new Gateway('test');
+        $this->description = new ShortDescription('Test donation');
     }
 
     protected function aggregateClass(): string
@@ -81,6 +85,7 @@ class RecurringPlanTest extends AggregateRootTestCase
             $this->amount,
             $this->gateway,
             new DonorIdentity($this->email),
+            $this->description,
         );
         $this->when(fn () => RecurringPlan::initiate(
             $this->now,
@@ -96,6 +101,7 @@ class RecurringPlanTest extends AggregateRootTestCase
             $this->interval,
             $this->gateway,
             new DonorIdentity($this->email),
+            $this->description,
         ));
     }
 
@@ -108,6 +114,7 @@ class RecurringPlanTest extends AggregateRootTestCase
             $this->amount,
             $this->gateway,
             new DonorIdentity(),
+            $this->description,
         );
         $this->when(fn () => RecurringPlan::initiate(
             $this->now,
@@ -142,6 +149,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->amount,
                 $this->gateway,
                 new DonorIdentity($this->email),
+                $this->description,
             )
         )
         ->when(fn (RecurringPlan $plan) => $plan->completeRecurringAttempt(
@@ -185,6 +193,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->amount,
                 $this->gateway,
                 new DonorIdentity($this->email),
+                $this->description,
             ),
             $terminalEvent
         )
@@ -254,6 +263,7 @@ class RecurringPlanTest extends AggregateRootTestCase
             $this->interval,
             $this->gateway,
             new DonorIdentity($this->email),
+            $this->description,
         ))->when(fn (RecurringPlan $plan) => $plan->activate($this->now))
         ->then(new RecurringPlanActivated(
             $this->now,
@@ -326,6 +336,7 @@ class RecurringPlanTest extends AggregateRootTestCase
             $this->interval,
             $this->gateway,
             new DonorIdentity($this->email),
+            $this->description,
         ))->when(fn (RecurringPlan $plan) => $plan->reActivate($this->now))
         ->expectsException(RecurringPlanReActivateNotAllowedException::class);
     }
@@ -383,6 +394,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->amount,
                 $this->gateway,
                 new DonorIdentity($this->email),
+                $this->description,
             )
         )->when(fn (RecurringPlan $plan) => $plan->completeRecurringAttempt(
             $this->now,
@@ -417,6 +429,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->amount,
                 $this->gateway,
                 new DonorIdentity($this->email),
+                $this->description,
             ),
             $terminalEvent
         )
@@ -439,6 +452,7 @@ class RecurringPlanTest extends AggregateRootTestCase
             $this->interval,
             $this->gateway,
             new DonorIdentity($this->email),
+            $this->description,
         ))->when(fn (RecurringPlan $plan) => $plan->cancel($this->now))
         ->then(new RecurringPlanCanceled(
             $this->now,
@@ -510,6 +524,7 @@ class RecurringPlanTest extends AggregateRootTestCase
             $this->interval,
             $this->gateway,
             new DonorIdentity($this->email),
+            $this->description,
         ))->when(fn (RecurringPlan $plan) => $plan->fail($this->now))
         ->then(new RecurringPlanFailed(
             $this->now,
@@ -586,6 +601,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->interval,
                 $this->gateway,
                 new DonorIdentity($this->email),
+                $this->description,
             ),
             new RecurringPlanActivated(
                 $this->now,
@@ -602,6 +618,7 @@ class RecurringPlanTest extends AggregateRootTestCase
             $this->amount,
             $this->gateway,
             new DonorIdentity($this->email),
+            $this->description,
         ));
     }
 
@@ -619,6 +636,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->interval,
                 $this->gateway,
                 new DonorIdentity($this->email),
+                $this->description,
             ),
             new RecurringPlanActivated(
                 $this->now,
@@ -639,6 +657,7 @@ class RecurringPlanTest extends AggregateRootTestCase
             $this->amount,
             $this->gateway,
             new DonorIdentity($this->email),
+            $this->description,
         ));
     }
 
@@ -656,6 +675,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->interval,
                 $this->gateway,
                 new DonorIdentity($this->email),
+                $this->description,
             ),
             new RecurringPlanActivated(
                 $this->now,
@@ -684,6 +704,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->amount,
                 $this->gateway,
                 new DonorIdentity($this->email),
+                $this->description,
             )
         )->when(fn (RecurringPlan $plan) => $plan->initiateRenewal($this->now, DonationId::generate()))
         ->expectsException(LogicException::class)->expectsExceptionMessage('Donation is in progress.');
@@ -701,6 +722,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->interval,
                 $this->gateway,
                 new DonorIdentity($this->email),
+                $this->description,
             ),
         )->when(fn (RecurringPlan $plan) => $plan->initiateRenewal($this->now, DonationId::generate()))
         ->expectsException(RecurringPlanRenewalNotAllowedException::class)
@@ -720,6 +742,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->interval,
                 $this->gateway,
                 new DonorIdentity($this->email),
+                $this->description,
             ),
             new RecurringPlanFailed(
                 $this->now,
@@ -742,6 +765,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->interval,
                 $this->gateway,
                 new DonorIdentity($this->email),
+                $this->description,
             ),
             new RecurringPlanExpired(
                 $this->now,
@@ -764,6 +788,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->interval,
                 $this->gateway,
                 new DonorIdentity($this->email),
+                $this->description,
             ),
             new RecurringPlanCanceled(
                 $this->now,
@@ -792,6 +817,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->amount,
                 $this->gateway,
                 new DonorIdentity($this->email),
+                $this->description,
             ),
         )->when(fn (RecurringPlan $plan) => $plan->completeRecurringAttempt(
             $renewalTime,
@@ -841,6 +867,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->amount,
                 $this->gateway,
                 new DonorIdentity($this->email),
+                $this->description,
             ),
         )->when(fn (RecurringPlan $plan) => $plan->completeRecurringAttempt(
             $renewalTime,
@@ -870,6 +897,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->amount,
                 $this->gateway,
                 new DonorIdentity($this->email),
+                $this->description,
             ),
         )->when(fn (RecurringPlan $plan) => $plan->completeRecurringAttempt(
             $renewalTime,

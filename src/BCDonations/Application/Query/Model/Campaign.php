@@ -75,4 +75,9 @@ class Campaign
     {
         $this->updatedAt = $updatedAt;
     }
+
+    public function isActive(): bool
+    {
+        return $this->status === CampaignStatus::Active;
+    }
 }

@@ -19,6 +19,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\Recurri
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use InvalidArgumentException;
 use LogicException;
 use Patchlevel\EventSourcing\Aggregate\BasicAggregateRoot;
@@ -40,6 +41,7 @@ class RecurringPlan extends BasicAggregateRoot
     private ?DateTimeImmutable $nextRenewalTime;
     private DonorIdentity $donorIdentity;
     private PaymentMethodId $paymentMethodId;
+    private ShortDescription $description;
 
     public static function initiate(
         DateTimeImmutable $currentTime,
@@ -61,6 +63,7 @@ class RecurringPlan extends BasicAggregateRoot
             $interval,
             $initialDonationRequest->gateway,
             $initialDonationRequest->donorIdentity,
+            $initialDonationRequest->description,
         ));
         return $donation;
     }
@@ -78,6 +81,7 @@ class RecurringPlan extends BasicAggregateRoot
         $this->donorIdentity = $event->donorIdentity;
         $this->nextRenewalTime = null;
         $this->paymentMethodId = $event->recurringPlanAction->paymentMethodId;
+        $this->description = $event->description;
     }
 
     #[Apply]
@@ -137,6 +141,7 @@ class RecurringPlan extends BasicAggregateRoot
                 $this->amount,
                 $this->gateway,
                 $this->donorIdentity,
+                $this->description,
             )),
             default =>  throw new RecurringPlanRenewalNotAllowedException('Only active and failing recurring donations can be renewed.'),
         };

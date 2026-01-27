@@ -4,26 +4,28 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\Controller;
 
+use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetActiveCampaigns;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\Campaign;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationRequest;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorIdentity;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringInterval;
 use ErgoSarapu\DonationBundle\Dto\DonationDto;
-use ErgoSarapu\DonationBundle\Entity\Campaign;
 use ErgoSarapu\DonationBundle\Form\DonationFormStep1Type;
 use ErgoSarapu\DonationBundle\Form\DonationFormStep2Type;
 use ErgoSarapu\DonationBundle\Form\DonationFormStep3Type;
 use ErgoSarapu\DonationBundle\Form\FormOptionsProvider;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Donations\Command\InitiateDonationIntegrationCommand;
-use ErgoSarapu\DonationBundle\Repository\CampaignRepository;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
+use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\QueryBusInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormInterface;
@@ -34,18 +36,18 @@ class IndexController extends AbstractController
 {
     public function __construct(
         private FormOptionsProvider $formOptions,
-        private readonly CampaignRepository $campaignRepository,
+        private readonly QueryBusInterface $queryBus,
         private readonly CommandBusInterface $commandBus
     ) {
     }
 
     public function __invoke(
         Request $request,
-        string $campaign,
+        string $campaignSlug,
         string $template,
         int $step = 1
     ): Response {
-        $campaign = $this->getDefaultCampaign();
+        $campaign = $this->getSingleActiveCampaign();
         $donation = $this->getDonationData($request);
 
         $form = $this->getDonationFormStep($step, $donation, $request);
@@ -71,11 +73,9 @@ class IndexController extends AbstractController
                 }
                 $amount = new Money($donation->getAmount(), new Currency($donation->getCurrencyCode()));
 
-                $campaignId = CampaignId::generate(); // TODO: use active campaign id
-
                 $donationRequest = new DonationRequest(
                     donationId: DonationId::generate(),
-                    campaignId: $campaignId,
+                    campaignId: CampaignId::fromString($campaign->getCampaignId()),
                     amount: $amount,
                     gateway: $gateway,
                     donorIdentity: new DonorIdentity(
@@ -83,6 +83,7 @@ class IndexController extends AbstractController
                         $this->getDomainPersonName($donation),
                         $this->getDomainNationalIdCode($donation),
                     ),
+                    description: new ShortDescription($campaign->getPublicTitle()),
                 );
 
                 $interval = null;
@@ -162,14 +163,16 @@ class IndexController extends AbstractController
         return $donation;
     }
 
-    private function getDefaultCampaign(): Campaign
+    private function getSingleActiveCampaign(): Campaign
     {
-        $campaigns = $this->campaignRepository->findBy(['default' => true]);
+        /** @var array<Campaign> $campaigns */
+        $campaigns = $this->queryBus->ask(new GetActiveCampaigns());
+
         if (count($campaigns) === 0) {
-            throw new InvalidArgumentException('No default campaign found');
+            throw new InvalidArgumentException('No active campaign found');
         }
         if (count($campaigns) > 1) {
-            throw new InvalidArgumentException('Multiple default campaigns found');
+            throw new InvalidArgumentException('Multiple active campaigns found');
         }
         return $campaigns[0];
     }

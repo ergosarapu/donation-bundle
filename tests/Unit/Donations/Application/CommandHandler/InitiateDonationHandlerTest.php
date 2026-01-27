@@ -18,6 +18,7 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
@@ -49,7 +50,8 @@ class InitiateDonationHandlerTest extends TestCase
             CampaignId::generate(),
             new Money(5000, new Currency('EUR')),
             new Gateway('test-gateway'),
-            new DonorIdentity(new Email('donor@example.com'))
+            new DonorIdentity(new Email('donor@example.com')),
+            new ShortDescription('Test donation')
         );
 
         $this->command = new InitiateDonation($donationRequest);

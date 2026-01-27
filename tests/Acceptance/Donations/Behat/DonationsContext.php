@@ -51,6 +51,7 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use ErgoSarapu\DonationBundle\Tests\Helpers\TestCommandBus;
 use ErgoSarapu\DonationBundle\Tests\Helpers\TestEventBus;
 use LogicException;
@@ -113,6 +114,7 @@ class DonationsContext implements Context
             $this->getDefaultTestMoney(),
             new Gateway('test'),
             new DonorIdentity(),
+            new ShortDescription('Test donation'),
         );
         $initiateDonation = new InitiateDonationIntegrationCommand($donationRequest);
         $this->commandBus->send($initiateDonation);
@@ -130,6 +132,7 @@ class DonationsContext implements Context
             new DonorIdentity(
                 new Email('example@example.com')
             ),
+            new ShortDescription('Test donation'),
         );
         $this->lastRecurringInterval = new RecurringInterval(RecurringInterval::Monthly);
         $initiateRecurringDonation = new InitiateDonationIntegrationCommand($donationRequest, $this->lastRecurringInterval);

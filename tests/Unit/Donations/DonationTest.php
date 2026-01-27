@@ -42,6 +42,8 @@ class DonationTest extends AggregateRootTestCase
 
     private RecurringPlanAction $recurringPlanAction;
 
+    private ShortDescription $description;
+
     protected function aggregateClass(): string
     {
         return Donation::class;
@@ -57,6 +59,7 @@ class DonationTest extends AggregateRootTestCase
         $this->gateway = new Gateway('test');
         $this->donationId = DonationId::generate();
         $this->recurringPlanAction = RecurringPlanAction::forInit(RecurringPlanId::generate());
+        $this->description = new ShortDescription('Test donation');
     }
 
     public function testInitiate(): void
@@ -67,6 +70,7 @@ class DonationTest extends AggregateRootTestCase
             $this->amount,
             $this->gateway,
             $this->donorIdentity,
+            $this->description,
         );
 
         $this->when(fn () => Donation::initiate(
@@ -81,7 +85,7 @@ class DonationTest extends AggregateRootTestCase
                 $this->campaignId,
                 $donationRequest->paymentId,
                 $this->gateway,
-                new ShortDescription('TODO: Add description'),
+                $this->description,
                 $this->recurringPlanAction,
                 $this->donorIdentity,
             )
@@ -96,6 +100,7 @@ class DonationTest extends AggregateRootTestCase
             $this->amount,
             $this->gateway,
             $this->donorIdentity,
+            $this->description,
         );
 
         $this->given(
@@ -167,6 +172,7 @@ class DonationTest extends AggregateRootTestCase
             $this->amount,
             $this->gateway,
             new DonorIdentity($this->email),
+            $this->description,
         );
 
         $this->given(

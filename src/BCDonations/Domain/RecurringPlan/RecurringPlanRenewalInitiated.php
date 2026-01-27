@@ -12,6 +12,7 @@ use ErgoSarapu\DonationBundle\SharedKernel\Event\AbstractTimestampedEvent;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\DomainEventInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use Patchlevel\EventSourcing\Attribute\Event;
 
 #[Event(name: 'recurring_plan.renewal_initiated')]
@@ -25,6 +26,7 @@ class RecurringPlanRenewalInitiated extends AbstractTimestampedEvent implements 
         public readonly Money $amount,
         public readonly Gateway $gateway,
         public readonly DonorIdentity $donorIdentity,
+        public readonly ShortDescription $description,
     ) {
         parent::__construct($occuredOn);
     }

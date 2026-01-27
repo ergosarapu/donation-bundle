@@ -33,6 +33,7 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use ErgoSarapu\DonationBundle\Tests\Helpers\DonationBundleTestingKernel;
 use Patchlevel\EventSourcing\Subscription\Engine\SubscriptionEngine;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -78,6 +79,7 @@ class InitiateDonationTest extends KernelTestCase
             $amount,
             new Gateway('test'),
             new DonorIdentity(),
+            new ShortDescription('Test donation'),
         );
         $initiateDonation = new InitiateDonationIntegrationCommand($donationRequest);
         $this->commandBus->dispatch($initiateDonation);
@@ -117,6 +119,7 @@ class InitiateDonationTest extends KernelTestCase
             $amount,
             new Gateway('test'),
             new DonorIdentity(),
+            new ShortDescription('Test donation'),
         );
         $initiateDonation = new InitiateDonationIntegrationCommand($donationRequest);
         $this->commandBus->dispatch($initiateDonation);
@@ -156,6 +159,7 @@ class InitiateDonationTest extends KernelTestCase
             $amount,
             new Gateway('test'),
             new DonorIdentity(new Email('example@example.com')),
+            new ShortDescription('Test donation'),
         );
         $initiateRecurringPlan = new InitiateRecurringPlan(
             $interval,

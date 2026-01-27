@@ -8,6 +8,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 
 final class DonationRequest
 {
@@ -19,6 +20,7 @@ final class DonationRequest
         public readonly Money $amount,
         public readonly Gateway $gateway,
         public readonly DonorIdentity $donorIdentity,
+        public readonly ShortDescription $description,
     ) {
         $this->paymentId = PaymentId::generate();
     }

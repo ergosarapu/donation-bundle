@@ -8,7 +8,6 @@ use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanAction;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use LogicException;
 use Patchlevel\EventSourcing\Aggregate\BasicAggregateRoot;
 use Patchlevel\EventSourcing\Attribute\Aggregate;
@@ -37,7 +36,7 @@ class Donation extends BasicAggregateRoot
             $donationRequest->campaignId,
             $donationRequest->paymentId,
             $donationRequest->gateway,
-            new ShortDescription('TODO: Add description'),
+            $donationRequest->description,
             $recurringPlanAction,
             $donationRequest->donorIdentity,
         ));
