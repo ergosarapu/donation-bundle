@@ -13,6 +13,7 @@
         <field name="currency" type="string" column="currency" nullable="false"/>
         <field name="status" type="string" column="status" length="16" nullable="false" enum-type="ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationStatus"/>
         <field name="recurringPlanId" type="string" column="recurring_plan_id" nullable="true"/>
+        <field name="campaignId" type="string" column="campaign_id" nullable="false"/>
         <field name="createdAt" type="datetime_immutable" column="created_at" nullable="false"/>
         <field name="updatedAt" type="datetime_immutable" column="updated_at" nullable="false"/>
         <unique-constraints>

@@ -83,9 +83,6 @@ return function (ContainerConfigurator $container) {
         ->autoconfigure(true)
         ->autowire(true)
         ->call('setContainer', [new Reference(\Psr\Container\ContainerInterface::class)]);
-    $services->set('donation_bundle.controller.payment_done_controller', \ErgoSarapu\DonationBundle\Controller\PaymentDoneController::class)
-        ->autoconfigure(true)
-        ->call('setContainer', [new Reference(\Psr\Container\ContainerInterface::class)]);
     $services->set('donation_bundle.twig.components.flag', \ErgoSarapu\DonationBundle\Twig\Components\Flag::class)
         ->autoconfigure(true)
         ->autowire(true);
@@ -100,21 +97,6 @@ return function (ContainerConfigurator $container) {
         ->public()
         ->autowire(true);
     $services->alias(\ErgoSarapu\DonationBundle\Form\FormOptionsProvider::class, 'donation_bundle.form.form_options_provider');
-
-    // Payum
-    $services->set('donation_bundle.payum.payment_status_extension', \ErgoSarapu\DonationBundle\Payum\UpdatePaymentStatusExtension::class)
-        ->autoconfigure(true)
-        ->public()
-        ->autowire(true)
-        ->tag('payum.extension', ['all' => true]);
-    $services->set('donation_bundle.payum.activate_subscription_extension', \ErgoSarapu\DonationBundle\Payum\ActivateSubscriptionExtension::class)
-        ->autoconfigure(true)
-        ->public()
-        ->tag('payum.extension', ['all' => true]);
-    $services->set('donation_bundle.application.payment.port.payment_gateway', \ErgoSarapu\DonationBundle\BCPayments\Infrastructure\Adapter\PayumPaymentGateway::class)
-        ->autoconfigure(true)
-        ->autowire(true);
-    $services->alias(\ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentGatewayInterface::class, 'donation_bundle.application.payment.port.payment_gateway');
 
     // Subscription
     $services->set('donation_bundle.subscription.subscription_manager', \ErgoSarapu\DonationBundle\Subscription\SubscriptionManager::class)
@@ -134,15 +116,6 @@ return function (ContainerConfigurator $container) {
 
     // Repository
     $services->set(\ErgoSarapu\DonationBundle\Repository\UserRepository::class)
-        ->autowire(true)
-        ->tag('doctrine.repository_service');
-    $services->set(\ErgoSarapu\DonationBundle\Repository\CampaignRepository::class)
-        ->autowire(true)
-        ->tag('doctrine.repository_service');
-    $services->set(\ErgoSarapu\DonationBundle\Repository\PaymentRepository::class)
-        ->autowire(true)
-        ->tag('doctrine.repository_service');
-    $services->set(\ErgoSarapu\DonationBundle\Repository\SubscriptionRepository::class)
         ->autowire(true)
         ->tag('doctrine.repository_service');
     $services->set(\ErgoSarapu\DonationBundle\Repository\ResetPasswordRequestRepository::class)
@@ -312,6 +285,9 @@ return function (ContainerConfigurator $container) {
 
     // Campaigns
     $services->set('donation_bundle.application.campaigns.query_handler.get_campaign', \ErgoSarapu\DonationBundle\BCDonations\Application\Query\Handler\GetCampaignHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.application.campaigns.query_handler.get_active_campaigns', \ErgoSarapu\DonationBundle\BCDonations\Application\Query\Handler\GetActiveCampaignsHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
 
@@ -487,7 +463,4 @@ return function (ContainerConfigurator $container) {
             'connection' => 'default',
         ])
     ;
-
-    // Legacy message handler
-    $services->set('donation_bundle.message_handler.capture_payment')->class(ErgoSarapu\DonationBundle\MessageHandler\CapturePaymentHandler::class)->autoconfigure()->autowire();
 };

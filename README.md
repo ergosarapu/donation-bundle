@@ -44,22 +44,6 @@ php bin/console donation:add-user [email] [givenname] [familyname] --admin
 
 If you run your app in localhost, then the admin panel can be accessed at http://localhost/admin.
 
-## Register Payum gateway factories
-
-The bundle uses Payum for payment gateway abstraction. In order to use a gateway, register Payum gateway factory, e.g:
-
-```yaml
-// config/services.yaml
-
-app.test_gateway_factory:
-    class: Payum\Core\Bridge\Symfony\Builder\GatewayFactoryBuilder
-    arguments: [ErgoSarapu\PayumTestGateway\TestGatewayFactory]
-    tags:
-        - { name: payum.gateway_factory_builder, factory: test-gateway }
-```
-
-Then configure [PayumBundle](https://github.com/Payum/PayumBundle) and gateways.
-
 ## Configuration
 
 The following configuration options are available for the Donation Bundle:
@@ -103,38 +87,6 @@ donation:
 
             # Marks gateway as country specific so user can quickly filter gateways with same country. Must be valid alpha-2 country code.
             country:              ~
-```
-## Process Subscription payments
-
-To create new payments for subscriptions (renew) run following command periodically. This dispatches created payments to messenger transport for capturing:
-```sh
-bin/console donation:subscription:process
-```
-
-To handle subscription payment capture asynchronously, you may create following Messenger configuration. Adjust according to your needs:
-
-```yaml
-# config/packages/messenger.yaml
-
-framework:
-    messenger:
-        transports:
-            async: 'doctrine://default'
-
-            subscription:
-                dsn: 'doctrine://default?queue_name=subscription'
-                failure_transport: subscription_failed
-                retry_strategy:
-                    max_retries: 0 // Do not retry subscription capture automatically, it will land in failure transport for manual processing
-
-            subscription_failed:
-                dsn: 'doctrine://default?queue_name=subscription_failed'
-                retry_strategy:
-                    max_retries: 10
-                    delay: 0
-
-        routing:
-            'ErgoSarapu\DonationBundle\Message\CapturePayment': subscription
 ```
 
 ## Reset password feature

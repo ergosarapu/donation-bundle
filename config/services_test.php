@@ -18,14 +18,6 @@ return function (ContainerConfigurator $container) {
         ->public(true)->autowire();
 
 
-    $services->set('donation_bundle.test.payum.action.get_standing_amount', ErgoSarapu\DonationBundle\Tests\Helpers\Payum\TestStandingAmountAction::class)
-        ->public(true)
-        ->tag('payum.action', ['all' => true]);
-
-    $services->set('donation_bundle.test.payum.action.convert_payment', ErgoSarapu\DonationBundle\Tests\Helpers\Payum\TestConvertPaymentAction::class)
-        ->public(true)
-        ->tag('payum.action', ['all' => true]);
-
     // Test Command Bus
     $services->set('donation_bundle.test.infrastructure.bus.command_bus', ErgoSarapu\DonationBundle\Tests\Helpers\TestCommandBus::class)
         ->args([service('donation_bundle.infrastructure.bus.command_bus')]);

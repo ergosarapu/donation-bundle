@@ -23,7 +23,6 @@
     "minimum-stability": "stable",
     "require": {
         "php": "^8.2",
-        "payum/payum-bundle": "^2.6",
         "symfony/http-client": "^6.4|^7.3",
         "easycorp/easyadmin-bundle": "^4.10",
         "symfony/asset-mapper": "^6.4|^7.3",
@@ -58,7 +57,6 @@
         "dama/doctrine-test-bundle": "^8.2",
         "symfony/mailer": "^6.4|^7.3",
         "zenstruck/messenger-test": "^1.11",
-        "payum/offline": "^1.7",
         "php-http/guzzle7-adapter": "^1.1",
         "php-http/message-factory": "^1.1",
         "phpunit/phpunit": "^11",

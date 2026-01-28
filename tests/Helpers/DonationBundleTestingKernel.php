@@ -7,10 +7,8 @@ namespace ErgoSarapu\DonationBundle\Tests\Helpers;
 use DAMA\DoctrineTestBundle\DAMADoctrineTestBundle;
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
 use ErgoSarapu\DonationBundle\DonationBundle;
-use ErgoSarapu\DonationBundle\Entity\Payment;
 use ErgoSarapu\DonationBundle\Tests\Helpers\DependencyInjection\Compiler\TestingCompilerPass;
 use Patchlevel\EventSourcingBundle\PatchlevelEventSourcingBundle;
-use Payum\Bundle\PayumBundle\PayumBundle;
 use Stof\DoctrineExtensionsBundle\StofDoctrineExtensionsBundle;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
@@ -41,7 +39,6 @@ class DonationBundleTestingKernel extends Kernel
             new FrameworkBundle(),
             new DoctrineBundle(),
             new DAMADoctrineTestBundle(),
-            new PayumBundle(),
             new ZenstruckMessengerTestBundle(),
             new PatchlevelEventSourcingBundle(),
             new StofDoctrineExtensionsBundle(),
@@ -78,22 +75,6 @@ class DonationBundleTestingKernel extends Kernel
                         ]
                     ],
                 ],
-            ]
-        ]);
-
-        $builder->loadFromExtension('payum', [
-            'gateways' => [
-                'my_gateway' => [
-                    'factory' => 'offline',
-                    'username' => 'test',
-                    'password' => 'test',
-                    'sandbox' => true,
-                ]
-            ],
-            'storages' => [
-                Payment::class => [
-                    'doctrine' => 'orm'
-                ]
             ]
         ]);
 

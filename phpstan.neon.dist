@@ -10,9 +10,5 @@ parameters:
 		- src/SharedInfrastructure
 		- tests
 		- src/Controller/Admin/CQRS
-	excludePaths:
-		- tests/Unit/Payum/ActivateSubscriptionExtensionTest.php
-		- tests/Integration/Subscription/SubscriptionManagerTest.php
-		- tests/Functional/Controller/IndexControllerTest.php
 	symfony:
 		containerXmlPath: var/cache/test/phpstan/ErgoSarapu_DonationBundle_Tests_Helpers_DonationBundleTestingKernelTestDebugContainer.xml

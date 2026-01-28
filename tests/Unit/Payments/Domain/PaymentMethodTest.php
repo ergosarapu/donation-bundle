@@ -40,6 +40,7 @@ class PaymentMethodTest extends AggregateRootTestCase
     public function testCreateUsable(): void
     {
         $paymentMethodAction = PaymentMethodAction::forRequest(
+            PaymentMethodId::generate(),
             PaymentId::generate(),
         );
         $paymentMethodResult = PaymentMethodResult::usable(new PaymentCredentialValue('value'));
@@ -61,6 +62,7 @@ class PaymentMethodTest extends AggregateRootTestCase
     public function testCreateUnusable(PaymentMethodUnusableReason $reason): void
     {
         $paymentMethodAction = PaymentMethodAction::forRequest(
+            PaymentMethodId::generate(),
             PaymentId::generate(),
         );
         $paymentMethodResult = PaymentMethodResult::unusable($reason);
@@ -91,6 +93,7 @@ class PaymentMethodTest extends AggregateRootTestCase
     public function testUpdateToUsableIgnored(): void
     {
         $paymentMethodAction = PaymentMethodAction::forRequest(
+            PaymentMethodId::generate(),
             PaymentId::generate(),
         );
         $paymentMethodResult = PaymentMethodResult::usable(new PaymentCredentialValue('new value'));
@@ -113,6 +116,7 @@ class PaymentMethodTest extends AggregateRootTestCase
     public function testUpdateUsableToUnusable(): void
     {
         $paymentMethodAction = PaymentMethodAction::forRequest(
+            PaymentMethodId::generate(),
             PaymentId::generate(),
         );
         $paymentMethodResult = PaymentMethodResult::unusable(PaymentMethodUnusableReason::Revoked);
@@ -141,6 +145,7 @@ class PaymentMethodTest extends AggregateRootTestCase
     public function testUpdateUnusableIdempotent(PaymentMethodUnusableReason $reason): void
     {
         $creadentialAction = PaymentMethodAction::forRequest(
+            PaymentMethodId::generate(),
             PaymentId::generate(),
         );
         $paymentMethodResult = PaymentMethodResult::unusable($reason);
@@ -162,6 +167,7 @@ class PaymentMethodTest extends AggregateRootTestCase
     public function testUpdateIdMismatchThrows(): void
     {
         $creadentialAction = PaymentMethodAction::forRequest(
+            PaymentMethodId::generate(),
             PaymentId::generate(),
         );
         $value = new PaymentCredentialValue('value');
@@ -188,6 +194,7 @@ class PaymentMethodTest extends AggregateRootTestCase
     public function testUsePermitted(): void
     {
         $paymentMethodActionForRequest = PaymentMethodAction::forRequest(
+            PaymentMethodId::generate(),
             PaymentId::generate(),
         );
         $paymentMethodActionForUse = PaymentMethodAction::forUse(
@@ -220,6 +227,7 @@ class PaymentMethodTest extends AggregateRootTestCase
     public function testUseRejected(PaymentMethodUnusableReason $reason): void
     {
         $paymentMethodActionForRequest = PaymentMethodAction::forRequest(
+            PaymentMethodId::generate(),
             PaymentId::generate(),
         );
         $paymentMethodActionForUse = PaymentMethodAction::forUse(
@@ -249,6 +257,7 @@ class PaymentMethodTest extends AggregateRootTestCase
     public function testUseWithMismatchedIdThrows(): void
     {
         $paymentMethodActionForRequest = PaymentMethodAction::forRequest(
+            PaymentMethodId::generate(),
             PaymentId::generate(),
         );
         $paymentMethodActionForUse = PaymentMethodAction::forUse(

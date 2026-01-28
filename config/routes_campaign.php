@@ -5,21 +5,21 @@ declare(strict_types=1);
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 
 return function (RoutingConfigurator $routes): void {
-    $routes->add('donation_landing', '/{campaign}/{step}')
+    $routes->add('donation_landing', '/{campaignSlug}/{step}')
         ->controller('donation_bundle.controller.index_controller')
         ->defaults([
-            'campaign' => 'default',
+            'campaignSlug' => 'default',
             'template' => 'landing',
             'step' => 1,
         ])
         ->requirements([
             'step' => '\d+',
         ]);
-    
-    $routes->add('donation_embed', '/{campaign}/{template}/{step}')
+
+    $routes->add('donation_embed', '/{campaignSlug}/{template}/{step}')
         ->controller('donation_bundle.controller.index_controller')
         ->defaults([
-            'campaign' => 'default',
+            'campaignSlug' => 'default',
             'step' => 1,
         ])
         ->requirements([

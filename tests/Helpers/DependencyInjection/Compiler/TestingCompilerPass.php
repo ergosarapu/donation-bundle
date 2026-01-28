@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\Tests\Helpers\DependencyInjection\Compiler;
 
 use DateTimeImmutable;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentGatewayInterface;
 use ErgoSarapu\DonationBundle\Tests\Acceptance\Payments\FakeGateway;
 use Patchlevel\EventSourcing\Clock\FrozenClock;
 use Psr\Clock\ClockInterface;
@@ -20,6 +21,8 @@ class TestingCompilerPass implements CompilerPassInterface
         $container->register('donation_bundle.application.payment.port.payment_gateway', FakeGateway::class)
             ->setPublic(false);
         $container->setAlias(FakeGateway::class, 'donation_bundle.application.payment.port.payment_gateway');
+        $container->setAlias(PaymentGatewayInterface::class, 'donation_bundle.application.payment.port.payment_gateway')
+            ->setPublic(false);
 
         // Setup frozen clock for deterministic testing
         $dateTime = new Definition(DateTimeImmutable::class, ['2025-12-01T00:00:00+00:00']);

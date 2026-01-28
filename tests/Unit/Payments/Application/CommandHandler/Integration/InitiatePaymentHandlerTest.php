@@ -12,6 +12,7 @@ use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Command\InitiatePaym
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
@@ -42,6 +43,7 @@ class InitiatePaymentHandlerTest extends TestCase
         $appliedTo = PaymentAppliedToId::generate();
         $email = new Email('donor@example.com');
         $methodAction = PaymentMethodAction::forRequest(
+            PaymentMethodId::generate(),
             $paymentId
         );
 

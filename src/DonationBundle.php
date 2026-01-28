@@ -6,11 +6,8 @@ namespace ErgoSarapu\DonationBundle;
 
 use DateInterval;
 use ErgoSarapu\DonationBundle\DependencyInjection\Compiler\RegisterQueryCompilerPass;
-use ErgoSarapu\DonationBundle\Entity\Payment;
-use ErgoSarapu\DonationBundle\Entity\PaymentToken;
 use ErgoSarapu\DonationBundle\IntegrationContracts\IntegrationCommandInterface;
 use ErgoSarapu\DonationBundle\IntegrationContracts\IntegrationEventInterface;
-use ErgoSarapu\DonationBundle\Payum\PHPSerializeType;
 use ErgoSarapu\DonationBundle\Repository\ResetPasswordRequestRepository;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\DomainEventInterface;
@@ -207,11 +204,6 @@ class DonationBundle extends AbstractBundle
                         'url' => '%env(DATABASE_URL)%',
                     ]
                 ],
-                'types' => [
-                    // This is specifically needed due to "object" type in
-                    // ./vendor/payum/core/Payum/Core/Bridge/Doctrine/Resources/mapping/Token.orm.xml
-                    'object' => PHPSerializeType::class,
-                ],
             ],
             'orm' => [
                 'entity_managers' => [
@@ -315,22 +307,6 @@ class DonationBundle extends AbstractBundle
                 __DIR__ . '/BCDonations/Domain',
                 __DIR__ . '/BCPayments/Domain',
             ]
-        ]);
-
-        $builder->prependExtensionConfig('payum', [
-            'storages' => [
-                Payment::class => [
-                    'doctrine' => 'orm'
-                ]
-            ],
-            'security' =>
-                ['token_storage' =>
-                    [
-                        PaymentToken::class => [
-                            'doctrine' => 'orm'
-                        ]
-                    ]
-                ],
         ]);
 
         $this->prependAssetMapperConfig($builder);

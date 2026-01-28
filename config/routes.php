@@ -5,25 +5,6 @@ declare(strict_types=1);
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 
 return function (RoutingConfigurator $routes): void {
-    // Import PayumBundle routes
-    // Note: PayumBundle provides XML routes, but since XmlFileLoader is not available in Symfony 7.4+,
-    // we need to manually define the essential Payum routes that are required for payment processing
-
-    // Essential PayumBundle routes for token-based payment flows
-    // Note: We cannot use $routes->import("@PayumBundle/Resources/config/routing/all.xml")
-    // because XmlFileLoader is not available in Symfony 7.4+
-    // These are the essential routes from PayumBundle that we need for payment processing
-    $routes->add('payum_capture_do', '/payment/capture/{payum_token}')
-        ->controller('payum.action.capture_controller');
-
-    $routes->add('payum_notify_do', '/payment/notify/{payum_token}')
-        ->controller('payum.action.notify_controller');
-
-    $routes->add('payum_authorize_do', '/payment/authorize/{payum_token}')
-        ->controller('payum.action.authorize_controller');
-
-    $routes->add('payum_refund_do', '/payment/refund/{payum_token}')
-        ->controller('payum.action.refund_controller');
 
     // Application routes
     $routes->add('donation_dashboard', '/admin')
@@ -38,9 +19,6 @@ return function (RoutingConfigurator $routes): void {
     $routes->add('donation_redirect', '/donate/{donationId}')
         ->controller('donation_bundle.controller.redirect_controller')
         ->requirements(['donationId' => '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}']);
-
-    $routes->add('donation_payment_done', '/done')
-        ->controller('donation_bundle.controller.payment_done_controller');
 
     $routes->add('donation_thank_you', '/thank-you')
         ->controller('Symfony\Bundle\FrameworkBundle\Controller\TemplateController')

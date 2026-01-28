@@ -14,6 +14,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodAction;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodResult;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
@@ -41,6 +42,7 @@ class CreatePaymentMethodHandlerTest extends TestCase
         );
 
         $methodAction = PaymentMethodAction::forRequest(
+            PaymentMethodId::generate(),
             PaymentId::generate()
         );
         $methodResult = PaymentMethodResult::usable(

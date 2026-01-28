@@ -7,19 +7,18 @@ namespace ErgoSarapu\DonationBundle\SharedInfrastructure\Doctrine;
 use Doctrine\ORM\Event\PrePersistEventArgs;
 use Doctrine\ORM\Event\PreRemoveEventArgs;
 use Doctrine\ORM\Event\PreUpdateEventArgs;
-use ErgoSarapu\DonationBundle\Entity\Campaign;
-use ErgoSarapu\DonationBundle\Entity\Payment;
-use ErgoSarapu\DonationBundle\Entity\PaymentToken;
-use ErgoSarapu\DonationBundle\Entity\Subscription;
 
 class EntityWriteInterceptor
 {
-    public const WRITE_ALLOWLIST = [
-        Payment::class,
-        PaymentToken::class,
-        Campaign::class,
-        Subscription::class
-    ];
+    /**
+     * @var array<string>
+     */
+    private readonly array $allowedClasses;
+
+    public function __construct(string ... $allowedClasses)
+    {
+        $this->allowedClasses = $allowedClasses;
+    }
 
     public function preUpdate(PreUpdateEventArgs $event): void
     {
@@ -47,7 +46,7 @@ class EntityWriteInterceptor
 
     private function isWriteAllowed(object $entity): bool
     {
-        foreach (self::WRITE_ALLOWLIST as $allowedClass) {
+        foreach ($this->allowedClasses as $allowedClass) {
             if ($entity instanceof $allowedClass) {
                 return true;
             }

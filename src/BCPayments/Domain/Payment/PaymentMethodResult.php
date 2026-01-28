@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCPayments\Domain\Payment;
 
 use LogicException;
+use Patchlevel\Hydrator\Normalizer\ObjectNormalizer;
 
+#[ObjectNormalizer]
 class PaymentMethodResult
 {
     private function __construct(

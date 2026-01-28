@@ -24,7 +24,7 @@ class DonationInitiatedHandler implements EventHandlerInterface
         $paymentMethodAction = null;
         if ($event->recurringPlanAction !== null) {
             $paymentMethodAction = match ($event->recurringPlanAction->intent) {
-                RecurringPlanActionIntent::Init => PaymentMethodAction::forRequest($event->paymentId),
+                RecurringPlanActionIntent::Init => PaymentMethodAction::forRequest($event->recurringPlanAction->paymentMethodId, $event->paymentId),
                 RecurringPlanActionIntent::Renew => PaymentMethodAction::forUse($event->recurringPlanAction->paymentMethodId, $event->paymentId),
             };
         }
