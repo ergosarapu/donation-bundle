@@ -179,8 +179,9 @@ class RecurringPlan extends BasicAggregateRoot
 
         // Validate donation is in progress
         if ($donationId->toString() !== $this->renwalDonationInProgress?->toString()) {
-            // Note that we may get here if the same donation was already processed due to retries, in this case it is safe to ignore the exception
-            throw new InvalidArgumentException('Donation id ' . $donationId->toString() . ' does not match in progress id: ' . $this->renwalDonationInProgress?->toString());
+            // Note that we may get here if the same donation was already processed due to retries,
+            // in this case it is safe to ignore the call
+            return;
         }
 
         match($donationStatus) {

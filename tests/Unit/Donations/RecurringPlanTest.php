@@ -831,7 +831,7 @@ class RecurringPlanTest extends AggregateRootTestCase
         ));
     }
 
-    public function testCompleteRecurringAttemptRenewalNotInProgressThrows(): void
+    public function testCompleteRecurringAttemptRenewalNotInProgressIgnored(): void
     {
         $renewalTime = $this->now->add($this->interval->toDateInterval());
         $this->given(
@@ -846,10 +846,10 @@ class RecurringPlanTest extends AggregateRootTestCase
             DonationId::generate(),
             DonationStatus::Accepted,
         ))
-        ->expectsException(LogicException::class);
+        ->then();
     }
 
-    public function testCompleteRecurringAttemptRenewalIdMismatchThrows(): void
+    public function testCompleteRecurringAttemptRenewalIdMismatchIgnored(): void
     {
         $renewalTime = $this->now->add($this->interval->toDateInterval());
         $this->given(
@@ -874,7 +874,7 @@ class RecurringPlanTest extends AggregateRootTestCase
             DonationId::generate(),
             DonationStatus::Accepted,
         ))
-        ->expectsException(LogicException::class);
+        ->then();
     }
 
     #[DataProvider('unsupportedDonationStatusProvider')]
