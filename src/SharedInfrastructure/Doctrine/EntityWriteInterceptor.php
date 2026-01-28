@@ -15,9 +15,22 @@ class EntityWriteInterceptor
      */
     private readonly array $allowedClasses;
 
-    public function __construct(string ... $allowedClasses)
+    /**
+     * @param array<string> $allowedClasses
+     */
+    private function __construct(array $allowedClasses)
     {
         $this->allowedClasses = $allowedClasses;
+    }
+
+    /**
+     * Factory method to create instance with merged default and additional classes
+     * @param array<string> $defaultClasses
+     * @param array<string> $additionalClasses
+     */
+    public static function create(array $defaultClasses, array $additionalClasses): self
+    {
+        return new self(array_merge($defaultClasses, $additionalClasses));
     }
 
     public function preUpdate(PreUpdateEventArgs $event): void

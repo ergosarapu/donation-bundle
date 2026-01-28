@@ -440,20 +440,41 @@ return function (ContainerConfigurator $container) {
     // *** Misc ***
     // ************
 
+    // Default allowed classes for write (bundle internal - not meant to be overridden)
+    $container->parameters()->set('donation_bundle.entity_write_interceptor.default_classes', [
+        \ErgoSarapu\DonationBundle\Entity\User::class,
+        \ErgoSarapu\DonationBundle\Entity\ResetPasswordRequest::class,
+    ]);
+
+    // Additional allowed classes (host app can set this to add more classes)
+    // Example in host app's config/services.yaml:
+    //   parameters:
+    //     donation_bundle.entity_write_interceptor.additional_classes:
+    //       - App\Entity\CustomEntity
+    $container->parameters()->set('donation_bundle.entity_write_interceptor.additional_classes', []);
+
+    // EntityWriteInterceptor - uses factory to merge default and additional allowed classes
+    // Host apps can add more allowed classes via 'donation_bundle.entity_write_interceptor.additional_classes'
+    // Example in host app's config/services.yaml:
+    //   parameters:
+    //     donation_bundle.entity_write_interceptor.additional_classes:
+    //       - App\Entity\CustomEntity
     $services->set(EntityWriteInterceptor::class)
+        ->factory([EntityWriteInterceptor::class, 'create'])
+        ->args([
+            '%donation_bundle.entity_write_interceptor.default_classes%',
+            '%donation_bundle.entity_write_interceptor.additional_classes%',
+        ])
         ->tag('doctrine.event_listener', [
             'event' => 'prePersist',
-            # you can also restrict listeners to a specific Doctrine connection
             'connection' => 'default',
         ])
         ->tag('doctrine.event_listener', [
             'event' => 'preUpdate',
-            # you can also restrict listeners to a specific Doctrine connection
             'connection' => 'default',
         ])
         ->tag('doctrine.event_listener', [
             'event' => 'preRemove',
-            # you can also restrict listeners to a specific Doctrine connection
             'connection' => 'default',
         ])
     ;
