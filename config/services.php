@@ -98,12 +98,6 @@ return function (ContainerConfigurator $container) {
         ->autowire(true);
     $services->alias(\ErgoSarapu\DonationBundle\Form\FormOptionsProvider::class, 'donation_bundle.form.form_options_provider');
 
-    // Subscription
-    $services->set('donation_bundle.subscription.subscription_manager', \ErgoSarapu\DonationBundle\Subscription\SubscriptionManager::class)
-        ->autowire(true)
-        ->public();
-    $services->alias(\ErgoSarapu\DonationBundle\Subscription\SubscriptionManager::class, 'donation_bundle.subscription.subscription_manager');
-
     // Command
     $services->set('donation_bundle.add_user_command', \ErgoSarapu\DonationBundle\Command\AddUserCommand::class)
         ->autoconfigure(true)
