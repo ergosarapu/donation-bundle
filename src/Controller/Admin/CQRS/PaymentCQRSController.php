@@ -85,6 +85,7 @@ class PaymentCQRSController extends AbstractCQRSController
     {
         return $crud
             ->showEntityActionsInlined()
+            ->setDefaultSort(['createdAt' => 'DESC'])
         ;
     }
 

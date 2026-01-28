@@ -115,6 +115,7 @@ class CampaignCQRSController extends AbstractCQRSController
     {
         return $crud
             ->showEntityActionsInlined()
+            ->setDefaultSort(['createdAt' => 'DESC'])
         ;
     }
 

@@ -84,6 +84,7 @@ class DonationCQRSController extends AbstractCQRSController
     {
         return $crud
             ->showEntityActionsInlined()
+            ->setDefaultSort(['createdAt' => 'DESC'])
         ;
     }
 
