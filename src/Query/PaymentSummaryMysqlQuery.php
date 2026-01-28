@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\Query;
 
 use DateTime;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
 use ErgoSarapu\DonationBundle\Dto\Query\DtoResultSetMapping;
 use ErgoSarapu\DonationBundle\Dto\Query\PaymentSummaryEntryDto;
-use ErgoSarapu\DonationBundle\Entity\Payment\Status;
 use RuntimeException;
 
 class PaymentSummaryMysqlQuery extends AbstractQuery implements PaymentSummaryQueryInterface
@@ -108,22 +110,24 @@ class PaymentSummaryMysqlQuery extends AbstractQuery implements PaymentSummaryQu
     /**
      * @return array<PaymentSummaryEntryDto>
      */
-    public function query(DateTime $startDate, DateTime $endDate, string $groupByPeriod = 'month'): array {
+    public function query(DateTime $startDate, DateTime $endDate, string $groupByPeriod = 'month'): array
+    {
         $rsm = new DtoResultSetMapping(PaymentSummaryEntryDto::class);
         $query = $this->em->createNativeQuery($this->getSeriesCTE($groupByPeriod, $startDate, $endDate) . ' ' . self::SQL, $rsm->getMapping());
         $query->setParameter(1, 'EUR');
         $query->setParameter(2, $startDate->format('Y-m-d'));
         $query->setParameter(3, $endDate->format('Y-m-d'));
-        $query->setParameter(4, Status::Captured);
+        $query->setParameter(4, PaymentStatus::Captured);
         $query->setParameter(5, 'EUR');
 
         return $query->getResult();
     }
 
-    private function getSeriesCTE(string $groupByPeriod, DateTime $startDate, DateTime $endDate): string {
+    private function getSeriesCTE(string $groupByPeriod, DateTime $startDate, DateTime $endDate): string
+    {
         $start = $startDate->format('Y-m-d');
         $end = $endDate->format('Y-m-d');
-        
+
         switch ($groupByPeriod) {
             case 'day':
                 return sprintf(self::SQL_DAY_SERIES_CTE, $start, $end);
