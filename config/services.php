@@ -210,6 +210,9 @@ return function (ContainerConfigurator $container) {
     $services->set('donation_bundle.donations.application.campaign.command_handler.update_campaign_public_title', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\UpdateCampaignPublicTitleHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
+    $services->set('donation_bundle.donations.application.campaign.command_handler.update_campaign_donation_description', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\UpdateCampaignDonationDescriptionHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
     $services->set('donation_bundle.donations.application.campaign.command_handler.activate_campaign', \ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\ActivateCampaignHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
