@@ -12,6 +12,7 @@ class Campaign
     private string $campaignId;
     private string $name;
     private string $publicTitle;
+    private string $donationDescription;
     private CampaignStatus $status;
     private DateTimeImmutable $createdAt;
     private DateTimeImmutable $updatedAt;
@@ -44,6 +45,16 @@ class Campaign
     public function setPublicTitle(string $publicTitle): void
     {
         $this->publicTitle = $publicTitle;
+    }
+
+    public function getDonationDescription(): string
+    {
+        return $this->donationDescription;
+    }
+
+    public function setDonationDescription(string $donationDescription): void
+    {
+        $this->donationDescription = $donationDescription;
     }
 
     public function getStatus(): CampaignStatus

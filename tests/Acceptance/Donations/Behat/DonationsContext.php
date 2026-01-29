@@ -366,7 +366,8 @@ class DonationsContext implements Context
     {
         $command = new CreateCampaign(
             new CampaignName($name),
-            new CampaignPublicTitle($publicTitle)
+            new CampaignPublicTitle($publicTitle),
+            new ShortDescription('Default donation description')
         );
         $this->lastCampaignId = $command->campaignId;
         $this->commandBus->dispatch($command);

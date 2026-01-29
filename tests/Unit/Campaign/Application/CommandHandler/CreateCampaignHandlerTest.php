@@ -12,6 +12,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignName;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignPublicTitle;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignRepositoryInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
@@ -39,7 +40,8 @@ class CreateCampaignHandlerTest extends TestCase
 
         $this->command = new CreateCampaign(
             new CampaignName('Test Campaign'),
-            new CampaignPublicTitle('Test Public Title')
+            new CampaignPublicTitle('Test Public Title'),
+            new ShortDescription('Test Donation Description')
         );
     }
 

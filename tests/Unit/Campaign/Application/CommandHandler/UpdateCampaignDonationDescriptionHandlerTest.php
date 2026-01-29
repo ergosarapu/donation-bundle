@@ -1,0 +1,55 @@
+<?php
+
+declare(strict_types=1);
+
+namespace ErgoSarapu\DonationBundle\Tests\Unit\Campaign\Application\CommandHandler;
+
+use DateTimeImmutable;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Command\UpdateCampaignDonationDescription;
+use ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\UpdateCampaignDonationDescriptionHandler;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignRepositoryInterface;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
+use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
+use Psr\Clock\ClockInterface;
+
+class UpdateCampaignDonationDescriptionHandlerTest extends TestCase
+{
+    private UpdateCampaignDonationDescriptionHandler $handler;
+    private CampaignRepositoryInterface&MockObject $campaignRepository;
+    private DateTimeImmutable $now;
+    private UpdateCampaignDonationDescription $command;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->campaignRepository = $this->createMock(CampaignRepositoryInterface::class);
+        $this->now = new DateTimeImmutable('2026-01-26 12:00:00');
+
+        $clock = $this->createMock(ClockInterface::class);
+        $clock->method('now')->willReturn($this->now);
+
+        $this->handler = new UpdateCampaignDonationDescriptionHandler(
+            $this->campaignRepository,
+            $clock
+        );
+
+        $this->command = new UpdateCampaignDonationDescription(
+            CampaignId::generate(),
+            new ShortDescription('Updated Donation Description')
+        );
+    }
+
+    public function testUpdatesCampaignDonationDescription(): void
+    {
+        $this->campaignRepository->expects($this->once())
+            ->method('load')
+            ->with($this->command->campaignId);
+
+        $this->campaignRepository->expects($this->once())
+            ->method('save');
+
+        ($this->handler)($this->command);
+    }
+}

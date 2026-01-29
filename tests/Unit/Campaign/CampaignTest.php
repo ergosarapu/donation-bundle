@@ -9,11 +9,13 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\Campaign;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignActivated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignArchived;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignCreated;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignDonationDescriptionUpdated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignName;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignNameUpdated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignPublicTitle;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignPublicTitleUpdated;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use LogicException;
 use Patchlevel\EventSourcing\PhpUnit\Test\AggregateRootTestCase;
 
@@ -23,6 +25,7 @@ class CampaignTest extends AggregateRootTestCase
     private CampaignId $campaignId;
     private CampaignName $name;
     private CampaignPublicTitle $publicTitle;
+    private ShortDescription $donationDescription;
 
     protected function aggregateClass(): string
     {
@@ -36,6 +39,7 @@ class CampaignTest extends AggregateRootTestCase
         $this->campaignId = CampaignId::generate();
         $this->name = new CampaignName('Internal Campaign Name');
         $this->publicTitle = new CampaignPublicTitle('Public Campaign Title');
+        $this->donationDescription = new ShortDescription('Donation Description');
     }
 
     public function testCreate(): void
@@ -45,12 +49,14 @@ class CampaignTest extends AggregateRootTestCase
             $this->campaignId,
             $this->name,
             $this->publicTitle,
+            $this->donationDescription,
         ))->then(
             new CampaignCreated(
                 $this->now,
                 $this->campaignId,
                 $this->name,
                 $this->publicTitle,
+                $this->donationDescription,
                 $this->now,
             )
         );
@@ -66,6 +72,7 @@ class CampaignTest extends AggregateRootTestCase
                 $this->campaignId,
                 $this->name,
                 $this->publicTitle,
+                $this->donationDescription,
                 $this->now,
             )
         )
@@ -90,6 +97,7 @@ class CampaignTest extends AggregateRootTestCase
                 $this->campaignId,
                 $this->name,
                 $this->publicTitle,
+                $this->donationDescription,
                 $this->now,
             )
         )
@@ -110,6 +118,7 @@ class CampaignTest extends AggregateRootTestCase
                 $this->campaignId,
                 $this->name,
                 $this->publicTitle,
+                $this->donationDescription,
                 $this->now,
             )
         )
@@ -134,12 +143,59 @@ class CampaignTest extends AggregateRootTestCase
                 $this->campaignId,
                 $this->name,
                 $this->publicTitle,
+                $this->donationDescription,
                 $this->now,
             )
         )
         ->when(fn (Campaign $campaign) => $campaign->updatePublicTitle(
             $this->now,
             $this->publicTitle, // Same title
+        ))
+        ->then(); // No event recorded
+    }
+
+    public function testUpdateDonationDescription(): void
+    {
+        $newDonationDescription = new ShortDescription('Updated Donation Description');
+
+        $this->given(
+            new CampaignCreated(
+                $this->now,
+                $this->campaignId,
+                $this->name,
+                $this->publicTitle,
+                $this->donationDescription,
+                $this->now,
+            )
+        )
+        ->when(fn (Campaign $campaign) => $campaign->updateDonationDescription(
+            $this->now,
+            $newDonationDescription,
+        ))
+        ->then(
+            new CampaignDonationDescriptionUpdated(
+                $this->now,
+                $this->campaignId,
+                $newDonationDescription,
+            )
+        );
+    }
+
+    public function testUpdateDonationDescriptionIsIdempotent(): void
+    {
+        $this->given(
+            new CampaignCreated(
+                $this->now,
+                $this->campaignId,
+                $this->name,
+                $this->publicTitle,
+                $this->donationDescription,
+                $this->now,
+            )
+        )
+        ->when(fn (Campaign $campaign) => $campaign->updateDonationDescription(
+            $this->now,
+            $this->donationDescription, // Same description
         ))
         ->then(); // No event recorded
     }
@@ -152,6 +208,7 @@ class CampaignTest extends AggregateRootTestCase
                 $this->campaignId,
                 $this->name,
                 $this->publicTitle,
+                $this->donationDescription,
                 $this->now,
             )
         )
@@ -172,6 +229,7 @@ class CampaignTest extends AggregateRootTestCase
                 $this->campaignId,
                 $this->name,
                 $this->publicTitle,
+                $this->donationDescription,
                 $this->now,
             ),
             new CampaignActivated(
@@ -200,6 +258,7 @@ class CampaignTest extends AggregateRootTestCase
                 $this->campaignId,
                 $this->name,
                 $this->publicTitle,
+                $this->donationDescription,
                 $this->now,
             ),
             new CampaignActivated(
@@ -219,6 +278,7 @@ class CampaignTest extends AggregateRootTestCase
                 $this->campaignId,
                 $this->name,
                 $this->publicTitle,
+                $this->donationDescription,
                 $this->now,
             ),
             new CampaignActivated(
@@ -243,6 +303,7 @@ class CampaignTest extends AggregateRootTestCase
                 $this->campaignId,
                 $this->name,
                 $this->publicTitle,
+                $this->donationDescription,
                 $this->now,
             ),
             new CampaignActivated(
@@ -266,6 +327,7 @@ class CampaignTest extends AggregateRootTestCase
                 $this->campaignId,
                 $this->name,
                 $this->publicTitle,
+                $this->donationDescription,
                 $this->now,
             )
         )

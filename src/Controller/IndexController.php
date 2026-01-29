@@ -83,7 +83,7 @@ class IndexController extends AbstractController
                         $this->getDomainPersonName($donation),
                         $this->getDomainNationalIdCode($donation),
                     ),
-                    description: new ShortDescription($campaign->getPublicTitle()),
+                    description: new ShortDescription($campaign->getDonationDescription()),
                 );
 
                 $interval = null;

@@ -10,6 +10,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Port\CampaignProject
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignActivated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignArchived;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignCreated;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignDonationDescriptionUpdated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignNameUpdated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignPublicTitleUpdated;
@@ -92,6 +93,7 @@ class CampaignProjector implements CampaignProjectionRepositoryInterface
         $campaign->setCampaignId($event->campaignId->toString());
         $campaign->setName($event->name->toString());
         $campaign->setPublicTitle($event->publicTitle->toString());
+        $campaign->setDonationDescription($event->donationDescription->toString());
         $campaign->setStatus($event->status);
         $campaign->setCreatedAt($event->createdAt);
         $campaign->setUpdatedAt($event->occuredOn);
@@ -138,6 +140,17 @@ class CampaignProjector implements CampaignProjectionRepositoryInterface
     {
         $campaign = $this->findOneOrThrow($event->campaignId);
         $campaign->setStatus($event->status);
+        $campaign->setUpdatedAt($event->occuredOn);
+
+        $this->projectionEntityManager->persist($campaign);
+        $this->projectionEntityManager->flush();
+    }
+
+    #[Subscribe(CampaignDonationDescriptionUpdated::class)]
+    public function onCampaignDonationDescriptionUpdated(CampaignDonationDescriptionUpdated $event): void
+    {
+        $campaign = $this->findOneOrThrow($event->campaignId);
+        $campaign->setDonationDescription($event->donationDescription->toString());
         $campaign->setUpdatedAt($event->occuredOn);
 
         $this->projectionEntityManager->persist($campaign);

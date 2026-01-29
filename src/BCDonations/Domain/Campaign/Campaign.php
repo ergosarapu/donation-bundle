@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign;
 
 use DateTimeImmutable;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use LogicException;
 use Patchlevel\EventSourcing\Aggregate\BasicAggregateRoot;
 use Patchlevel\EventSourcing\Attribute\Aggregate;
@@ -18,6 +19,7 @@ class Campaign extends BasicAggregateRoot
     private CampaignId $id;
     private CampaignName $name;
     private CampaignPublicTitle $publicTitle;
+    private ShortDescription $donationDescription;
     private CampaignStatus $status;
 
     public static function create(
@@ -25,6 +27,7 @@ class Campaign extends BasicAggregateRoot
         CampaignId $campaignId,
         CampaignName $name,
         CampaignPublicTitle $publicTitle,
+        ShortDescription $donationDescription,
         ?DateTimeImmutable $createdAt = null,
     ): self {
         $campaign = new self();
@@ -33,6 +36,7 @@ class Campaign extends BasicAggregateRoot
             $campaignId,
             $name,
             $publicTitle,
+            $donationDescription,
             $createdAt ?? $currentTime,
         ));
         return $campaign;
@@ -61,6 +65,19 @@ class Campaign extends BasicAggregateRoot
             $currentTime,
             $this->id,
             $publicTitle,
+        ));
+    }
+
+    public function updateDonationDescription(DateTimeImmutable $currentTime, ShortDescription $donationDescription): void
+    {
+        if ($this->donationDescription->toString() === $donationDescription->toString()) {
+            return; // Idempotency - no change
+        }
+
+        $this->recordThat(new CampaignDonationDescriptionUpdated(
+            $currentTime,
+            $this->id,
+            $donationDescription,
         ));
     }
 
@@ -109,6 +126,7 @@ class Campaign extends BasicAggregateRoot
         $this->id = $event->campaignId;
         $this->name = $event->name;
         $this->publicTitle = $event->publicTitle;
+        $this->donationDescription = $event->donationDescription;
         $this->status = $event->status;
     }
 
@@ -134,5 +152,11 @@ class Campaign extends BasicAggregateRoot
     protected function applyArchived(CampaignArchived $event): void
     {
         $this->status = $event->status;
+    }
+
+    #[Apply]
+    protected function applyDonationDescriptionUpdated(CampaignDonationDescriptionUpdated $event): void
+    {
+        $this->donationDescription = $event->donationDescription;
     }
 }

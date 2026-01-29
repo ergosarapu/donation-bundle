@@ -11,6 +11,7 @@
         </id>
         <field name="name" type="string" column="name" length="255" nullable="false"/>
         <field name="publicTitle" type="string" column="public_title" length="255" nullable="false"/>
+        <field name="donationDescription" type="string" column="donation_description" length="255" nullable="false"/>
         <field name="status" type="string" column="status" length="16" nullable="false"
                enum-type="ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignStatus"/>
         <field name="createdAt" type="datetime_immutable" column="created_at" nullable="false"/>

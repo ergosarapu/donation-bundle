@@ -16,6 +16,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\ActivateCampaign;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\ArchiveCampaign;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\CreateCampaign;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Command\UpdateCampaignDonationDescription;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\UpdateCampaignName;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\UpdateCampaignPublicTitle;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\Campaign;
@@ -24,6 +25,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignName;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignPublicTitle;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignStatus;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -43,6 +45,7 @@ class CampaignCQRSController extends AbstractCQRSController
         $command = new CreateCampaign(
             new CampaignName($entity->getName()),
             new CampaignPublicTitle($entity->getPublicTitle()),
+            new ShortDescription($entity->getDonationDescription()),
         );
         $this->commandBus->dispatch($command);
     }
@@ -79,6 +82,17 @@ class CampaignCQRSController extends AbstractCQRSController
             $this->commandBus->dispatch($command);
             unset($changes['publicTitle']);
         }
+
+        if (isset($changes['donationDescription'])) {
+            /** @var string $newDescription */
+            $newDescription = $updateEvent->getNewValue('donationDescription');
+            $command = new UpdateCampaignDonationDescription(
+                CampaignId::fromString($entity->getCampaignId()),
+                new ShortDescription($newDescription),
+            );
+            $this->commandBus->dispatch($command);
+            unset($changes['donationDescription']);
+        }
     }
 
     public static function getEntityFqcn(): string
@@ -95,6 +109,7 @@ class CampaignCQRSController extends AbstractCQRSController
             })->hideOnDetail()->hideOnForm(),
             TextField::new('name'),
             TextField::new('publicTitle'),
+            TextField::new('donationDescription'),
             ChoiceField::new('status')
                 ->setDisabled()
                 ->formatValue(function (CampaignStatus $value) {
