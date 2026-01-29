@@ -11,6 +11,6 @@ enum PaymentStatus: String
     case Failed = 'failed';
     case Authorized = 'authorized';
     case Captured = 'captured';
-    // case Settled = 'settled';
+    case Settled = 'settled';
     case Refunded = 'refunded';
 }

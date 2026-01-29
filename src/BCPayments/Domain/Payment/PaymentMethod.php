@@ -21,20 +21,20 @@ class PaymentMethod extends BasicAggregateRoot
 
     public static function create(
         DateTimeImmutable $currentTime,
-        PaymentMethodAction $paymentMethodAction,
+        PaymentMethodId $paymentMethodId,
         PaymentMethodResult $paymentMethodResult,
     ): self {
         $paymentMethod = new self();
         if (!$paymentMethodResult->isUsable()) {
             $paymentMethod->recordThat(new UnusablePaymentMethodCreated(
                 $currentTime,
-                $paymentMethodAction,
+                $paymentMethodId,
                 $paymentMethodResult->unusableReason(),
             ));
         } else {
             $paymentMethod->recordThat(new UsablePaymentMethodCreated(
                 $currentTime,
-                $paymentMethodAction,
+                $paymentMethodId,
                 $paymentMethodResult->value(),
             ));
         }
@@ -43,10 +43,10 @@ class PaymentMethod extends BasicAggregateRoot
 
     public function update(
         DateTimeImmutable $currentTime,
-        PaymentMethodAction $paymentMethodAction,
+        PaymentMethodId $paymentMethodId,
         PaymentMethodResult $result,
     ): void {
-        if ($this->id->toString() !== $paymentMethodAction->paymentMethodId->toString()) {
+        if ($this->id->toString() !== $paymentMethodId->toString()) {
             throw new InvalidArgumentException('Payment Method ID mismatch');
         }
 
@@ -62,29 +62,29 @@ class PaymentMethod extends BasicAggregateRoot
 
         $this->recordThat(new PaymentMethodUnusable(
             $currentTime,
-            $paymentMethodAction,
+            $paymentMethodId,
             $result->unusableReason(),
         ));
     }
 
     #[Apply]
-    protected function applyActivated(UsablePaymentMethodCreated $event): void
+    protected function applyUsableCreated(UsablePaymentMethodCreated $event): void
     {
-        $this->id = $event->paymentMethodAction->paymentMethodId;
+        $this->id = $event->paymentMethodId;
         $this->value = $event->credentialValue;
     }
 
     #[Apply]
     protected function applyUnusableCreated(UnusablePaymentMethodCreated $event): void
     {
-        $this->id = $event->paymentMethodAction->paymentMethodId;
+        $this->id = $event->paymentMethodId;
         $this->value = null;
     }
 
     #[Apply]
     protected function applyUnusable(PaymentMethodUnusable $event): void
     {
-        $this->id = $event->paymentMethodAction->paymentMethodId;
+        $this->id = $event->paymentMethodId;
         $this->value = null;
     }
 

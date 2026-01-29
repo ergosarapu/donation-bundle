@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Donation;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationAccepted;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationCreated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationFailed;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationInitiated;
@@ -62,6 +63,35 @@ class DonationTest extends AggregateRootTestCase
         $this->description = new ShortDescription('Test donation');
     }
 
+    public function testCreate(): void
+    {
+        $paymentId = PaymentId::generate();
+
+        $this->when(fn () => Donation::create(
+            $this->now,
+            $this->donationId,
+            $this->amount,
+            $this->campaignId,
+            $paymentId,
+            $this->description,
+            $this->donorIdentity,
+            $this->recurringPlanAction->recurringPlanId,
+            null,
+        ))->then(
+            new DonationCreated(
+                $this->now,
+                $this->donationId,
+                $this->amount,
+                $this->campaignId,
+                $paymentId,
+                $this->description,
+                $this->donorIdentity,
+                $this->recurringPlanAction->recurringPlanId,
+                $this->now,
+            )
+        );
+    }
+
     public function testInitiate(): void
     {
         $donationRequest = new DonationRequest(
@@ -92,7 +122,7 @@ class DonationTest extends AggregateRootTestCase
         );
     }
 
-    public function testAccept(): void
+    public function testAcceptInitiated(): void
     {
         $donationRequest = new DonationRequest(
             $this->donationId,
@@ -111,9 +141,47 @@ class DonationTest extends AggregateRootTestCase
                 $this->campaignId,
                 $donationRequest->paymentId,
                 $this->gateway,
-                new ShortDescription('TODO: Add description'),
+                new ShortDescription('Description'),
                 $this->recurringPlanAction,
                 $this->donorIdentity,
+            )
+        )
+        ->when(fn (Donation $donation) => $donation->accept(
+            $this->now,
+            $this->amount,
+        ))
+        ->then(
+            new DonationAccepted(
+                $this->now,
+                $this->donationId,
+                $this->amount,
+                $this->recurringPlanAction->recurringPlanId,
+            )
+        );
+    }
+
+    public function testAcceptCreated(): void
+    {
+        $donationRequest = new DonationRequest(
+            $this->donationId,
+            $this->campaignId,
+            $this->amount,
+            $this->gateway,
+            $this->donorIdentity,
+            $this->description,
+        );
+
+        $this->given(
+            new DonationCreated(
+                $this->now,
+                $this->donationId,
+                $this->amount,
+                $this->campaignId,
+                $donationRequest->paymentId,
+                new ShortDescription('Description'),
+                $this->donorIdentity,
+                $this->recurringPlanAction->recurringPlanId,
+                $this->now,
             )
         )
         ->when(fn (Donation $donation) => $donation->accept(
@@ -164,7 +232,7 @@ class DonationTest extends AggregateRootTestCase
         ->expectsExceptionMessage('Cannot transition from failed to accepted');
     }
 
-    public function testFail(): void
+    public function testFailInitiated(): void
     {
         $donationRequest = new DonationRequest(
             $this->donationId,
@@ -186,6 +254,31 @@ class DonationTest extends AggregateRootTestCase
                 new ShortDescription('TODO: Add description'),
                 $this->recurringPlanAction,
                 new DonorIdentity($this->email),
+            )
+        )
+        ->when(fn (Donation $donation) => $donation->fail($this->now))
+        ->then(
+            new DonationFailed(
+                $this->now,
+                $this->donationId,
+                $this->recurringPlanAction->recurringPlanId,
+            )
+        );
+    }
+
+    public function testFailCreated(): void
+    {
+        $this->given(
+            new DonationCreated(
+                $this->now,
+                $this->donationId,
+                $this->amount,
+                $this->campaignId,
+                PaymentId::generate(),
+                new ShortDescription('Description'),
+                $this->donorIdentity,
+                $this->recurringPlanAction->recurringPlanId,
+                $this->now,
             )
         )
         ->when(fn (Donation $donation) => $donation->fail($this->now))

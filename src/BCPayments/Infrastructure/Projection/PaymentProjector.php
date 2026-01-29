@@ -10,6 +10,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Application\Query\Port\PaymentProjectio
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentAuthorized;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCanceled;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCaptured;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCreated;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentFailed;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentInitiated;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRedirectUrlSetUp;
@@ -79,6 +80,24 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         $payment = new Payment();
         $payment->setId($event->paymentId->toString());
         $payment->setCreatedAt($event->occuredOn);
+        $payment->setUpdatedAt($event->occuredOn);
+        $payment->setAmount($event->amount->amount());
+        $payment->setCurrency($event->amount->currency()->code());
+        $payment->setStatus($event->status);
+        $this->projectionEntityManager->persist($payment);
+        $this->projectionEntityManager->flush();
+    }
+
+    #[Subscribe(PaymentCreated::class)]
+    public function onPaymentCreated(PaymentCreated $event): void
+    {
+        // Idempotency guard
+        if ($this->findOne($event->paymentId) !== null) {
+            return;
+        }
+        $payment = new Payment();
+        $payment->setId($event->paymentId->toString());
+        $payment->setCreatedAt($event->createdAt);
         $payment->setUpdatedAt($event->occuredOn);
         $payment->setAmount($event->amount->amount());
         $payment->setCurrency($event->amount->currency()->code());

@@ -9,6 +9,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentAuthorized;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCanceled;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCaptured;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCreated;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCredentialValue;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentDidNotSucceed;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentFailed;
@@ -21,6 +22,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRefunded;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentReleasedForGatewayCall;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRequest;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentReservedForGatewayCall;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentSucceeded;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
@@ -65,6 +67,35 @@ class PaymentTest extends AggregateRootTestCase
         $this->email = new Email('example@example.com');
         $this->description = new ShortDescription('Test payment');
         $this->appliedTo = PaymentAppliedToId::generate();
+    }
+
+    public function testCreate(): void
+    {
+        $this->when(fn () => Payment::create(
+            $this->now,
+            $this->paymentId,
+            PaymentStatus::Pending,
+            $this->amount,
+            $this->description,
+            $this->appliedTo,
+            $this->email,
+            null,
+            null,
+            null,
+        ))->then(
+            new PaymentCreated(
+                $this->now,
+                $this->now,
+                $this->paymentId,
+                PaymentStatus::Pending,
+                $this->amount,
+                $this->description,
+                $this->appliedTo,
+                $this->email,
+                null,
+                null,
+            )
+        );
     }
 
     public function testInitiate(): void

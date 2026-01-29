@@ -19,8 +19,8 @@ class UpdatePaymentMethodHandler implements CommandHandlerInterface
 
     public function __invoke(UpdatePaymentMethod $command): void
     {
-        $paymentMethod = $this->paymentMethodRepository->load($command->action->paymentMethodId);
-        $paymentMethod->update($this->clock->now(), $command->action, $command->result);
+        $paymentMethod = $this->paymentMethodRepository->load($command->paymentMethodId);
+        $paymentMethod->update($this->clock->now(), $command->paymentMethodId, $command->result);
         $this->paymentMethodRepository->save($paymentMethod);
     }
 }

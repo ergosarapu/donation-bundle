@@ -22,6 +22,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlan;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanAction;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanActivated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanCanceled;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanCreated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanExpired;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanFailed;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanFailing;
@@ -29,6 +30,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanInitiated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanRenewalCompleted;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanRenewalInitiated;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanStatus;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
@@ -74,6 +76,71 @@ class RecurringPlanTest extends AggregateRootTestCase
     protected function aggregateClass(): string
     {
         return RecurringPlan::class;
+    }
+
+    public function testCreate(): void
+    {
+        $recurringPlanId = RecurringPlanId::generate();
+        $initialDonationId = DonationId::generate();
+        $paymentMethodId = PaymentMethodId::generate();
+        $nextRenewalTime = $this->now->add($this->interval->toDateInterval());
+
+        $this->when(fn () => RecurringPlan::create(
+            $this->now,
+            $recurringPlanId,
+            RecurringPlanStatus::Pending,
+            $this->interval,
+            $initialDonationId,
+            $this->campaignId,
+            $paymentMethodId,
+            $this->amount,
+            $this->gateway,
+            new DonorIdentity($this->email),
+            $nextRenewalTime,
+            $this->description,
+            null,
+        ))->then(
+            new RecurringPlanCreated(
+                $this->now,
+                $this->now,
+                $recurringPlanId,
+                RecurringPlanStatus::Pending,
+                $this->interval,
+                $initialDonationId,
+                $this->campaignId,
+                $paymentMethodId,
+                $this->amount,
+                $this->gateway,
+                new DonorIdentity($this->email),
+                $this->description,
+                $nextRenewalTime,
+            )
+        );
+    }
+
+    public function testCreateWithoutEmailThrows(): void
+    {
+        $recurringPlanId = RecurringPlanId::generate();
+        $initialDonationId = DonationId::generate();
+        $paymentMethodId = PaymentMethodId::generate();
+        $nextRenewalTime = $this->now->add($this->interval->toDateInterval());
+
+        $this->when(fn () => RecurringPlan::create(
+            $this->now,
+            $recurringPlanId,
+            RecurringPlanStatus::Pending,
+            $this->interval,
+            $initialDonationId,
+            $this->campaignId,
+            $paymentMethodId,
+            $this->amount,
+            $this->gateway,
+            new DonorIdentity(),
+            $nextRenewalTime,
+            $this->description,
+            null,
+        ))->expectsException(InvalidArgumentException::class)
+        ->expectsExceptionMessage('Recurring plan requires donor email');
     }
 
     public function testInitiate(): void

@@ -68,6 +68,7 @@ class PaymentCQRSController extends AbstractCQRSController
                         PaymentStatus::Pending->value => 'warning',
                         PaymentStatus::Authorized->value => 'info',
                         PaymentStatus::Captured->value => 'success',
+                        PaymentStatus::Settled->value => 'success',
                         PaymentStatus::Failed->value => 'danger',
                         PaymentStatus::Canceled->value => 'secondary',
                         PaymentStatus::Refunded->value => 'secondary',

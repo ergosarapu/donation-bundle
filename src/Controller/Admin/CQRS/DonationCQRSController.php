@@ -66,6 +66,7 @@ class DonationCQRSController extends AbstractCQRSController
                 ->formatValue(function (DonationStatus $value) {
                     $colors = [
                         DonationStatus::Pending->value => 'warning',
+                        DonationStatus::Created->value => 'warning',
                         DonationStatus::Accepted->value => 'success',
                         DonationStatus::Failed->value => 'danger',
                     ];

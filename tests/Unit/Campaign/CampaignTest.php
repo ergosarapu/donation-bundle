@@ -51,6 +51,7 @@ class CampaignTest extends AggregateRootTestCase
                 $this->campaignId,
                 $this->name,
                 $this->publicTitle,
+                $this->now,
             )
         );
     }
@@ -65,6 +66,7 @@ class CampaignTest extends AggregateRootTestCase
                 $this->campaignId,
                 $this->name,
                 $this->publicTitle,
+                $this->now,
             )
         )
         ->when(fn (Campaign $campaign) => $campaign->updateName(
@@ -88,6 +90,7 @@ class CampaignTest extends AggregateRootTestCase
                 $this->campaignId,
                 $this->name,
                 $this->publicTitle,
+                $this->now,
             )
         )
         ->when(fn (Campaign $campaign) => $campaign->updateName(
@@ -107,6 +110,7 @@ class CampaignTest extends AggregateRootTestCase
                 $this->campaignId,
                 $this->name,
                 $this->publicTitle,
+                $this->now,
             )
         )
         ->when(fn (Campaign $campaign) => $campaign->updatePublicTitle(
@@ -130,6 +134,7 @@ class CampaignTest extends AggregateRootTestCase
                 $this->campaignId,
                 $this->name,
                 $this->publicTitle,
+                $this->now,
             )
         )
         ->when(fn (Campaign $campaign) => $campaign->updatePublicTitle(
@@ -147,6 +152,7 @@ class CampaignTest extends AggregateRootTestCase
                 $this->campaignId,
                 $this->name,
                 $this->publicTitle,
+                $this->now,
             )
         )
         ->when(fn (Campaign $campaign) => $campaign->activate($this->now))
@@ -166,6 +172,7 @@ class CampaignTest extends AggregateRootTestCase
                 $this->campaignId,
                 $this->name,
                 $this->publicTitle,
+                $this->now,
             ),
             new CampaignActivated(
                 $this->now,
@@ -193,6 +200,7 @@ class CampaignTest extends AggregateRootTestCase
                 $this->campaignId,
                 $this->name,
                 $this->publicTitle,
+                $this->now,
             ),
             new CampaignActivated(
                 $this->now,
@@ -211,6 +219,7 @@ class CampaignTest extends AggregateRootTestCase
                 $this->campaignId,
                 $this->name,
                 $this->publicTitle,
+                $this->now,
             ),
             new CampaignActivated(
                 $this->now,
@@ -234,6 +243,7 @@ class CampaignTest extends AggregateRootTestCase
                 $this->campaignId,
                 $this->name,
                 $this->publicTitle,
+                $this->now,
             ),
             new CampaignActivated(
                 $this->now,
@@ -256,6 +266,7 @@ class CampaignTest extends AggregateRootTestCase
                 $this->campaignId,
                 $this->name,
                 $this->publicTitle,
+                $this->now,
             )
         )
         ->when(fn (Campaign $campaign) => $campaign->archive($this->now))

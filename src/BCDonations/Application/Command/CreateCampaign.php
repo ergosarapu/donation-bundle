@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\BCDonations\Application\Command;
 
+use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignName;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignPublicTitle;
@@ -16,7 +17,12 @@ final class CreateCampaign implements CommandInterface
     public function __construct(
         public readonly CampaignName $name,
         public readonly CampaignPublicTitle $publicTitle,
+        ?CampaignId $campaignId = null,
+        public readonly ?DateTimeImmutable $createdAt = null,
     ) {
-        $this->campaignId = CampaignId::generate();
+        if ($campaignId === null) {
+            $campaignId = CampaignId::generate();
+        }
+        $this->campaignId = $campaignId;
     }
 }

@@ -10,9 +10,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\UpdatePaymen
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentMethodRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCredentialValue;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethod;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodAction;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodResult;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -42,25 +40,22 @@ class UpdatePaymentMethodHandlerTest extends TestCase
             $clock
         );
 
-        $methodAction = PaymentMethodAction::forUse(
-            PaymentMethodId::generate(),
-            PaymentId::generate()
-        );
+        $paymentMethodId = PaymentMethodId::generate();
         $methodResult = PaymentMethodResult::usable(
             new PaymentCredentialValue('updated_token_456')
         );
-        $this->command = new UpdatePaymentMethod($methodAction, $methodResult);
+        $this->command = new UpdatePaymentMethod($paymentMethodId, $methodResult);
     }
 
     public function testUpdatesPaymentCredential(): void
     {
         $this->paymentMethodRepository->expects($this->once())
             ->method('load')
-            ->with($this->command->action->paymentMethodId)
+            ->with($this->command->paymentMethodId)
             ->willReturn($this->paymentMethod);
         $this->paymentMethod->expects($this->once())
             ->method('update')
-            ->with($this->now, $this->command->action, $this->command->result);
+            ->with($this->now, $this->command->paymentMethodId, $this->command->result);
         $this->paymentMethodRepository->expects($this->once())
             ->method('save')
             ->with($this->paymentMethod);

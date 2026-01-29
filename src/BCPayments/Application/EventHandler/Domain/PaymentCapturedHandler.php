@@ -40,7 +40,7 @@ class PaymentCapturedHandler implements EventHandlerInterface
             $paymentMethodResult = PaymentMethodResult::unusable(PaymentMethodUnusableReason::RequestFailed);
         }
         $this->commandBus->dispatch(new CreatePaymentMethod(
-            $action,
+            $action->paymentMethodId,
             $paymentMethodResult,
         ));
     }
@@ -54,7 +54,7 @@ class PaymentCapturedHandler implements EventHandlerInterface
         }
 
         $this->commandBus->dispatch(new UpdatePaymentMethod(
-            $action,
+            $action->paymentMethodId,
             $paymentMethodResult,
         ));
     }

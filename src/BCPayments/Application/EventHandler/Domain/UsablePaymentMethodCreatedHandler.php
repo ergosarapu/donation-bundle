@@ -18,7 +18,7 @@ class UsablePaymentMethodCreatedHandler implements EventHandlerInterface
     public function __invoke(UsablePaymentMethodCreated $event): void
     {
         $this->eventBus->dispatch(new UsablePaymentMethodCreatedIntegrationEvent(
-            $event->paymentMethodAction->paymentMethodId,
+            $event->paymentMethodId,
         ));
     }
 }

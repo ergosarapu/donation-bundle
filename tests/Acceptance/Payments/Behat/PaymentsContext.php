@@ -148,13 +148,9 @@ class PaymentsContext implements Context
     public function usablePaymentMethodExists(): void
     {
         $paymentMethodId = PaymentMethodId::generate();
-        $action = PaymentMethodAction::forRequest(
-            $paymentMethodId,
-            PaymentId::generate(),
-        );
         $this->lastPaymentMethodId = $paymentMethodId;
         $this->commandBus->send(new CreatePaymentMethod(
-            $action,
+            $paymentMethodId,
             PaymentMethodResult::usable(new PaymentCredentialValue('credential-value')),
         ));
         $this->usablePaymentMethodIsCreated();
@@ -164,13 +160,9 @@ class PaymentsContext implements Context
     public function unusablePaymentMethodExists(): void
     {
         $paymentMethodId = PaymentMethodId::generate();
-        $action = PaymentMethodAction::forRequest(
-            $paymentMethodId,
-            PaymentId::generate(),
-        );
         $this->lastPaymentMethodId = $paymentMethodId;
         $this->commandBus->send(new CreatePaymentMethod(
-            $action,
+            $paymentMethodId,
             PaymentMethodResult::unusable(PaymentMethodUnusableReason::Expired),
         ));
         $this->unusablePaymentMethodIsCreated();
@@ -183,12 +175,8 @@ class PaymentsContext implements Context
         $this->lastPaymentMethodId = PaymentMethodId::generate();
         // Store a different payment method to ensure the specified one does not exist,
         // allowing to test the non-existence scenario.
-        $action = PaymentMethodAction::forRequest(
-            PaymentMethodId::generate(),
-            PaymentId::generate(),
-        );
         $this->commandBus->send(new CreatePaymentMethod(
-            $action,
+            PaymentMethodId::generate(),
             PaymentMethodResult::usable(new PaymentCredentialValue('credential-value')),
         ));
     }
@@ -339,7 +327,7 @@ class PaymentsContext implements Context
         /** @var UsablePaymentMethodCreated $event */
         $event = $events[0];
         Assert::eq(
-            $event->paymentMethodAction->paymentMethodId->toString(),
+            $event->paymentMethodId->toString(),
             $this->lastPaymentMethodId->toString(),
             'PaymentMethodId in UsablePaymentMethodCreated event should match the expected PaymentMethodId'
         );
@@ -356,7 +344,7 @@ class PaymentsContext implements Context
         /** @var UnusablePaymentMethodCreated $event */
         $event = $events[0];
         Assert::eq(
-            $event->paymentMethodAction->paymentMethodId->toString(),
+            $event->paymentMethodId->toString(),
             $this->lastPaymentMethodId->toString(),
             'PaymentMethodId in UnusablePaymentMethodCreated event should match the expected PaymentMethodId'
         );
@@ -373,7 +361,7 @@ class PaymentsContext implements Context
         /** @var PaymentMethodUnusable $event */
         $event = $events[0];
         Assert::eq(
-            $event->paymentMethodAction->paymentMethodId->toString(),
+            $event->paymentMethodId->toString(),
             $this->lastPaymentMethodId->toString(),
             'PaymentMethodId in PaymentMethodUnusable event should match the expected PaymentMethodId'
         );

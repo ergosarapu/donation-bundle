@@ -25,6 +25,7 @@ class Campaign extends BasicAggregateRoot
         CampaignId $campaignId,
         CampaignName $name,
         CampaignPublicTitle $publicTitle,
+        ?DateTimeImmutable $createdAt = null,
     ): self {
         $campaign = new self();
         $campaign->recordThat(new CampaignCreated(
@@ -32,6 +33,7 @@ class Campaign extends BasicAggregateRoot
             $campaignId,
             $name,
             $publicTitle,
+            $createdAt ?? $currentTime,
         ));
         return $campaign;
     }

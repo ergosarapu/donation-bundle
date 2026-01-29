@@ -68,6 +68,59 @@ class RecurringPlan extends BasicAggregateRoot
         return $donation;
     }
 
+    public static function create(
+        DateTimeImmutable $currentTime,
+        RecurringPlanId $recurringPlanId,
+        RecurringPlanStatus $status,
+        RecurringInterval $interval,
+        DonationId $initialDonationId,
+        CampaignId $campaignId,
+        PaymentMethodId $paymentMethodId,
+        Money $amount,
+        Gateway $gateway,
+        DonorIdentity $donorIdentity,
+        ?DateTimeImmutable $nextRenewalTime,
+        ShortDescription $description,
+        ?DateTimeImmutable $createdAt = null,
+    ): self {
+        if ($donorIdentity->email === null) {
+            throw new InvalidArgumentException('Recurring plan requires donor email');
+        }
+        $donation = new self();
+        $donation->recordThat(new RecurringPlanCreated(
+            $currentTime,
+            $createdAt ?? $currentTime,
+            $recurringPlanId,
+            $status,
+            $interval,
+            $initialDonationId,
+            $campaignId,
+            $paymentMethodId,
+            $amount,
+            $gateway,
+            $donorIdentity,
+            $description,
+            $nextRenewalTime,
+        ));
+        return $donation;
+    }
+
+    #[Apply]
+    protected function applyCreated(RecurringPlanCreated $event): void
+    {
+        $this->id = $event->recurringPlanId;
+        $this->renwalDonationInProgress = null;
+        $this->status = $event->status;
+        $this->interval = $event->interval;
+        $this->campaignId = $event->campaignId;
+        $this->amount = $event->amount;
+        $this->gateway = $event->gateway;
+        $this->donorIdentity = $event->donorIdentity;
+        $this->nextRenewalTime = $event->nextRenewalTime;
+        $this->paymentMethodId = $event->paymentMethodId;
+        $this->description = $event->description;
+    }
+
     #[Apply]
     protected function applyInitiated(RecurringPlanInitiated $event): void
     {
@@ -277,7 +330,7 @@ class RecurringPlan extends BasicAggregateRoot
             RecurringPlanStatus::Failing,
             RecurringPlanStatus::Pending,
             RecurringPlanStatus::Active => $this->recordThat(new RecurringPlanFailed($currentTime, $this->id)),
-            default => throw new RecurringPlanFailNotAllowedException('Failing not allowed from status: ' . $this->status->value),
+            default => throw new RecurringPlanFailNotAllowedException('Fail not allowed from status: ' . $this->status->value),
         };
     }
 }

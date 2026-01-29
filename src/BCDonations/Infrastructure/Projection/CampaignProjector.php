@@ -93,7 +93,7 @@ class CampaignProjector implements CampaignProjectionRepositoryInterface
         $campaign->setName($event->name->toString());
         $campaign->setPublicTitle($event->publicTitle->toString());
         $campaign->setStatus($event->status);
-        $campaign->setCreatedAt($event->occuredOn);
+        $campaign->setCreatedAt($event->createdAt);
         $campaign->setUpdatedAt($event->occuredOn);
 
         $this->projectionEntityManager->persist($campaign);

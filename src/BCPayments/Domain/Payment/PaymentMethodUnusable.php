@@ -7,6 +7,7 @@ namespace ErgoSarapu\DonationBundle\BCPayments\Domain\Payment;
 use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\AbstractTimestampedEvent;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\DomainEventInterface;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use Patchlevel\EventSourcing\Attribute\Event;
 
 #[Event(name: 'payment_method.unusable')]
@@ -14,7 +15,7 @@ class PaymentMethodUnusable extends AbstractTimestampedEvent implements DomainEv
 {
     public function __construct(
         DateTimeImmutable $occuredOn,
-        public readonly PaymentMethodAction $paymentMethodAction,
+        public readonly PaymentMethodId $paymentMethodId,
         public readonly PaymentMethodUnusableReason $reason,
     ) {
         parent::__construct($occuredOn);

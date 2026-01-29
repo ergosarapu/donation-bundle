@@ -10,6 +10,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\RecurringPlanT
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Port\RecurringPlanProjectionRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationAccepted;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanActivated;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanCreated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanFailed;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanFailing;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
@@ -72,6 +73,29 @@ class RecurringPlanProjector implements RecurringPlanProjectionRepositoryInterfa
             $criteria['paymentMethodId'] = $paymentMethodId->toString();
         }
         return $criteria;
+    }
+
+    #[Subscribe(RecurringPlanCreated::class)]
+    public function onRecurringPlanCreated(RecurringPlanCreated $event): void
+    {
+        if ($this->findOne($event->recurringPlanId) !== null) {
+            // Idempotency guard
+            return;
+        }
+
+        $recurringPlan = new RecurringPlan();
+        $recurringPlan->setRecurringPlanId($event->recurringPlanId->toString());
+        $recurringPlan->setCreatedAt($event->createdAt);
+        $recurringPlan->setUpdatedAt($event->occuredOn);
+        $recurringPlan->setInitialDonationId($event->initialDonationId->toString());
+        $recurringPlan->setAmount($event->amount->amount());
+        $recurringPlan->setCurrency($event->amount->currency()->code());
+        $recurringPlan->setInterval($event->interval->toString());
+        $recurringPlan->setStatus($event->status);
+        $recurringPlan->setDonorEmail($event->donorIdentity->email?->toString());
+        $recurringPlan->setPaymentMethodId($event->paymentMethodId->toString());
+        $this->projectionEntityManager->persist($recurringPlan);
+        $this->projectionEntityManager->flush();
     }
 
     #[Subscribe(RecurringPlanInitiated::class)]

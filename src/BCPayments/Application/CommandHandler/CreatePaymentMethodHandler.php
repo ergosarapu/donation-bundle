@@ -21,11 +21,11 @@ class CreatePaymentMethodHandler implements CommandHandlerInterface
 
     public function __invoke(CreatePaymentMethod $command): void
     {
-        if ($this->paymentMethodRepository->has($command->paymentMethodAction->paymentMethodId)) {
+        if ($this->paymentMethodRepository->has($command->paymentMethodId)) {
             return;
         }
 
-        $paymentMethod = PaymentMethod::create($this->clock->now(), $command->paymentMethodAction, $command->paymentMethodResult);
+        $paymentMethod = PaymentMethod::create($this->clock->now(), $command->paymentMethodId, $command->paymentMethodResult);
         try {
             $this->paymentMethodRepository->save($paymentMethod);
         } catch (AggregateAlreadyExistsException $e) {

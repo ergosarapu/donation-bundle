@@ -18,7 +18,7 @@ class UnusablePaymentMethodCreatedHandler implements EventHandlerInterface
     public function __invoke(UnusablePaymentMethodCreated $event): void
     {
         $this->eventBus->dispatch(new UnusablePaymentMethodCreatedIntegrationEvent(
-            $event->paymentMethodAction->paymentMethodId,
+            $event->paymentMethodId,
         ));
     }
 }

@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCDonations\Domain\Donation;
 
 use DateTimeImmutable;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanAction;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use LogicException;
 use Patchlevel\EventSourcing\Aggregate\BasicAggregateRoot;
 use Patchlevel\EventSourcing\Attribute\Aggregate;
@@ -43,12 +46,46 @@ class Donation extends BasicAggregateRoot
         return $donation;
     }
 
+    public static function create(
+        DateTimeImmutable $currentTime,
+        DonationId $donationId,
+        Money $amount,
+        CampaignId $campaignId,
+        PaymentId $paymentId,
+        ShortDescription $description,
+        DonorIdentity $donorIdentity,
+        ?RecurringPlanId $recurringPlanId,
+        ?DateTimeImmutable $createdAt
+    ): self {
+        $donation = new self();
+        $donation->recordThat(new DonationCreated(
+            $currentTime,
+            $donationId,
+            $amount,
+            $campaignId,
+            $paymentId,
+            $description,
+            $donorIdentity,
+            $recurringPlanId,
+            $createdAt ?? $currentTime,
+        ));
+        return $donation;
+    }
+
     #[Apply]
     protected function applyInitiated(DonationInitiated $event): void
     {
         $this->id = $event->donationId;
         $this->status = $event->status;
         $this->recurringPlanId = $event->recurringPlanAction?->recurringPlanId;
+    }
+
+    #[Apply]
+    protected function applyCreated(DonationCreated $event): void
+    {
+        $this->id = $event->donationId;
+        $this->status = $event->status;
+        $this->recurringPlanId = $event->recurringPlanId;
     }
 
     #[Apply]
@@ -69,12 +106,24 @@ class Donation extends BasicAggregateRoot
             return;
         }
 
+        $this->validateTransitionToAccepted();
+        $this->recordThat(new DonationAccepted($currentTime, $this->id, $acceptedAmount, $this->recurringPlanId));
+    }
+
+    public function validateTransitionToAccepted(): void
+    {
         if ($this->status === DonationStatus::Pending) {
-            $this->recordThat(new DonationAccepted($currentTime, $this->id, $acceptedAmount, $this->recurringPlanId));
             return;
         }
+        if ($this->status === DonationStatus::Created) {
+            return;
+        }
+        $this->failTransitionValidation($this->status, DonationStatus::Accepted);
+    }
 
-        throw new LogicException('Cannot transition from ' . $this->status->value . ' to ' . DonationStatus::Accepted->value . '.');
+    private function failTransitionValidation(DonationStatus $from, DonationStatus $to): void
+    {
+        throw new LogicException('Cannot transition from ' . $from->value . ' to ' . $to->value . '.');
     }
 
     public function fail(DateTimeImmutable $currentTime): void
@@ -83,11 +132,18 @@ class Donation extends BasicAggregateRoot
             return;
         }
 
+        $this->validateTransitionToFailed();
+        $this->recordThat(new DonationFailed($currentTime, $this->id, $this->recurringPlanId));
+    }
+
+    public function validateTransitionToFailed(): void
+    {
         if ($this->status === DonationStatus::Pending) {
-            $this->recordThat(new DonationFailed($currentTime, $this->id, $this->recurringPlanId));
             return;
         }
-
-        throw new LogicException('Cannot transition from ' . $this->status->value . ' to ' . DonationStatus::Failed->value . '.');
+        if ($this->status === DonationStatus::Created) {
+            return;
+        }
+        $this->failTransitionValidation($this->status, DonationStatus::Failed);
     }
 }

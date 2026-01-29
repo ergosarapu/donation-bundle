@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\Donation;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Port\DonationProjectionRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationAccepted;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationCreated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationFailed;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationInitiated;
@@ -101,6 +102,28 @@ class DonationProjector implements DonationProjectionRepositoryInterface
         $donation->setCurrency($event->amount->currency()->code());
         $donation->setStatus($event->status);
         $donation->setRecurringPlanId($event->recurringPlanAction?->recurringPlanId->toString());
+        $donation->setCampaignId($event->campaignId->toString());
+        $this->projectionEntityManager->persist($donation);
+        $this->projectionEntityManager->flush();
+    }
+
+    #[Subscribe(DonationCreated::class)]
+    public function onDonationCreated(DonationCreated $event): void
+    {
+        if ($this->findOneBy($event->donationId) !== null) {
+            // Idempotency guard
+            return;
+        }
+
+        $donation = new Donation();
+        $donation->setDonationId($event->donationId->toString());
+        $donation->setCreatedAt($event->createdAt);
+        $donation->setUpdatedAt($event->occuredOn);
+        $donation->setPaymentId($event->paymentId->toString());
+        $donation->setAmount($event->amount->amount());
+        $donation->setCurrency($event->amount->currency()->code());
+        $donation->setStatus($event->status);
+        $donation->setRecurringPlanId($event->recurringPlanId?->toString());
         $donation->setCampaignId($event->campaignId->toString());
         $this->projectionEntityManager->persist($donation);
         $this->projectionEntityManager->flush();

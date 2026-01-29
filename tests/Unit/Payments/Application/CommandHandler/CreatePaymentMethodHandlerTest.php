@@ -10,10 +10,8 @@ use ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\CreatePaymen
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentMethodRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCredentialValue;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethod;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodAction;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodResult;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -41,14 +39,11 @@ class CreatePaymentMethodHandlerTest extends TestCase
             $clock
         );
 
-        $methodAction = PaymentMethodAction::forRequest(
-            PaymentMethodId::generate(),
-            PaymentId::generate()
-        );
+        $paymentMethodId = PaymentMethodId::generate();
         $methodResult = PaymentMethodResult::usable(
             new PaymentCredentialValue('token_123')
         );
-        $this->command = new CreatePaymentMethod($methodAction, $methodResult);
+        $this->command = new CreatePaymentMethod($paymentMethodId, $methodResult);
     }
 
     public function testCreatesPaymentMethod(): void
@@ -66,7 +61,7 @@ class CreatePaymentMethodHandlerTest extends TestCase
     {
         $this->paymentMethodRepository->expects($this->once())
             ->method('has')
-            ->with($this->command->paymentMethodAction->paymentMethodId)
+            ->with($this->command->paymentMethodId)
             ->willReturn(true);
         $this->paymentMethodRepository->expects($this->never())
             ->method('save');

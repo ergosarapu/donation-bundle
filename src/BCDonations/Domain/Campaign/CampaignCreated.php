@@ -19,6 +19,7 @@ final class CampaignCreated extends AbstractTimestampedEvent implements DomainEv
         public readonly CampaignId $campaignId,
         public readonly CampaignName $name,
         public readonly CampaignPublicTitle $publicTitle,
+        public readonly DateTimeImmutable $createdAt,
     ) {
         parent::__construct($occuredOn);
         $this->status = CampaignStatus::Draft;

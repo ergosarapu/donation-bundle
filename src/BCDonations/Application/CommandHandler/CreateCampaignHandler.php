@@ -31,6 +31,7 @@ final class CreateCampaignHandler implements CommandHandlerInterface
             $command->campaignId,
             $command->name,
             $command->publicTitle,
+            $command->createdAt,
         );
 
         try {

@@ -10,6 +10,8 @@ use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\URL;
 use LogicException;
@@ -56,6 +58,34 @@ class Payment extends BasicAggregateRoot
         return $payment;
     }
 
+    public static function create(
+        DateTimeImmutable $currentTime,
+        PaymentId $paymentId,
+        PaymentStatus $status,
+        Money $amount,
+        ShortDescription $description,
+        ?PaymentAppliedToId $appliedTo,
+        ?Email $senderEmail,
+        ?PersonName $senderName,
+        ?NationalIdCode $senderNationalIdCode,
+        ?DateTimeImmutable $createdAt
+    ): self {
+        $payment = new self();
+        $payment->recordThat(new PaymentCreated(
+            $currentTime,
+            $createdAt ?? $currentTime,
+            $paymentId,
+            $status,
+            $amount,
+            $description,
+            $appliedTo,
+            $senderEmail,
+            $senderName,
+            $senderNationalIdCode,
+        ));
+        return $payment;
+    }
+
     private static function validatePaymentIds(PaymentMethodAction $paymentMethodAction, PaymentRequest $paymentRequest): void
     {
         if ($paymentMethodAction->paymentId !== $paymentRequest->paymentId) {
@@ -63,7 +93,7 @@ class Payment extends BasicAggregateRoot
         }
     }
 
-    #[Apply(PaymentInitiated::class)]
+    #[Apply]
     protected function applyInitiated(PaymentInitiated $event): void
     {
         $this->id = $event->paymentId;
@@ -74,6 +104,14 @@ class Payment extends BasicAggregateRoot
         $this->description = $event->description;
         $this->email = $event->email;
         $this->paymentMethodAction = $event->paymentMethodAction;
+    }
+
+    #[Apply]
+    protected function applyCreated(PaymentCreated $event): void
+    {
+        $this->id = $event->paymentId;
+        $this->amount = $event->amount;
+        $this->status = $event->status;
     }
 
     #[Apply]
