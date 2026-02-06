@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\Tests\Helpers;
 
-use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
-use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\EventBusInterface;
-
 trait TestMessageBusTrait
 {
     /**
@@ -19,38 +16,6 @@ trait TestMessageBusTrait
      */
     private array $interceptions = [];
 
-    public function __construct(private readonly EventBusInterface|CommandBusInterface $bus)
-    {
-    }
-
-    public function dispatch(object $message): void
-    {
-        $this->send($message, true);
-    }
-
-    public function send(object $message, bool $intercept = false): void
-    {
-        $this->dispatched[] = $message;
-        if ($intercept) {
-            foreach ($this->interceptions as $instanceof) {
-                if ($message instanceof $instanceof) {
-                    return;
-                }
-            }
-        }
-        $this->bus->dispatch($message);
-    }
-    public function dispatchAndIntercept(object $message, string ... $interceptions): void
-    {
-        $this->intercept(...$interceptions);
-        $this->bus->dispatch($message);
-        foreach ($interceptions as $intercept) {
-            $this->interceptions = array_filter(
-                $this->interceptions,
-                fn ($item) => $item !== $intercept
-            );
-        }
-    }
 
     /**
      * @return array<object>

@@ -8,13 +8,18 @@ use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\CreatePayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\CreatePaymentHandler;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentRepositoryInterface;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\BankReference;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Iban;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\LegacyPaymentId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\ProcessorReference;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
@@ -52,16 +57,30 @@ class CreatePaymentHandlerTest extends TestCase
         $email = new Email('donor@example.com');
         $senderName = new PersonName('John', 'Doe');
         $senderNationalIdCode = new NationalIdCode('12345678901');
+        $initiatedAt = new DateTimeImmutable('2024-02-01');
+        $capturedAt = new DateTimeImmutable('2024-02-02');
+        $processorReference = new ProcessorReference('proc-ref-123');
+        $bankReference = new BankReference('bank-ref-456');
+        $legacyPaymentIdentifier = new LegacyPaymentId('legacy-789');
+        $iban = new Iban('GB94BARC10201530093459');
+        $gateway = new Gateway('test-gateway');
 
         $this->command = new CreatePayment(
             $paymentId,
             PaymentStatus::Pending,
             $amount,
             $description,
+            $gateway,
             $email,
             $senderName,
             $senderNationalIdCode,
-            $appliedTo
+            $appliedTo,
+            $initiatedAt,
+            $capturedAt,
+            $processorReference,
+            $bankReference,
+            $legacyPaymentIdentifier,
+            $iban,
         );
     }
 

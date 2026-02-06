@@ -33,11 +33,17 @@ class CreatePaymentHandler implements CommandHandlerInterface
             $command->status,
             $command->amount,
             $command->description,
+            $command->gateway,
             $command->paymentAppliedToId,
             $command->senderEmail,
             $command->senderName,
             $command->senderNationalIdCode,
-            $command->createdAt,
+            $command->initiatedAt,
+            $command->capturedAt,
+            $command->processorReference,
+            $command->bankReference,
+            $command->legacyPaymentId,
+            $command->iban,
         );
 
         try {

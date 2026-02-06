@@ -150,6 +150,14 @@ return function (ContainerConfigurator $container) {
             ->addArgument(\ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\Campaign::class));
     $services->alias(\ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignRepositoryInterface::class, 'donation_bundle.infrastructure.donations.repository.adapter.patchlevel_campaign_repository');
 
+    // ***********************
+    // *** Payment Imports ***
+    // ***********************
+
+    $services->set('donation_bundle.infrastructure.payment.camt_import_decoder', \ErgoSarapu\DonationBundle\BCPayments\Infrastructure\Adapter\CamtImportDecoder::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->alias(\ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentImportDecoderInterface::class, 'donation_bundle.infrastructure.payment.camt_import_decoder');
 
     // ************************
     // *** Command Handlers ***
@@ -258,6 +266,12 @@ return function (ContainerConfigurator $container) {
         ->autoconfigure(true)
         ->autowire(true);
     $services->set('donation_bundle.payments.application.payment.command_handler.capture_payment', \ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\CapturePaymentHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.payments.application.payment.command_handler.create_pending_payment_import', \ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\CreatePendingPaymentImportHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.payments.application.payment.command_handler.import_payments_from_file', \ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\ImportPaymentsFromFileHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
 

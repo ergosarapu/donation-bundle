@@ -11,6 +11,7 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\OrganisationRegCode;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\URL;
@@ -64,24 +65,72 @@ class Payment extends BasicAggregateRoot
         PaymentStatus $status,
         Money $amount,
         ShortDescription $description,
+        ?Gateway $gateway,
         ?PaymentAppliedToId $appliedTo,
         ?Email $senderEmail,
         ?PersonName $senderName,
         ?NationalIdCode $senderNationalIdCode,
-        ?DateTimeImmutable $createdAt
+        DateTimeImmutable $initiatedAt,
+        ?DateTimeImmutable $capturedAt,
+        ?ProcessorReference $processorReference,
+        ?BankReference $bankReference,
+        ?LegacyPaymentId $legacyPaymentId,
+        ?Iban $iban,
     ): self {
         $payment = new self();
         $payment->recordThat(new PaymentCreated(
             $currentTime,
-            $createdAt ?? $currentTime,
+            $initiatedAt,
+            $capturedAt,
             $paymentId,
             $status,
             $amount,
             $description,
+            $gateway,
             $appliedTo,
             $senderEmail,
             $senderName,
             $senderNationalIdCode,
+            $processorReference,
+            $bankReference,
+            $legacyPaymentId,
+            $iban,
+        ));
+        return $payment;
+    }
+
+    public static function createPendingImport(
+        DateTimeImmutable $currentTime,
+        PaymentId $paymentId,
+        PaymentImportSourceIdentifier $sourceIdentifier,
+        ?BankReference $bankReference,
+        PaymentStatus $status,
+        Money $amount,
+        ?ShortDescription $description,
+        DateTimeImmutable $bookingDate,
+        ?AccountHolderName $debtorAccountHolderName,
+        ?NationalIdCode $debtorNationalIdCode,
+        ?OrganisationRegCode $debtorOrganizationRegCode,
+        ?PaymentReference $reference,
+        ?Iban $debtorIban,
+        ?Bic $debtorBic,
+    ): self {
+        $payment = new self();
+        $payment->recordThat(new PaymentImportPending(
+            $currentTime,
+            $paymentId,
+            $sourceIdentifier,
+            $bankReference,
+            $status,
+            $amount,
+            $description,
+            $bookingDate,
+            $debtorAccountHolderName,
+            $debtorNationalIdCode,
+            $debtorOrganizationRegCode,
+            $reference,
+            $debtorIban,
+            $debtorBic,
         ));
         return $payment;
     }
@@ -108,6 +157,14 @@ class Payment extends BasicAggregateRoot
 
     #[Apply]
     protected function applyCreated(PaymentCreated $event): void
+    {
+        $this->id = $event->paymentId;
+        $this->amount = $event->amount;
+        $this->status = $event->status;
+    }
+
+    #[Apply]
+    protected function applyPaymentImportPending(PaymentImportPending $event): void
     {
         $this->id = $event->paymentId;
         $this->amount = $event->amount;
