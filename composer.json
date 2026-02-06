@@ -48,7 +48,8 @@
         "symfony/messenger": "^6.4|^7.3",
         "patchlevel/event-sourcing-bundle": "^3.12",
         "patchlevel/event-sourcing": "3.13.1",
-        "symfony/doctrine-messenger": "^6.4|^7.3"
+        "symfony/doctrine-messenger": "^6.4|^7.3",
+        "genkgo/camt": "^2.10"
     },
     "require-dev": {
         "symfony/yaml": "^6.4|^7.3",
