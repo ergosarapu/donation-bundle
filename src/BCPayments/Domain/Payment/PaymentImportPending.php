@@ -27,7 +27,7 @@ class PaymentImportPending extends AbstractTimestampedEvent implements DomainEve
         public readonly PaymentStatus $status,
         public readonly Money $amount,
         public readonly ?ShortDescription $description,
-        public readonly DateTimeImmutable $effectiveDate,
+        public readonly DateTimeImmutable $bookingDate,
         public readonly ?AccountHolderName $accountHolderName,
         public readonly ?NationalIdCode $nationalIdCode,
         public readonly ?OrganisationRegCode $organizationRegCode,

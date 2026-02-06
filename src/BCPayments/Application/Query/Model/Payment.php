@@ -30,7 +30,10 @@ class Payment
     private ?string $bankReference = null;
     private ?string $processorReference = null;
     private ?string $legacyPaymentId = null;
-    private DateTimeImmutable $effectiveDate;
+    private ?DateTimeImmutable $bookingDate = null;
+    private ?DateTimeImmutable $initiatedAt = null;
+    private ?DateTimeImmutable $capturedAt = null;
+    private ?DateTimeImmutable $authorizedAt = null;
     private DateTimeImmutable $createdAt;
     private DateTimeImmutable $updatedAt;
 
@@ -254,13 +257,43 @@ class Payment
         $this->legacyPaymentId = $legacyPaymentId;
     }
 
-    public function getEffectiveDate(): DateTimeImmutable
+    public function getBookingDate(): ?DateTimeImmutable
     {
-        return $this->effectiveDate;
+        return $this->bookingDate;
     }
 
-    public function setEffectiveDate(DateTimeImmutable $effectiveDate): void
+    public function setBookingDate(?DateTimeImmutable $bookingDate): void
     {
-        $this->effectiveDate = $effectiveDate;
+        $this->bookingDate = $bookingDate;
+    }
+
+    public function getInitiatedAt(): ?DateTimeImmutable
+    {
+        return $this->initiatedAt;
+    }
+
+    public function setInitiatedAt(?DateTimeImmutable $initiatedAt): void
+    {
+        $this->initiatedAt = $initiatedAt;
+    }
+
+    public function getCapturedAt(): ?DateTimeImmutable
+    {
+        return $this->capturedAt;
+    }
+
+    public function setCapturedAt(?DateTimeImmutable $capturedAt): void
+    {
+        $this->capturedAt = $capturedAt;
+    }
+
+    public function getAuthorizedAt(): ?DateTimeImmutable
+    {
+        return $this->authorizedAt;
+    }
+
+    public function setAuthorizedAt(?DateTimeImmutable $authorizedAt): void
+    {
+        $this->authorizedAt = $authorizedAt;
     }
 }

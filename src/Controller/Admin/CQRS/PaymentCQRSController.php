@@ -112,7 +112,10 @@ class PaymentCQRSController extends AbstractCQRSController
             TextField::new('referenceNumber')->setDisabled(),
             TextField::new('iban')->setDisabled(),
             TextField::new('bic')->setDisabled(),
-            DateTimeField::new('effectiveDate')->setDisabled(),
+            DateTimeField::new('initiatedAt')->setDisabled(),
+            DateTimeField::new('capturedAt')->setDisabled(),
+            DateTimeField::new('authorizedAt')->setDisabled(),
+            DateTimeField::new('bookingDate')->setDisabled(),
             DateTimeField::new('createdAt')->setDisabled(),
             DateTimeField::new('updatedAt')->setDisabled(),
         ];

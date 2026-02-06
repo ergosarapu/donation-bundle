@@ -15,20 +15,20 @@ class PaymentId implements AggregateRootId
 
     /**
      * Generate a deterministic UUIDv7-based PaymentId from source identifier,
-     * processor reference, and effective date.
+     * unique reference, and date.
      *
      * This ensures that the same payment data always generates the same ID,
      * enabling idempotent imports.
      *
      * @param string $sourceIdentifier The source system identifier
      * @param string $uniqueReference The unique reference (e.g. processor reference or bank reference)
-     * @param DateTimeImmutable $effectiveDate The effective date of the payment
+     * @param DateTimeImmutable $date The date of the payment
      * @return self
      */
     public static function generateDeterministic(
         string $sourceIdentifier,
         string $uniqueReference,
-        DateTimeImmutable $effectiveDate
+        DateTimeImmutable $date
     ): self {
         // Create a deterministic seed from source id and unique reference
         $seed = $sourceIdentifier . '|' . $uniqueReference;
@@ -36,7 +36,7 @@ class PaymentId implements AggregateRootId
 
         // UUIDv7 structure: 48-bit timestamp + 12-bit random + 62-bit random
         // Get milliseconds timestamp for UUIDv7
-        $timestamp = (int) ($effectiveDate->getTimestamp() * 1000);
+        $timestamp = (int) ($date->getTimestamp() * 1000);
 
         // Build UUIDv7 bytes (16 bytes total)
         $bytes = '';

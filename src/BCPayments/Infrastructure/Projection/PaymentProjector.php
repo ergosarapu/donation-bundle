@@ -80,7 +80,7 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         }
         $payment = new Payment();
         $payment->setId($event->paymentId->toString());
-        $payment->setEffectiveDate($event->occuredOn);
+        $payment->setInitiatedAt($event->occuredOn);
         $payment->setCreatedAt($event->occuredOn);
         $payment->setUpdatedAt($event->occuredOn);
         $payment->setAmount($event->amount->amount());
@@ -100,7 +100,7 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         }
         $payment = new Payment();
         $payment->setId($event->paymentId->toString());
-        $payment->setEffectiveDate($event->effectiveDate);
+        $payment->setCapturedAt($event->capturedAt);
         $payment->setCreatedAt($event->occuredOn);
         $payment->setUpdatedAt($event->occuredOn);
         $payment->setAmount($event->amount->amount());
@@ -128,7 +128,7 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         }
         $payment = new Payment();
         $payment->setId($event->paymentId->toString());
-        $payment->setEffectiveDate($event->effectiveDate);
+        $payment->setBookingDate($event->bookingDate);
         $payment->setCreatedAt($event->occuredOn);
         $payment->setUpdatedAt($event->occuredOn);
         $payment->setAmount($event->amount->amount());
@@ -164,6 +164,7 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
     ): void {
         $payment = $this->findOneOrThrow($event->paymentId);
         $payment->setUpdatedAt($event->occuredOn);
+        $payment->setAuthorizedAt($event->occuredOn);
         $payment->setStatus($event->status);
         $payment->setAmount($event->authorizedAmount->amount());
         $this->projectionEntityManager->flush();
@@ -174,6 +175,7 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
     {
         $payment = $this->findOneOrThrow($event->paymentId);
         $payment->setUpdatedAt($event->occuredOn);
+        $payment->setCapturedAt($event->occuredOn);
         $payment->setStatus($event->status);
         $payment->setAmount($event->capturedAmount->amount());
         $this->projectionEntityManager->flush();

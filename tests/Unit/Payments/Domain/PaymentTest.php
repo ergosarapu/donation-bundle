@@ -133,7 +133,7 @@ class PaymentTest extends AggregateRootTestCase
     {
         $sourceIdentifier = new PaymentImportSourceIdentifier('source-123');
         $bankReference = new BankReference('ref-456');
-        $effectiveDate = $this->now->sub(new DateInterval('P1D'));
+        $bookingDate = $this->now->sub(new DateInterval('P1D'));
         $accountHolderName = new AccountHolderName('John Doe');
         $nationalIdCode = new NationalIdCode('12345678901');
         $organizationRegCode = new OrganisationRegCode('12345678');
@@ -149,7 +149,7 @@ class PaymentTest extends AggregateRootTestCase
             PaymentStatus::Pending,
             $this->amount,
             $this->description,
-            $effectiveDate,
+            $bookingDate,
             $accountHolderName,
             $nationalIdCode,
             $organizationRegCode,
@@ -165,7 +165,7 @@ class PaymentTest extends AggregateRootTestCase
                 PaymentStatus::Pending,
                 $this->amount,
                 $this->description,
-                $effectiveDate,
+                $bookingDate,
                 $accountHolderName,
                 $nationalIdCode,
                 $organizationRegCode,
@@ -180,7 +180,7 @@ class PaymentTest extends AggregateRootTestCase
     {
         $sourceIdentifier = new PaymentImportSourceIdentifier('source-123');
         $bankReference = new BankReference('ref-456');
-        $effectiveDate = $this->now->sub(new DateInterval('P1D'));
+        $bookingDate = $this->now->sub(new DateInterval('P1D'));
 
         $this->when(fn () => Payment::createPendingImport(
             $this->now,
@@ -190,7 +190,7 @@ class PaymentTest extends AggregateRootTestCase
             PaymentStatus::Pending,
             $this->amount,
             null,
-            $effectiveDate,
+            $bookingDate,
             null,
             null,
             null,
@@ -206,7 +206,7 @@ class PaymentTest extends AggregateRootTestCase
                 PaymentStatus::Pending,
                 $this->amount,
                 null,
-                $effectiveDate,
+                $bookingDate,
                 null,
                 null,
                 null,

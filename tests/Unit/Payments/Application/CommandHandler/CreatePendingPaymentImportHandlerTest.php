@@ -53,7 +53,7 @@ class CreatePendingPaymentImportHandlerTest extends TestCase
         $bankReference = new BankReference('ref-456');
         $amount = new Money(5000, new Currency('EUR'));
         $description = new ShortDescription('Test payment import');
-        $effectiveDate = new DateTimeImmutable('2024-02-02');
+        $bookingDate = new DateTimeImmutable('2024-02-02');
         $accountHolderName = new AccountHolderName('John Doe');
         $nationalIdCode = new NationalIdCode('12345678901');
         $organizationRegCode = new OrganisationRegCode('12345678');
@@ -67,7 +67,7 @@ class CreatePendingPaymentImportHandlerTest extends TestCase
             PaymentStatus::Pending,
             $amount,
             $description,
-            $effectiveDate,
+            $bookingDate,
             $accountHolderName,
             $nationalIdCode,
             $organizationRegCode,

@@ -28,7 +28,10 @@
         <field name="processorReference" type="string" column="processor_reference" length="100" nullable="true"/>
         <field name="legacyPaymentId" type="string" column="legacy_payment_id" length="100" nullable="true"/>
         <field name="redirectUrl" type="string" column="redirect_url" nullable="true"/>
-        <field name="effectiveDate" type="datetime_immutable" column="effective_date" nullable="false"/>
+        <field name="bookingDate" type="datetime_immutable" column="booking_date" nullable="true"/>
+        <field name="initiatedAt" type="datetime_immutable" column="initiated_at" nullable="true"/>
+        <field name="capturedAt" type="datetime_immutable" column="captured_at" nullable="true"/>
+        <field name="authorizedAt" type="datetime_immutable" column="authorized_at" nullable="true"/>
         <field name="createdAt" type="datetime_immutable" column="created_at" nullable="false"/>
         <field name="updatedAt" type="datetime_immutable" column="updated_at" nullable="false"/>
     </entity>
