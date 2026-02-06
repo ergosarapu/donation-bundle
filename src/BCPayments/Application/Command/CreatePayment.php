@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCPayments\Application\Command;
 
 use DateTimeImmutable;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\BankReference;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\LegacyPaymentId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\ProcessorReference;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
@@ -27,6 +30,9 @@ final class CreatePayment implements CommandInterface
         public readonly ?NationalIdCode $senderNationalIdCode,
         public readonly ?PaymentAppliedToId $paymentAppliedToId,
         public readonly DateTimeImmutable $effectiveDate,
+        public readonly ?ProcessorReference $processorReference,
+        public readonly ?BankReference $bankReference,
+        public readonly ?LegacyPaymentId $legacyPaymentId,
     ) {
     }
 }

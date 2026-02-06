@@ -22,11 +22,13 @@ class Payment
     private ?string $accountHolderName = null;
     private ?string $nationalIdCode = null;
     private ?string $organizationRegCode = null;
-    private ?string $referenceNumber = null;
+    private ?string $reference = null;
     private ?string $iban = null;
     private ?string $bic = null;
     private ?string $sourceIdentifier = null;
-    private ?string $paymentProcessorReference = null;
+    private ?string $bankReference = null;
+    private ?string $processorReference = null;
+    private ?string $legacyPaymentId = null;
     private DateTimeImmutable $effectiveDate;
     private DateTimeImmutable $createdAt;
     private DateTimeImmutable $updatedAt;
@@ -171,14 +173,14 @@ class Payment
         $this->organizationRegCode = $organizationRegCode;
     }
 
-    public function getReferenceNumber(): ?string
+    public function getReference(): ?string
     {
-        return $this->referenceNumber;
+        return $this->reference;
     }
 
-    public function setReferenceNumber(?string $referenceNumber): void
+    public function setReference(?string $reference): void
     {
-        $this->referenceNumber = $referenceNumber;
+        $this->reference = $reference;
     }
 
     public function getIban(): ?string
@@ -211,14 +213,34 @@ class Payment
         $this->sourceIdentifier = $sourceIdentifier;
     }
 
-    public function getPaymentProcessorReference(): ?string
+    public function getBankReference(): ?string
     {
-        return $this->paymentProcessorReference;
+        return $this->bankReference;
     }
 
-    public function setPaymentProcessorReference(?string $paymentProcessorReference): void
+    public function setBankReference(?string $bankReference): void
     {
-        $this->paymentProcessorReference = $paymentProcessorReference;
+        $this->bankReference = $bankReference;
+    }
+
+    public function getProcessorReference(): ?string
+    {
+        return $this->processorReference;
+    }
+
+    public function setProcessorReference(?string $processorReference): void
+    {
+        $this->processorReference = $processorReference;
+    }
+
+    public function getLegacyPaymentId(): ?string
+    {
+        return $this->legacyPaymentId;
+    }
+
+    public function setLegacyPaymentId(?string $legacyPaymentId): void
+    {
+        $this->legacyPaymentId = $legacyPaymentId;
     }
 
     public function getEffectiveDate(): DateTimeImmutable

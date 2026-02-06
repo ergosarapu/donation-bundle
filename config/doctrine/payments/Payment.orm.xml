@@ -19,11 +19,13 @@
         <field name="accountHolderName" type="string" column="account_holder_name" length="255" nullable="true"/>
         <field name="nationalIdCode" type="string" column="national_id_code" length="50" nullable="true"/>
         <field name="organizationRegCode" type="string" column="organization_reg_code" length="50" nullable="true"/>
-        <field name="referenceNumber" type="string" column="reference_number" length="100" nullable="true"/>
+        <field name="reference" type="string" column="reference" length="100" nullable="true"/>
         <field name="iban" type="string" column="iban" length="50" nullable="true"/>
         <field name="bic" type="string" column="bic" length="20" nullable="true"/>
         <field name="sourceIdentifier" type="string" column="source_identifier" length="100" nullable="true"/>
-        <field name="paymentProcessorReference" type="string" column="payment_processor_reference" length="100" nullable="true"/>
+        <field name="bankReference" type="string" column="bank_reference" length="100" nullable="true"/>
+        <field name="processorReference" type="string" column="processor_reference" length="100" nullable="true"/>
+        <field name="legacyPaymentId" type="string" column="legacy_payment_id" length="100" nullable="true"/>
         <field name="redirectUrl" type="string" column="redirect_url" nullable="true"/>
         <field name="effectiveDate" type="datetime_immutable" column="effective_date" nullable="false"/>
         <field name="createdAt" type="datetime_immutable" column="created_at" nullable="false"/>

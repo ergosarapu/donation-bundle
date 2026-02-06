@@ -69,7 +69,10 @@ class Payment extends BasicAggregateRoot
         ?Email $senderEmail,
         ?PersonName $senderName,
         ?NationalIdCode $senderNationalIdCode,
-        DateTimeImmutable $effectiveDate
+        DateTimeImmutable $effectiveDate,
+        ?ProcessorReference $processorReference,
+        ?BankReference $bankReference,
+        ?LegacyPaymentId $legacyPaymentId,
     ): self {
         $payment = new self();
         $payment->recordThat(new PaymentCreated(
@@ -83,6 +86,9 @@ class Payment extends BasicAggregateRoot
             $senderEmail,
             $senderName,
             $senderNationalIdCode,
+            $processorReference,
+            $bankReference,
+            $legacyPaymentId,
         ));
         return $payment;
     }
@@ -91,7 +97,7 @@ class Payment extends BasicAggregateRoot
         DateTimeImmutable $currentTime,
         PaymentId $paymentId,
         PaymentImportSourceIdentifier $sourceIdentifier,
-        PaymentProcessorReference $paymentProcessorReference,
+        ?BankReference $bankReference,
         PaymentStatus $status,
         Money $amount,
         ?ShortDescription $description,
@@ -99,7 +105,7 @@ class Payment extends BasicAggregateRoot
         ?AccountHolderName $debtorAccountHolderName,
         ?NationalIdCode $debtorNationalIdCode,
         ?OrganisationRegCode $debtorOrganizationRegCode,
-        ?PaymentReferenceNumber $referenceNumber,
+        ?PaymentReference $reference,
         ?Iban $debtorIban,
         ?Bic $debtorBic,
     ): self {
@@ -108,7 +114,7 @@ class Payment extends BasicAggregateRoot
             $currentTime,
             $paymentId,
             $sourceIdentifier,
-            $paymentProcessorReference,
+            $bankReference,
             $status,
             $amount,
             $description,
@@ -116,7 +122,7 @@ class Payment extends BasicAggregateRoot
             $debtorAccountHolderName,
             $debtorNationalIdCode,
             $debtorOrganizationRegCode,
-            $referenceNumber,
+            $reference,
             $debtorIban,
             $debtorBic,
         ));

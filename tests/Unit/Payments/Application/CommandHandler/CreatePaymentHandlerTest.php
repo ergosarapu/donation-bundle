@@ -8,8 +8,11 @@ use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\CreatePayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\CreatePaymentHandler;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentRepositoryInterface;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\BankReference;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\LegacyPaymentId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\ProcessorReference;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
@@ -53,6 +56,9 @@ class CreatePaymentHandlerTest extends TestCase
         $senderName = new PersonName('John', 'Doe');
         $senderNationalIdCode = new NationalIdCode('12345678901');
         $effectiveDate = new DateTimeImmutable('2024-02-02');
+        $processorReference = new ProcessorReference('proc-ref-123');
+        $bankReference = new BankReference('bank-ref-456');
+        $legacyPaymentIdentifier = new LegacyPaymentId('legacy-789');
 
         $this->command = new CreatePayment(
             $paymentId,
@@ -64,6 +70,9 @@ class CreatePaymentHandlerTest extends TestCase
             $senderNationalIdCode,
             $appliedTo,
             $effectiveDate,
+            $processorReference,
+            $bankReference,
+            $legacyPaymentIdentifier,
         );
     }
 

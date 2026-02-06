@@ -24,7 +24,7 @@ class CreatePendingPaymentImportHandler implements CommandHandlerInterface
     {
         $paymentId = PaymentId::generateDeterministic(
             $command->sourceIdentifier->value,
-            $command->paymentProcessorReference->value,
+            $command->bankReference->value,
             $command->effectiveDate
         );
 
@@ -38,7 +38,7 @@ class CreatePendingPaymentImportHandler implements CommandHandlerInterface
             $this->clock->now(),
             $paymentId,
             $command->sourceIdentifier,
-            $command->paymentProcessorReference,
+            $command->bankReference,
             $command->status,
             $command->amount,
             $command->description,
@@ -46,7 +46,7 @@ class CreatePendingPaymentImportHandler implements CommandHandlerInterface
             $command->accountHolderName,
             $command->nationalIdCode,
             $command->organizationRegCode,
-            $command->referenceNumber,
+            $command->reference,
             $command->iban,
             $command->bic,
         );

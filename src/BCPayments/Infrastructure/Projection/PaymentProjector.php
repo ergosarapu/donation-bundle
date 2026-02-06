@@ -109,6 +109,9 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         $payment->setGivenName($event->debtorName?->givenName);
         $payment->setFamilyName($event->debtorName?->familyName);
         $payment->setNationalIdCode($event->debtorNationalIdCode?->value);
+        $payment->setProcessorReference($event->processorReference?->value);
+        $payment->setBankReference($event->bankReference?->value);
+        $payment->setLegacyPaymentId($event->legacyPaymentId?->id);
         $this->projectionEntityManager->persist($payment);
         $this->projectionEntityManager->flush();
     }
@@ -133,11 +136,11 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         $payment->setAccountHolderName($event->accountHolderName?->value);
         $payment->setNationalIdCode($event->nationalIdCode?->value);
         $payment->setOrganizationRegCode($event->organizationRegCode?->value);
-        $payment->setReferenceNumber($event->referenceNumber?->value);
+        $payment->setReference($event->reference?->value);
         $payment->setIban($event->iban?->value);
         $payment->setBic($event->bic?->value);
         $payment->setSourceIdentifier($event->sourceIdentifier->value);
-        $payment->setPaymentProcessorReference($event->paymentProcessorReference->value);
+        $payment->setBankReference($event->bankReference?->value);
         $this->projectionEntityManager->persist($payment);
         $this->projectionEntityManager->flush();
     }

@@ -23,7 +23,7 @@ class PaymentImportPending extends AbstractTimestampedEvent implements DomainEve
         DateTimeImmutable $occuredOn,
         public readonly PaymentId $paymentId,
         public readonly PaymentImportSourceIdentifier $sourceIdentifier,
-        public readonly PaymentProcessorReference $paymentProcessorReference,
+        public readonly ?BankReference $bankReference,
         public readonly PaymentStatus $status,
         public readonly Money $amount,
         public readonly ?ShortDescription $description,
@@ -31,7 +31,7 @@ class PaymentImportPending extends AbstractTimestampedEvent implements DomainEve
         public readonly ?AccountHolderName $accountHolderName,
         public readonly ?NationalIdCode $nationalIdCode,
         public readonly ?OrganisationRegCode $organizationRegCode,
-        public readonly ?PaymentReferenceNumber $referenceNumber,
+        public readonly ?PaymentReference $reference,
         public readonly ?Iban $iban,
         public readonly ?Bic $bic,
     ) {

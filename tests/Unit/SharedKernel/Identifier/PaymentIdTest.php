@@ -32,11 +32,11 @@ class PaymentIdTest extends TestCase
     public function testGenerateDeterministicProducesSameIdForSameInputs(): void
     {
         $sourceIdentifier = 'source-123';
-        $processorReference = 'ref-456';
+        $uniqueReference = 'ref-456';
         $effectiveDate = new DateTimeImmutable('2024-02-01 12:00:00');
 
-        $id1 = PaymentId::generateDeterministic($sourceIdentifier, $processorReference, $effectiveDate);
-        $id2 = PaymentId::generateDeterministic($sourceIdentifier, $processorReference, $effectiveDate);
+        $id1 = PaymentId::generateDeterministic($sourceIdentifier, $uniqueReference, $effectiveDate);
+        $id2 = PaymentId::generateDeterministic($sourceIdentifier, $uniqueReference, $effectiveDate);
 
         $this->assertEquals($id1->toString(), $id2->toString());
     }
@@ -46,10 +46,10 @@ class PaymentIdTest extends TestCase
         // This test ensures the deterministic algorithm doesn't change unexpectedly.
         // If this test fails, it means the implementation has changed and may affect existing data.
         $sourceIdentifier = 'test-source-123';
-        $processorReference = 'test-ref-456';
+        $uniqueReference = 'test-ref-456';
         $effectiveDate = new DateTimeImmutable('2024-02-01 12:00:00', new \DateTimeZone('UTC'));
 
-        $id = PaymentId::generateDeterministic($sourceIdentifier, $processorReference, $effectiveDate);
+        $id = PaymentId::generateDeterministic($sourceIdentifier, $uniqueReference, $effectiveDate);
 
         // Expected UUID generated with the current implementation
         // This is a UUIDv7 based on:
@@ -62,16 +62,16 @@ class PaymentIdTest extends TestCase
 
     public function testGenerateDeterministicProducesDifferentIdForDifferentSourceIdentifier(): void
     {
-        $processorReference = 'ref-456';
+        $uniqueReference = 'ref-456';
         $effectiveDate = new DateTimeImmutable('2024-02-01 12:00:00');
 
-        $id1 = PaymentId::generateDeterministic('source-123', $processorReference, $effectiveDate);
-        $id2 = PaymentId::generateDeterministic('source-789', $processorReference, $effectiveDate);
+        $id1 = PaymentId::generateDeterministic('source-123', $uniqueReference, $effectiveDate);
+        $id2 = PaymentId::generateDeterministic('source-789', $uniqueReference, $effectiveDate);
 
         $this->assertNotEquals($id1->toString(), $id2->toString());
     }
 
-    public function testGenerateDeterministicProducesDifferentIdForDifferentProcessorReference(): void
+    public function testGenerateDeterministicProducesDifferentIdForDifferentUniqueReference(): void
     {
         $sourceIdentifier = 'source-123';
         $effectiveDate = new DateTimeImmutable('2024-02-01 12:00:00');
@@ -85,10 +85,10 @@ class PaymentIdTest extends TestCase
     public function testGenerateDeterministicProducesDifferentIdForDifferentEffectiveDate(): void
     {
         $sourceIdentifier = 'source-123';
-        $processorReference = 'ref-456';
+        $uniqueReference = 'ref-456';
 
-        $id1 = PaymentId::generateDeterministic($sourceIdentifier, $processorReference, new DateTimeImmutable('2024-02-01 12:00:00'));
-        $id2 = PaymentId::generateDeterministic($sourceIdentifier, $processorReference, new DateTimeImmutable('2024-03-15 15:30:00'));
+        $id1 = PaymentId::generateDeterministic($sourceIdentifier, $uniqueReference, new DateTimeImmutable('2024-02-01 12:00:00'));
+        $id2 = PaymentId::generateDeterministic($sourceIdentifier, $uniqueReference, new DateTimeImmutable('2024-03-15 15:30:00'));
 
         $this->assertNotEquals($id1->toString(), $id2->toString());
     }
@@ -96,10 +96,10 @@ class PaymentIdTest extends TestCase
     public function testGenerateDeterministicProducesValidUuidV7(): void
     {
         $sourceIdentifier = 'source-123';
-        $processorReference = 'ref-456';
+        $uniqueReference = 'ref-456';
         $effectiveDate = new DateTimeImmutable('2024-02-01 12:00:00');
 
-        $id = PaymentId::generateDeterministic($sourceIdentifier, $processorReference, $effectiveDate);
+        $id = PaymentId::generateDeterministic($sourceIdentifier, $uniqueReference, $effectiveDate);
         $uuidString = $id->toString();
 
         // Check UUID format (8-4-4-4-12)
@@ -116,12 +116,12 @@ class PaymentIdTest extends TestCase
     public function testGenerateDeterministicIncludesTimestampFromEffectiveDate(): void
     {
         $sourceIdentifier = 'source-123';
-        $processorReference = 'ref-456';
+        $uniqueReference = 'ref-456';
         $date1 = new DateTimeImmutable('2024-02-01 12:00:00');
         $date2 = new DateTimeImmutable('2024-02-01 12:00:01'); // 1 second later
 
-        $id1 = PaymentId::generateDeterministic($sourceIdentifier, $processorReference, $date1);
-        $id2 = PaymentId::generateDeterministic($sourceIdentifier, $processorReference, $date2);
+        $id1 = PaymentId::generateDeterministic($sourceIdentifier, $uniqueReference, $date1);
+        $id2 = PaymentId::generateDeterministic($sourceIdentifier, $uniqueReference, $date2);
 
         // Different timestamps should produce different IDs even with same source and reference
         $this->assertNotEquals($id1->toString(), $id2->toString());
@@ -150,10 +150,10 @@ class PaymentIdTest extends TestCase
     public function testGenerateDeterministicWithSpecialCharacters(): void
     {
         $sourceIdentifier = 'source-with-special-chars-!@#$%^&*()';
-        $processorReference = 'ref-with-unicode-émojis-🎉';
+        $uniqueReference = 'ref-with-unicode-émojis-🎉';
         $effectiveDate = new DateTimeImmutable('2024-02-01 12:00:00');
 
-        $id = PaymentId::generateDeterministic($sourceIdentifier, $processorReference, $effectiveDate);
+        $id = PaymentId::generateDeterministic($sourceIdentifier, $uniqueReference, $effectiveDate);
 
         $this->assertInstanceOf(PaymentId::class, $id);
         $this->assertMatchesRegularExpression('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/', $id->toString());

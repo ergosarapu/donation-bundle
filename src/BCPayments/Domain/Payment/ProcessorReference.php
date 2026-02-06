@@ -7,7 +7,7 @@ namespace ErgoSarapu\DonationBundle\BCPayments\Domain\Payment;
 use Patchlevel\Hydrator\Normalizer\ObjectNormalizer;
 
 #[ObjectNormalizer]
-final class PaymentProcessorReference
+final class ProcessorReference
 {
     public function __construct(
         public readonly string $value,

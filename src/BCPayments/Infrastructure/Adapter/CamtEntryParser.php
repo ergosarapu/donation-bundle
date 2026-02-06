@@ -6,10 +6,10 @@ namespace ErgoSarapu\DonationBundle\BCPayments\Infrastructure\Adapter;
 
 use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\AccountHolderName;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\BankReference;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Bic;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Iban;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentProcessorReference;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentReferenceNumber;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentReference;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
@@ -84,7 +84,7 @@ class CamtEntryParser
         throw new InvalidArgumentException('Could not resolve agent type for: ' . $counterPartyType);
     }
 
-    public function getAccountServicerReference(): PaymentProcessorReference
+    public function getBankReference(): BankReference
     {
         $accountServicerReference = $this->txDetail->getReference()?->getAccountServicerReference();
         if ($accountServicerReference === null) {
@@ -94,7 +94,7 @@ class CamtEntryParser
         if (null === $accountServicerReference) {
             throw new \InvalidArgumentException('Account servicer reference not found for entry');
         }
-        return new PaymentProcessorReference($accountServicerReference);
+        return new BankReference($accountServicerReference);
     }
 
     private function getTxDetail(Entry $entry): EntryTransactionDetail
@@ -205,7 +205,7 @@ class CamtEntryParser
         return null;
     }
 
-    public function getPaymentReference(): ?PaymentReferenceNumber
+    public function getPaymentReference(): ?PaymentReference
     {
         $rmInfo = $this->txDetail->getRemittanceInformation();
         if (null === $rmInfo) {
@@ -227,7 +227,7 @@ class CamtEntryParser
             if (null === $scor) {
                 return null;
             }
-            return new PaymentReferenceNumber($scor);
+            return new PaymentReference($scor);
         }
 
         return null;

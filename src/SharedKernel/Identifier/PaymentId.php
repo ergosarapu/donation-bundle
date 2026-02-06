@@ -21,17 +21,17 @@ class PaymentId implements AggregateRootId
      * enabling idempotent imports.
      *
      * @param string $sourceIdentifier The source system identifier
-     * @param string $processorReference The payment processor reference
+     * @param string $uniqueReference The unique reference (e.g. processor reference or bank reference)
      * @param DateTimeImmutable $effectiveDate The effective date of the payment
      * @return self
      */
     public static function generateDeterministic(
         string $sourceIdentifier,
-        string $processorReference,
+        string $uniqueReference,
         DateTimeImmutable $effectiveDate
     ): self {
-        // Create a deterministic seed from source id and processor reference
-        $seed = $sourceIdentifier . '|' . $processorReference;
+        // Create a deterministic seed from source id and unique reference
+        $seed = $sourceIdentifier . '|' . $uniqueReference;
         $hash = hash('sha256', $seed, true); // Get binary hash (32 bytes)
 
         // UUIDv7 structure: 48-bit timestamp + 12-bit random + 62-bit random

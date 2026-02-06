@@ -27,7 +27,7 @@ class CamtEntryParserTest extends TestCase
         $this->assertEquals('GB94BARC10201530093459', $parser->getIban()?->value);
         $this->assertEquals('11111111', $parser->getOrganisationRegCode()?->value);
         $this->assertEquals('Test Company OÜ', $parser->getAccountHolderName()?->value);
-        $this->assertEquals('ANONREF1-111111111', $parser->getAccountServicerReference()->value);
+        $this->assertEquals('ANONREF1-111111111', $parser->getBankReference()->value);
         $this->assertEquals(10000, $parser->getAmount()->amount());
         $this->assertEquals('EUR', $parser->getAmount()->currency()->code());
         $this->assertEquals('ANONFEE2', $parser->getBic()?->value);
@@ -44,7 +44,7 @@ class CamtEntryParserTest extends TestCase
         $this->assertEquals('GB94BARC10201530093459', $parser->getIban()?->value);
         $this->assertNull($parser->getOrganisationRegCode());
         $this->assertEquals('Mati Karu', $parser->getAccountHolderName()?->value);
-        $this->assertEquals('ANONREF1-111111112', $parser->getAccountServicerReference()->value);
+        $this->assertEquals('ANONREF1-111111112', $parser->getBankReference()->value);
         $this->assertEquals(10000, $parser->getAmount()->amount());
         $this->assertEquals('EUR', $parser->getAmount()->currency()->code());
         $this->assertEquals('ANONFEE2', $parser->getBic()?->value);

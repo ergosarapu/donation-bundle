@@ -9,12 +9,12 @@ use ErgoSarapu\DonationBundle\BCPayments\Application\Command\CreatePendingPaymen
 use ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\CreatePendingPaymentImportHandler;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\AccountHolderName;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\BankReference;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Bic;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Iban;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportSourceIdentifier;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentProcessorReference;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentReferenceNumber;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentReference;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
@@ -50,20 +50,20 @@ class CreatePendingPaymentImportHandlerTest extends TestCase
         );
 
         $sourceIdentifier = new PaymentImportSourceIdentifier('source-123');
-        $paymentProcessorReference = new PaymentProcessorReference('ref-456');
+        $bankReference = new BankReference('ref-456');
         $amount = new Money(5000, new Currency('EUR'));
         $description = new ShortDescription('Test payment import');
         $effectiveDate = new DateTimeImmutable('2024-02-02');
         $accountHolderName = new AccountHolderName('John Doe');
         $nationalIdCode = new NationalIdCode('12345678901');
         $organizationRegCode = new OrganisationRegCode('12345678');
-        $referenceNumber = new PaymentReferenceNumber('1234567890');
+        $referenceNumber = new PaymentReference('1234567890');
         $iban = new Iban('EE382200221020145685');
         $bic = new Bic('HABAEE2X');
 
         $this->command = new CreatePendingPaymentImport(
             $sourceIdentifier,
-            $paymentProcessorReference,
+            $bankReference,
             PaymentStatus::Pending,
             $amount,
             $description,
@@ -128,7 +128,7 @@ class CreatePendingPaymentImportHandlerTest extends TestCase
     {
         $commandWithNulls = new CreatePendingPaymentImport(
             new PaymentImportSourceIdentifier('source-789'),
-            new PaymentProcessorReference('ref-789'),
+            new BankReference('ref-789'), // Bank reference is required
             PaymentStatus::Pending,
             new Money(1000, new Currency('USD')),
             null,

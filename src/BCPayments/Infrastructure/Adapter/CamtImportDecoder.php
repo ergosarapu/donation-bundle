@@ -31,7 +31,7 @@ class CamtImportDecoder implements PaymentImportDecoderInterface
 
                 $command = new CreatePendingPaymentImport(
                     $sourceIdentifier,
-                    $parser->getAccountServicerReference(),
+                    $parser->getBankReference(),
                     PaymentStatus::Settled,
                     $parser->getAmount(),
                     $parser->getDescription(),
