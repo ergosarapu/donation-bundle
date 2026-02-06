@@ -112,6 +112,7 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         $payment->setProcessorReference($event->processorReference?->value);
         $payment->setBankReference($event->bankReference?->value);
         $payment->setLegacyPaymentId($event->legacyPaymentId?->id);
+        $payment->setIban($event->iban?->value);
         $this->projectionEntityManager->persist($payment);
         $this->projectionEntityManager->flush();
     }

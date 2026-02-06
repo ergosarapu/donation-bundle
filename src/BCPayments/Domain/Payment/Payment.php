@@ -73,6 +73,7 @@ class Payment extends BasicAggregateRoot
         ?ProcessorReference $processorReference,
         ?BankReference $bankReference,
         ?LegacyPaymentId $legacyPaymentId,
+        ?Iban $iban,
     ): self {
         $payment = new self();
         $payment->recordThat(new PaymentCreated(
@@ -89,6 +90,7 @@ class Payment extends BasicAggregateRoot
             $processorReference,
             $bankReference,
             $legacyPaymentId,
+            $iban,
         ));
         return $payment;
     }

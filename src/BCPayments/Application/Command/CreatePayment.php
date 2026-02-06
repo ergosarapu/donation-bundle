@@ -6,6 +6,7 @@ namespace ErgoSarapu\DonationBundle\BCPayments\Application\Command;
 
 use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\BankReference;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Iban;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\LegacyPaymentId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\ProcessorReference;
@@ -33,6 +34,7 @@ final class CreatePayment implements CommandInterface
         public readonly ?ProcessorReference $processorReference,
         public readonly ?BankReference $bankReference,
         public readonly ?LegacyPaymentId $legacyPaymentId,
+        public readonly ?Iban $iban,
     ) {
     }
 }

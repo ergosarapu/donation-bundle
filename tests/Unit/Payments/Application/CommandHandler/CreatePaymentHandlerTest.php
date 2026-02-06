@@ -9,6 +9,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Application\Command\CreatePayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\CreatePaymentHandler;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\BankReference;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Iban;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\LegacyPaymentId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
@@ -59,6 +60,7 @@ class CreatePaymentHandlerTest extends TestCase
         $processorReference = new ProcessorReference('proc-ref-123');
         $bankReference = new BankReference('bank-ref-456');
         $legacyPaymentIdentifier = new LegacyPaymentId('legacy-789');
+        $iban = new Iban('GB94BARC10201530093459');
 
         $this->command = new CreatePayment(
             $paymentId,
@@ -73,6 +75,7 @@ class CreatePaymentHandlerTest extends TestCase
             $processorReference,
             $bankReference,
             $legacyPaymentIdentifier,
+            $iban,
         );
     }
 

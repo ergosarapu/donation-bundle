@@ -89,6 +89,7 @@ class PaymentTest extends AggregateRootTestCase
         $processorReference = new ProcessorReference('proc-ref-123');
         $bankReference = new BankReference('bank-ref-456');
         $legacyPaymentId = new LegacyPaymentId('legacy-789');
+        $iban = new Iban('EE382200221020145685');
 
         $this->when(fn () => Payment::create(
             $this->now,
@@ -104,6 +105,7 @@ class PaymentTest extends AggregateRootTestCase
             $processorReference,
             $bankReference,
             $legacyPaymentId,
+            $iban,
         ))->then(
             new PaymentCreated(
                 $this->now,
@@ -119,6 +121,7 @@ class PaymentTest extends AggregateRootTestCase
                 $processorReference,
                 $bankReference,
                 $legacyPaymentId,
+                $iban,
             )
         );
     }

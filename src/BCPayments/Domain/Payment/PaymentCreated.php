@@ -33,6 +33,7 @@ class PaymentCreated extends AbstractTimestampedEvent implements DomainEventInte
         public readonly ?ProcessorReference $processorReference,
         public readonly ?BankReference $bankReference,
         public readonly ?LegacyPaymentId $legacyPaymentId,
+        public readonly ?Iban $iban,
     ) {
         parent::__construct($occuredOn);
     }

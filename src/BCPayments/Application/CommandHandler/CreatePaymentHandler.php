@@ -41,6 +41,7 @@ class CreatePaymentHandler implements CommandHandlerInterface
             $command->processorReference,
             $command->bankReference,
             $command->legacyPaymentId,
+            $command->iban,
         );
 
         try {
