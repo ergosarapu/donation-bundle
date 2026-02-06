@@ -37,7 +37,7 @@ class CreatePaymentHandler implements CommandHandlerInterface
             $command->senderEmail,
             $command->senderName,
             $command->senderNationalIdCode,
-            $command->createdAt,
+            $command->effectiveDate,
         );
 
         try {

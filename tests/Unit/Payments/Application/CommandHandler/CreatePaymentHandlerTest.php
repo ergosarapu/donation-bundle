@@ -52,6 +52,7 @@ class CreatePaymentHandlerTest extends TestCase
         $email = new Email('donor@example.com');
         $senderName = new PersonName('John', 'Doe');
         $senderNationalIdCode = new NationalIdCode('12345678901');
+        $effectiveDate = new DateTimeImmutable('2024-02-02');
 
         $this->command = new CreatePayment(
             $paymentId,
@@ -61,7 +62,8 @@ class CreatePaymentHandlerTest extends TestCase
             $email,
             $senderName,
             $senderNationalIdCode,
-            $appliedTo
+            $appliedTo,
+            $effectiveDate,
         );
     }
 

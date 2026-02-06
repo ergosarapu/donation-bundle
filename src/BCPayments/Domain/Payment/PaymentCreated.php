@@ -21,15 +21,15 @@ class PaymentCreated extends AbstractTimestampedEvent implements DomainEventInte
 {
     public function __construct(
         DateTimeImmutable $occuredOn,
-        public readonly DateTimeImmutable $createdAt,
+        public readonly DateTimeImmutable $effectiveDate,
         public readonly PaymentId $paymentId,
         public readonly PaymentStatus $status,
         public readonly Money $amount,
         public readonly ShortDescription $description,
         public readonly ?PaymentAppliedToId $appliedTo,
         public readonly ?Email $senderEmail,
-        public readonly ?PersonName $senderName,
-        public readonly ?NationalIdCode $senderNationalIdCode,
+        public readonly ?PersonName $debtorName,
+        public readonly ?NationalIdCode $debtorNationalIdCode,
     ) {
         parent::__construct($occuredOn);
     }

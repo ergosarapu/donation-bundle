@@ -10,14 +10,17 @@ use Behat\Step\Given;
 use Behat\Step\Then;
 use Behat\Step\When;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\CreatePaymentMethod;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Command\ImportPaymentsFromFile;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsAuthorized;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsCanceled;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsCaptured;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsFailed;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentFileImportResult;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetPayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetPendingPayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model\Payment;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCredentialValue;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportStatus;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodAction;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodResult;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodUnusable;
@@ -56,6 +59,7 @@ class PaymentsContext implements Context
 {
     private PaymentId $lastPaymentId;
     private PaymentMethodId $lastPaymentMethodId;
+    private string $lastUploadedPaymentImportFile;
 
     public function __construct(
         private readonly SubscriptionEngine $subscriptionEngine,
@@ -323,7 +327,6 @@ class PaymentsContext implements Context
         $this->eventBus->assertDispatched(UsablePaymentMethodCreated::class, 1);
         // Verify the PaymentMethodId in the event matches the expected one
         $events = $this->eventBus->dispatchedMessages(UsablePaymentMethodCreated::class);
-        // if (!empty($events) && $this->lastPaymentMethodId !== null) {
         /** @var UsablePaymentMethodCreated $event */
         $event = $events[0];
         Assert::eq(
@@ -331,7 +334,6 @@ class PaymentsContext implements Context
             $this->lastPaymentMethodId->toString(),
             'PaymentMethodId in UsablePaymentMethodCreated event should match the expected PaymentMethodId'
         );
-        // }
     }
 
     #[Then('unusable payment method is created')]
@@ -340,7 +342,6 @@ class PaymentsContext implements Context
         $this->eventBus->assertDispatched(UnusablePaymentMethodCreated::class, 1);
         // Verify the PaymentMethodId in the event matches the expected one
         $events = $this->eventBus->dispatchedMessages(UnusablePaymentMethodCreated::class);
-        // if (!empty($events) && $this->lastPaymentMethodId !== null) {
         /** @var UnusablePaymentMethodCreated $event */
         $event = $events[0];
         Assert::eq(
@@ -348,7 +349,6 @@ class PaymentsContext implements Context
             $this->lastPaymentMethodId->toString(),
             'PaymentMethodId in UnusablePaymentMethodCreated event should match the expected PaymentMethodId'
         );
-        // }
     }
 
     #[Then('stored payment method is unusable')]
@@ -357,7 +357,6 @@ class PaymentsContext implements Context
         $this->eventBus->assertDispatched(PaymentMethodUnusable::class, 1);
         // Verify the PaymentMethodId in the event matches the expected one
         $events = $this->eventBus->dispatchedMessages(PaymentMethodUnusable::class);
-        // if (!empty($events) && $this->lastPaymentMethodId !== null) {
         /** @var PaymentMethodUnusable $event */
         $event = $events[0];
         Assert::eq(
@@ -365,7 +364,6 @@ class PaymentsContext implements Context
             $this->lastPaymentMethodId->toString(),
             'PaymentMethodId in PaymentMethodUnusable event should match the expected PaymentMethodId'
         );
-        // }
     }
 
     #[Then('no payment method integration event is emitted')]
@@ -398,6 +396,32 @@ class PaymentsContext implements Context
     {
         $this->eventBus->assertNotDispatched(UsablePaymentMethodCreated::class);
         $this->eventBus->assertNotDispatched(PaymentMethodUnusable::class);
+    }
+
+    #[Given('payment import file has been uploaded')]
+    public function paymentImportFileHasBeenUploaded(): void
+    {
+        $this->lastUploadedPaymentImportFile = __DIR__ . '/../../../Unit/Payments/Infrastructure/Fixtures/single_entry_private_debtor.camt.xml';
+    }
+
+    #[When('import payments from file')]
+    public function importPaymentsFromFile(): void
+    {
+        /** @var PaymentFileImportResult $result */
+        $result = $this->commandBus->send(new ImportPaymentsFromFile($this->lastUploadedPaymentImportFile));
+        Assert::isInstanceOf($result, PaymentFileImportResult::class);
+        Assert::greaterThan(count($result->pendingPaymentIds), 0);
+        $this->lastPaymentId = $result->pendingPaymentIds[0];
+    }
+
+    #[Then('payment is imported with import status Pending')]
+    public function paymentIsImportedWithImportStatusPending(): void
+    {
+        /** @var Payment $payment */
+        $payment = $this->queryBus->ask(new GetPayment($this->lastPaymentId));
+        Assert::isInstanceOf($payment, Payment::class);
+        Assert::notNull($payment);
+        Assert::eq($payment->getImportStatus(), PaymentImportStatus::Pending);
     }
 
 }

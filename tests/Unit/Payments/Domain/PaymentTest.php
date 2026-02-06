@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\Tests\Unit\Payments\Domain;
 
+use DateInterval;
 use DateTimeImmutable;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\AccountHolderName;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Bic;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Iban;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentAuthorized;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCanceled;
@@ -13,11 +17,15 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCreated;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCredentialValue;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentDidNotSucceed;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentFailed;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportPending;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportSourceIdentifier;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentInitiated;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodAction;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodResult;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodUnusableReason;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentProcessorReference;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRedirectUrlSetUp;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentReferenceNumber;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRefunded;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentReleasedForGatewayCall;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRequest;
@@ -31,6 +39,8 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\OrganisationRegCode;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\URL;
 use LogicException;
@@ -81,17 +91,105 @@ class PaymentTest extends AggregateRootTestCase
             $this->email,
             null,
             null,
-            null,
+            $this->now->add(new DateInterval('P1D')),
         ))->then(
             new PaymentCreated(
                 $this->now,
-                $this->now,
+                $this->now->add(new DateInterval('P1D')),
                 $this->paymentId,
                 PaymentStatus::Pending,
                 $this->amount,
                 $this->description,
                 $this->appliedTo,
                 $this->email,
+                null,
+                null,
+            )
+        );
+    }
+
+    public function testCreatePendingImport(): void
+    {
+        $sourceIdentifier = new PaymentImportSourceIdentifier('source-123');
+        $paymentProcessorReference = new PaymentProcessorReference('ref-456');
+        $effectiveDate = $this->now->sub(new DateInterval('P1D'));
+        $accountHolderName = new AccountHolderName('John Doe');
+        $nationalIdCode = new NationalIdCode('12345678901');
+        $organizationRegCode = new OrganisationRegCode('12345678');
+        $referenceNumber = new PaymentReferenceNumber('1234567890');
+        $iban = new Iban('EE382200221020145685');
+        $bic = new Bic('HABAEE2X');
+
+        $this->when(fn () => Payment::createPendingImport(
+            $this->now,
+            $this->paymentId,
+            $sourceIdentifier,
+            $paymentProcessorReference,
+            PaymentStatus::Pending,
+            $this->amount,
+            $this->description,
+            $effectiveDate,
+            $accountHolderName,
+            $nationalIdCode,
+            $organizationRegCode,
+            $referenceNumber,
+            $iban,
+            $bic,
+        ))->then(
+            new PaymentImportPending(
+                $this->now,
+                $this->paymentId,
+                $sourceIdentifier,
+                $paymentProcessorReference,
+                PaymentStatus::Pending,
+                $this->amount,
+                $this->description,
+                $effectiveDate,
+                $accountHolderName,
+                $nationalIdCode,
+                $organizationRegCode,
+                $referenceNumber,
+                $iban,
+                $bic,
+            )
+        );
+    }
+
+    public function testCreatePendingImportWithNullableFields(): void
+    {
+        $sourceIdentifier = new PaymentImportSourceIdentifier('source-123');
+        $paymentProcessorReference = new PaymentProcessorReference('ref-456');
+        $effectiveDate = $this->now->sub(new DateInterval('P1D'));
+
+        $this->when(fn () => Payment::createPendingImport(
+            $this->now,
+            $this->paymentId,
+            $sourceIdentifier,
+            $paymentProcessorReference,
+            PaymentStatus::Pending,
+            $this->amount,
+            null,
+            $effectiveDate,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+        ))->then(
+            new PaymentImportPending(
+                $this->now,
+                $this->paymentId,
+                $sourceIdentifier,
+                $paymentProcessorReference,
+                PaymentStatus::Pending,
+                $this->amount,
+                null,
+                $effectiveDate,
+                null,
+                null,
+                null,
+                null,
                 null,
                 null,
             )

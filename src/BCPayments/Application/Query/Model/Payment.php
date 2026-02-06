@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model;
 
 use DateTimeImmutable;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportStatus;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
 
 class Payment
@@ -14,6 +15,19 @@ class Payment
     private string $currency;
     private PaymentStatus $status;
     private ?string $redirectUrl;
+    private ?PaymentImportStatus $importStatus = null;
+    private ?string $description = null;
+    private ?string $givenName = null;
+    private ?string $familyName = null;
+    private ?string $accountHolderName = null;
+    private ?string $nationalIdCode = null;
+    private ?string $organizationRegCode = null;
+    private ?string $referenceNumber = null;
+    private ?string $iban = null;
+    private ?string $bic = null;
+    private ?string $sourceIdentifier = null;
+    private ?string $paymentProcessorReference = null;
+    private DateTimeImmutable $effectiveDate;
     private DateTimeImmutable $createdAt;
     private DateTimeImmutable $updatedAt;
 
@@ -85,5 +99,135 @@ class Payment
     public function setUpdatedAt(DateTimeImmutable $updatedAt): void
     {
         $this->updatedAt = $updatedAt;
+    }
+
+    public function getImportStatus(): ?PaymentImportStatus
+    {
+        return $this->importStatus;
+    }
+
+    public function setImportStatus(?PaymentImportStatus $importStatus): void
+    {
+        $this->importStatus = $importStatus;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(?string $description): void
+    {
+        $this->description = $description;
+    }
+
+    public function getGivenName(): ?string
+    {
+        return $this->givenName;
+    }
+
+    public function setGivenName(?string $givenName): void
+    {
+        $this->givenName = $givenName;
+    }
+
+    public function getFamilyName(): ?string
+    {
+        return $this->familyName;
+    }
+
+    public function setFamilyName(?string $familyName): void
+    {
+        $this->familyName = $familyName;
+    }
+
+    public function getAccountHolderName(): ?string
+    {
+        return $this->accountHolderName;
+    }
+
+    public function setAccountHolderName(?string $accountHolderName): void
+    {
+        $this->accountHolderName = $accountHolderName;
+    }
+
+    public function getNationalIdCode(): ?string
+    {
+        return $this->nationalIdCode;
+    }
+
+    public function setNationalIdCode(?string $nationalIdCode): void
+    {
+        $this->nationalIdCode = $nationalIdCode;
+    }
+
+    public function getOrganizationRegCode(): ?string
+    {
+        return $this->organizationRegCode;
+    }
+
+    public function setOrganizationRegCode(?string $organizationRegCode): void
+    {
+        $this->organizationRegCode = $organizationRegCode;
+    }
+
+    public function getReferenceNumber(): ?string
+    {
+        return $this->referenceNumber;
+    }
+
+    public function setReferenceNumber(?string $referenceNumber): void
+    {
+        $this->referenceNumber = $referenceNumber;
+    }
+
+    public function getIban(): ?string
+    {
+        return $this->iban;
+    }
+
+    public function setIban(?string $iban): void
+    {
+        $this->iban = $iban;
+    }
+
+    public function getBic(): ?string
+    {
+        return $this->bic;
+    }
+
+    public function setBic(?string $bic): void
+    {
+        $this->bic = $bic;
+    }
+
+    public function getSourceIdentifier(): ?string
+    {
+        return $this->sourceIdentifier;
+    }
+
+    public function setSourceIdentifier(?string $sourceIdentifier): void
+    {
+        $this->sourceIdentifier = $sourceIdentifier;
+    }
+
+    public function getPaymentProcessorReference(): ?string
+    {
+        return $this->paymentProcessorReference;
+    }
+
+    public function setPaymentProcessorReference(?string $paymentProcessorReference): void
+    {
+        $this->paymentProcessorReference = $paymentProcessorReference;
+    }
+
+    public function getEffectiveDate(): DateTimeImmutable
+    {
+        return $this->effectiveDate;
+    }
+
+    public function setEffectiveDate(DateTimeImmutable $effectiveDate): void
+    {
+        $this->effectiveDate = $effectiveDate;
     }
 }

@@ -12,7 +12,20 @@
         <field name="amount" type="integer" column="amount" nullable="false"/>
         <field name="currency" type="string" column="currency" nullable="false"/>
         <field name="status" type="string" column="status" length="50" nullable="false" enum-type="ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus"/>
+        <field name="importStatus" type="string" column="import_status" length="50" nullable="true" enum-type="ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportStatus"/>
+        <field name="description" type="string" column="description" length="255" nullable="true"/>
+        <field name="givenName" type="string" column="given_name" length="100" nullable="true"/>
+        <field name="familyName" type="string" column="family_name" length="100" nullable="true"/>
+        <field name="accountHolderName" type="string" column="account_holder_name" length="255" nullable="true"/>
+        <field name="nationalIdCode" type="string" column="national_id_code" length="50" nullable="true"/>
+        <field name="organizationRegCode" type="string" column="organization_reg_code" length="50" nullable="true"/>
+        <field name="referenceNumber" type="string" column="reference_number" length="100" nullable="true"/>
+        <field name="iban" type="string" column="iban" length="50" nullable="true"/>
+        <field name="bic" type="string" column="bic" length="20" nullable="true"/>
+        <field name="sourceIdentifier" type="string" column="source_identifier" length="100" nullable="true"/>
+        <field name="paymentProcessorReference" type="string" column="payment_processor_reference" length="100" nullable="true"/>
         <field name="redirectUrl" type="string" column="redirect_url" nullable="true"/>
+        <field name="effectiveDate" type="datetime_immutable" column="effective_date" nullable="false"/>
         <field name="createdAt" type="datetime_immutable" column="created_at" nullable="false"/>
         <field name="updatedAt" type="datetime_immutable" column="updated_at" nullable="false"/>
     </entity>

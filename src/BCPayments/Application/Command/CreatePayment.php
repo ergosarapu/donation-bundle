@@ -26,7 +26,7 @@ final class CreatePayment implements CommandInterface
         public readonly ?PersonName $senderName,
         public readonly ?NationalIdCode $senderNationalIdCode,
         public readonly ?PaymentAppliedToId $paymentAppliedToId,
-        public readonly ?DateTimeImmutable $createdAt = null,
+        public readonly DateTimeImmutable $effectiveDate,
     ) {
     }
 }

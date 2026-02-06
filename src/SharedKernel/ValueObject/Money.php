@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\SharedKernel\ValueObject;
 
-use InvalidArgumentException;
 use Patchlevel\Hydrator\Normalizer\ObjectNormalizer;
 
 #[ObjectNormalizer]
@@ -14,9 +13,6 @@ final class Money
         private readonly int $amount,
         private readonly Currency $currency
     ) {
-        if ($amount < 0) {
-            throw new InvalidArgumentException('Amount cannot be negative');
-        }
     }
 
     public function amount(): int
