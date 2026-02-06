@@ -70,6 +70,7 @@ class Payment extends BasicAggregateRoot
         ?Email $senderEmail,
         ?PersonName $senderName,
         ?NationalIdCode $senderNationalIdCode,
+        DateTimeImmutable $initiatedAt,
         DateTimeImmutable $capturedAt,
         ?ProcessorReference $processorReference,
         ?BankReference $bankReference,
@@ -79,6 +80,7 @@ class Payment extends BasicAggregateRoot
         $payment = new self();
         $payment->recordThat(new PaymentCreated(
             $currentTime,
+            $initiatedAt,
             $capturedAt,
             $paymentId,
             $status,

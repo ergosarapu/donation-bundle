@@ -57,6 +57,7 @@ class CreatePaymentHandlerTest extends TestCase
         $email = new Email('donor@example.com');
         $senderName = new PersonName('John', 'Doe');
         $senderNationalIdCode = new NationalIdCode('12345678901');
+        $initiatedAt = new DateTimeImmutable('2024-02-01');
         $capturedAt = new DateTimeImmutable('2024-02-02');
         $processorReference = new ProcessorReference('proc-ref-123');
         $bankReference = new BankReference('bank-ref-456');
@@ -74,6 +75,7 @@ class CreatePaymentHandlerTest extends TestCase
             $senderName,
             $senderNationalIdCode,
             $appliedTo,
+            $initiatedAt,
             $capturedAt,
             $processorReference,
             $bankReference,

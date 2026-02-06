@@ -38,6 +38,7 @@ class CreatePaymentHandler implements CommandHandlerInterface
             $command->senderEmail,
             $command->senderName,
             $command->senderNationalIdCode,
+            $command->initiatedAt,
             $command->capturedAt,
             $command->processorReference,
             $command->bankReference,

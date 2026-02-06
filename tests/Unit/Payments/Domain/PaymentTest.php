@@ -103,6 +103,7 @@ class PaymentTest extends AggregateRootTestCase
             $this->email,
             $senderName,
             $nationalIdCode,
+            $this->now->sub(new DateInterval('P1D')),
             $this->now->add(new DateInterval('P1D')),
             $processorReference,
             $bankReference,
@@ -111,6 +112,7 @@ class PaymentTest extends AggregateRootTestCase
         ))->then(
             new PaymentCreated(
                 $this->now,
+                $this->now->sub(new DateInterval('P1D')),
                 $this->now->add(new DateInterval('P1D')),
                 $this->paymentId,
                 PaymentStatus::Pending,

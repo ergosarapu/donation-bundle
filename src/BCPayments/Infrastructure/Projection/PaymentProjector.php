@@ -100,6 +100,7 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         }
         $payment = new Payment();
         $payment->setId($event->paymentId->toString());
+        $payment->setInitiatedAt($event->initiatedAt);
         $payment->setCapturedAt($event->capturedAt);
         $payment->setCreatedAt($event->occuredOn);
         $payment->setUpdatedAt($event->occuredOn);
