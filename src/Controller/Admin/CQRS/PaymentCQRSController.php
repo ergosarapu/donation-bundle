@@ -109,7 +109,7 @@ class PaymentCQRSController extends AbstractCQRSController
             TextField::new('accountHolderName')->setDisabled(),
             TextField::new('nationalIdCode')->setDisabled(),
             TextField::new('organizationRegCode')->setDisabled(),
-            TextField::new('referenceNumber')->setDisabled(),
+            TextField::new('reference')->setDisabled(),
             TextField::new('iban')->setDisabled(),
             TextField::new('bic')->setDisabled(),
             DateTimeField::new('initiatedAt')->setDisabled(),
