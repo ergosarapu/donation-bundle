@@ -23,7 +23,7 @@ class PaymentCreated extends AbstractTimestampedEvent implements DomainEventInte
     public function __construct(
         DateTimeImmutable $occuredOn,
         public readonly DateTimeImmutable $initiatedAt,
-        public readonly DateTimeImmutable $capturedAt,
+        public readonly ?DateTimeImmutable $capturedAt,
         public readonly PaymentId $paymentId,
         public readonly PaymentStatus $status,
         public readonly Money $amount,

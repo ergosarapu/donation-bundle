@@ -33,7 +33,7 @@ final class CreatePayment implements CommandInterface
         public readonly ?NationalIdCode $senderNationalIdCode,
         public readonly ?PaymentAppliedToId $paymentAppliedToId,
         public readonly DateTimeImmutable $initiatedAt,
-        public readonly DateTimeImmutable $capturedAt,
+        public readonly ?DateTimeImmutable $capturedAt,
         public readonly ?ProcessorReference $processorReference,
         public readonly ?BankReference $bankReference,
         public readonly ?LegacyPaymentId $legacyPaymentId,

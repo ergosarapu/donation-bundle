@@ -71,7 +71,7 @@ class Payment extends BasicAggregateRoot
         ?PersonName $senderName,
         ?NationalIdCode $senderNationalIdCode,
         DateTimeImmutable $initiatedAt,
-        DateTimeImmutable $capturedAt,
+        ?DateTimeImmutable $capturedAt,
         ?ProcessorReference $processorReference,
         ?BankReference $bankReference,
         ?LegacyPaymentId $legacyPaymentId,
