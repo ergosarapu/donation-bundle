@@ -86,6 +86,7 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         $payment->setAmount($event->amount->amount());
         $payment->setCurrency($event->amount->currency()->code());
         $payment->setStatus($event->status);
+        $payment->setGateway($event->gateway->id());
         $this->projectionEntityManager->persist($payment);
         $this->projectionEntityManager->flush();
     }
@@ -105,6 +106,7 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         $payment->setAmount($event->amount->amount());
         $payment->setCurrency($event->amount->currency()->code());
         $payment->setStatus($event->status);
+        $payment->setGateway($event->gateway?->id());
         $payment->setDescription($event->description->toString());
         $payment->setGivenName($event->debtorName?->givenName);
         $payment->setFamilyName($event->debtorName?->familyName);

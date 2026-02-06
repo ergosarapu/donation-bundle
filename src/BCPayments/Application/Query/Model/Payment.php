@@ -14,6 +14,7 @@ class Payment
     private int $amount;
     private string $currency;
     private PaymentStatus $status;
+    private ?string $gateway = null;
     private ?string $redirectUrl;
     private ?PaymentImportStatus $importStatus = null;
     private ?string $description = null;
@@ -71,6 +72,16 @@ class Payment
     public function setStatus(PaymentStatus $status): void
     {
         $this->status = $status;
+    }
+
+    public function getGateway(): ?string
+    {
+        return $this->gateway;
+    }
+
+    public function setGateway(?string $gateway): void
+    {
+        $this->gateway = $gateway;
     }
 
     public function getRedirectUrl(): ?string

@@ -90,6 +90,7 @@ class PaymentTest extends AggregateRootTestCase
         $bankReference = new BankReference('bank-ref-456');
         $legacyPaymentId = new LegacyPaymentId('legacy-789');
         $iban = new Iban('EE382200221020145685');
+        $gateway = new Gateway('test-gateway');
 
         $this->when(fn () => Payment::create(
             $this->now,
@@ -97,6 +98,7 @@ class PaymentTest extends AggregateRootTestCase
             PaymentStatus::Pending,
             $this->amount,
             $this->description,
+            $gateway,
             $this->appliedTo,
             $this->email,
             $senderName,
@@ -114,6 +116,7 @@ class PaymentTest extends AggregateRootTestCase
                 PaymentStatus::Pending,
                 $this->amount,
                 $this->description,
+                $gateway,
                 $this->appliedTo,
                 $this->email,
                 $senderName,

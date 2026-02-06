@@ -14,6 +14,7 @@ use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
@@ -26,6 +27,7 @@ final class CreatePayment implements CommandInterface
         public readonly PaymentStatus $status,
         public readonly Money $amount,
         public readonly ShortDescription $description,
+        public readonly ?Gateway $gateway,
         public readonly ?Email $senderEmail,
         public readonly ?PersonName $senderName,
         public readonly ?NationalIdCode $senderNationalIdCode,

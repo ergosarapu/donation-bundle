@@ -19,6 +19,7 @@ use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
@@ -61,12 +62,14 @@ class CreatePaymentHandlerTest extends TestCase
         $bankReference = new BankReference('bank-ref-456');
         $legacyPaymentIdentifier = new LegacyPaymentId('legacy-789');
         $iban = new Iban('GB94BARC10201530093459');
+        $gateway = new Gateway('test-gateway');
 
         $this->command = new CreatePayment(
             $paymentId,
             PaymentStatus::Pending,
             $amount,
             $description,
+            $gateway,
             $email,
             $senderName,
             $senderNationalIdCode,
