@@ -10,7 +10,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\AccountHolderName;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\BankReference;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Bic;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Iban;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\LegacyPaymentId;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\LegacyPaymentNumber;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentAuthorized;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCanceled;
@@ -19,7 +19,10 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCreated;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCredentialValue;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentDidNotSucceed;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentFailed;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportAccepted;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportPending;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportReconciled;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportRejected;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportSourceIdentifier;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentInitiated;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodAction;
@@ -84,11 +87,11 @@ class PaymentTest extends AggregateRootTestCase
 
     public function testCreate(): void
     {
-        $senderName = new PersonName('John', 'Doe');
+        $name = new PersonName('John', 'Doe');
         $nationalIdCode = new NationalIdCode('12345678901');
         $processorReference = new ProcessorReference('proc-ref-123');
         $bankReference = new BankReference('bank-ref-456');
-        $legacyPaymentId = new LegacyPaymentId('legacy-789');
+        $legacyPaymentId = new LegacyPaymentNumber('legacy-789');
         $iban = new Iban('EE382200221020145685');
         $gateway = new Gateway('test-gateway');
 
@@ -101,7 +104,7 @@ class PaymentTest extends AggregateRootTestCase
             $gateway,
             $this->appliedTo,
             $this->email,
-            $senderName,
+            $name,
             $nationalIdCode,
             $this->now->sub(new DateInterval('P1D')),
             $this->now->add(new DateInterval('P1D')),
@@ -121,7 +124,7 @@ class PaymentTest extends AggregateRootTestCase
                 $gateway,
                 $this->appliedTo,
                 $this->email,
-                $senderName,
+                $name,
                 $nationalIdCode,
                 $processorReference,
                 $bankReference,
@@ -1027,5 +1030,408 @@ class PaymentTest extends AggregateRootTestCase
                 new URL('https://example.com/redirect'),
             )
         );
+    }
+
+    public function testAcceptImport(): void
+    {
+        $sourceIdentifier = new PaymentImportSourceIdentifier('source-123');
+        $this->given(new PaymentImportPending(
+            $this->now,
+            $this->paymentId,
+            $sourceIdentifier,
+            null,
+            PaymentStatus::Settled,
+            $this->amount,
+            $this->description,
+            $this->now,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+        ))
+        ->when(fn (Payment $payment) => $payment->acceptImport($this->now))
+        ->then(
+            new PaymentImportAccepted(
+                $this->now,
+                $this->paymentId,
+            )
+        );
+    }
+
+    public function testAcceptImportIdempotent(): void
+    {
+        $this->given(new PaymentImportAccepted(
+            $this->now,
+            $this->paymentId,
+        ))
+        ->when(fn (Payment $payment) => $payment->acceptImport($this->now))
+        ->then();
+    }
+
+    public function testAcceptImportOnRejectedThrows(): void
+    {
+        $this->given(new PaymentImportRejected(
+            $this->now,
+            $this->paymentId,
+        ))
+        ->when(fn (Payment $payment) => $payment->acceptImport($this->now))
+        ->expectsException(LogicException::class)
+        ->expectsExceptionMessage('Can only accept pending imported payments.');
+    }
+
+    public function testAcceptImportOnReconciledThrows(): void
+    {
+        $this->given(new PaymentImportReconciled(
+            $this->now,
+            $this->paymentId,
+            PaymentId::generate(),
+        ))
+        ->when(fn (Payment $payment) => $payment->acceptImport($this->now))
+        ->expectsException(LogicException::class)
+        ->expectsExceptionMessage('Can only accept pending imported payments.');
+    }
+
+    public function testRejectImport(): void
+    {
+        $sourceIdentifier = new PaymentImportSourceIdentifier('source-123');
+        $this->given(new PaymentImportPending(
+            $this->now,
+            $this->paymentId,
+            $sourceIdentifier,
+            null,
+            PaymentStatus::Settled,
+            $this->amount,
+            $this->description,
+            $this->now,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+        ))
+        ->when(fn (Payment $payment) => $payment->rejectImport($this->now))
+        ->then(
+            new PaymentImportRejected(
+                $this->now,
+                $this->paymentId,
+            )
+        );
+    }
+
+    public function testRejectImportIdempotent(): void
+    {
+        $this->given(new PaymentImportRejected(
+            $this->now,
+            $this->paymentId,
+        ))
+        ->when(fn (Payment $payment) => $payment->rejectImport($this->now))
+        ->then();
+    }
+
+    public function testRejectImportOnAcceptedThrows(): void
+    {
+        $this->given(new PaymentImportAccepted(
+            $this->now,
+            $this->paymentId,
+        ))
+        ->when(fn (Payment $payment) => $payment->rejectImport($this->now))
+        ->expectsException(LogicException::class)
+        ->expectsExceptionMessage('Can only reject pending imported payments.');
+    }
+
+    public function testRejectImportOnReconciledThrows(): void
+    {
+        $this->given(new PaymentImportReconciled(
+            $this->now,
+            $this->paymentId,
+            PaymentId::generate(),
+        ))
+        ->when(fn (Payment $payment) => $payment->rejectImport($this->now))
+        ->expectsException(LogicException::class)
+        ->expectsExceptionMessage('Can only reject pending imported payments.');
+    }
+
+    public function testReconcileImport(): void
+    {
+        $importedPaymentId = PaymentId::generate();
+        $existingPaymentId = PaymentId::generate();
+        $sourceIdentifier = new PaymentImportSourceIdentifier('source-123');
+
+        $name = new PersonName('Jane', 'Doe');
+        $nationalIdCode = new NationalIdCode('12345678901');
+        $processorReference = new ProcessorReference('proc-ref-123');
+        $bankReference = new BankReference('bank-ref-456');
+        $legacyPaymentId = new LegacyPaymentNumber('legacy-789');
+        $iban = new Iban('EE382200221020145685');
+
+        $existingPayment = Payment::create(
+            $this->now,
+            $existingPaymentId,
+            PaymentStatus::Captured,
+            $this->amount,
+            $this->description,
+            $this->gateway,
+            $this->appliedTo,
+            $this->email,
+            $name,
+            $nationalIdCode,
+            $this->now->sub(new DateInterval('P1D')),
+            $this->now->add(new DateInterval('P1D')),
+            $processorReference,
+            $bankReference,
+            $legacyPaymentId,
+            $iban,
+        );
+
+        $this->given(new PaymentImportPending(
+            $this->now,
+            $importedPaymentId,
+            $sourceIdentifier,
+            null,
+            PaymentStatus::Settled,
+            $this->amount,
+            $this->description,
+            $this->now,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+        ))
+        ->when(fn (Payment $payment) => $payment->reconcileImport($this->now, $existingPayment))
+        ->then(
+            new PaymentImportReconciled(
+                $this->now,
+                $importedPaymentId,
+                $existingPaymentId,
+            )
+        );
+    }
+
+    public function testReconcileImportWithSelfThrows(): void
+    {
+        $sourceIdentifier = new PaymentImportSourceIdentifier('source-123');
+
+        $importedPayment = Payment::createPendingImport(
+            $this->now,
+            $this->paymentId,
+            $sourceIdentifier,
+            null,
+            PaymentStatus::Captured,
+            $this->amount,
+            $this->description,
+            $this->now,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+        );
+
+        $this->given(new PaymentImportPending(
+            $this->now,
+            $this->paymentId,
+            $sourceIdentifier,
+            null,
+            PaymentStatus::Captured,
+            $this->amount,
+            $this->description,
+            $this->now,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+        ))
+        ->when(fn (Payment $payment) => $payment->reconcileImport($this->now, $importedPayment))
+        ->expectsException(LogicException::class)
+        ->expectsExceptionMessage('Cannot reconcile payment with itself.');
+    }
+
+    public function testReconcileImportWithDifferentAmountThrows(): void
+    {
+        $importedPaymentId = PaymentId::generate();
+        $existingPaymentId = PaymentId::generate();
+        $sourceIdentifier = new PaymentImportSourceIdentifier('source-123');
+        $differentAmount = new Money(200, new Currency('EUR'));
+        $existingPayment = Payment::create(
+            $this->now,
+            $existingPaymentId,
+            PaymentStatus::Captured,
+            $differentAmount,
+            $this->description,
+            $this->gateway,
+            $this->appliedTo,
+            $this->email,
+            null,
+            null,
+            $this->now->sub(new DateInterval('P1D')),
+            $this->now->add(new DateInterval('P1D')),
+            null,
+            null,
+            null,
+            null,
+        );
+
+        $this->given(new PaymentImportPending(
+            $this->now,
+            $importedPaymentId,
+            $sourceIdentifier,
+            null,
+            PaymentStatus::Captured,
+            $this->amount,
+            $this->description,
+            $this->now,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+        ))
+        ->when(fn (Payment $payment) => $payment->reconcileImport($this->now, $existingPayment))
+        ->expectsException(LogicException::class)
+        ->expectsExceptionMessage('Cannot reconcile payments with differences in amount.');
+    }
+
+    public function testReconcileRejectedImportThrows(): void
+    {
+        $existingPaymentId = PaymentId::generate();
+        $existingPayment = Payment::create(
+            $this->now,
+            $existingPaymentId,
+            PaymentStatus::Captured,
+            $this->amount,
+            $this->description,
+            $this->gateway,
+            $this->appliedTo,
+            $this->email,
+            null,
+            null,
+            $this->now->sub(new DateInterval('P1D')),
+            $this->now->add(new DateInterval('P1D')),
+            null,
+            null,
+            null,
+            null,
+        );
+
+        $this->given(
+            new PaymentImportPending(
+                $this->now,
+                $this->paymentId,
+                new PaymentImportSourceIdentifier('source-123'),
+                null,
+                PaymentStatus::Captured,
+                $this->amount,
+                $this->description,
+                $this->now,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+            ),
+            new PaymentImportRejected(
+                $this->now,
+                $this->paymentId,
+            )
+        )
+        ->when(fn (Payment $payment) => $payment->reconcileImport($this->now, $existingPayment))
+        ->expectsException(LogicException::class)
+        ->expectsExceptionMessage('Can only reconcile pending imported payments.');
+    }
+
+    public function testReconcileAcceptedImportThrows(): void
+    {
+        $existingPaymentId = PaymentId::generate();
+        $existingPayment = Payment::create(
+            $this->now,
+            $existingPaymentId,
+            PaymentStatus::Captured,
+            $this->amount,
+            $this->description,
+            $this->gateway,
+            $this->appliedTo,
+            $this->email,
+            null,
+            null,
+            $this->now->sub(new DateInterval('P1D')),
+            $this->now->add(new DateInterval('P1D')),
+            null,
+            null,
+            null,
+            null,
+        );
+
+        $this->given(
+            new PaymentImportPending(
+                $this->now,
+                $this->paymentId,
+                new PaymentImportSourceIdentifier('source-123'),
+                null,
+                PaymentStatus::Captured,
+                $this->amount,
+                $this->description,
+                $this->now,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+            ),
+            new PaymentImportAccepted(
+                $this->now,
+                $this->paymentId,
+            )
+        )
+        ->when(fn (Payment $payment) => $payment->reconcileImport($this->now, $existingPayment))
+        ->expectsException(LogicException::class)
+        ->expectsExceptionMessage('Can only reconcile pending imported payments.');
+    }
+
+    public function testReconcileNonImportImportThrows(): void
+    {
+        $existingPaymentId = PaymentId::generate();
+        $existingPayment = Payment::create(
+            $this->now,
+            $existingPaymentId,
+            PaymentStatus::Captured,
+            $this->amount,
+            $this->description,
+            $this->gateway,
+            $this->appliedTo,
+            $this->email,
+            null,
+            null,
+            $this->now->sub(new DateInterval('P1D')),
+            $this->now->add(new DateInterval('P1D')),
+            null,
+            null,
+            null,
+            null,
+        );
+
+        $this->given(new PaymentInitiated(
+            $this->now,
+            $this->paymentId,
+            $this->amount,
+            $this->gateway,
+            $this->description,
+            $this->appliedTo,
+            $this->email,
+            null,
+        ))
+        ->when(fn (Payment $payment) => $payment->reconcileImport($this->now, $existingPayment))
+        ->expectsException(LogicException::class)
+        ->expectsExceptionMessage('Can only reconcile pending imported payments.');
     }
 }

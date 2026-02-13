@@ -10,7 +10,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\CreatePaymen
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\BankReference;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Iban;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\LegacyPaymentId;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\LegacyPaymentNumber;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\ProcessorReference;
@@ -55,13 +55,13 @@ class CreatePaymentHandlerTest extends TestCase
         $description = new ShortDescription('Test payment');
         $appliedTo = PaymentAppliedToId::generate();
         $email = new Email('donor@example.com');
-        $senderName = new PersonName('John', 'Doe');
-        $senderNationalIdCode = new NationalIdCode('12345678901');
+        $name = new PersonName('John', 'Doe');
+        $nationalIdCode = new NationalIdCode('12345678901');
         $initiatedAt = new DateTimeImmutable('2024-02-01');
         $capturedAt = new DateTimeImmutable('2024-02-02');
         $processorReference = new ProcessorReference('proc-ref-123');
         $bankReference = new BankReference('bank-ref-456');
-        $legacyPaymentIdentifier = new LegacyPaymentId('legacy-789');
+        $legacyPaymentIdentifier = new LegacyPaymentNumber('legacy-789');
         $iban = new Iban('GB94BARC10201530093459');
         $gateway = new Gateway('test-gateway');
 
@@ -72,8 +72,8 @@ class CreatePaymentHandlerTest extends TestCase
             $description,
             $gateway,
             $email,
-            $senderName,
-            $senderNationalIdCode,
+            $name,
+            $nationalIdCode,
             $appliedTo,
             $initiatedAt,
             $capturedAt,

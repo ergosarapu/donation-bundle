@@ -13,6 +13,8 @@ use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\Campaign;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\Donation;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\RecurringPlan;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model\Payment;
+use ErgoSarapu\DonationBundle\Controller\Admin\CQRS\PaymentCQRSController;
+use ErgoSarapu\DonationBundle\Controller\Admin\CQRS\PendingPaymentImportCQRSController;
 use ErgoSarapu\DonationBundle\Dto\SummaryFilterDto;
 use ErgoSarapu\DonationBundle\Enum\Period;
 use Symfony\Component\HttpFoundation\Response;
@@ -44,7 +46,8 @@ class AdminDashboardController extends AbstractDashboardController
     public function configureMenuItems(): iterable
     {
         yield MenuItem::section('Payments');
-        yield MenuItem::linkToCrud('Payments', 'fa fa-money-bill', Payment::class);
+        yield MenuItem::linkToCrud('Payments', 'fa fa-money-bill', Payment::class)->setController(PaymentCQRSController::class);
+        yield MenuItem::linkToCrud('Payment Import', 'fa fa-file-import', Payment::class)->setController(PendingPaymentImportCQRSController::class);
 
         yield MenuItem::section('Donations');
         yield MenuItem::linkToCrud('Campaigns', 'fa fa-rocket', Campaign::class);

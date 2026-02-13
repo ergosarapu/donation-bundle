@@ -42,6 +42,9 @@ return function (ContainerConfigurator $container) {
     $services->set(\ErgoSarapu\DonationBundle\Controller\Admin\CQRS\PaymentCQRSController::class)
         ->autoconfigure(true)
         ->autowire(true);
+    $services->set(\ErgoSarapu\DonationBundle\Controller\Admin\CQRS\PendingPaymentImportCQRSController::class)
+        ->autoconfigure(true)
+        ->autowire(true);
     $services->set(\ErgoSarapu\DonationBundle\Controller\Admin\CQRS\DonationCQRSController::class)
         ->autoconfigure(true)
         ->autowire(true);
@@ -102,9 +105,6 @@ return function (ContainerConfigurator $container) {
     $services->set('donation_bundle.add_user_command', \ErgoSarapu\DonationBundle\Command\AddUserCommand::class)
         ->autoconfigure(true)
         ->autowire(true);
-    $services->set('donation_bundle.subscription_process_command', \ErgoSarapu\DonationBundle\Command\SubscriptionProcessCommand::class)
-        ->autoconfigure(true)
-        ->autowire(true);
     $services->set('donation_bundle.user_validator', \ErgoSarapu\DonationBundle\Utils\UserValidator::class);
     $services->alias(\ErgoSarapu\DonationBundle\Utils\UserValidator::class, 'donation_bundle.user_validator');
 
@@ -158,6 +158,16 @@ return function (ContainerConfigurator $container) {
         ->autoconfigure(true)
         ->autowire(true);
     $services->alias(\ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentImportDecoderInterface::class, 'donation_bundle.infrastructure.payment.camt_import_decoder');
+
+    $services->set('donation_bundle.infrastructure.payment.projection_payments_matcher', \ErgoSarapu\DonationBundle\BCPayments\Infrastructure\Adapter\ProjectionPaymentsMatcher::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->alias(\ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentsMatcherInterface::class, 'donation_bundle.infrastructure.payment.projection_payments_matcher');
+
+    $services->set('donation_bundle.infrastructure.payment.pending_payment_import_listener', \ErgoSarapu\DonationBundle\BCPayments\Infrastructure\Listener\PendingPaymentImportListener::class)
+        ->autoconfigure(true)
+        ->autowire(true)
+        ->tag('doctrine.orm.entity_listener', ['event' => 'postLoad', 'entity' => \ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model\Payment::class]);
 
     // ************************
     // *** Command Handlers ***
@@ -268,6 +278,15 @@ return function (ContainerConfigurator $container) {
     $services->set('donation_bundle.payments.application.payment.command_handler.capture_payment', \ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\CapturePaymentHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
+    $services->set('donation_bundle.payments.application.payment.command_handler.accept_payment_import', \ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\AcceptPaymentImportHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.payments.application.payment.command_handler.reject_payment_import', \ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\RejectPaymentImportHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.payments.application.payment.command_handler.reconcile_payment_import', \ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\ReconcilePaymentImportHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
     $services->set('donation_bundle.payments.application.payment.command_handler.create_pending_payment_import', \ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\CreatePendingPaymentImportHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
@@ -316,6 +335,9 @@ return function (ContainerConfigurator $container) {
         ->autoconfigure(true)
         ->autowire(true);
     $services->set('donation_bundle.application.payments.query_handler.get_pending_payment', \ErgoSarapu\DonationBundle\BCPayments\Application\Query\Handler\GetPendingPaymentHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.application.payments.query_handler.get_matching_payments', \ErgoSarapu\DonationBundle\BCPayments\Application\Query\Handler\GetMatchingPaymentsHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
 

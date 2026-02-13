@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\Tests\Acceptance\Payments\Behat;
 
 use Behat\Behat\Context\Context;
+use Behat\Hook\AfterScenario;
 use Behat\Hook\BeforeScenario;
 use Behat\Step\Given;
 use Behat\Step\Then;
@@ -68,8 +69,7 @@ class PaymentsContext implements Context
         private readonly TestEventBus $eventBus,
         private readonly QueryBusInterface $queryBus,
     ) {
-        $this->subscriptionEngine->setup();
-        $this->subscriptionEngine->boot();
+        $this->initProjections();
     }
 
     #[BeforeScenario]
@@ -79,6 +79,20 @@ class PaymentsContext implements Context
         $this->eventBus->intercept(IntegrationEventInterface::class);
         $this->commandBus->reset();
         $this->commandBus->intercept(IntegrationCommandInterface::class);
+    }
+
+    #[BeforeScenario]
+    public function initProjections(): void
+    {
+        $this->clearProjections();
+        $this->subscriptionEngine->setup();
+        $this->subscriptionEngine->boot();
+    }
+
+    #[AfterScenario]
+    public function clearProjections(): void
+    {
+        $this->subscriptionEngine->remove();
     }
 
     private function sendInitiatePaymentCommand(InitiatePaymentIntegrationCommand $command): void
@@ -289,7 +303,7 @@ class PaymentsContext implements Context
         $payment = $this->queryBus->ask(new GetPendingPayment($this->lastPaymentId));
         Assert::isInstanceOf($payment, Payment::class);
         Assert::notNull($payment);
-        $this->lastPaymentId = PaymentId::fromString($payment->getId());
+        $this->lastPaymentId = PaymentId::fromString($payment->getPaymentId());
     }
 
     #[Then('payment is marked as :paymentState')]
@@ -423,5 +437,4 @@ class PaymentsContext implements Context
         Assert::notNull($payment);
         Assert::eq($payment->getImportStatus(), PaymentImportStatus::Pending);
     }
-
 }
