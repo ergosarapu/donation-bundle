@@ -36,6 +36,7 @@ class Payment extends BasicAggregateRoot
     private bool $succeedRecorded = false;
     private bool $gatewayCallReserved = false;
     private ?PaymentMethodAction $paymentMethodAction;
+    private ?PaymentImportStatus $importStatus = null;
 
     public static function initiate(
         DateTimeImmutable $currentTime,
@@ -67,14 +68,14 @@ class Payment extends BasicAggregateRoot
         ShortDescription $description,
         ?Gateway $gateway,
         ?PaymentAppliedToId $appliedTo,
-        ?Email $senderEmail,
-        ?PersonName $senderName,
-        ?NationalIdCode $senderNationalIdCode,
+        ?Email $email,
+        ?PersonName $name,
+        ?NationalIdCode $nationalIdCode,
         DateTimeImmutable $initiatedAt,
         ?DateTimeImmutable $capturedAt,
         ?ProcessorReference $processorReference,
         ?BankReference $bankReference,
-        ?LegacyPaymentId $legacyPaymentId,
+        ?LegacyPaymentNumber $legacyPaymentNumber,
         ?Iban $iban,
     ): self {
         $payment = new self();
@@ -88,12 +89,12 @@ class Payment extends BasicAggregateRoot
             $description,
             $gateway,
             $appliedTo,
-            $senderEmail,
-            $senderName,
-            $senderNationalIdCode,
+            $email,
+            $name,
+            $nationalIdCode,
             $processorReference,
             $bankReference,
-            $legacyPaymentId,
+            $legacyPaymentNumber,
             $iban,
         ));
         return $payment;
@@ -108,12 +109,12 @@ class Payment extends BasicAggregateRoot
         Money $amount,
         ?ShortDescription $description,
         DateTimeImmutable $bookingDate,
-        ?AccountHolderName $debtorAccountHolderName,
-        ?NationalIdCode $debtorNationalIdCode,
-        ?OrganisationRegCode $debtorOrganizationRegCode,
+        ?AccountHolderName $accountHolderName,
+        ?NationalIdCode $nationalIdCode,
+        ?OrganisationRegCode $organizationRegCode,
         ?PaymentReference $reference,
-        ?Iban $debtorIban,
-        ?Bic $debtorBic,
+        ?Iban $iban,
+        ?Bic $bic,
     ): self {
         $payment = new self();
         $payment->recordThat(new PaymentImportPending(
@@ -125,12 +126,12 @@ class Payment extends BasicAggregateRoot
             $amount,
             $description,
             $bookingDate,
-            $debtorAccountHolderName,
-            $debtorNationalIdCode,
-            $debtorOrganizationRegCode,
+            $accountHolderName,
+            $nationalIdCode,
+            $organizationRegCode,
             $reference,
-            $debtorIban,
-            $debtorBic,
+            $iban,
+            $bic,
         ));
         return $payment;
     }
@@ -169,6 +170,25 @@ class Payment extends BasicAggregateRoot
         $this->id = $event->paymentId;
         $this->amount = $event->amount;
         $this->status = $event->status;
+        $this->importStatus = $event->importStatus;
+    }
+
+    #[Apply]
+    protected function applyPaymentImportAccepted(PaymentImportAccepted $event): void
+    {
+        $this->importStatus = $event->importStatus;
+    }
+
+    #[Apply]
+    protected function applyPaymentImportRejected(PaymentImportRejected $event): void
+    {
+        $this->importStatus = $event->importStatus;
+    }
+
+    #[Apply]
+    protected function applyPaymentImportReconciled(PaymentImportReconciled $event): void
+    {
+        $this->importStatus = $event->importStatus;
     }
 
     #[Apply]
@@ -214,7 +234,6 @@ class Payment extends BasicAggregateRoot
     protected function applyPaymentDidNotSucceeded(PaymentDidNotSucceed $event): void
     {
     }
-
 
     #[Apply]
     protected function applyReservedForGatewayCall(PaymentReservedForGatewayCall $event): void
@@ -378,5 +397,43 @@ class Payment extends BasicAggregateRoot
     public function setRedirectURL(DateTimeImmutable $currentTime, URL $redirectUrl): void
     {
         $this->recordThat(new PaymentRedirectUrlSetUp($currentTime, $this->id, $redirectUrl));
+    }
+
+    public function reconcileImport(DateTimeImmutable $currentTime, self $withPayment): void
+    {
+        if ($this->id->toString() === $withPayment->id->toString()) {
+            throw new LogicException('Cannot reconcile payment with itself.');
+        }
+        if (!$this->amount->equals($withPayment->amount)) {
+            throw new LogicException('Cannot reconcile payments with differences in amount.');
+        }
+        if ($this->importStatus !== PaymentImportStatus::Pending) {
+            throw new LogicException('Can only reconcile pending imported payments.');
+        }
+        $this->recordThat(new PaymentImportReconciled($currentTime, $this->id, $withPayment->id));
+    }
+
+    public function acceptImport(DateTimeImmutable $currentTime): void
+    {
+        // Idempotency guard
+        if ($this->importStatus === PaymentImportStatus::Accepted) {
+            return;
+        }
+        if ($this->importStatus !== PaymentImportStatus::Pending) {
+            throw new LogicException('Can only accept pending imported payments.');
+        }
+        $this->recordThat(new PaymentImportAccepted($currentTime, $this->id));
+    }
+
+    public function rejectImport(DateTimeImmutable $currentTime): void
+    {
+        // Idempotency guard
+        if ($this->importStatus === PaymentImportStatus::Rejected) {
+            return;
+        }
+        if ($this->importStatus !== PaymentImportStatus::Pending) {
+            throw new LogicException('Can only reject pending imported payments.');
+        }
+        $this->recordThat(new PaymentImportRejected($currentTime, $this->id));
     }
 }

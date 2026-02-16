@@ -5,46 +5,59 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model;
 
 use DateTimeImmutable;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentMatch;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportStatus;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
 
 class Payment
 {
-    private string $id;
+    private string $paymentId;
     private int $amount;
     private string $currency;
     private PaymentStatus $status;
     private ?string $gateway = null;
     private ?string $redirectUrl;
     private ?PaymentImportStatus $importStatus = null;
+    private ?string $reconciledWith = null;
     private ?string $description = null;
+
     private ?string $givenName = null;
     private ?string $familyName = null;
     private ?string $accountHolderName = null;
+    private ?string $effectiveName = null;
+
     private ?string $nationalIdCode = null;
     private ?string $organizationRegCode = null;
+    private ?string $effectiveIdCode = null;
+
     private ?string $reference = null;
     private ?string $iban = null;
     private ?string $bic = null;
     private ?string $sourceIdentifier = null;
     private ?string $bankReference = null;
     private ?string $processorReference = null;
-    private ?string $legacyPaymentId = null;
+    private ?string $legacyPaymentNumber = null;
+
     private ?DateTimeImmutable $bookingDate = null;
     private ?DateTimeImmutable $initiatedAt = null;
     private ?DateTimeImmutable $capturedAt = null;
     private ?DateTimeImmutable $authorizedAt = null;
     private DateTimeImmutable $createdAt;
+    private DateTimeImmutable $effectiveDate;
+
     private DateTimeImmutable $updatedAt;
 
-    public function getId(): string
+    /** @var array<PaymentMatch> */
+    private array $matchingPayments = [];
+
+    public function getPaymentId(): string
     {
-        return $this->id;
+        return $this->paymentId;
     }
 
-    public function setId(string $id): void
+    public function setPaymentId(string $paymentId): void
     {
-        $this->id = $id;
+        $this->paymentId = $paymentId;
     }
 
     public function getAmount(): int
@@ -105,6 +118,7 @@ class Payment
     public function setCreatedAt(DateTimeImmutable $createdAt): void
     {
         $this->createdAt = $createdAt;
+        $this->setEffectiveDate();
     }
 
     public function getUpdatedAt(): DateTimeImmutable
@@ -127,6 +141,16 @@ class Payment
         $this->importStatus = $importStatus;
     }
 
+    public function getReconciledWith(): ?string
+    {
+        return $this->reconciledWith;
+    }
+
+    public function setReconciledWith(?string $reconciledWith): void
+    {
+        $this->reconciledWith = $reconciledWith;
+    }
+
     public function getDescription(): ?string
     {
         return $this->description;
@@ -145,6 +169,7 @@ class Payment
     public function setGivenName(?string $givenName): void
     {
         $this->givenName = $givenName;
+        $this->setEffectiveName();
     }
 
     public function getFamilyName(): ?string
@@ -155,6 +180,7 @@ class Payment
     public function setFamilyName(?string $familyName): void
     {
         $this->familyName = $familyName;
+        $this->setEffectiveName();
     }
 
     public function getAccountHolderName(): ?string
@@ -165,6 +191,7 @@ class Payment
     public function setAccountHolderName(?string $accountHolderName): void
     {
         $this->accountHolderName = $accountHolderName;
+        $this->setEffectiveName();
     }
 
     public function getNationalIdCode(): ?string
@@ -175,6 +202,7 @@ class Payment
     public function setNationalIdCode(?string $nationalIdCode): void
     {
         $this->nationalIdCode = $nationalIdCode;
+        $this->setEffectiveIdCode();
     }
 
     public function getOrganizationRegCode(): ?string
@@ -185,6 +213,7 @@ class Payment
     public function setOrganizationRegCode(?string $organizationRegCode): void
     {
         $this->organizationRegCode = $organizationRegCode;
+        $this->setEffectiveIdCode();
     }
 
     public function getReference(): ?string
@@ -247,14 +276,14 @@ class Payment
         $this->processorReference = $processorReference;
     }
 
-    public function getLegacyPaymentId(): ?string
+    public function getLegacyPaymentNumber(): ?string
     {
-        return $this->legacyPaymentId;
+        return $this->legacyPaymentNumber;
     }
 
-    public function setLegacyPaymentId(?string $legacyPaymentId): void
+    public function setLegacyPaymentNumber(?string $legacyPaymentNumber): void
     {
-        $this->legacyPaymentId = $legacyPaymentId;
+        $this->legacyPaymentNumber = $legacyPaymentNumber;
     }
 
     public function getBookingDate(): ?DateTimeImmutable
@@ -265,6 +294,7 @@ class Payment
     public function setBookingDate(?DateTimeImmutable $bookingDate): void
     {
         $this->bookingDate = $bookingDate;
+        $this->setEffectiveDate();
     }
 
     public function getInitiatedAt(): ?DateTimeImmutable
@@ -275,6 +305,7 @@ class Payment
     public function setInitiatedAt(?DateTimeImmutable $initiatedAt): void
     {
         $this->initiatedAt = $initiatedAt;
+        $this->setEffectiveDate();
     }
 
     public function getCapturedAt(): ?DateTimeImmutable
@@ -285,6 +316,7 @@ class Payment
     public function setCapturedAt(?DateTimeImmutable $capturedAt): void
     {
         $this->capturedAt = $capturedAt;
+        $this->setEffectiveDate();
     }
 
     public function getAuthorizedAt(): ?DateTimeImmutable
@@ -295,5 +327,56 @@ class Payment
     public function setAuthorizedAt(?DateTimeImmutable $authorizedAt): void
     {
         $this->authorizedAt = $authorizedAt;
+        $this->setEffectiveDate();
+    }
+
+    /**
+     * @return array<PaymentMatch>
+     */
+    public function getMatchingPayments(): array
+    {
+        return $this->matchingPayments;
+    }
+
+    /**
+     * @param array<PaymentMatch> $matchingPayments
+     */
+    public function setMatchingPayments(array $matchingPayments): void
+    {
+        $this->matchingPayments = $matchingPayments;
+    }
+
+    public function getEffectiveDate(): DateTimeImmutable
+    {
+        return $this->effectiveDate;
+    }
+
+    private function setEffectiveDate(): void
+    {
+        $this->effectiveDate = $this->bookingDate ?? $this->capturedAt ?? $this->authorizedAt ?? $this->initiatedAt ?? $this->createdAt;
+    }
+
+    public function getEffectiveName(): ?string
+    {
+        return $this->effectiveName;
+    }
+
+    private function setEffectiveName(): void
+    {
+        if ($this->givenName !== null && $this->familyName !== null) {
+            $this->effectiveName = trim($this->givenName . ' ' . $this->familyName);
+        } else {
+            $this->effectiveName = $this->accountHolderName;
+        }
+    }
+
+    public function getEffectiveIdCode(): ?string
+    {
+        return $this->effectiveIdCode;
+    }
+
+    private function setEffectiveIdCode(): void
+    {
+        $this->effectiveIdCode = $this->nationalIdCode ?? $this->organizationRegCode;
     }
 }

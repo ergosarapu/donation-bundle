@@ -12,7 +12,10 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCanceled;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCaptured;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCreated;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentFailed;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportAccepted;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportPending;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportReconciled;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportRejected;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentInitiated;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRedirectUrlSetUp;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRefunded;
@@ -63,7 +66,7 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
     {
         $criteria = [];
         if ($id !== null) {
-            $criteria['id'] = $id->toString();
+            $criteria['paymentId'] = $id->toString();
         }
         if ($status !== null) {
             $criteria['status'] = $status->value;
@@ -79,7 +82,7 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
             return;
         }
         $payment = new Payment();
-        $payment->setId($event->paymentId->toString());
+        $payment->setPaymentId($event->paymentId->toString());
         $payment->setInitiatedAt($event->occuredOn);
         $payment->setCreatedAt($event->occuredOn);
         $payment->setUpdatedAt($event->occuredOn);
@@ -99,7 +102,7 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
             return;
         }
         $payment = new Payment();
-        $payment->setId($event->paymentId->toString());
+        $payment->setPaymentId($event->paymentId->toString());
         $payment->setInitiatedAt($event->initiatedAt);
         $payment->setCapturedAt($event->capturedAt);
         $payment->setCreatedAt($event->occuredOn);
@@ -109,12 +112,12 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         $payment->setStatus($event->status);
         $payment->setGateway($event->gateway?->id());
         $payment->setDescription($event->description->toString());
-        $payment->setGivenName($event->debtorName?->givenName);
-        $payment->setFamilyName($event->debtorName?->familyName);
-        $payment->setNationalIdCode($event->debtorNationalIdCode?->value);
+        $payment->setGivenName($event->name?->givenName);
+        $payment->setFamilyName($event->name?->familyName);
+        $payment->setNationalIdCode($event->nationalIdCode?->value);
         $payment->setProcessorReference($event->processorReference?->value);
         $payment->setBankReference($event->bankReference?->value);
-        $payment->setLegacyPaymentId($event->legacyPaymentId?->id);
+        $payment->setLegacyPaymentNumber($event->legacyPaymentNumber?->value);
         $payment->setIban($event->iban?->value);
         $this->projectionEntityManager->persist($payment);
         $this->projectionEntityManager->flush();
@@ -128,7 +131,7 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
             return;
         }
         $payment = new Payment();
-        $payment->setId($event->paymentId->toString());
+        $payment->setPaymentId($event->paymentId->toString());
         $payment->setBookingDate($event->bookingDate);
         $payment->setCreatedAt($event->occuredOn);
         $payment->setUpdatedAt($event->occuredOn);
@@ -210,6 +213,37 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         $payment->setUpdatedAt($event->occuredOn);
         $payment->setStatus($event->status);
         $payment->setAmount($event->remainingAmount->amount());
+        $this->projectionEntityManager->flush();
+    }
+
+    #[Subscribe(PaymentImportAccepted::class)]
+    public function onPaymentImportAccepted(
+        PaymentImportAccepted $event
+    ): void {
+        $payment = $this->findOneOrThrow($event->paymentId);
+        $payment->setUpdatedAt($event->occuredOn);
+        $payment->setImportStatus($event->importStatus);
+        $this->projectionEntityManager->flush();
+    }
+
+    #[Subscribe(PaymentImportRejected::class)]
+    public function onPaymentImportRejected(
+        PaymentImportRejected $event
+    ): void {
+        $payment = $this->findOneOrThrow($event->paymentId);
+        $payment->setUpdatedAt($event->occuredOn);
+        $payment->setImportStatus($event->importStatus);
+        $this->projectionEntityManager->flush();
+    }
+
+    #[Subscribe(PaymentImportReconciled::class)]
+    public function onPaymentImportReconciled(
+        PaymentImportReconciled $event
+    ): void {
+        $payment = $this->findOneOrThrow($event->paymentId);
+        $payment->setUpdatedAt($event->occuredOn);
+        $payment->setImportStatus($event->importStatus);
+        $payment->setReconciledWith($event->reconciledWith->toString());
         $this->projectionEntityManager->flush();
     }
 
