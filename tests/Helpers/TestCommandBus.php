@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\Tests\Helpers;
 
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
+use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandResult;
+use Ramsey\Uuid\Uuid;
 
 class TestCommandBus implements CommandBusInterface
 {
@@ -14,18 +16,18 @@ class TestCommandBus implements CommandBusInterface
     {
     }
 
-    public function dispatch(object $message): mixed
+    public function dispatch(object $message): CommandResult
     {
         return $this->send($message, true);
     }
 
-    public function send(object $message, bool $intercept = false): mixed
+    public function send(object $message, bool $intercept = false): CommandResult
     {
         $this->dispatched[] = $message;
         if ($intercept) {
             foreach ($this->interceptions as $instanceof) {
                 if ($message instanceof $instanceof) {
-                    return null;
+                    return new CommandResult(null, Uuid::uuid4()->toString());
                 }
             }
         }

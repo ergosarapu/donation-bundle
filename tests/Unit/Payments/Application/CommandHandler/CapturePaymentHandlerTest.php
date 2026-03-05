@@ -17,6 +17,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCredentialValue;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodResult;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
+use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandResult;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
@@ -103,7 +104,8 @@ class CapturePaymentHandlerTest extends TestCase
                     $command->paymentId === $this->command->paymentId &&
                     $command->capturedAmount->equals($capturedAmount) &&
                     $command->paymentMethodResult === $methodResult;
-            }));
+            }))
+            ->willReturn(new CommandResult(null, 'test-correlation-id'));
 
         ($this->handler)($this->command);
     }
@@ -134,7 +136,8 @@ class CapturePaymentHandlerTest extends TestCase
             ->with($this->callback(function ($command) {
                 return $command instanceof MarkPaymentAsFailed &&
                     $command->paymentId === $this->command->paymentId;
-            }));
+            }))
+            ->willReturn(new CommandResult(null, 'test-correlation-id'));
 
         ($this->handler)($this->command);
     }

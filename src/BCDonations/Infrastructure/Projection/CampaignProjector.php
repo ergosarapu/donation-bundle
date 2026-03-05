@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\BCDonations\Infrastructure\Projection;
 
-use Doctrine\ORM\EntityManagerInterface;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\Campaign;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Port\CampaignProjectionRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignActivated;
@@ -15,20 +14,18 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignNameUpdated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignPublicTitleUpdated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignStatus;
+use ErgoSarapu\DonationBundle\SharedInfrastructure\Patchlevel\ProjectorTrait;
 use Patchlevel\EventSourcing\Attribute\Projector;
 use Patchlevel\EventSourcing\Attribute\Subscribe;
 use Patchlevel\EventSourcing\Attribute\Teardown;
+use Patchlevel\EventSourcing\Message\Message;
 use Patchlevel\EventSourcing\Subscription\Subscriber\SubscriberUtil;
 
 #[Projector('campaign')]
 class CampaignProjector implements CampaignProjectionRepositoryInterface
 {
     use SubscriberUtil;
-
-    public function __construct(
-        private EntityManagerInterface $projectionEntityManager
-    ) {
-    }
+    use ProjectorTrait;
 
     public function findOne(?CampaignId $id = null, ?CampaignStatus $status = null): ?Campaign
     {
@@ -55,7 +52,7 @@ class CampaignProjector implements CampaignProjectionRepositoryInterface
      */
     private function findByCriteria(array $criteria): array
     {
-        return $this->projectionEntityManager->getRepository(Campaign::class)->findBy($criteria);
+        return $this->getEntityManager()->getRepository(Campaign::class)->findBy($criteria);
     }
 
     /**
@@ -63,7 +60,7 @@ class CampaignProjector implements CampaignProjectionRepositoryInterface
      */
     private function findOneByCriteria(array $criteria): ?Campaign
     {
-        return $this->projectionEntityManager->getRepository(Campaign::class)->findOneBy($criteria);
+        return $this->getEntityManager()->getRepository(Campaign::class)->findOneBy($criteria);
     }
 
     /**
@@ -82,8 +79,9 @@ class CampaignProjector implements CampaignProjectionRepositoryInterface
     }
 
     #[Subscribe(CampaignCreated::class)]
-    public function onCampaignCreated(CampaignCreated $event): void
+    public function onCampaignCreated(Message $message): void
     {
+        $event = $this->getEvent($message, CampaignCreated::class);
         // Idempotency guard
         if ($this->findOne($event->campaignId) !== null) {
             return;
@@ -98,68 +96,73 @@ class CampaignProjector implements CampaignProjectionRepositoryInterface
         $campaign->setCreatedAt($event->createdAt);
         $campaign->setUpdatedAt($event->occuredOn);
 
-        $this->projectionEntityManager->persist($campaign);
-        $this->projectionEntityManager->flush();
+        $this->persist($campaign);
+        $this->flush($message);
     }
 
     #[Subscribe(CampaignNameUpdated::class)]
-    public function onCampaignNameUpdated(CampaignNameUpdated $event): void
+    public function onCampaignNameUpdated(Message $message): void
     {
+        $event = $this->getEvent($message, CampaignNameUpdated::class);
         $campaign = $this->findOneOrThrow($event->campaignId);
         $campaign->setName($event->name->toString());
         $campaign->setUpdatedAt($event->occuredOn);
 
-        $this->projectionEntityManager->persist($campaign);
-        $this->projectionEntityManager->flush();
+        $this->persist($campaign);
+        $this->flush($message);
     }
 
     #[Subscribe(CampaignPublicTitleUpdated::class)]
-    public function onCampaignPublicTitleUpdated(CampaignPublicTitleUpdated $event): void
+    public function onCampaignPublicTitleUpdated(Message $message): void
     {
+        $event = $this->getEvent($message, CampaignPublicTitleUpdated::class);
         $campaign = $this->findOneOrThrow($event->campaignId);
         $campaign->setPublicTitle($event->publicTitle->toString());
         $campaign->setUpdatedAt($event->occuredOn);
 
-        $this->projectionEntityManager->persist($campaign);
-        $this->projectionEntityManager->flush();
+        $this->persist($campaign);
+        $this->flush($message);
     }
 
     #[Subscribe(CampaignActivated::class)]
-    public function onCampaignActivated(CampaignActivated $event): void
+    public function onCampaignActivated(Message $message): void
     {
+        $event = $this->getEvent($message, CampaignActivated::class);
         $campaign = $this->findOneOrThrow($event->campaignId);
         $campaign->setStatus($event->status);
         $campaign->setUpdatedAt($event->occuredOn);
 
-        $this->projectionEntityManager->persist($campaign);
-        $this->projectionEntityManager->flush();
+        $this->persist($campaign);
+        $this->flush($message);
     }
 
     #[Subscribe(CampaignArchived::class)]
-    public function onCampaignArchived(CampaignArchived $event): void
+    public function onCampaignArchived(Message $message): void
     {
+        $event = $this->getEvent($message, CampaignArchived::class);
         $campaign = $this->findOneOrThrow($event->campaignId);
         $campaign->setStatus($event->status);
         $campaign->setUpdatedAt($event->occuredOn);
 
-        $this->projectionEntityManager->persist($campaign);
-        $this->projectionEntityManager->flush();
+        $this->persist($campaign);
+        $this->flush($message);
     }
 
     #[Subscribe(CampaignDonationDescriptionUpdated::class)]
-    public function onCampaignDonationDescriptionUpdated(CampaignDonationDescriptionUpdated $event): void
+    public function onCampaignDonationDescriptionUpdated(Message $message): void
     {
+        $event = $this->getEvent($message, CampaignDonationDescriptionUpdated::class);
         $campaign = $this->findOneOrThrow($event->campaignId);
         $campaign->setDonationDescription($event->donationDescription->toString());
         $campaign->setUpdatedAt($event->occuredOn);
 
-        $this->projectionEntityManager->persist($campaign);
-        $this->projectionEntityManager->flush();
+        $this->persist($campaign);
+        $this->flush($message);
     }
 
     #[Teardown]
     public function teardown(): void
     {
-        $this->projectionEntityManager->createQuery('DELETE FROM ' . Campaign::class)->execute();
+        $this->getEntityManager()->createQuery('DELETE FROM ' . Campaign::class)->execute();
     }
 }

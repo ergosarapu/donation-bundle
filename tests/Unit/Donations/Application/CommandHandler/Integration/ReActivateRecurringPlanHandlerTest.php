@@ -9,6 +9,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\Integration
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Donations\Command\ReActivateRecurringPlanIntegrationCommand;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
+use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandResult;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -36,7 +37,8 @@ class ReActivateRecurringPlanHandlerTest extends TestCase
             ->with($this->callback(function ($command) use ($recurringPlanId) {
                 return $command instanceof ReActivateRecurringPlan
                     && $command->recurringPlanId === $recurringPlanId;
-            }));
+            }))
+            ->willReturn(new CommandResult(null, 'test-correlation-id'));
 
         ($this->handler)($integrationCommand);
     }

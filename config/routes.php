@@ -6,9 +6,7 @@ use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 
 return function (RoutingConfigurator $routes): void {
 
-    // Application routes
-    $routes->add('donation_dashboard', '/admin')
-        ->controller('ErgoSarapu\DonationBundle\Controller\AdminDashboardController::index');
+    $routes->import('.', \EasyCorp\Bundle\EasyAdminBundle\Router\AdminRouteLoader::ROUTE_LOADER_TYPE);
 
     $routes->add('live_component_admin', '/admin/_components/{_live_component}/{_live_action}')
         ->defaults(['_live_action' => 'get']);
@@ -19,6 +17,10 @@ return function (RoutingConfigurator $routes): void {
     $routes->add('donation_redirect', '/donate/{donationId}')
         ->controller('donation_bundle.controller.redirect_controller')
         ->requirements(['donationId' => '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}']);
+
+    $routes->add('donation_command_status', '/api/command-status')
+        ->controller('donation_bundle.controller.command_status_controller')
+        ->methods(['GET']);
 
     $routes->add('donation_thank_you', '/thank-you')
         ->controller('Symfony\Bundle\FrameworkBundle\Controller\TemplateController')

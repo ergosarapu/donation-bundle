@@ -6,6 +6,9 @@ namespace ErgoSarapu\DonationBundle\SharedInfrastructure\Adapter\Bus;
 
 use ErgoSarapu\DonationBundle\SharedApplication\Message\DelayedMessage;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
+use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandResult;
+use ErgoSarapu\DonationBundle\SharedInfrastructure\Messenger\Stamp\MessageMetadataStamp;
+use RuntimeException;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\DelayStamp;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
@@ -17,15 +20,26 @@ class SymfonyMessengerCommandBus implements CommandBusInterface
     {
     }
 
-    public function dispatch(object $command): mixed
+    public function dispatch(object $command): CommandResult
     {
         if ($command instanceof DelayedMessage) {
-            return $this->commandBus->dispatch(
+            $envelope = $this->commandBus->dispatch(
                 $command->message,
                 [DelayStamp::delayUntil($command->delayUntil), new TransportNamesStamp('delayed')]
-            )->last(HandledStamp::class)?->getResult();
+            );
+        } else {
+            $envelope = $this->commandBus->dispatch($command);
         }
 
-        return $this->commandBus->dispatch($command)->last(HandledStamp::class)?->getResult();
+        $result =  $envelope->last(HandledStamp::class)?->getResult();
+        $metadata = $envelope->last(MessageMetadataStamp::class);
+        if ($metadata === null) {
+            throw new RuntimeException('MessageMetadataStamp is missing from the envelope.');
+        }
+
+        return new CommandResult(
+            result: $result,
+            correlationId: $metadata->correlationId
+        );
     }
 }

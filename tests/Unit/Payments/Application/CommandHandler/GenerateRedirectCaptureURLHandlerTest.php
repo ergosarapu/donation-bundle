@@ -13,6 +13,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentRepositoryInter
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\GatewayPaymentRequest;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
+use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandResult;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
@@ -139,7 +140,8 @@ class GenerateRedirectCaptureURLHandlerTest extends TestCase
                 return $command instanceof MarkPaymentAsFailed &&
                     $command->paymentId === $this->command->paymentId &&
                     $command->paymentMethodResult === null;
-            }));
+            }))
+            ->willReturn(new CommandResult(null, 'test-correlation-id'));
 
         ($this->handler)($this->command);
     }

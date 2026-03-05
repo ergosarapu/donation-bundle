@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\Controller\Admin\CQRS;
 
 use Doctrine\ORM\Event\PreUpdateEventArgs;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Option\SortOrder;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
@@ -16,18 +14,12 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\MoneyField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model\Payment;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
-use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 
 /**
  * @extends AbstractCQRSController<Payment>
  */
-abstract class AbstractPaymentCQRSController extends AbstractCQRSController
+abstract class AbstractPaymentController extends AbstractCQRSController
 {
-    public function __construct(
-        public readonly CommandBusInterface $commandBus,
-    ) {
-    }
-
     public function dispatchCommandsForPersist(object $entity): void
     {
     }
@@ -93,18 +85,6 @@ abstract class AbstractPaymentCQRSController extends AbstractCQRSController
             TextField::new('reference')->setDisabled(),
             DateTimeField::new('updatedAt')->setDisabled()->hideOnIndex(),
         ];
-    }
-
-    public function configureActions(Actions $actions): Actions
-    {
-        return $actions
-            ->remove(Crud::PAGE_INDEX, Action::DELETE)
-            ->remove(Crud::PAGE_INDEX, Action::NEW)
-            ->remove(Crud::PAGE_INDEX, Action::EDIT)
-            ->add(Crud::PAGE_INDEX, Action::DETAIL)
-            ->remove(Crud::PAGE_DETAIL, Action::DELETE)
-            ->remove(Crud::PAGE_DETAIL, Action::EDIT)
-        ;
     }
 
     public function configureCrud(Crud $crud): Crud

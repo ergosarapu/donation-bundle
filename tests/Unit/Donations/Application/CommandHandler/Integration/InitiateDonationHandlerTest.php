@@ -14,6 +14,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorIdentity;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringInterval;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Donations\Command\InitiateDonationIntegrationCommand;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
+use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandResult;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
@@ -56,7 +57,8 @@ class InitiateDonationHandlerTest extends TestCase
             ->with($this->callback(function ($command) use ($donationRequest) {
                 return $command instanceof InitiateDonation
                     && $command->donationRequest === $donationRequest;
-            }));
+            }))
+            ->willReturn(new CommandResult(null, 'test-correlation-id'));
 
         ($this->handler)($integrationCommand);
     }
@@ -85,7 +87,8 @@ class InitiateDonationHandlerTest extends TestCase
                 return $command instanceof InitiateRecurringPlan
                     && $command->interval === $recurringInterval
                     && $command->donationRequest === $donationRequest;
-            }));
+            }))
+            ->willReturn(new CommandResult(null, 'test-correlation-id'));
 
         ($this->handler)($integrationCommand);
     }

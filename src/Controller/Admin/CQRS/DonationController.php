@@ -18,7 +18,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationStatus;
 /**
  * @extends AbstractCQRSController<Donation>
  */
-class DonationCQRSController extends AbstractCQRSController
+class DonationController extends AbstractCQRSController
 {
     public function __construct()
     {

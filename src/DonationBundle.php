@@ -176,6 +176,12 @@ class DonationBundle extends AbstractBundle
 
     public function prependExtension(ContainerConfigurator $container, ContainerBuilder $builder): void
     {
+        $builder->prependExtensionConfig('twig', [
+            'paths' => [
+                __DIR__ . '/../templates/bundles/EasyAdminBundle' => 'EasyAdmin',
+            ],
+        ]);
+
         $builder->prependExtensionConfig('twig_component', [
             'defaults' => [
                 'ErgoSarapu\DonationBundle\Twig\Components\\' => [
@@ -231,6 +237,13 @@ class DonationBundle extends AbstractBundle
                                 'prefix' => 'ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model',
                                 'alias' => 'PaymentsReadModel',
                                 'is_bundle' => false,
+                            ],
+                            'SharedReadModel' => [
+                                'type' => 'xml',
+                                'dir' => __DIR__ . '/../config/doctrine/shared',
+                                'prefix' => 'ErgoSarapu\DonationBundle\SharedApplication\Query\Model',
+                                'alias' => 'SharedReadModel',
+                                'is_bundle' => false,
                             ]
                         ],
                     ],
@@ -252,6 +265,13 @@ class DonationBundle extends AbstractBundle
                                 'prefix' => 'ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model',
                                 'alias' => 'PaymentsReadModel',
                                 'is_bundle' => false,
+                            ],
+                            'SharedReadModel' => [
+                                'type' => 'xml',
+                                'dir' => __DIR__ . '/../config/doctrine/shared',
+                                'prefix' => 'ErgoSarapu\DonationBundle\SharedApplication\Query\Model',
+                                'alias' => 'SharedReadModel',
+                                'is_bundle' => false,
                             ]
                         ],
                     ],
@@ -264,11 +284,18 @@ class DonationBundle extends AbstractBundle
                 'default_bus' => 'message.bus',
                 'buses' => [
                     'message.bus' => null,
-                    'command.bus' => null,
+                    'command.bus' => [
+                        'middleware' => [
+                            'donation_bundle.infrastructure.messenger.message_metadata_middleware',
+                        ],
+                    ],
                     'query.bus' => null,
                     'event.bus' => [
                         'default_middleware' => [
                             'allow_no_handlers' => true,
+                        ],
+                        'middleware' => [
+                            'donation_bundle.infrastructure.messenger.message_metadata_middleware',
                         ],
                     ],
                 ],
@@ -306,7 +333,10 @@ class DonationBundle extends AbstractBundle
             'events' => [
                 __DIR__ . '/BCDonations/Domain',
                 __DIR__ . '/BCPayments/Domain',
-            ]
+            ],
+            'headers' => [
+                __DIR__ . '/SharedInfrastructure/Messenger/Stamp',
+            ],
         ]);
 
         $this->prependAssetMapperConfig($builder);

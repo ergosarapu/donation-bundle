@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\BCDonations\Infrastructure\Projection;
 
-use Doctrine\ORM\EntityManagerInterface;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\RecurringPlan;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\RecurringPlanTracking;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Port\RecurringPlanProjectionRepositoryInterface;
@@ -18,21 +17,19 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanInit
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanRenewalCompleted;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanRenewalInitiated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanStatus;
+use ErgoSarapu\DonationBundle\SharedInfrastructure\Patchlevel\ProjectorTrait;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use Patchlevel\EventSourcing\Attribute\Projector;
 use Patchlevel\EventSourcing\Attribute\Subscribe;
 use Patchlevel\EventSourcing\Attribute\Teardown;
+use Patchlevel\EventSourcing\Message\Message;
 use Patchlevel\EventSourcing\Subscription\Subscriber\SubscriberUtil;
 
 #[Projector('recurring_plan')]
 class RecurringPlanProjector implements RecurringPlanProjectionRepositoryInterface
 {
     use SubscriberUtil;
-
-    public function __construct(
-        private EntityManagerInterface $projectionEntityManager
-    ) {
-    }
+    use ProjectorTrait;
 
     public function findOne(?RecurringPlanId $id = null, ?RecurringPlanStatus $status = null, ?PaymentMethodId $paymentMethodId = null): ?RecurringPlan
     {
@@ -54,7 +51,7 @@ class RecurringPlanProjector implements RecurringPlanProjectionRepositoryInterfa
      */
     private function findOneByCriteria(array $criteria): ?RecurringPlan
     {
-        return $this->projectionEntityManager->getRepository(RecurringPlan::class)->findOneBy($criteria);
+        return $this->getEntityManager()->getRepository(RecurringPlan::class)->findOneBy($criteria);
     }
 
     /**
@@ -76,8 +73,9 @@ class RecurringPlanProjector implements RecurringPlanProjectionRepositoryInterfa
     }
 
     #[Subscribe(RecurringPlanCreated::class)]
-    public function onRecurringPlanCreated(RecurringPlanCreated $event): void
+    public function onRecurringPlanCreated(Message $message): void
     {
+        $event = $this->getEvent($message, RecurringPlanCreated::class);
         if ($this->findOne($event->recurringPlanId) !== null) {
             // Idempotency guard
             return;
@@ -94,13 +92,14 @@ class RecurringPlanProjector implements RecurringPlanProjectionRepositoryInterfa
         $recurringPlan->setStatus($event->status);
         $recurringPlan->setDonorEmail($event->donorIdentity->email?->toString());
         $recurringPlan->setPaymentMethodId($event->paymentMethodId->toString());
-        $this->projectionEntityManager->persist($recurringPlan);
-        $this->projectionEntityManager->flush();
+        $this->persist($recurringPlan);
+        $this->flush($message);
     }
 
     #[Subscribe(RecurringPlanInitiated::class)]
-    public function onRecurringPlanInitiated(RecurringPlanInitiated $event): void
+    public function onRecurringPlanInitiated(Message $message): void
     {
+        $event = $this->getEvent($message, RecurringPlanInitiated::class);
         if ($this->findOne($event->recurringPlanAction->recurringPlanId) !== null) {
             // Idempotency guard
             return;
@@ -117,74 +116,80 @@ class RecurringPlanProjector implements RecurringPlanProjectionRepositoryInterfa
         $recurringPlan->setStatus($event->status);
         $recurringPlan->setDonorEmail($event->donorIdentity->email?->toString());
         $recurringPlan->setPaymentMethodId($event->recurringPlanAction->paymentMethodId->toString());
-        $this->projectionEntityManager->persist($recurringPlan);
-        $this->projectionEntityManager->flush();
+        $this->persist($recurringPlan);
+        $this->flush($message);
     }
 
     #[Subscribe(RecurringPlanActivated::class)]
-    public function onRecurringPlanActivated(RecurringPlanActivated $event): void
+    public function onRecurringPlanActivated(Message $message): void
     {
+        $event = $this->getEvent($message, RecurringPlanActivated::class);
         $recurringPlan = $this->findOneOrThrow($event->id);
         $recurringPlan->setUpdatedAt($event->occuredOn);
         $recurringPlan->setStatus($event->status);
         $recurringPlan->setNextRenewalTime($event->nextRenewalTime);
-        $this->projectionEntityManager->persist($recurringPlan);
-        $this->projectionEntityManager->flush();
+        $this->persist($recurringPlan);
+        $this->flush($message);
     }
 
     #[Subscribe(RecurringPlanFailed::class)]
-    public function onRecurringPlanFailed(RecurringPlanFailed $event): void
+    public function onRecurringPlanFailed(Message $message): void
     {
+        $event = $this->getEvent($message, RecurringPlanFailed::class);
         $recurringPlan = $this->findOneOrThrow($event->id);
         $recurringPlan->setUpdatedAt($event->occuredOn);
         $recurringPlan->setStatus($event->status);
         $recurringPlan->setNextRenewalTime(null);
-        $this->projectionEntityManager->persist($recurringPlan);
-        $this->projectionEntityManager->flush();
+        $this->persist($recurringPlan);
+        $this->flush($message);
     }
 
     #[Subscribe(RecurringPlanFailing::class)]
-    public function onRecurringPlanFailing(RecurringPlanFailing $event): void
+    public function onRecurringPlanFailing(Message $message): void
     {
+        $event = $this->getEvent($message, RecurringPlanFailing::class);
         $recurringPlan = $this->findOneOrThrow($event->id);
         $recurringPlan->setUpdatedAt($event->occuredOn);
         $recurringPlan->setStatus($event->status);
-        $this->projectionEntityManager->persist($recurringPlan);
-        $this->projectionEntityManager->flush();
+        $this->persist($recurringPlan);
+        $this->flush($message);
     }
 
     #[Subscribe(RecurringPlanRenewalInitiated::class)]
-    public function onRecurringPlanRenewalInitiated(RecurringPlanRenewalInitiated $event): void
+    public function onRecurringPlanRenewalInitiated(Message $message): void
     {
+        $event = $this->getEvent($message, RecurringPlanRenewalInitiated::class);
         $recurringPlan = $this->findOneOrThrow($event->recurringPlanAction->recurringPlanId);
         $recurringPlan->setUpdatedAt($event->occuredOn);
         $recurringPlan->setRenewalInProgressDonationId($event->renewalDonationId->toString());
-        $this->projectionEntityManager->persist($recurringPlan);
-        $this->projectionEntityManager->flush();
+        $this->persist($recurringPlan);
+        $this->flush($message);
     }
 
     #[Subscribe(RecurringPlanRenewalCompleted::class)]
-    public function onRecurringPlanRenewalCompleted(RecurringPlanRenewalCompleted $event): void
+    public function onRecurringPlanRenewalCompleted(Message $message): void
     {
+        $event = $this->getEvent($message, RecurringPlanRenewalCompleted::class);
         $recurringPlan = $this->findOneOrThrow($event->id);
         $recurringPlan->setUpdatedAt($event->occuredOn);
         $recurringPlan->setRenewalInProgressDonationId(null);
         $recurringPlan->setNextRenewalTime($event->nextRenewalTime);
-        $this->projectionEntityManager->persist($recurringPlan);
-        $this->projectionEntityManager->flush();
+        $this->persist($recurringPlan);
+        $this->flush($message);
     }
 
 
     #[Subscribe(DonationAccepted::class)]
-    public function onDonationAccepted(DonationAccepted $event): void
+    public function onDonationAccepted(Message $message): void
     {
+        $event = $this->getEvent($message, DonationAccepted::class);
         if ($event->recurringPlanId === null) {
             // Not needed for our projection
             return;
         }
 
-        $this->projectionEntityManager->wrapInTransaction(function (EntityManagerInterface $em) use ($event) {
-            $tracking = $em->find(RecurringPlanTracking::class, $event->donationId->toString());
+        $this->getEntityManager()->wrapInTransaction(function () use ($event, $message) {
+            $tracking = $this->getEntityManager()->find(RecurringPlanTracking::class, $event->donationId->toString());
             if ($tracking !== null && $tracking->isDonationAcceptedSeen()) {
                 // This event has already been processed for this recurring donation
                 return;
@@ -193,7 +198,7 @@ class RecurringPlanProjector implements RecurringPlanProjectionRepositoryInterfa
             if ($tracking === null) {
                 $tracking = new RecurringPlanTracking();
                 $tracking->setDonationId($event->donationId->toString());
-                $em->persist($tracking);
+                $this->persist($tracking);
             }
             $tracking->setDonationAcceptedSeen(true);
 
@@ -201,7 +206,7 @@ class RecurringPlanProjector implements RecurringPlanProjectionRepositoryInterfa
             $cumulativeAmount = $recurringPlan->getCumulativeReceivedAmount() + $event->acceptedAmount->amount();
             $recurringPlan->setCumulativeReceivedAmount($cumulativeAmount);
             $recurringPlan->setUpdatedAt($event->occuredOn);
-            $em->flush();
+            $this->flush($message);
         });
     }
 
@@ -210,9 +215,9 @@ class RecurringPlanProjector implements RecurringPlanProjectionRepositoryInterfa
     #[Teardown]
     public function teardown(): void
     {
-        $this->projectionEntityManager->wrapInTransaction(function (EntityManagerInterface $em) {
-            $em->createQuery('DELETE FROM ' . RecurringPlan::class)->execute();
-            $em->createQuery('DELETE FROM ' . RecurringPlanTracking::class)->execute();
+        $this->getEntityManager()->wrapInTransaction(function () {
+            $this->getEntityManager()->createQuery('DELETE FROM ' . RecurringPlan::class)->execute();
+            $this->getEntityManager()->createQuery('DELETE FROM ' . RecurringPlanTracking::class)->execute();
         });
     }
 }

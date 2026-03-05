@@ -21,37 +21,23 @@ return function (ContainerConfigurator $container) {
         ->autoconfigure(true)
         ->autowire(true);
 
-    // ***************************************
-    // *** Admin CRUD Controllers (legacy) ***
-    // ***************************************
-
-    $services->set(\ErgoSarapu\DonationBundle\Controller\Admin\PaymentCrudController::class)
-        ->autoconfigure(true)
-        ->autowire(true);
-    $services->set(\ErgoSarapu\DonationBundle\Controller\Admin\CampaignCrudController::class)
-        ->autoconfigure(true)
-        ->autowire(true);
-    $services->set(\ErgoSarapu\DonationBundle\Controller\Admin\SubscriptionCrudController::class)
-        ->autoconfigure(true)
-        ->autowire(true);
-
     // ******************************
     // *** Admin CQRS Controllers ***
     // ******************************
 
-    $services->set(\ErgoSarapu\DonationBundle\Controller\Admin\CQRS\PaymentCQRSController::class)
+    $services->set(\ErgoSarapu\DonationBundle\Controller\Admin\CQRS\PaymentController::class)
         ->autoconfigure(true)
         ->autowire(true);
-    $services->set(\ErgoSarapu\DonationBundle\Controller\Admin\CQRS\PendingPaymentImportCQRSController::class)
+    $services->set(\ErgoSarapu\DonationBundle\Controller\Admin\CQRS\PaymentImportController::class)
         ->autoconfigure(true)
         ->autowire(true);
-    $services->set(\ErgoSarapu\DonationBundle\Controller\Admin\CQRS\DonationCQRSController::class)
+    $services->set(\ErgoSarapu\DonationBundle\Controller\Admin\CQRS\DonationController::class)
         ->autoconfigure(true)
         ->autowire(true);
-    $services->set(\ErgoSarapu\DonationBundle\Controller\Admin\CQRS\CampaignCQRSController::class)
+    $services->set(\ErgoSarapu\DonationBundle\Controller\Admin\CQRS\CampaignController::class)
         ->autoconfigure(true)
         ->autowire(true);
-    $services->set(\ErgoSarapu\DonationBundle\Controller\Admin\CQRS\RecurringPlanCQRSController::class)
+    $services->set(\ErgoSarapu\DonationBundle\Controller\Admin\CQRS\RecurringPlanController::class)
         ->autoconfigure(true)
         ->autowire(true);
 
@@ -64,6 +50,18 @@ return function (ContainerConfigurator $container) {
         ->autoconfigure(true)
         ->autowire(true)
     ->call('setContainer', [new Reference(\Psr\Container\ContainerInterface::class)]);
+
+    // ***********************
+    // *** API Controllers ***
+    // ***********************
+
+    $services->set('donation_bundle.controller.command_status_controller', \ErgoSarapu\DonationBundle\Controller\CommandStatusController::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+
+    // ***********************
+    // *** GUI Controllers ***
+    // ***********************
 
     // Form
     $services->set('donation_bundle.twig.components.donation_form', \ErgoSarapu\DonationBundle\Twig\Components\DonationForm::class)
@@ -341,6 +339,11 @@ return function (ContainerConfigurator $container) {
         ->autoconfigure(true)
         ->autowire(true);
 
+    // Shared
+    $services->set('donation_bundle.application.shared.query_handler.get_command_statuses', \ErgoSarapu\DonationBundle\SharedApplication\Query\Handler\GetCommandStatusesHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+
     // **********************
     // *** Event Handlers ***
     // **********************
@@ -476,17 +479,37 @@ return function (ContainerConfigurator $container) {
         ->tag('event_sourcing.subscriber');
     $services->alias(\ErgoSarapu\DonationBundle\BCPayments\Application\Query\Port\PaymentProjectionRepositoryInterface::class, 'donation_bundle.infrastructure.projector.payment');
 
+    // Shared
+    $services->set('donation_bundle.infrastructure.shared.command_status_projection_repository', \ErgoSarapu\DonationBundle\SharedInfrastructure\Adapter\CommandStatusProjectionRepository::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->alias(\ErgoSarapu\DonationBundle\SharedApplication\Query\Port\CommandStatusProjectionRepositoryInterface::class, 'donation_bundle.infrastructure.shared.command_status_projection_repository');
+
     // ******************
     // *** Processors ***
     // ******************
 
-    $services->set('donation_bundle.infrastructure.subscriber.patchlevel_all_events_processor', \ErgoSarapu\DonationBundle\SharedInfrastructure\Processor\PatchlevelAllDomainEventsProcessor::class)
+    $services->set('donation_bundle.infrastructure.subscriber.patchlevel_all_events_processor', \ErgoSarapu\DonationBundle\SharedInfrastructure\Patchlevel\PatchlevelAllDomainEventsProcessor::class)
         ->autoconfigure(true)
         ->autowire(true);
 
     // ************
     // *** Misc ***
     // ************
+
+    // Message Decorator
+    $services->set('donation_bundle.infrastructure.message.patchlevel_message_decorator', \ErgoSarapu\DonationBundle\SharedInfrastructure\Patchlevel\MessageMetadataDecorator::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->alias(\Patchlevel\EventSourcing\Repository\MessageDecorator\MessageDecorator::class, 'donation_bundle.infrastructure.message.patchlevel_message_decorator');
+
+    // Messenger Context and Middleware
+    $services->set('donation_bundle.infrastructure.messenger.message_context', \ErgoSarapu\DonationBundle\SharedInfrastructure\Messenger\MessageContext::class);
+    $services->alias(\ErgoSarapu\DonationBundle\SharedInfrastructure\Messenger\MessageContext::class, 'donation_bundle.infrastructure.messenger.message_context');
+
+    $services->set('donation_bundle.infrastructure.messenger.message_metadata_middleware', \ErgoSarapu\DonationBundle\SharedInfrastructure\Messenger\Middleware\MessageMetadataMiddleware::class)
+        ->arg(0, new Reference('donation_bundle.infrastructure.messenger.message_context'))
+        ->autoconfigure(false);
 
     // Default allowed classes for write (bundle internal - not meant to be overridden)
     $container->parameters()->set('donation_bundle.entity_write_interceptor.default_classes', [

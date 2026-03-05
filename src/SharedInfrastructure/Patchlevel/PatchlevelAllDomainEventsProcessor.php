@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ErgoSarapu\DonationBundle\SharedInfrastructure\Processor;
+namespace ErgoSarapu\DonationBundle\SharedInfrastructure\Patchlevel;
 
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\EventBusInterface;
 use Patchlevel\EventSourcing\Attribute\Processor;

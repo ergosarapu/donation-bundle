@@ -10,6 +10,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentFileImportResul
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentImportDecoderInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandInterface;
+use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandResult;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -53,7 +54,11 @@ class ImportPaymentsFromFileHandlerTest extends TestCase
 
         $this->commandBus->expects($this->exactly(3))
             ->method('dispatch')
-            ->willReturnOnConsecutiveCalls($paymentId1, $paymentId2, $paymentId3);
+            ->willReturnOnConsecutiveCalls(
+                new CommandResult($paymentId1, 'test-correlation-id-1'),
+                new CommandResult($paymentId2, 'test-correlation-id-2'),
+                new CommandResult($paymentId3, 'test-correlation-id-3')
+            );
 
         $result = ($this->handler)($command);
 
@@ -83,7 +88,11 @@ class ImportPaymentsFromFileHandlerTest extends TestCase
 
         $this->commandBus->expects($this->exactly(3))
             ->method('dispatch')
-            ->willReturnOnConsecutiveCalls($paymentId1, null, $paymentId3);
+            ->willReturnOnConsecutiveCalls(
+                new CommandResult($paymentId1, 'test-correlation-id-1'),
+                new CommandResult(null, 'test-correlation-id-2'),
+                new CommandResult($paymentId3, 'test-correlation-id-3')
+            );
 
         $result = ($this->handler)($command);
 
@@ -108,7 +117,7 @@ class ImportPaymentsFromFileHandlerTest extends TestCase
 
         $this->commandBus->expects($this->exactly(2))
             ->method('dispatch')
-            ->willReturn(null);
+            ->willReturn(new CommandResult(null, 'test-correlation-id'));
 
         $result = ($this->handler)($command);
 

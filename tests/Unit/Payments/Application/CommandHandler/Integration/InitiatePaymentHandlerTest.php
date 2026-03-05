@@ -10,6 +10,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodAction;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRequest;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Command\InitiatePaymentIntegrationCommand;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
+use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandResult;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
@@ -66,7 +67,8 @@ class InitiatePaymentHandlerTest extends TestCase
             ->with($this->callback(function ($command) use ($paymentRequest) {
                 return $command instanceof InitiatePayment
                     && $command->paymentRequest === $paymentRequest;
-            }));
+            }))
+            ->willReturn(new CommandResult(null, 'test-correlation-id'));
 
         ($this->handler)($integrationCommand);
     }

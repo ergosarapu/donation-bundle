@@ -33,7 +33,7 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * @extends AbstractCQRSController<Campaign>
  */
-class CampaignCQRSController extends AbstractCQRSController
+class CampaignController extends AbstractCQRSController
 {
     public function __construct(private readonly CommandBusInterface $commandBus)
     {

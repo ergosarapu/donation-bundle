@@ -12,6 +12,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentMethodRepositor
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethod;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodAction;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
+use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandResult;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -90,7 +91,8 @@ class UsePaymentMethodHandlerTest extends TestCase
                 return $command instanceof MarkPaymentAsFailed &&
                     $command->paymentId === $this->command->paymentMethodAction->paymentId &&
                     $command->paymentMethodResult === null;
-            }));
+            }))
+            ->willReturn(new CommandResult(null, 'test-correlation-id'));
 
         ($this->handler)($this->command);
     }

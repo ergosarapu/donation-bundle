@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\BCDonations\Infrastructure\Projection;
 
-use Doctrine\ORM\EntityManagerInterface;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\Donation;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Port\DonationProjectionRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationAccepted;
@@ -14,20 +13,18 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationInitiated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationStatus;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
+use ErgoSarapu\DonationBundle\SharedInfrastructure\Patchlevel\ProjectorTrait;
 use Patchlevel\EventSourcing\Attribute\Projector;
 use Patchlevel\EventSourcing\Attribute\Subscribe;
 use Patchlevel\EventSourcing\Attribute\Teardown;
+use Patchlevel\EventSourcing\Message\Message;
 use Patchlevel\EventSourcing\Subscription\Subscriber\SubscriberUtil;
 
 #[Projector('donation')]
 class DonationProjector implements DonationProjectionRepositoryInterface
 {
     use SubscriberUtil;
-
-    public function __construct(
-        private EntityManagerInterface $projectionEntityManager
-    ) {
-    }
+    use ProjectorTrait;
 
     public function findBy(?DonationId $id = null, ?DonationStatus $status = null, ?RecurringPlanId $recurringPlanId = null): array
     {
@@ -56,7 +53,7 @@ class DonationProjector implements DonationProjectionRepositoryInterface
      */
     private function findByCriteria(array $criteria): array
     {
-        return $this->projectionEntityManager->getRepository(Donation::class)->findBy($criteria);
+        return $this->getEntityManager()->getRepository(Donation::class)->findBy($criteria);
     }
 
     /**
@@ -64,7 +61,7 @@ class DonationProjector implements DonationProjectionRepositoryInterface
      */
     private function findOneByCriteria(array $criteria): ?Donation
     {
-        return $this->projectionEntityManager->getRepository(Donation::class)->findOneBy($criteria);
+        return $this->getEntityManager()->getRepository(Donation::class)->findOneBy($criteria);
     }
 
     /**
@@ -86,8 +83,9 @@ class DonationProjector implements DonationProjectionRepositoryInterface
     }
 
     #[Subscribe(DonationInitiated::class)]
-    public function onDonationInitiated(DonationInitiated $event): void
+    public function onDonationInitiated(Message $message): void
     {
+        $event = $this->getEvent($message, DonationInitiated::class);
         if ($this->findOneBy($event->donationId) !== null) {
             // Idempotency guard
             return;
@@ -103,13 +101,14 @@ class DonationProjector implements DonationProjectionRepositoryInterface
         $donation->setStatus($event->status);
         $donation->setRecurringPlanId($event->recurringPlanAction?->recurringPlanId->toString());
         $donation->setCampaignId($event->campaignId->toString());
-        $this->projectionEntityManager->persist($donation);
-        $this->projectionEntityManager->flush();
+        $this->persist($donation);
+        $this->flush($message);
     }
 
     #[Subscribe(DonationCreated::class)]
-    public function onDonationCreated(DonationCreated $event): void
+    public function onDonationCreated(Message $message): void
     {
+        $event = $this->getEvent($message, DonationCreated::class);
         if ($this->findOneBy($event->donationId) !== null) {
             // Idempotency guard
             return;
@@ -125,36 +124,38 @@ class DonationProjector implements DonationProjectionRepositoryInterface
         $donation->setStatus($event->status);
         $donation->setRecurringPlanId($event->recurringPlanId?->toString());
         $donation->setCampaignId($event->campaignId->toString());
-        $this->projectionEntityManager->persist($donation);
-        $this->projectionEntityManager->flush();
+        $this->persist($donation);
+        $this->flush($message);
     }
 
     #[Subscribe(DonationAccepted::class)]
-    public function onDonationAccepted(DonationAccepted $event): void
+    public function onDonationAccepted(Message $message): void
     {
+        $event = $this->getEvent($message, DonationAccepted::class);
         $donation = $this->findOrThrow($event->donationId);
         $donation->setUpdatedAt($event->occuredOn);
         $donation->setStatus($event->status);
         $donation->setRecurringPlanId($event->recurringPlanId?->toString());
-        $this->projectionEntityManager->persist($donation);
-        $this->projectionEntityManager->flush();
+        $this->persist($donation);
+        $this->flush($message);
     }
 
     #[Subscribe(DonationFailed::class)]
-    public function onDonationFailed(DonationFailed $event): void
+    public function onDonationFailed(Message $message): void
     {
+        $event = $this->getEvent($message, DonationFailed::class);
         $donation = $this->findOrThrow($event->donationId);
         $donation->setUpdatedAt($event->occuredOn);
         $donation->setStatus($event->status);
         $donation->setRecurringPlanId($event->recurringPlanId?->toString());
-        $this->projectionEntityManager->persist($donation);
-        $this->projectionEntityManager->flush();
+        $this->persist($donation);
+        $this->flush($message);
     }
 
     #[Teardown]
     public function teardown(): void
     {
-        $this->projectionEntityManager->createQuery('DELETE FROM ' . Donation::class)->execute();
+        $this->getEntityManager()->createQuery('DELETE FROM ' . Donation::class)->execute();
     }
 
 }

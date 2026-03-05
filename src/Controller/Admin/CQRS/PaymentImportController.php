@@ -6,6 +6,8 @@ namespace ErgoSarapu\DonationBundle\Controller\Admin\CQRS;
 
 use Doctrine\ORM\Event\PreUpdateEventArgs;
 use Doctrine\ORM\QueryBuilder;
+use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminAction;
+use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminRoute;
 use EasyCorp\Bundle\EasyAdminBundle\Collection\FieldCollection;
 use EasyCorp\Bundle\EasyAdminBundle\Collection\FilterCollection;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
@@ -15,7 +17,6 @@ use EasyCorp\Bundle\EasyAdminBundle\Config\Option\SortOrder;
 use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
 use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
 use EasyCorp\Bundle\EasyAdminBundle\Dto\SearchDto;
-use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\AcceptPaymentImport;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\ImportPaymentsFromFile;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\ReconcilePaymentImport;
@@ -29,7 +30,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class PendingPaymentImportCQRSController extends AbstractPaymentCQRSController
+class PaymentImportController extends AbstractPaymentController
 {
     public function dispatchCommandsForPersist(object $entity): void
     {
@@ -74,41 +75,68 @@ class PendingPaymentImportCQRSController extends AbstractPaymentCQRSController
             ->linkToCrudAction('uploadFile')
             ->createAsGlobalAction();
 
-        $accept = Action::new('accept', 'Accept', 'fa fa-check')
+        $accept = $this->newInterceptedAction(
+            'accept',
+            'Accept',
+            'fa fa-check',
+            htmlAttributes: [
+                'data-reconcile-target' => 'acceptAction',
+                'data-action-interceptor-confirmation-param' => '⚠️ This payment has potential matching payments. Accepting it may create a duplicate. Continue?',
+                'hidden' => 'hidden',
+            ]
+        )
             ->linkToCrudAction('accept')
-            ->setCssClass('btn btn-success')
-            ->displayIf(static fn ($entity) => $entity instanceof Payment && !empty($entity->getMatchingPayments()))
-            ->askConfirmation('⚠️ This payment has potential matching payments. Accepting it may create a duplicate. Continue?');
+            ->asSuccessAction()
+            ->displayIf(static fn ($entity) => $entity instanceof Payment && !empty($entity->getMatchingPayments()));
 
-        $acceptNoMatches = Action::new('acceptNoMatches', 'Accept', 'fa fa-check')
+        $acceptNoMatches = $this->newInterceptedAction(
+            'acceptNoMatches',
+            'Accept',
+            'fa fa-check',
+            htmlAttributes: [
+                'data-reconcile-target' => 'acceptAction',
+                'hidden' => 'hidden',
+            ]
+        )
             ->linkToCrudAction('accept')
-            ->setCssClass('btn btn-success')
+            ->asSuccessAction()
             ->displayIf(static fn ($entity) => $entity instanceof Payment && empty($entity->getMatchingPayments()));
 
-        $reject = Action::new('reject', 'Reject', 'fa fa-times')
+        $reject = $this->newInterceptedAction('reject', 'Reject', 'fa fa-times')
             ->linkToCrudAction('reject')
-            ->setCssClass('btn btn-danger');
+            ->asDangerAction()
+        ;
 
-        $reconcile = Action::new('reconcile', 'Reconcile', 'fa fa-link')
+        $reconcile = $this->newInterceptedAction(
+            'reconcile',
+            'Reconcile',
+            'fa fa-link',
+            htmlAttributes: [
+                'data-reconcile-target' => 'reconcileAction',
+                'hidden' => 'hidden',
+            ]
+        )
             ->linkToCrudAction('reconcile')
-            ->displayAsButton()
-            ->setCssClass('btn btn-primary btn-sm')
-            ->displayIf(static fn () => false); // Hidden from automatic rendering
+            ->asSuccessAction()
+            ->addCssClass('btn-reconcile')
+        ;
 
         return $actions
             ->add(Crud::PAGE_INDEX, $uploadFile)
+            ->add(Crud::PAGE_INDEX, $reconcile)
             ->add(Crud::PAGE_INDEX, $accept)
             ->add(Crud::PAGE_INDEX, $acceptNoMatches)
             ->add(Crud::PAGE_INDEX, $reject)
-            ->add(Crud::PAGE_INDEX, $reconcile)
-            ->remove(Crud::PAGE_INDEX, Action::EDIT)
             ->remove(Crud::PAGE_INDEX, Action::DELETE)
-            ->remove(Crud::PAGE_INDEX, Action::NEW);
+            ->remove(Crud::PAGE_INDEX, Action::NEW)
+            ->remove(Crud::PAGE_INDEX, Action::EDIT)
+        ;
     }
 
     /**
      * @param AdminContext<Payment> $context
      */
+    #[AdminRoute(path: '/upload')]
     public function uploadFile(AdminContext $context, Request $request): Response
     {
         if (!$request->isMethod('POST')) {
@@ -123,7 +151,7 @@ class PendingPaymentImportCQRSController extends AbstractPaymentCQRSController
 
         if ($uploadedFile) {
             try {
-                $result = $this->commandBus->dispatch(new ImportPaymentsFromFile($uploadedFile->getPathname()));
+                $result = $this->dispatch(new ImportPaymentsFromFile($uploadedFile->getPathname()))->result;
                 if ($result instanceof PaymentFileImportResult === false) {
                     throw new RuntimeException('Unexpected result type from '.ImportPaymentsFromFile::class.' command');
                 }
@@ -147,63 +175,51 @@ class PendingPaymentImportCQRSController extends AbstractPaymentCQRSController
     /**
      * @param AdminContext<Payment> $context
      */
+    #[AdminAction(methods: ['POST'])]
+    #[AdminRoute(path: '/accept')]
     public function accept(AdminContext $context): Response
     {
         /** @var Payment $payment */
         $payment = $context->getEntity()->getInstance();
-
-        $this->commandBus->dispatch(new AcceptPaymentImport(PaymentId::fromString($payment->getPaymentId())));
-        $this->addFlash('success', sprintf('Payment %s accepted.', $payment->getPaymentId()));
-
-        return $this->redirectToIndex();
+        $command = new AcceptPaymentImport(PaymentId::fromString($payment->getPaymentId()));
+        return $this->dispatchAndReturnCorrelationId($command);
     }
 
     /**
      * @param AdminContext<Payment> $context
      */
+    #[AdminAction(methods: ['POST'])]
+    #[AdminRoute(path: '/reject')]
     public function reject(AdminContext $context): Response
     {
         /** @var Payment $payment */
         $payment = $context->getEntity()->getInstance();
-
-        $this->commandBus->dispatch(new RejectPaymentImport(PaymentId::fromString($payment->getPaymentId())));
-        $this->addFlash('warning', sprintf('Payment %s rejected.', $payment->getPaymentId()));
-
-        return $this->redirectToIndex();
+        $command = new RejectPaymentImport(PaymentId::fromString($payment->getPaymentId()));
+        return $this->dispatchAndReturnCorrelationId($command);
     }
 
     /**
     * @param AdminContext<Payment> $context
     */
+    #[AdminAction(methods: ['POST'])]
+    #[AdminRoute(path: '/reconcile')]
     public function reconcile(AdminContext $context): Response
     {
-        $request = $context->getRequest();
-        $pendingPaymentId = $request->query->get('pendingId');
-        $matchingPaymentId = $request->query->get('matchingId');
+        /** @var Payment $payment */
+        $payment = $context->getEntity()->getInstance();
 
-        if (!$pendingPaymentId || !$matchingPaymentId) {
-            $this->addFlash('error', 'Missing payment IDs for reconciliation.');
-            return $this->redirectToRoute('admin', [
-                'crudAction' => Action::INDEX,
-                'crudControllerFqcn' => self::class,
-            ]);
+        $request = $context->getRequest();
+        $reconcileWith = $request->request->get('reconcileWith');
+
+        if (!is_string($reconcileWith)) {
+            throw new RuntimeException('Missing reconcileWith parameter');
         }
 
-        $this->commandBus->dispatch(new ReconcilePaymentImport(PaymentId::fromString($pendingPaymentId), PaymentId::fromString($matchingPaymentId)));
-        $this->addFlash('success', sprintf('Payments %s and %s reconciled.', $pendingPaymentId, $matchingPaymentId));
-
-        return $this->redirectToIndex();
-    }
-
-    private function redirectToIndex(): Response
-    {
-        /** @var AdminUrlGenerator $adminUrlGenerator */
-        $adminUrlGenerator = $this->container->get(AdminUrlGenerator::class);
-        $url = $adminUrlGenerator
-            ->setController(self::class)
-            ->setAction(Action::INDEX)
-            ->generateUrl();
-        return $this->redirect($url);
+        $command = new ReconcilePaymentImport(
+            PaymentId::fromString($payment->getPaymentId()),
+            PaymentId::fromString($reconcileWith)
+        );
+        return $this->dispatchAndReturnCorrelationId($command);
     }
 
 }

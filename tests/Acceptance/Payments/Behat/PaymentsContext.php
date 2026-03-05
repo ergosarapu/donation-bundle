@@ -421,8 +421,9 @@ class PaymentsContext implements Context
     #[When('import payments from file')]
     public function importPaymentsFromFile(): void
     {
+        $commandResult = $this->commandBus->send(new ImportPaymentsFromFile($this->lastUploadedPaymentImportFile));
         /** @var PaymentFileImportResult $result */
-        $result = $this->commandBus->send(new ImportPaymentsFromFile($this->lastUploadedPaymentImportFile));
+        $result = $commandResult->result;
         Assert::isInstanceOf($result, PaymentFileImportResult::class);
         Assert::greaterThan(count($result->pendingPaymentIds), 0);
         $this->lastPaymentId = $result->pendingPaymentIds[0];

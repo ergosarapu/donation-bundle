@@ -72,7 +72,7 @@ class ProjectionPaymentsMatcher implements PaymentsMatcherInterface
 
         $matches = array_values(array_filter(
             $matches,
-            static fn (PaymentMatch $match): bool => $match->score >= 0.7
+            static fn (PaymentMatch $match): bool => $match->score >= 0.6
         ));
 
         return $matches;

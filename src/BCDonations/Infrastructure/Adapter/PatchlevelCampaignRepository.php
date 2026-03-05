@@ -7,7 +7,7 @@ namespace ErgoSarapu\DonationBundle\BCDonations\Infrastructure\Adapter;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\Campaign;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignRepositoryInterface;
-use ErgoSarapu\DonationBundle\SharedInfrastructure\Repository\PatchlevelRepositoryWrapperTrait;
+use ErgoSarapu\DonationBundle\SharedInfrastructure\Patchlevel\PatchlevelRepositoryWrapperTrait;
 
 final class PatchlevelCampaignRepository implements CampaignRepositoryInterface
 {

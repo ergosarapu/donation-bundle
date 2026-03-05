@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ErgoSarapu\DonationBundle\SharedInfrastructure\Repository;
+namespace ErgoSarapu\DonationBundle\SharedInfrastructure\Patchlevel;
 
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\RepositoryException as AppRepositoryException;

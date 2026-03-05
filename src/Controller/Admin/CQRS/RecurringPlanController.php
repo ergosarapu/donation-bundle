@@ -20,7 +20,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanStat
 /**
  * @extends AbstractCQRSController<RecurringPlan>
  */
-class RecurringPlanCQRSController extends AbstractCQRSController
+class RecurringPlanController extends AbstractCQRSController
 {
     public function __construct()
     {

@@ -23,17 +23,21 @@ class ImportPaymentsFromFileHandler implements CommandHandlerInterface
     {
         $commands = $this->decoder->getCommands($command->fileName);
 
-        $results = array_map(
+        $commandResults = array_map(
             fn ($c) => $this->commandBus->dispatch($c),
             $commands
         );
 
+        $pendingPaymentIds = array_map(
+            fn ($result) => $result->result,
+            $commandResults,
+        );
         $pendingPaymentIds = array_filter(
-            $results,
-            fn ($result) => $result instanceof PaymentId
+            $pendingPaymentIds,
+            fn ($id) => $id instanceof PaymentId
         );
 
-        $skipped = count($results) - count($pendingPaymentIds);
+        $skipped = count($commandResults) - count($pendingPaymentIds);
 
         return new PaymentFileImportResult(array_values($pendingPaymentIds), $skipped);
     }
