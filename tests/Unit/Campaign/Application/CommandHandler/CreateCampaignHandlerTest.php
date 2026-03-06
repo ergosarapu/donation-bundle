@@ -7,10 +7,10 @@ namespace ErgoSarapu\DonationBundle\Tests\Unit\Campaign\Application\CommandHandl
 use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\CreateCampaign;
 use ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\CreateCampaignHandler;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Port\CampaignRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\Campaign;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignName;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignPublicTitle;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignRepositoryInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use PHPUnit\Framework\MockObject\MockObject;

@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
-namespace ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign;
+namespace ErgoSarapu\DonationBundle\BCDonations\Application\Port;
+
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\Campaign;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
 
 interface CampaignRepositoryInterface
 {

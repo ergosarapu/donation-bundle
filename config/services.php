@@ -146,7 +146,7 @@ return function (ContainerConfigurator $container) {
         ->arg(0, (new Definition(\Patchlevel\EventSourcing\Repository\Repository::class))
             ->setFactory([new Reference(\Patchlevel\EventSourcing\Repository\RepositoryManager::class), 'get'])
             ->addArgument(\ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\Campaign::class));
-    $services->alias(\ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignRepositoryInterface::class, 'donation_bundle.infrastructure.donations.repository.adapter.patchlevel_campaign_repository');
+    $services->alias(\ErgoSarapu\DonationBundle\BCDonations\Application\Port\CampaignRepositoryInterface::class, 'donation_bundle.infrastructure.donations.repository.adapter.patchlevel_campaign_repository');
 
     // ***********************
     // *** Payment Imports ***

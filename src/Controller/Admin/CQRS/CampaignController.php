@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\Controller\Admin\CQRS;
 
 use Doctrine\ORM\Event\PreUpdateEventArgs;
+use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminAction;
+use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminRoute;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
@@ -24,10 +26,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignName;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignPublicTitle;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignStatus;
-use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
-use RuntimeException;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -35,10 +34,6 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class CampaignController extends AbstractCQRSController
 {
-    public function __construct(private readonly CommandBusInterface $commandBus)
-    {
-    }
-
     /** @param $entity Campaign */
     public function dispatchCommandsForPersist(object $entity): void
     {
@@ -47,7 +42,7 @@ class CampaignController extends AbstractCQRSController
             new CampaignPublicTitle($entity->getPublicTitle()),
             new ShortDescription($entity->getDonationDescription()),
         );
-        $this->commandBus->dispatch($command);
+        $this->dispatch($command);
     }
 
     public function dispatchCommandsForDelete(object $entity): void
@@ -68,7 +63,7 @@ class CampaignController extends AbstractCQRSController
                 CampaignId::fromString($entity->getCampaignId()),
                 new CampaignName($newName),
             );
-            $this->commandBus->dispatch($command);
+            $this->dispatch($command);
             unset($changes['name']);
         }
 
@@ -79,7 +74,7 @@ class CampaignController extends AbstractCQRSController
                 CampaignId::fromString($entity->getCampaignId()),
                 new CampaignPublicTitle($newName),
             );
-            $this->commandBus->dispatch($command);
+            $this->dispatch($command);
             unset($changes['publicTitle']);
         }
 
@@ -90,7 +85,7 @@ class CampaignController extends AbstractCQRSController
                 CampaignId::fromString($entity->getCampaignId()),
                 new ShortDescription($newDescription),
             );
-            $this->commandBus->dispatch($command);
+            $this->dispatch($command);
             unset($changes['donationDescription']);
         }
     }
@@ -136,14 +131,14 @@ class CampaignController extends AbstractCQRSController
 
     public function configureActions(Actions $actions): Actions
     {
-        $activate = Action::new('activate')
+        $activate = $this->newInterceptedAction('activate')
             ->linkToCrudAction('activateCampaign')
             ->displayIf(static fn (Campaign $campaign): bool => !$campaign->isActive())
-            ->addCssClass('btn btn-success');
-        $archive = Action::new('archive')
+            ->asSuccessAction();
+        $archive = $this->newInterceptedAction('archive')
             ->linkToCrudAction('archiveCampaign')
             ->displayIf(static fn (Campaign $campaign): bool => $campaign->isActive())
-            ->addCssClass('btn btn-warning');
+            ->asWarningAction();
 
         return $actions
             ->remove(Crud::PAGE_INDEX, Action::DELETE)
@@ -156,6 +151,8 @@ class CampaignController extends AbstractCQRSController
     /**
      * @param AdminContext<Campaign> $context
      */
+    #[AdminAction(methods: ['POST'])]
+    #[AdminRoute(path: '/reject-campaign')]
     public function activateCampaign(AdminContext $context): Response
     {
         /** @var Campaign $campaign */
@@ -163,13 +160,14 @@ class CampaignController extends AbstractCQRSController
         $command = new ActivateCampaign(
             CampaignId::fromString($campaign->getCampaignId())
         );
-        $this->commandBus->dispatch($command);
-        return $this->redirect($this->getReferer($context->getRequest()));
+        return $this->dispatchAndReturnCorrelationId($command);
     }
 
     /**
      * @param AdminContext<Campaign> $context
      */
+    #[AdminAction(methods: ['POST'])]
+    #[AdminRoute(path: '/archive-campaign')]
     public function archiveCampaign(AdminContext $context): Response
     {
         /** @var Campaign $campaign */
@@ -177,16 +175,6 @@ class CampaignController extends AbstractCQRSController
         $command = new ArchiveCampaign(
             CampaignId::fromString($campaign->getCampaignId())
         );
-        $this->commandBus->dispatch($command);
-        return $this->redirect($this->getReferer($context->getRequest()));
-    }
-
-    private function getReferer(Request $request): string
-    {
-        $referer = $request->headers->get('referer');
-        if ($referer === null) {
-            throw new RuntimeException('No referer header found');
-        }
-        return $referer;
+        return $this->dispatchAndReturnCorrelationId($command);
     }
 }

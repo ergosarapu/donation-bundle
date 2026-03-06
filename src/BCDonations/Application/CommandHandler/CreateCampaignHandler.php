@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler;
 
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\CreateCampaign;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Port\CampaignRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\Campaign;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignRepositoryInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\CommandHandlerInterface;
 use Psr\Clock\ClockInterface;

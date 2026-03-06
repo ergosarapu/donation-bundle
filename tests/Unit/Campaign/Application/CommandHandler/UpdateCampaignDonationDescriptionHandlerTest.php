@@ -7,8 +7,8 @@ namespace ErgoSarapu\DonationBundle\Tests\Unit\Campaign\Application\CommandHandl
 use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\UpdateCampaignDonationDescription;
 use ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\UpdateCampaignDonationDescriptionHandler;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Port\CampaignRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignRepositoryInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
