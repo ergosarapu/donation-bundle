@@ -36,7 +36,7 @@ class CreateRecurringPlanHandler implements CommandHandlerInterface
             $command->paymentMethodId,
             $command->amount,
             $command->gateway,
-            $command->donorIdentity,
+            $command->donorDetails,
             $command->nextRenewalTime,
             $command->description,
             $command->createdAt,

@@ -9,6 +9,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationRequest;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanInitiated;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\EventHandlerInterface;
+use LogicException;
 
 class RecurringPlanInitiatedHandler implements EventHandlerInterface
 {
@@ -18,17 +19,22 @@ class RecurringPlanInitiatedHandler implements EventHandlerInterface
 
     public function __invoke(RecurringPlanInitiated $event): void
     {
+        if ($event->donorDetails === null) {
+            throw new LogicException('Missing donor details. Personal info may have been deleted.');
+        }
+
         $donationRequest = new DonationRequest(
             $event->initialDonationId,
             $event->campaignId,
             $event->amount,
             $event->gateway,
-            $event->donorIdentity,
+            $event->donorDetails,
             $event->description,
         );
 
         $this->commandBus->dispatch(new InitiateDonation(
             $donationRequest,
+            $event->recurringPlanId,
             $event->recurringPlanAction,
         ));
     }

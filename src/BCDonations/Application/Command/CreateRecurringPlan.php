@@ -7,7 +7,7 @@ namespace ErgoSarapu\DonationBundle\BCDonations\Application\Command;
 use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorIdentity;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorDetails;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringInterval;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanStatus;
@@ -28,7 +28,7 @@ final class CreateRecurringPlan implements CommandInterface
         public readonly PaymentMethodId $paymentMethodId,
         public readonly Money $amount,
         public readonly Gateway $gateway,
-        public readonly DonorIdentity $donorIdentity,
+        public readonly DonorDetails $donorDetails,
         public readonly ShortDescription $description,
         public readonly ?DateTimeImmutable $nextRenewalTime,
         public readonly ?DateTimeImmutable $createdAt = null,

@@ -13,6 +13,8 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\OrganisationRegCode;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use Patchlevel\EventSourcing\Attribute\Event;
+use Patchlevel\Hydrator\Attribute\DataSubjectId;
+use Patchlevel\Hydrator\Attribute\PersonalData;
 
 #[Event(name: 'payment.import_pending')]
 class PaymentImportPending extends AbstractTimestampedEvent implements DomainEventInterface
@@ -21,17 +23,23 @@ class PaymentImportPending extends AbstractTimestampedEvent implements DomainEve
 
     public function __construct(
         DateTimeImmutable $occuredOn,
+        #[DataSubjectId]
         public readonly PaymentId $paymentId,
         public readonly PaymentImportSourceIdentifier $sourceIdentifier,
         public readonly ?BankReference $bankReference,
         public readonly PaymentStatus $status,
         public readonly Money $amount,
+        #[PersonalData]
         public readonly ?ShortDescription $description,
         public readonly DateTimeImmutable $bookingDate,
+        #[PersonalData]
         public readonly ?AccountHolderName $accountHolderName,
+        #[PersonalData]
         public readonly ?NationalIdCode $nationalIdCode,
+        #[PersonalData]
         public readonly ?OrganisationRegCode $organizationRegCode,
         public readonly ?PaymentReference $reference,
+        #[PersonalData]
         public readonly ?Iban $iban,
         public readonly ?Bic $bic,
     ) {

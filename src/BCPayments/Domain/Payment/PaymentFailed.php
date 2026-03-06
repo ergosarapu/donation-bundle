@@ -10,6 +10,8 @@ use ErgoSarapu\DonationBundle\SharedKernel\Event\DomainEventInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use Patchlevel\EventSourcing\Attribute\Event;
+use Patchlevel\Hydrator\Attribute\DataSubjectId;
+use Patchlevel\Hydrator\Attribute\PersonalData;
 
 #[Event(name: 'payment.failed')]
 class PaymentFailed extends AbstractTimestampedEvent implements DomainEventInterface
@@ -18,9 +20,11 @@ class PaymentFailed extends AbstractTimestampedEvent implements DomainEventInter
 
     public function __construct(
         DateTimeImmutable $occuredOn,
+        #[DataSubjectId]
         public readonly PaymentId $paymentId,
         public readonly ?PaymentAppliedToId $appliedTo = null,
         public readonly ?PaymentMethodAction $paymentMethodAction = null,
+        #[PersonalData]
         public readonly ?PaymentMethodResult $paymentMethodResult = null,
     ) {
         parent::__construct($occuredOn);

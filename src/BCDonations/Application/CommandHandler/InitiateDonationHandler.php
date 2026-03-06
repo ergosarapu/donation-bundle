@@ -29,6 +29,7 @@ class InitiateDonationHandler implements CommandHandlerInterface
         $donation = Donation::initiate(
             $this->clock->now(),
             $command->donationRequest,
+            $command->recurringPlanId,
             $command->recurringPlanAction,
         );
         try {

@@ -13,6 +13,8 @@ use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use Patchlevel\EventSourcing\Attribute\Event;
+use Patchlevel\Hydrator\Attribute\DataSubjectId;
+use Patchlevel\Hydrator\Attribute\PersonalData;
 
 #[Event(name: 'donation.created')]
 final class DonationCreated extends AbstractTimestampedEvent implements DomainEventInterface
@@ -21,12 +23,15 @@ final class DonationCreated extends AbstractTimestampedEvent implements DomainEv
 
     public function __construct(
         DateTimeImmutable $occuredOn,
+        #[DataSubjectId]
         public readonly DonationId $donationId,
         public readonly Money $amount,
         public readonly CampaignId $campaignId,
         public readonly PaymentId $paymentId,
-        public readonly ShortDescription $description,
-        public readonly DonorIdentity $donorIdentity,
+        #[PersonalData]
+        public readonly ?ShortDescription $description,
+        #[PersonalData]
+        public readonly ?DonorDetails $donorDetails,
         public readonly ?RecurringPlanId $recurringPlanId,
         public readonly DateTimeImmutable $createdAt,
     ) {

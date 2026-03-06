@@ -10,7 +10,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\CreateRecur
 use ErgoSarapu\DonationBundle\BCDonations\Application\Port\RecurringPlanRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorIdentity;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorDetails;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringInterval;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlan;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
@@ -56,7 +56,7 @@ class CreateRecurringPlanHandlerTest extends TestCase
         $amount = new Money(5000, new Currency('EUR'));
         $gateway = new Gateway('test-gateway');
         $description = new ShortDescription('Test recurring plan');
-        $donorIdentity = new DonorIdentity(new Email('donor@example.com'));
+        $donorDetails = new DonorDetails(new Email('donor@example.com'));
         $nextRenewalTime = $this->now->add($interval->toDateInterval());
 
         $this->command = new CreateRecurringPlan(
@@ -68,7 +68,7 @@ class CreateRecurringPlanHandlerTest extends TestCase
             $paymentMethodId,
             $amount,
             $gateway,
-            $donorIdentity,
+            $donorDetails,
             $description,
             $nextRenewalTime
         );

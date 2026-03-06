@@ -11,7 +11,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Application\Port\RecurringPlanReposito
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationRequest;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorIdentity;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorDetails;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringInterval;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlan;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
@@ -51,7 +51,7 @@ class InitiateRecurringPlanHandlerTest extends TestCase
             CampaignId::generate(),
             new Money(5000, new Currency('EUR')),
             new Gateway('test-gateway'),
-            new DonorIdentity(new Email('donor@example.com')),
+            new DonorDetails(new Email('donor@example.com')),
             new ShortDescription('Test donation')
         );
 

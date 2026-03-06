@@ -337,6 +337,11 @@ class DonationBundle extends AbstractBundle
             'headers' => [
                 __DIR__ . '/SharedInfrastructure/Messenger/Stamp',
             ],
+            'cryptography' => [
+                'enabled' => true,
+                'algorithm' => 'aes-256-cbc',
+                'use_encrypted_field_name' => true,
+            ],
         ]);
 
         $this->prependAssetMapperConfig($builder);

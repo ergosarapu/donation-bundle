@@ -19,7 +19,7 @@ final class DonationRequest
         public readonly CampaignId $campaignId,
         public readonly Money $amount,
         public readonly Gateway $gateway,
-        public readonly DonorIdentity $donorIdentity,
+        public readonly DonorDetails $donorDetails,
         public readonly ShortDescription $description,
     ) {
         $this->paymentId = PaymentId::generate();

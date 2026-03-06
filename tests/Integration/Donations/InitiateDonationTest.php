@@ -16,7 +16,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationRequest;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationStatus;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorIdentity;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorDetails;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringInterval;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanStatus;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsCaptured;
@@ -78,7 +78,7 @@ class InitiateDonationTest extends KernelTestCase
             CampaignId::generate(),
             $amount,
             new Gateway('test'),
-            new DonorIdentity(),
+            new DonorDetails(),
             new ShortDescription('Test donation'),
         );
         $initiateDonation = new InitiateDonationIntegrationCommand($donationRequest);
@@ -118,7 +118,7 @@ class InitiateDonationTest extends KernelTestCase
             CampaignId::generate(),
             $amount,
             new Gateway('test'),
-            new DonorIdentity(),
+            new DonorDetails(),
             new ShortDescription('Test donation'),
         );
         $initiateDonation = new InitiateDonationIntegrationCommand($donationRequest);
@@ -158,7 +158,7 @@ class InitiateDonationTest extends KernelTestCase
             CampaignId::generate(),
             $amount,
             new Gateway('test'),
-            new DonorIdentity(new Email('example@example.com')),
+            new DonorDetails(new Email('example@example.com')),
             new ShortDescription('Test donation'),
         );
         $initiateRecurringPlan = new InitiateRecurringPlan(

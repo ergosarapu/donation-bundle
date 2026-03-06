@@ -28,7 +28,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignStatus;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationRequest;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationStatus;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorIdentity;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorDetails;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringInterval;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanStatus;
@@ -113,7 +113,7 @@ class DonationsContext implements Context
             CampaignId::generate(),
             $this->getDefaultTestMoney(),
             new Gateway('test'),
-            new DonorIdentity(),
+            new DonorDetails(),
             new ShortDescription('Test donation'),
         );
         $initiateDonation = new InitiateDonationIntegrationCommand($donationRequest);
@@ -129,7 +129,7 @@ class DonationsContext implements Context
             CampaignId::generate(),
             $this->getDefaultTestMoney(),
             new Gateway('test'),
-            new DonorIdentity(
+            new DonorDetails(
                 new Email('example@example.com')
             ),
             new ShortDescription('Test donation'),

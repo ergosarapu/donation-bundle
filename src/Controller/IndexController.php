@@ -9,7 +9,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\Campaign;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationRequest;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorIdentity;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorDetails;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringInterval;
 use ErgoSarapu\DonationBundle\Dto\DonationDto;
 use ErgoSarapu\DonationBundle\Form\DonationFormStep1Type;
@@ -78,7 +78,7 @@ class IndexController extends AbstractController
                     campaignId: CampaignId::fromString($campaign->getCampaignId()),
                     amount: $amount,
                     gateway: $gateway,
-                    donorIdentity: new DonorIdentity(
+                    donorDetails: new DonorDetails(
                         $this->getDomainEmail($donation),
                         $this->getDomainPersonName($donation),
                         $this->getDomainNationalIdCode($donation),

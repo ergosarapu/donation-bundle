@@ -90,7 +90,7 @@ class RecurringPlanProjector implements RecurringPlanProjectionRepositoryInterfa
         $recurringPlan->setCurrency($event->amount->currency()->code());
         $recurringPlan->setInterval($event->interval->toString());
         $recurringPlan->setStatus($event->status);
-        $recurringPlan->setDonorEmail($event->donorIdentity->email?->toString());
+        $recurringPlan->setDonorEmail($event->donorDetails?->email?->toString());
         $recurringPlan->setPaymentMethodId($event->paymentMethodId->toString());
         $this->persist($recurringPlan);
         $this->flush($message);
@@ -100,13 +100,13 @@ class RecurringPlanProjector implements RecurringPlanProjectionRepositoryInterfa
     public function onRecurringPlanInitiated(Message $message): void
     {
         $event = $this->getEvent($message, RecurringPlanInitiated::class);
-        if ($this->findOne($event->recurringPlanAction->recurringPlanId) !== null) {
+        if ($this->findOne($event->recurringPlanId) !== null) {
             // Idempotency guard
             return;
         }
 
         $recurringPlan = new RecurringPlan();
-        $recurringPlan->setRecurringPlanId($event->recurringPlanAction->recurringPlanId->toString());
+        $recurringPlan->setRecurringPlanId($event->recurringPlanId->toString());
         $recurringPlan->setCreatedAt($event->occuredOn);
         $recurringPlan->setUpdatedAt($event->occuredOn);
         $recurringPlan->setInitialDonationId($event->initialDonationId->toString());
@@ -114,7 +114,7 @@ class RecurringPlanProjector implements RecurringPlanProjectionRepositoryInterfa
         $recurringPlan->setCurrency($event->amount->currency()->code());
         $recurringPlan->setInterval($event->interval->toString());
         $recurringPlan->setStatus($event->status);
-        $recurringPlan->setDonorEmail($event->donorIdentity->email?->toString());
+        $recurringPlan->setDonorEmail($event->donorDetails?->email?->toString());
         $recurringPlan->setPaymentMethodId($event->recurringPlanAction->paymentMethodId->toString());
         $this->persist($recurringPlan);
         $this->flush($message);
@@ -159,7 +159,7 @@ class RecurringPlanProjector implements RecurringPlanProjectionRepositoryInterfa
     public function onRecurringPlanRenewalInitiated(Message $message): void
     {
         $event = $this->getEvent($message, RecurringPlanRenewalInitiated::class);
-        $recurringPlan = $this->findOneOrThrow($event->recurringPlanAction->recurringPlanId);
+        $recurringPlan = $this->findOneOrThrow($event->recurringPlanId);
         $recurringPlan->setUpdatedAt($event->occuredOn);
         $recurringPlan->setRenewalInProgressDonationId($event->renewalDonationId->toString());
         $this->persist($recurringPlan);

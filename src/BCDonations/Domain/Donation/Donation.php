@@ -28,6 +28,7 @@ class Donation extends BasicAggregateRoot
     public static function initiate(
         DateTimeImmutable $currentTime,
         DonationRequest $donationRequest,
+        ?RecurringPlanId $recurringPlanId = null,
         ?RecurringPlanAction $recurringPlanAction = null,
     ): self {
 
@@ -40,8 +41,9 @@ class Donation extends BasicAggregateRoot
             $donationRequest->paymentId,
             $donationRequest->gateway,
             $donationRequest->description,
+            $recurringPlanId,
             $recurringPlanAction,
-            $donationRequest->donorIdentity,
+            $donationRequest->donorDetails,
         ));
         return $donation;
     }
@@ -53,7 +55,7 @@ class Donation extends BasicAggregateRoot
         CampaignId $campaignId,
         PaymentId $paymentId,
         ShortDescription $description,
-        DonorIdentity $donorIdentity,
+        DonorDetails $donorDetails,
         ?RecurringPlanId $recurringPlanId,
         ?DateTimeImmutable $createdAt
     ): self {
@@ -65,7 +67,7 @@ class Donation extends BasicAggregateRoot
             $campaignId,
             $paymentId,
             $description,
-            $donorIdentity,
+            $donorDetails,
             $recurringPlanId,
             $createdAt ?? $currentTime,
         ));
@@ -77,7 +79,7 @@ class Donation extends BasicAggregateRoot
     {
         $this->id = $event->donationId;
         $this->status = $event->status;
-        $this->recurringPlanId = $event->recurringPlanAction?->recurringPlanId;
+        $this->recurringPlanId = $event->recurringPlanId;
     }
 
     #[Apply]

@@ -7,7 +7,7 @@ namespace ErgoSarapu\DonationBundle\BCDonations\Application\Command;
 use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorIdentity;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorDetails;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
@@ -23,7 +23,7 @@ final class CreateDonation implements CommandInterface
         public readonly ?RecurringPlanId $recurringPlanId,
         public readonly Money $amount,
         public readonly ShortDescription $description,
-        public readonly DonorIdentity $donorIdentity,
+        public readonly DonorDetails $donorDetails,
         public readonly ?DateTimeImmutable $createdAt = null,
     ) {
     }

@@ -10,7 +10,7 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
 use Patchlevel\Hydrator\Normalizer\ObjectNormalizer;
 
 #[ObjectNormalizer]
-final class DonorIdentity
+final class DonorDetails
 {
     public function __construct(
         public readonly ?Email $email = null,

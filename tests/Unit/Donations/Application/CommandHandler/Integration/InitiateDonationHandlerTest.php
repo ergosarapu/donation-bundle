@@ -10,7 +10,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\Integration
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationRequest;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorIdentity;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorDetails;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringInterval;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Donations\Command\InitiateDonationIntegrationCommand;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
@@ -43,7 +43,7 @@ class InitiateDonationHandlerTest extends TestCase
             CampaignId::generate(),
             new Money(5000, new Currency('EUR')),
             new Gateway('test-gateway'),
-            new DonorIdentity(new Email('donor@example.com')),
+            new DonorDetails(new Email('donor@example.com')),
             new ShortDescription('Test donation')
         );
 
@@ -70,7 +70,7 @@ class InitiateDonationHandlerTest extends TestCase
             CampaignId::generate(),
             new Money(5000, new Currency('EUR')),
             new Gateway('test-gateway'),
-            new DonorIdentity(new Email('donor@example.com')),
+            new DonorDetails(new Email('donor@example.com')),
             new ShortDescription('Test donation')
         );
 

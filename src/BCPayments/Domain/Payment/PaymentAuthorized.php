@@ -11,6 +11,8 @@ use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use Patchlevel\EventSourcing\Attribute\Event;
+use Patchlevel\Hydrator\Attribute\DataSubjectId;
+use Patchlevel\Hydrator\Attribute\PersonalData;
 
 #[Event(name: 'payment.authorized')]
 class PaymentAuthorized extends AbstractTimestampedEvent implements DomainEventInterface
@@ -19,10 +21,12 @@ class PaymentAuthorized extends AbstractTimestampedEvent implements DomainEventI
 
     public function __construct(
         DateTimeImmutable $occurredOn,
+        #[DataSubjectId]
         public readonly PaymentId $paymentId,
         public readonly Money $authorizedAmount,
         public readonly ?PaymentAppliedToId $appliedTo = null,
         public readonly ?PaymentMethodAction $paymentMethodAction = null,
+        #[PersonalData]
         public readonly ?PaymentMethodResult $paymentMethodResult = null,
     ) {
         parent::__construct($occurredOn);
