@@ -35,7 +35,7 @@ class CreateDonationHandler implements CommandHandlerInterface
             $command->description,
             $command->donorDetails,
             $command->recurringPlanId,
-            $command->createdAt,
+            $command->initiatedAt,
         );
 
         try {

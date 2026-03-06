@@ -99,9 +99,6 @@ class CampaignController extends AbstractCQRSController
     {
         return [
             IdField::new('campaignId')->setDisabled()->hideOnIndex(),
-            IdField::new('campaignId')->setDisabled()->formatValue(function (string $value): string {
-                return substr($value, -12);
-            })->hideOnDetail()->hideOnForm(),
             TextField::new('name'),
             TextField::new('publicTitle'),
             TextField::new('donationDescription'),
@@ -116,8 +113,8 @@ class CampaignController extends AbstractCQRSController
                     $color = $colors[$value->value];
                     return sprintf('<span class="badge badge-%s">%s</span>', $color, ucfirst($value->name));
                 }),
-            DateTimeField::new('createdAt')->setDisabled(),
-            DateTimeField::new('updatedAt')->setDisabled(),
+            DateTimeField::new('createdAt')->setFormat('yyyy-MM-dd HH:mm'),
+            DateTimeField::new('updatedAt')->setFormat('yyyy-MM-dd HH:mm'),
         ];
     }
 

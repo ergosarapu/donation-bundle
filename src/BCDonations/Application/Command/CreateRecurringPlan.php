@@ -31,7 +31,7 @@ final class CreateRecurringPlan implements CommandInterface
         public readonly DonorDetails $donorDetails,
         public readonly ShortDescription $description,
         public readonly ?DateTimeImmutable $nextRenewalTime,
-        public readonly ?DateTimeImmutable $createdAt = null,
+        public readonly DateTimeImmutable $initiatedAt,
     ) {
     }
 }

@@ -39,7 +39,7 @@ class CreateRecurringPlanHandler implements CommandHandlerInterface
             $command->donorDetails,
             $command->nextRenewalTime,
             $command->description,
-            $command->createdAt,
+            $command->initiatedAt,
         );
         try {
             $this->recurringPlanRepository->save($recurringPlan);

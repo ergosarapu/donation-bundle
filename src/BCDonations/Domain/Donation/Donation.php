@@ -57,7 +57,7 @@ class Donation extends BasicAggregateRoot
         ShortDescription $description,
         DonorDetails $donorDetails,
         ?RecurringPlanId $recurringPlanId,
-        ?DateTimeImmutable $createdAt
+        DateTimeImmutable $initiatedAt,
     ): self {
         $donation = new self();
         $donation->recordThat(new DonationCreated(
@@ -69,7 +69,7 @@ class Donation extends BasicAggregateRoot
             $description,
             $donorDetails,
             $recurringPlanId,
-            $createdAt ?? $currentTime,
+            $initiatedAt,
         ));
         return $donation;
     }
@@ -102,14 +102,14 @@ class Donation extends BasicAggregateRoot
         $this->status = $event->status;
     }
 
-    public function accept(DateTimeImmutable $currentTime, Money $acceptedAmount): void
+    public function accept(DateTimeImmutable $currentTime, Money $acceptedAmount, ?DateTimeImmutable $acceptedAt): void
     {
         if ($this->status === DonationStatus::Accepted) {
             return;
         }
 
         $this->validateTransitionToAccepted();
-        $this->recordThat(new DonationAccepted($currentTime, $this->id, $acceptedAmount, $this->recurringPlanId));
+        $this->recordThat(new DonationAccepted($currentTime, $acceptedAt ?? $currentTime, $this->id, $acceptedAmount, $this->recurringPlanId));
     }
 
     public function validateTransitionToAccepted(): void

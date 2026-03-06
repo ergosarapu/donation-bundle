@@ -55,12 +55,7 @@ class RecurringPlanController extends AbstractCQRSController
     {
         return [
             IdField::new('recurringPlanId')->setDisabled()->hideOnIndex(),
-            IdField::new('recurringPlanId')->setDisabled()->formatValue(function (string $value): string {
-                return substr($value, -12);
-            })->hideOnDetail()->hideOnForm(),
-            MoneyField::new('amount')->setCurrencyPropertyPath('currency')->setDisabled(),
-            MoneyField::new('cumulativeReceivedAmount')->setCurrencyPropertyPath('currency')->setDisabled()->setLabel('Total Received Amount'),
-            TextField::new('interval')->setDisabled(),
+            DateTimeField::new('initiatedAt')->setDisabled()->setLabel('Date')->setFormat('yyyy-MM-dd HH:mm'),
             ChoiceField::new('status')
                 ->setDisabled()
                 ->formatValue(function (RecurringPlanStatus $value) {
@@ -75,10 +70,13 @@ class RecurringPlanController extends AbstractCQRSController
                     $style = $styles[$value->value];
                     return sprintf('<span class="badge badge-%s">%s%s</span>', $style['color'], $style['icon'], ucfirst($value->name));
                 }),
+            MoneyField::new('amount')->setCurrencyPropertyPath('currency')->setDisabled(),
+            MoneyField::new('cumulativeReceivedAmount')->setCurrencyPropertyPath('currency')->setDisabled()->setLabel('Total Received Amount'),
+            TextField::new('interval')->setDisabled(),
             EmailField::new('donorEmail')->setDisabled(),
-            DateTimeField::new('nextRenewalTime')->setDisabled(),
-            DateTimeField::new('createdAt')->setDisabled(),
-            DateTimeField::new('updatedAt')->setDisabled(),
+            DateTimeField::new('nextRenewalTime')->setDisabled()->setFormat('yyyy-MM-dd HH:mm'),
+            // DateTimeField::new('createdAt')->setDisabled(),
+            DateTimeField::new('updatedAt')->setDisabled()->setFormat('yyyy-MM-dd HH:mm'),
         ];
     }
 

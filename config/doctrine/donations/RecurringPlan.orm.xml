@@ -16,8 +16,11 @@
         <field name="donorEmail" type="string" column="donor_email" nullable="true"/>
         <field name="status" type="string" column="status" length="16" nullable="false" enum-type="ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanStatus"/>
         <field name="paymentMethodId" type="string" column="payment_method_id" length="36" nullable="true"/>
+
         <field name="createdAt" type="datetime_immutable" column="created_at" nullable="false"/>
+        <field name="initiatedAt" type="datetime_immutable" column="initiated_at" nullable="false"/>
         <field name="updatedAt" type="datetime_immutable" column="updated_at" nullable="false"/>
+
         <field name="nextRenewalTime" type="datetime_immutable" column="next_renewal_time" nullable="true"/>
         <field name="renewalInProgressDonationId" type="string" column="renewal_in_progress_donation_id" nullable="true"/>
     </entity>

@@ -36,7 +36,7 @@ class AdminDashboardController extends AbstractDashboardController
     {
         yield MenuItem::section('Payments');
         yield MenuItem::linkTo(PaymentController::class, 'Payments', 'fa fa-money-bill');
-        yield MenuItem::linkTo(PaymentImportController::class, 'Payment Import', 'fa fa-file-import');
+        yield MenuItem::linkTo(PaymentImportController::class, 'Import', 'fa fa-file-import');
 
         yield MenuItem::section('Donations');
         yield MenuItem::linkTo(CampaignController::class, 'Campaigns', 'fa fa-rocket');

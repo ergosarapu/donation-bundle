@@ -83,7 +83,7 @@ class RecurringPlan extends BasicAggregateRoot
         DonorDetails $donorDetails,
         ?DateTimeImmutable $nextRenewalTime,
         ShortDescription $description,
-        ?DateTimeImmutable $createdAt = null,
+        DateTimeImmutable $initiatedAt,
     ): self {
         if ($donorDetails->email === null) {
             throw new InvalidArgumentException('Recurring plan requires donor email');
@@ -91,7 +91,7 @@ class RecurringPlan extends BasicAggregateRoot
         $donation = new self();
         $donation->recordThat(new RecurringPlanCreated(
             $currentTime,
-            $createdAt ?? $currentTime,
+            $initiatedAt,
             $recurringPlanId,
             $status,
             $interval,

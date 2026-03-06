@@ -60,7 +60,8 @@ class CreateDonationHandlerTest extends TestCase
             $recurringPlanId,
             $amount,
             $description,
-            $donorDetails
+            $donorDetails,
+            $this->now
         );
     }
 

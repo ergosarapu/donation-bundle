@@ -70,7 +70,8 @@ class CreateRecurringPlanHandlerTest extends TestCase
             $gateway,
             $donorDetails,
             $description,
-            $nextRenewalTime
+            $nextRenewalTime,
+            $this->now
         );
     }
 

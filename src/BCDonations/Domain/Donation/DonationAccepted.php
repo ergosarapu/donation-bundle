@@ -18,6 +18,7 @@ final class DonationAccepted extends AbstractTimestampedEvent implements DomainE
 
     public function __construct(
         DateTimeImmutable $occuredOn,
+        public readonly DateTimeImmutable $acceptedAt,
         public readonly DonationId $donationId,
         public readonly Money $acceptedAmount,
         public readonly ?RecurringPlanId $recurringPlanId = null,

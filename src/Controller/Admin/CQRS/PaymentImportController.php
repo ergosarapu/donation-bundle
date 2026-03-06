@@ -63,7 +63,6 @@ class PaymentImportController extends AbstractPaymentController
             ->setDefaultSort([
                 'effectiveDate' => SortOrder::ASC,
             ])
-            ->setEntityLabelInSingular('Pending Import')
             ->setPageTitle(Crud::PAGE_INDEX, 'Pending Imports')
             ->overrideTemplate('crud/index', '@Donation/admin/crud/pending_payment_import_index.html.twig')
         ;

@@ -16,6 +16,13 @@ class Donation
     private DonationStatus $status;
     private ?string $recurringPlanId = null;
     private string $campaignId;
+    private ?string $email = null;
+    private ?string $givenName = null;
+    private ?string $familyName = null;
+    private ?string $nationalIdCode = null;
+    private ?DateTimeImmutable $initiatedAt = null;
+    private ?DateTimeImmutable $acceptedAt = null;
+    private DateTimeImmutable $effectiveDate;
     private DateTimeImmutable $createdAt;
     private DateTimeImmutable $updatedAt;
 
@@ -77,6 +84,7 @@ class Donation
     public function setCreatedAt(DateTimeImmutable $createdAt): void
     {
         $this->createdAt = $createdAt;
+        $this->setEffectiveDate();
     }
 
     public function getUpdatedAt(): DateTimeImmutable
@@ -107,5 +115,77 @@ class Donation
     public function setCampaignId(string $campaignId): void
     {
         $this->campaignId = $campaignId;
+    }
+
+    public function getEmail(): ?string
+    {
+        return $this->email;
+    }
+
+    public function setEmail(?string $email): void
+    {
+        $this->email = $email;
+    }
+
+    public function getGivenName(): ?string
+    {
+        return $this->givenName;
+    }
+
+    public function setGivenName(?string $givenName): void
+    {
+        $this->givenName = $givenName;
+    }
+
+    public function getFamilyName(): ?string
+    {
+        return $this->familyName;
+    }
+
+    public function setFamilyName(?string $familyName): void
+    {
+        $this->familyName = $familyName;
+    }
+
+    public function getNationalIdCode(): ?string
+    {
+        return $this->nationalIdCode;
+    }
+
+    public function setNationalIdCode(?string $nationalIdCode): void
+    {
+        $this->nationalIdCode = $nationalIdCode;
+    }
+
+    public function getInitiatedAt(): ?DateTimeImmutable
+    {
+        return $this->initiatedAt;
+    }
+
+    public function setInitiatedAt(?DateTimeImmutable $initiatedAt): void
+    {
+        $this->initiatedAt = $initiatedAt;
+        $this->setEffectiveDate();
+    }
+
+    public function getAcceptedAt(): ?DateTimeImmutable
+    {
+        return $this->acceptedAt;
+    }
+
+    public function setAcceptedAt(?DateTimeImmutable $acceptedAt): void
+    {
+        $this->acceptedAt = $acceptedAt;
+        $this->setEffectiveDate();
+    }
+
+    public function getEffectiveDate(): DateTimeImmutable
+    {
+        return $this->effectiveDate;
+    }
+
+    private function setEffectiveDate(): void
+    {
+        $this->effectiveDate = $this->acceptedAt ?? $this->initiatedAt ?? $this->createdAt;
     }
 }

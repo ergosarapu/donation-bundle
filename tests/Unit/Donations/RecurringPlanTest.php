@@ -101,7 +101,7 @@ class RecurringPlanTest extends AggregateRootTestCase
             new DonorDetails($this->email),
             $nextRenewalTime,
             $this->description,
-            null,
+            $this->now,
         ))->then(
             new RecurringPlanCreated(
                 $this->now,
@@ -141,7 +141,7 @@ class RecurringPlanTest extends AggregateRootTestCase
             new DonorDetails(),
             $nextRenewalTime,
             $this->description,
-            null,
+            $this->now,
         ))->expectsException(InvalidArgumentException::class)
         ->expectsExceptionMessage('Recurring plan requires donor email');
     }

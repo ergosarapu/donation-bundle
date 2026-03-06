@@ -23,7 +23,7 @@ class RecurringPlanCreated extends AbstractTimestampedEvent implements DomainEve
 {
     public function __construct(
         DateTimeImmutable $occuredOn,
-        public readonly DateTimeImmutable $createdAt,
+        public readonly DateTimeImmutable $initiatedAt,
         #[DataSubjectId]
         public readonly RecurringPlanId $recurringPlanId,
         public readonly RecurringPlanStatus $status,

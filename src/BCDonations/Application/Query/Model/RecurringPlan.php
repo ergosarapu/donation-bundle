@@ -18,6 +18,7 @@ class RecurringPlan
     private RecurringPlanStatus $status;
     private ?string $donorEmail;
     private ?string $paymentMethodId;
+    private DateTimeImmutable $initiatedAt;
     private DateTimeImmutable $createdAt;
     private DateTimeImmutable $updatedAt;
     private ?DateTimeImmutable $nextRenewalTime;
@@ -82,6 +83,16 @@ class RecurringPlan
     public function setStatus(RecurringPlanStatus $status): void
     {
         $this->status = $status;
+    }
+
+    public function getInitiatedAt(): DateTimeImmutable
+    {
+        return $this->initiatedAt;
+    }
+
+    public function setInitiatedAt(DateTimeImmutable $initiatedAt): void
+    {
+        $this->initiatedAt = $initiatedAt;
     }
 
     public function getCreatedAt(): DateTimeImmutable

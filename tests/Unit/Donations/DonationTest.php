@@ -79,7 +79,7 @@ class DonationTest extends AggregateRootTestCase
             $this->description,
             $this->donorDetails,
             $this->recurringPlanId,
-            null,
+            $this->now,
         ))->then(
             new DonationCreated(
                 $this->now,
@@ -155,9 +155,11 @@ class DonationTest extends AggregateRootTestCase
         ->when(fn (Donation $donation) => $donation->accept(
             $this->now,
             $this->amount,
+            null,
         ))
         ->then(
             new DonationAccepted(
+                $this->now,
                 $this->now,
                 $this->donationId,
                 $this->amount,
@@ -193,9 +195,11 @@ class DonationTest extends AggregateRootTestCase
         ->when(fn (Donation $donation) => $donation->accept(
             $this->now,
             $this->amount,
+            null,
         ))
         ->then(
             new DonationAccepted(
+                $this->now,
                 $this->now,
                 $this->donationId,
                 $this->amount,
@@ -209,6 +213,7 @@ class DonationTest extends AggregateRootTestCase
         $this->given(
             new DonationAccepted(
                 $this->now,
+                $this->now,
                 $this->donationId,
                 $this->amount,
                 null,
@@ -217,6 +222,7 @@ class DonationTest extends AggregateRootTestCase
         ->when(fn (Donation $donation) => $donation->accept(
             $this->now,
             $this->amount,
+            null,
         ))
         ->then(); // No event should be recorded
     }
@@ -233,6 +239,7 @@ class DonationTest extends AggregateRootTestCase
         ->when(fn (Donation $donation) => $donation->accept(
             $this->now,
             $this->amount,
+            null,
         ))
         ->expectsException(LogicException::class)
         ->expectsExceptionMessage('Cannot transition from failed to accepted');
@@ -327,6 +334,7 @@ class DonationTest extends AggregateRootTestCase
     {
         $this->given(
             new DonationAccepted(
+                $this->now,
                 $this->now,
                 $this->donationId,
                 $this->amount,

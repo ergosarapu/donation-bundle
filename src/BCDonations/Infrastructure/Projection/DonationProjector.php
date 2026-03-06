@@ -94,6 +94,7 @@ class DonationProjector implements DonationProjectionRepositoryInterface
         $donation = new Donation();
         $donation->setDonationId($event->donationId->toString());
         $donation->setCreatedAt($event->occuredOn);
+        $donation->setInitiatedAt($event->occuredOn);
         $donation->setUpdatedAt($event->occuredOn);
         $donation->setPaymentId($event->paymentId->toString());
         $donation->setAmount($event->amount->amount());
@@ -101,6 +102,10 @@ class DonationProjector implements DonationProjectionRepositoryInterface
         $donation->setStatus($event->status);
         $donation->setRecurringPlanId($event->recurringPlanId?->toString());
         $donation->setCampaignId($event->campaignId->toString());
+        $donation->setEmail($event->donorDetails?->email?->toString());
+        $donation->setGivenName($event->donorDetails?->name?->givenName);
+        $donation->setFamilyName($event->donorDetails?->name?->familyName);
+        $donation->setNationalIdCode($event->donorDetails?->nationalIdCode?->value);
         $this->persist($donation);
         $this->flush($message);
     }
@@ -116,7 +121,8 @@ class DonationProjector implements DonationProjectionRepositoryInterface
 
         $donation = new Donation();
         $donation->setDonationId($event->donationId->toString());
-        $donation->setCreatedAt($event->createdAt);
+        $donation->setCreatedAt($event->occuredOn);
+        $donation->setInitiatedAt($event->initiatedAt);
         $donation->setUpdatedAt($event->occuredOn);
         $donation->setPaymentId($event->paymentId->toString());
         $donation->setAmount($event->amount->amount());
@@ -124,6 +130,10 @@ class DonationProjector implements DonationProjectionRepositoryInterface
         $donation->setStatus($event->status);
         $donation->setRecurringPlanId($event->recurringPlanId?->toString());
         $donation->setCampaignId($event->campaignId->toString());
+        $donation->setEmail($event->donorDetails?->email?->toString());
+        $donation->setGivenName($event->donorDetails?->name?->givenName);
+        $donation->setFamilyName($event->donorDetails?->name?->familyName);
+        $donation->setNationalIdCode($event->donorDetails?->nationalIdCode?->value);
         $this->persist($donation);
         $this->flush($message);
     }
@@ -134,6 +144,7 @@ class DonationProjector implements DonationProjectionRepositoryInterface
         $event = $this->getEvent($message, DonationAccepted::class);
         $donation = $this->findOrThrow($event->donationId);
         $donation->setUpdatedAt($event->occuredOn);
+        $donation->setAcceptedAt($event->acceptedAt);
         $donation->setStatus($event->status);
         $donation->setRecurringPlanId($event->recurringPlanId?->toString());
         $this->persist($donation);

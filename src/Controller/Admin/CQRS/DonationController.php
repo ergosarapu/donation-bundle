@@ -12,6 +12,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\MoneyField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\Donation;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationStatus;
 
@@ -53,9 +54,7 @@ class DonationController extends AbstractCQRSController
     {
         return [
             IdField::new('donationId')->setDisabled()->hideOnIndex(),
-            IdField::new('donationId')->setDisabled()->formatValue(function (string $value): string {
-                return substr($value, -12);
-            })->hideOnDetail()->hideOnForm(),
+            DateTimeField::new('effectiveDate')->setDisabled()->setLabel('Date')->setFormat('yyyy-MM-dd HH:mm'),
             MoneyField::new('amount')->setCurrencyPropertyPath('currency')->setDisabled(),
             ChoiceField::new('status')
                 ->setDisabled()
@@ -69,11 +68,9 @@ class DonationController extends AbstractCQRSController
                     $color = $colors[$value->value];
                     return sprintf('<span class="badge badge-%s">%s</span>', $color, ucfirst($value->name));
                 }),
-            IdField::new('paymentId')->setDisabled(),
-            IdField::new('recurringPlanId')->setDisabled(),
-            IdField::new('campaignId')->setDisabled(),
-            DateTimeField::new('createdAt')->setDisabled(),
-            DateTimeField::new('updatedAt')->setDisabled(),
+            TextField::new('givenName')->setDisabled(),
+            TextField::new('familyName')->setDisabled(),
+            TextField::new('email')->setDisabled(),
         ];
     }
 

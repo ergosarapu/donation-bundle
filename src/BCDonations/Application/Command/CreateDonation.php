@@ -24,7 +24,7 @@ final class CreateDonation implements CommandInterface
         public readonly Money $amount,
         public readonly ShortDescription $description,
         public readonly DonorDetails $donorDetails,
-        public readonly ?DateTimeImmutable $createdAt = null,
+        public readonly DateTimeImmutable $initiatedAt,
     ) {
     }
 }

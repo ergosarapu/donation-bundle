@@ -20,7 +20,7 @@ class AcceptDonationHandler implements CommandHandlerInterface
     public function __invoke(AcceptDonation $command): void
     {
         $donation = $this->donationRepository->load($command->donationId);
-        $donation->accept($this->clock->now(), $command->amount);
+        $donation->accept($this->clock->now(), $command->amount, $command->acceptedAt);
         $this->donationRepository->save($donation);
     }
 }

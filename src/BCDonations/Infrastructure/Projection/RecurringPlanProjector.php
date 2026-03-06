@@ -83,7 +83,8 @@ class RecurringPlanProjector implements RecurringPlanProjectionRepositoryInterfa
 
         $recurringPlan = new RecurringPlan();
         $recurringPlan->setRecurringPlanId($event->recurringPlanId->toString());
-        $recurringPlan->setCreatedAt($event->createdAt);
+        $recurringPlan->setInitiatedAt($event->initiatedAt);
+        $recurringPlan->setCreatedAt($event->occuredOn);
         $recurringPlan->setUpdatedAt($event->occuredOn);
         $recurringPlan->setInitialDonationId($event->initialDonationId->toString());
         $recurringPlan->setAmount($event->amount->amount());
@@ -107,6 +108,7 @@ class RecurringPlanProjector implements RecurringPlanProjectionRepositoryInterfa
 
         $recurringPlan = new RecurringPlan();
         $recurringPlan->setRecurringPlanId($event->recurringPlanId->toString());
+        $recurringPlan->setInitiatedAt($event->occuredOn);
         $recurringPlan->setCreatedAt($event->occuredOn);
         $recurringPlan->setUpdatedAt($event->occuredOn);
         $recurringPlan->setInitialDonationId($event->initialDonationId->toString());

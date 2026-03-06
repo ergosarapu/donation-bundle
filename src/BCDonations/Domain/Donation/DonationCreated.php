@@ -33,7 +33,7 @@ final class DonationCreated extends AbstractTimestampedEvent implements DomainEv
         #[PersonalData]
         public readonly ?DonorDetails $donorDetails,
         public readonly ?RecurringPlanId $recurringPlanId,
-        public readonly DateTimeImmutable $createdAt,
+        public readonly DateTimeImmutable $initiatedAt,
     ) {
         parent::__construct($occuredOn);
         $this->status = DonationStatus::Created;
