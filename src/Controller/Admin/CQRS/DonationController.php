@@ -20,10 +20,6 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationStatus;
  */
 class DonationController extends AbstractCQRSController
 {
-    public function __construct()
-    {
-    }
-
     public function dispatchCommandsForPersist(object $entity): void
     {
     }

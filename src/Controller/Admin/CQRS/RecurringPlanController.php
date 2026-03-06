@@ -22,10 +22,6 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanStat
  */
 class RecurringPlanController extends AbstractCQRSController
 {
-    public function __construct()
-    {
-    }
-
     public function dispatchCommandsForPersist(object $entity): void
     {
     }
