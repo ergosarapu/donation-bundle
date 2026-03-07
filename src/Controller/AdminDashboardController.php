@@ -46,7 +46,9 @@ class AdminDashboardController extends AbstractDashboardController
 
     public function configureAssets(): Assets
     {
-        return Assets::new()->addAssetMapperEntry('app');
+        return Assets::new()
+            ->addAssetMapperEntry('app')
+            ->addCssFile('@ergosarapu/donation-bundle/admin.css');
     }
 
 }
