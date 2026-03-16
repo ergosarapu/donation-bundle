@@ -67,7 +67,8 @@
         "phpstan/phpstan-symfony": "^2.0",
         "behat/behat": "^3.29",
         "friends-of-behat/symfony-extension": "^2.6",
-        "webmozart/assert": "^2.1"
+        "webmozart/assert": "^1.12",
+        "phparkitect/phparkitect": "^0.8.0"
     },
     "extra": {
         "symfony": {

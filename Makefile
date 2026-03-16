@@ -50,3 +50,7 @@ cs-fix:																				## php-cs-fixer fix
 .PHONY: cs-check
 cs-check:																			## php-cs-fixer check
 	vendor/bin/php-cs-fixer check -v
+
+.PHONY: phparkitect
+phparkitect:																			## phparkitect check
+	vendor/bin/phparkitect check

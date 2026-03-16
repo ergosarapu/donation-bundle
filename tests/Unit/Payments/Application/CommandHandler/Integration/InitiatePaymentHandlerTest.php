@@ -6,8 +6,6 @@ namespace ErgoSarapu\DonationBundle\Tests\Unit\Payments\Application\CommandHandl
 
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\InitiatePayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\Integration\InitiatePaymentHandler;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodAction;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRequest;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Command\InitiatePaymentIntegrationCommand;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandResult;
@@ -43,33 +41,118 @@ class InitiatePaymentHandlerTest extends TestCase
         $description = new ShortDescription('Test donation');
         $appliedTo = PaymentAppliedToId::generate();
         $email = new Email('donor@example.com');
-        $methodAction = PaymentMethodAction::forRequest(
-            PaymentMethodId::generate(),
-            $paymentId
-        );
+        $requestPaymentMethodId = PaymentMethodId::generate();
 
-        $paymentRequest = new PaymentRequest(
+        $integrationCommand = new InitiatePaymentIntegrationCommand(
             $paymentId,
             $amount,
             $gateway,
             $description,
             $appliedTo,
             $email,
-            $methodAction
-        );
-
-        $integrationCommand = new InitiatePaymentIntegrationCommand(
-            $paymentRequest
+            $requestPaymentMethodId,
+            false
         );
 
         $this->commandBus->expects($this->once())
             ->method('dispatch')
-            ->with($this->callback(function ($command) use ($paymentRequest) {
-                return $command instanceof InitiatePayment
-                    && $command->paymentRequest === $paymentRequest;
+            ->with($this->callback(function ($command) use ($paymentId, $amount, $gateway, $description, $appliedTo, $email, $requestPaymentMethodId) {
+                if (!$command instanceof InitiatePayment) {
+                    return false;
+                }
+                $request = $command->paymentRequest;
+                return $request->paymentId === $paymentId
+                    && $request->amount === $amount
+                    && $request->gateway === $gateway
+                    && $request->description === $description
+                    && $request->appliedTo === $appliedTo
+                    && $request->email === $email
+                    && $request->paymentMethodAction !== null
+                    && $request->paymentMethodAction->paymentMethodId === $requestPaymentMethodId;
             }))
             ->willReturn(new CommandResult(null, 'test-correlation-id'));
 
         ($this->handler)($integrationCommand);
     }
+
+    public function testDispatchesInitiatePaymentCommandWithUsePaymentMethod(): void
+    {
+        $paymentId = PaymentId::generate();
+        $amount = new Money(5000, new Currency('EUR'));
+        $gateway = new Gateway('test-gateway');
+        $description = new ShortDescription('Test donation');
+        $appliedTo = PaymentAppliedToId::generate();
+        $email = new Email('donor@example.com');
+        $usePaymentMethodId = PaymentMethodId::generate();
+
+        $integrationCommand = new InitiatePaymentIntegrationCommand(
+            $paymentId,
+            $amount,
+            $gateway,
+            $description,
+            $appliedTo,
+            $email,
+            $usePaymentMethodId,
+            true
+        );
+
+        $this->commandBus->expects($this->once())
+            ->method('dispatch')
+            ->with($this->callback(function ($command) use ($paymentId, $amount, $gateway, $description, $appliedTo, $email, $usePaymentMethodId) {
+                if (!$command instanceof InitiatePayment) {
+                    return false;
+                }
+                $request = $command->paymentRequest;
+                return $request->paymentId === $paymentId
+                    && $request->amount === $amount
+                    && $request->gateway === $gateway
+                    && $request->description === $description
+                    && $request->appliedTo === $appliedTo
+                    && $request->email === $email
+                    && $request->paymentMethodAction !== null
+                    && $request->paymentMethodAction->paymentMethodId === $usePaymentMethodId;
+            }))
+            ->willReturn(new CommandResult(null, 'test-correlation-id'));
+
+        ($this->handler)($integrationCommand);
+    }
+
+    public function testDispatchesInitiatePaymentCommandWithoutPaymentMethod(): void
+    {
+        $paymentId = PaymentId::generate();
+        $amount = new Money(5000, new Currency('EUR'));
+        $gateway = new Gateway('test-gateway');
+        $description = new ShortDescription('Test donation');
+        $appliedTo = PaymentAppliedToId::generate();
+        $email = new Email('donor@example.com');
+
+        $integrationCommand = new InitiatePaymentIntegrationCommand(
+            $paymentId,
+            $amount,
+            $gateway,
+            $description,
+            $appliedTo,
+            $email
+        );
+
+        $this->commandBus->expects($this->once())
+            ->method('dispatch')
+            ->with($this->callback(function ($command) use ($paymentId, $amount, $gateway, $description, $appliedTo, $email) {
+                if (!$command instanceof InitiatePayment) {
+                    return false;
+                }
+                $request = $command->paymentRequest;
+                return $request->paymentId === $paymentId
+                    && $request->amount === $amount
+                    && $request->gateway === $gateway
+                    && $request->description === $description
+                    && $request->appliedTo === $appliedTo
+                    && $request->email === $email
+                    && $request->paymentMethodAction === null;
+            }))
+            ->willReturn(new CommandResult(null, 'test-correlation-id'));
+
+        ($this->handler)($integrationCommand);
+    }
+
 }

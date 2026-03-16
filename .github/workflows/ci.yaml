@@ -65,6 +65,9 @@ jobs:
       - name: Check Code Style
         run: make cs-check
 
+      - name: Check Architecture
+        run: make phparkitect
+
       - name: Run Unit Tests with coverage
         run: make phpunit-unit-coverage
       
