@@ -23,6 +23,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model\Payment;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCredentialValue;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportStatus;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodAction;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodActionIntent;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodResult;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodUnusable;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodUnusableReason;
@@ -128,7 +129,14 @@ class PaymentsContext implements Context
         );
 
         return new InitiatePaymentIntegrationCommand(
-            $paymentRequest
+            paymentId: $paymentRequest->paymentId,
+            amount: $paymentRequest->amount,
+            gateway: $paymentRequest->gateway,
+            description: $paymentRequest->description,
+            appliedTo: $paymentRequest->appliedTo,
+            email: $paymentRequest->email,
+            paymentMethodId: $paymentMethodAction?->paymentMethodId,
+            usePaymentMethodId: $paymentMethodAction?->intent === PaymentMethodActionIntent::Use,
         );
     }
 
@@ -302,7 +310,6 @@ class PaymentsContext implements Context
     {
         $payment = $this->queryBus->ask(new GetPendingPayment($this->lastPaymentId));
         Assert::isInstanceOf($payment, Payment::class);
-        Assert::notNull($payment);
         $this->lastPaymentId = PaymentId::fromString($payment->getPaymentId());
     }
 
@@ -311,7 +318,6 @@ class PaymentsContext implements Context
     {
         $payment = $this->queryBus->ask(new GetPayment($this->lastPaymentId));
         Assert::isInstanceOf($payment, Payment::class);
-        Assert::notNull($payment);
         Assert::eq($payment->getStatus(), PaymentStatus::from($paymentState));
 
     }
@@ -422,9 +428,9 @@ class PaymentsContext implements Context
     public function importPaymentsFromFile(): void
     {
         $commandResult = $this->commandBus->send(new ImportPaymentsFromFile($this->lastUploadedPaymentImportFile));
+        Assert::isInstanceOf($commandResult->result, PaymentFileImportResult::class);
         /** @var PaymentFileImportResult $result */
         $result = $commandResult->result;
-        Assert::isInstanceOf($result, PaymentFileImportResult::class);
         Assert::greaterThan(count($result->pendingPaymentIds), 0);
         $this->lastPaymentId = $result->pendingPaymentIds[0];
     }
@@ -432,10 +438,9 @@ class PaymentsContext implements Context
     #[Then('payment is imported with import status Pending')]
     public function paymentIsImportedWithImportStatusPending(): void
     {
-        /** @var Payment $payment */
         $payment = $this->queryBus->ask(new GetPayment($this->lastPaymentId));
         Assert::isInstanceOf($payment, Payment::class);
-        Assert::notNull($payment);
+        /** @var Payment $payment */
         Assert::eq($payment->getImportStatus(), PaymentImportStatus::Pending);
     }
 }

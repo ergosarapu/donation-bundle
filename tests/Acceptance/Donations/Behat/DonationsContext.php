@@ -32,7 +32,6 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorDetails;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringInterval;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanStatus;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodActionIntent;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Donations\Command\InitiateDonationIntegrationCommand;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Donations\Command\ReActivateRecurringPlanIntegrationCommand;
 use ErgoSarapu\DonationBundle\IntegrationContracts\IntegrationCommandInterface;
@@ -145,7 +144,7 @@ class DonationsContext implements Context
     {
         $donation = $this->queryBus->ask(new GetPendingDonation($this->lastDonationId));
         Assert::isInstanceOf($donation, Donation::class);
-        Assert::notNull($donation, 'No pending donation found');
+        /** @var Donation $donation */
         $this->lastPaymentId = PaymentId::fromString($donation->getPaymentId());
         $this->lastRecurringPlanId = null;
     }
@@ -153,9 +152,9 @@ class DonationsContext implements Context
     #[Then('donation is initiated for the renewal')]
     public function donationIsInitiatedForTheRenewal(): void
     {
-        /** @var Donation $donation */
         $donation = $this->queryBus->ask(new GetPendingDonation($this->lastDonationId));
-        Assert::notNull($donation, 'No pending donation found');
+        Assert::isInstanceOf($donation, Donation::class);
+        /** @var Donation $donation */
         $this->lastPaymentId = PaymentId::fromString($donation->getPaymentId());
         Assert::notNull($recurringPlanId = $donation->getRecurringPlanId());
         $this->lastRecurringPlanId = RecurringPlanId::fromString($recurringPlanId);
@@ -175,8 +174,8 @@ class DonationsContext implements Context
 
         /** @var InitiatePaymentIntegrationCommand $command */
         $command = $messages[0];
-        Assert::notNull($command->paymentRequest->paymentMethodAction);
-        Assert::eq($command->paymentRequest->paymentMethodAction->intent, PaymentMethodActionIntent::Request);
+        Assert::notNull($command->paymentMethodId);
+        Assert::false($command->usePaymentMethodId);
         $this->commandBus->resetDispatched();
     }
 
@@ -188,8 +187,8 @@ class DonationsContext implements Context
 
         /** @var InitiatePaymentIntegrationCommand $command */
         $command = $messages[0];
-        Assert::notNull($command->paymentRequest->paymentMethodAction);
-        Assert::eq($command->paymentRequest->paymentMethodAction->intent, PaymentMethodActionIntent::Use);
+        Assert::notNull($command->paymentMethodId);
+        Assert::true($command->usePaymentMethodId);
         $this->commandBus->resetDispatched();
     }
 
@@ -199,8 +198,6 @@ class DonationsContext implements Context
         Assert::notNull($this->lastRecurringPlanId);
         $recurringPlan = $this->queryBus->ask(new GetRecurringPlan($this->lastRecurringPlanId));
         Assert::isInstanceOf($recurringPlan, RecurringPlan::class);
-        Assert::isInstanceOf($recurringPlan, RecurringPlan::class);
-        Assert::notNull($recurringPlan, 'No recurring plan found');
         Assert::eq($recurringPlan->getInitialDonationId(), $this->lastDonationId->toString());
         Assert::notNull($recurringPlan->getPaymentMethodId());
         $this->lastPaymentMethodId = PaymentMethodId::fromString($recurringPlan->getPaymentMethodId());
@@ -237,7 +234,6 @@ class DonationsContext implements Context
     {
         $donation = $this->queryBus->ask(new GetDonation($this->lastDonationId));
         Assert::isInstanceOf($donation, Donation::class);
-        Assert::notNull($donation);
         Assert::eq($donation->getStatus(), DonationStatus::Accepted);
     }
 
@@ -246,7 +242,6 @@ class DonationsContext implements Context
     {
         $donation = $this->queryBus->ask(new GetDonation($this->lastDonationId));
         Assert::isInstanceOf($donation, Donation::class);
-        Assert::notNull($donation);
         Assert::eq($donation->getStatus(), DonationStatus::Failed);
     }
 
@@ -376,8 +371,6 @@ class DonationsContext implements Context
     #[When('update campaign name to :newName')]
     public function updateCampaignNameTo(string $newName): void
     {
-        Assert::notNull($this->lastCampaignId);
-
         $command = new UpdateCampaignName(
             $this->lastCampaignId,
             new CampaignName($newName)
@@ -389,8 +382,6 @@ class DonationsContext implements Context
     #[When('update campaign public title to :newPublicTitle')]
     public function updateCampaignPublicTitleTo(string $newPublicTitle): void
     {
-        Assert::notNull($this->lastCampaignId);
-
         $command = new UpdateCampaignPublicTitle(
             $this->lastCampaignId,
             new CampaignPublicTitle($newPublicTitle)
@@ -402,8 +393,6 @@ class DonationsContext implements Context
     #[When('activate campaign')]
     public function activateCampaign(): void
     {
-        Assert::notNull($this->lastCampaignId);
-
         $command = new ActivateCampaign($this->lastCampaignId);
 
         $this->commandBus->dispatch($command);
@@ -412,8 +401,6 @@ class DonationsContext implements Context
     #[When('archive campaign')]
     public function archiveCampaign(): void
     {
-        Assert::notNull($this->lastCampaignId);
-
         $command = new ArchiveCampaign($this->lastCampaignId);
 
         $this->commandBus->dispatch($command);
@@ -454,7 +441,6 @@ class DonationsContext implements Context
     {
         $campaign = $this->queryBus->ask(new GetCampaign($this->lastCampaignId));
         Assert::isInstanceOf($campaign, Campaign::class);
-        Assert::notNull($campaign, 'No campaign found');
         $expectedStatus = CampaignStatus::from($status);
         Assert::same(
             $campaign->getStatus(),
@@ -466,7 +452,6 @@ class DonationsContext implements Context
     #[Then('campaign name is updated to :newName')]
     public function campaignNameIsUpdated(string $newName): void
     {
-        Assert::notNull($this->lastCampaignId);
         $campaign = $this->queryBus->ask(new GetCampaign($this->lastCampaignId));
         Assert::isInstanceOf($campaign, Campaign::class);
         Assert::eq($campaign->getName(), $newName, sprintf('Campaign name should be "%s"', $newName));
@@ -476,7 +461,6 @@ class DonationsContext implements Context
     #[Then('campaign public title is updated to :newName')]
     public function campaignPublicTitleIsUpdated(string $newName): void
     {
-        Assert::notNull($this->lastCampaignId);
         $campaign = $this->queryBus->ask(new GetCampaign($this->lastCampaignId));
         Assert::isInstanceOf($campaign, Campaign::class);
         Assert::eq($campaign->getPublicTitle(), $newName, sprintf('Campaign public title should be "%s"', $newName));
@@ -486,7 +470,6 @@ class DonationsContext implements Context
     #[Then('campaign is activated')]
     public function campaignIsActivated(): void
     {
-        Assert::notNull($this->lastCampaignId);
         $campaign = $this->queryBus->ask(new GetCampaign($this->lastCampaignId));
         Assert::isInstanceOf($campaign, Campaign::class);
         Assert::same(
@@ -500,7 +483,6 @@ class DonationsContext implements Context
     #[Then('campaign is archived')]
     public function campaignIsArchived(): void
     {
-        Assert::notNull($this->lastCampaignId);
         $campaign = $this->queryBus->ask(new GetCampaign($this->lastCampaignId));
         Assert::isInstanceOf($campaign, Campaign::class);
         Assert::same(

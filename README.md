@@ -123,13 +123,33 @@ composer update
 ```
 
 ## Testing
-To run tests, use:
+Run unit tests:
 ```sh
 make phpunit-unit
+```
+Run unit tests with coverage. Domain and Application layers must be unit tested with 100% coverage. Make sure the XDebug is enabled, e.g. when using DDEV, run 'ddev xdebug on' outside the container.
+```sh
+make phpunit-unit-coverage
+```
+
+Following commands require DATABASE_URL to be set
+```sh
 export DATABASE_URL=pdo-mysql://db:db@db/db
+```
+Run database migrations
+```sh
 make migrate
+```
+Run acceptance tests
+```sh
 make behat
+```
+Run integration tests (TODO: legacy, remove?)
+```sh
 make phpunit-integration
+```
+Run functional tests (TODO: legacy, remove?)
+```sh
 make phpunit-functional
 ```
 
