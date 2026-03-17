@@ -16,6 +16,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportInReview;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportPending;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportReconciled;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportRejected;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportStatus;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentInitiated;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRedirectUrlSetUp;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRefunded;
@@ -37,6 +38,20 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
     public function findOne(?PaymentId $id = null, ?PaymentStatus $status = null): ?Payment
     {
         return $this->findOneByCriteria($this->buildCriteria($id, $status));
+    }
+
+    public function countBy(?PaymentImportStatus $importStatus = null): int
+    {
+        $qb = $this->getEntityManager()->createQueryBuilder();
+        $qb->select('COUNT(p.paymentId)')
+            ->from(Payment::class, 'p');
+
+        if ($importStatus !== null) {
+            $qb->where('p.importStatus = :importStatus')
+                ->setParameter('importStatus', $importStatus);
+        }
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
     }
 
     private function findOneOrThrow(?PaymentId $id = null, ?PaymentStatus $status = null): Payment

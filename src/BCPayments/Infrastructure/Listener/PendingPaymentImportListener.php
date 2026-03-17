@@ -21,7 +21,7 @@ class PendingPaymentImportListener
 
     public function postLoad(Payment $payment, PostLoadEventArgs $event): void
     {
-        if ($payment->getImportStatus() !== PaymentImportStatus::Pending) {
+        if ($payment->getImportStatus() !== PaymentImportStatus::Review) {
             return;
         }
 

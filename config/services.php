@@ -25,10 +25,13 @@ return function (ContainerConfigurator $container) {
     // *** Admin CQRS Controllers ***
     // ******************************
 
-    $services->set(\ErgoSarapu\DonationBundle\Controller\Admin\CQRS\PaymentController::class)
+    $services->set(\ErgoSarapu\DonationBundle\Controller\Admin\CQRS\PaymentsController::class)
         ->autoconfigure(true)
         ->autowire(true);
-    $services->set(\ErgoSarapu\DonationBundle\Controller\Admin\CQRS\PaymentImportController::class)
+    $services->set(\ErgoSarapu\DonationBundle\Controller\Admin\CQRS\ReviewPaymentImportsController::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set(\ErgoSarapu\DonationBundle\Controller\Admin\CQRS\PendingPaymentImportsController::class)
         ->autoconfigure(true)
         ->autowire(true);
     $services->set(\ErgoSarapu\DonationBundle\Controller\Admin\CQRS\DonationController::class)
@@ -339,6 +342,9 @@ return function (ContainerConfigurator $container) {
         ->autoconfigure(true)
         ->autowire(true);
     $services->set('donation_bundle.application.payments.query_handler.get_matching_payments', \ErgoSarapu\DonationBundle\BCPayments\Application\Query\Handler\GetMatchingPaymentsHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.application.payments.query_handler.get_payments_count', \ErgoSarapu\DonationBundle\BCPayments\Application\Query\Handler\GetPaymentsCountHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
 

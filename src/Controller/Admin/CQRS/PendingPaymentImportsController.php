@@ -10,22 +10,31 @@ use EasyCorp\Bundle\EasyAdminBundle\Collection\FilterCollection;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Option\SortOrder;
 use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
 use EasyCorp\Bundle\EasyAdminBundle\Dto\SearchDto;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportStatus;
 
-class PaymentController extends AbstractPaymentController
+class PendingPaymentImportsController extends AbstractPaymentController
 {
     public function createIndexQueryBuilder(SearchDto $searchDto, EntityDto $entityDto, FieldCollection $fields, FilterCollection $filters): QueryBuilder
     {
         $qb = parent::createIndexQueryBuilder($searchDto, $entityDto, $fields, $filters);
-        $qb->andWhere('(entity.importStatus IS NULL OR entity.importStatus IN (:importStatuses))')
-            ->setParameter('importStatuses', [
-            PaymentImportStatus::Accepted->value,
-            PaymentImportStatus::Reconciled->value,
-            ]);
+        $qb->andWhere('entity.importStatus = :importStatus')->setParameter('importStatus', PaymentImportStatus::Pending->value);
         return $qb;
     }
+
+    public function configureCrud(Crud $crud): Crud
+    {
+        return $crud
+            ->showEntityActionsInlined()
+            ->setDefaultSort([
+                'effectiveDate' => SortOrder::ASC,
+            ])
+            ->setPageTitle(Crud::PAGE_INDEX, 'Pending Imports')
+        ;
+    }
+
 
     public function configureActions(Actions $actions): Actions
     {
