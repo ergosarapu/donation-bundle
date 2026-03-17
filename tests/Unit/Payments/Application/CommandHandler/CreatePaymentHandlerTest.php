@@ -9,7 +9,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Application\Command\CreatePayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\CreatePaymentHandler;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\BankReference;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\GatewayTransactionId;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\GatewayReference;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Iban;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\LegacyPaymentNumber;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
@@ -60,7 +60,7 @@ class CreatePaymentHandlerTest extends TestCase
         $nationalIdCode = new NationalIdCode('12345678901');
         $initiatedAt = new DateTimeImmutable('2024-02-01');
         $capturedAt = new DateTimeImmutable('2024-02-02');
-        $gatewayTransactionId = new GatewayTransactionId('gateway-tx-123');
+        $gatewayReference = new GatewayReference('gateway-tx-123');
         $bankReference = new BankReference('bank-ref-456');
         $paymentReference = new PaymentReference('1234567890');
         $legacyPaymentIdentifier = new LegacyPaymentNumber('legacy-789');
@@ -79,7 +79,7 @@ class CreatePaymentHandlerTest extends TestCase
             $appliedTo,
             $initiatedAt,
             $capturedAt,
-            $gatewayTransactionId,
+            $gatewayReference,
             $bankReference,
             $paymentReference,
             $legacyPaymentIdentifier,

@@ -130,7 +130,7 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         $payment->setGivenName($event->name?->givenName);
         $payment->setFamilyName($event->name?->familyName);
         $payment->setNationalIdCode($event->nationalIdCode?->value);
-        $payment->setGatewayTransactionId($event->gatewayTransactionId?->value);
+        $payment->setGatewayReference($event->gatewayReference?->value);
         $payment->setBankReference($event->bankReference?->value);
         $payment->setReference($event->paymentReference?->value);
         $payment->setLegacyPaymentNumber($event->legacyPaymentNumber?->value);

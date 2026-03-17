@@ -9,7 +9,7 @@ use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\AccountHolderName;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\BankReference;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Bic;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\GatewayTransactionId;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\GatewayReference;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Iban;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\LegacyPaymentNumber;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
@@ -90,7 +90,7 @@ class PaymentTest extends AggregateRootTestCase
     {
         $name = new PersonName('John', 'Doe');
         $nationalIdCode = new NationalIdCode('12345678901');
-        $gatewayTransactionId = new GatewayTransactionId('gateway-tx-123');
+        $gatewayReference = new GatewayReference('gateway-ref-123');
         $bankReference = new BankReference('bank-ref-456');
         $paymentReference = new PaymentReference('payment-ref-789');
         $legacyPaymentId = new LegacyPaymentNumber('legacy-789');
@@ -110,7 +110,7 @@ class PaymentTest extends AggregateRootTestCase
             $nationalIdCode,
             $this->now->sub(new DateInterval('P1D')),
             $this->now->add(new DateInterval('P1D')),
-            $gatewayTransactionId,
+            $gatewayReference,
             $bankReference,
             $paymentReference,
             $legacyPaymentId,
@@ -129,7 +129,7 @@ class PaymentTest extends AggregateRootTestCase
                 $this->email,
                 $name,
                 $nationalIdCode,
-                $gatewayTransactionId,
+                $gatewayReference,
                 $bankReference,
                 $paymentReference,
                 $legacyPaymentId,
@@ -1243,7 +1243,7 @@ class PaymentTest extends AggregateRootTestCase
 
         $name = new PersonName('Jane', 'Doe');
         $nationalIdCode = new NationalIdCode('12345678901');
-        $gatewayTransactionId = new GatewayTransactionId('proc-ref-123');
+        $gatewayReference = new GatewayReference('proc-ref-123');
         $bankReference = new BankReference('bank-ref-456');
         $paymentReference = new PaymentReference('payment-ref-789');
         $legacyPaymentId = new LegacyPaymentNumber('legacy-789');
@@ -1262,7 +1262,7 @@ class PaymentTest extends AggregateRootTestCase
             $nationalIdCode,
             $this->now->sub(new DateInterval('P1D')),
             $this->now->add(new DateInterval('P1D')),
-            $gatewayTransactionId,
+            $gatewayReference,
             $bankReference,
             $paymentReference,
             $legacyPaymentId,
@@ -1303,7 +1303,7 @@ class PaymentTest extends AggregateRootTestCase
 
         $name = new PersonName('Jane', 'Doe');
         $nationalIdCode = new NationalIdCode('12345678901');
-        $gatewayTransactionId = new GatewayTransactionId('proc-ref-123');
+        $gatewayReference = new GatewayReference('proc-ref-123');
         $bankReference = new BankReference('bank-ref-456');
         $paymentReference = new PaymentReference('payment-ref-789');
         $legacyPaymentId = new LegacyPaymentNumber('legacy-789');
@@ -1322,7 +1322,7 @@ class PaymentTest extends AggregateRootTestCase
             $nationalIdCode,
             $this->now->sub(new DateInterval('P1D')),
             $this->now->add(new DateInterval('P1D')),
-            $gatewayTransactionId,
+            $gatewayReference,
             $bankReference,
             $paymentReference,
             $legacyPaymentId,

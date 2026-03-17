@@ -40,7 +40,7 @@ class PaymentCreated extends AbstractTimestampedEvent implements DomainEventInte
         public readonly ?PersonName $name,
         #[PersonalData]
         public readonly ?NationalIdCode $nationalIdCode,
-        public readonly ?GatewayTransactionId $gatewayTransactionId,
+        public readonly ?GatewayReference $gatewayReference,
         public readonly ?BankReference $bankReference,
         public readonly ?PaymentReference $paymentReference,
         public readonly ?LegacyPaymentNumber $legacyPaymentNumber,

@@ -460,7 +460,7 @@ class PaymentsContext implements Context
             paymentAppliedToId: null,
             initiatedAt: new \DateTimeImmutable('2025-11-24'),
             capturedAt: new \DateTimeImmutable('2025-11-24'),
-            gatewayTransactionId: null,
+            gatewayReference: null,
             bankReference: null,
             paymentReference: new PaymentReference('11223344556677'),
             legacyPaymentNumber: null,
@@ -493,7 +493,7 @@ class PaymentsContext implements Context
             paymentAppliedToId: null,
             initiatedAt: new \DateTimeImmutable('2025-11-20'),
             capturedAt: new \DateTimeImmutable('2025-11-20'),
-            gatewayTransactionId: null,
+            gatewayReference: null,
             bankReference: null,
             paymentReference: new PaymentReference('99887766554433'), // Different reference
             legacyPaymentNumber: null,

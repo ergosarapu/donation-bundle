@@ -42,7 +42,7 @@ class CreatePaymentHandler implements CommandHandlerInterface
             $command->nationalIdCode,
             $command->initiatedAt,
             $command->capturedAt,
-            $command->gatewayTransactionId,
+            $command->gatewayReference,
             $command->bankReference,
             $command->paymentReference,
             $command->legacyPaymentNumber,

@@ -7,7 +7,7 @@ namespace ErgoSarapu\DonationBundle\BCPayments\Domain\Payment;
 use Patchlevel\Hydrator\Normalizer\ObjectNormalizer;
 
 #[ObjectNormalizer]
-final class GatewayTransactionId
+final class GatewayReference
 {
     public function __construct(
         public readonly string $value,
