@@ -30,7 +30,7 @@
         <field name="bic" type="string" column="bic" length="20" nullable="true"/>
         <field name="sourceIdentifier" type="string" column="source_identifier" length="100" nullable="true"/>
         <field name="bankReference" type="string" column="bank_reference" length="100" nullable="true"/>
-        <field name="processorReference" type="string" column="processor_reference" length="100" nullable="true"/>
+        <field name="gatewayTransactionId" type="string" column="gateway_transaction_id" length="100" nullable="true"/>
         <field name="legacyPaymentNumber" type="string" column="legacy_payment_id" length="255" nullable="true"/>
         <field name="redirectUrl" type="string" column="redirect_url" nullable="true"/>
 

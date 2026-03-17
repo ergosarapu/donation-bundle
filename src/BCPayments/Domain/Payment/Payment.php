@@ -73,8 +73,9 @@ class Payment extends BasicAggregateRoot
         ?NationalIdCode $nationalIdCode,
         DateTimeImmutable $initiatedAt,
         ?DateTimeImmutable $capturedAt,
-        ?ProcessorReference $processorReference,
+        ?GatewayTransactionId $gatewayTransactionId,
         ?BankReference $bankReference,
+        ?PaymentReference $paymentReference,
         ?LegacyPaymentNumber $legacyPaymentNumber,
         ?Iban $iban,
     ): self {
@@ -92,8 +93,9 @@ class Payment extends BasicAggregateRoot
             $email,
             $name,
             $nationalIdCode,
-            $processorReference,
+            $gatewayTransactionId,
             $bankReference,
+            $paymentReference,
             $legacyPaymentNumber,
             $iban,
         ));
@@ -188,6 +190,13 @@ class Payment extends BasicAggregateRoot
     #[Apply]
     protected function applyPaymentImportReconciled(PaymentImportReconciled $event): void
     {
+        $this->importStatus = $event->importStatus;
+    }
+
+    #[Apply]
+    protected function applyPaymentImportInReview(PaymentImportInReview $event): void
+    {
+        $this->id = $event->paymentId;
         $this->importStatus = $event->importStatus;
     }
 
@@ -401,16 +410,25 @@ class Payment extends BasicAggregateRoot
 
     public function reconcileImport(DateTimeImmutable $currentTime, self $withPayment): void
     {
+        $this->validateReconcileConditions($withPayment);
+        $this->recordThat(new PaymentImportReconciled($currentTime, $this->id, $withPayment->id));
+    }
+
+    private function validateReconcileConditions(self $withPayment): void
+    {
         if ($this->id->toString() === $withPayment->id->toString()) {
             throw new LogicException('Cannot reconcile payment with itself.');
         }
         if (!$this->amount->equals($withPayment->amount)) {
             throw new LogicException('Cannot reconcile payments with differences in amount.');
         }
-        if ($this->importStatus !== PaymentImportStatus::Pending) {
-            throw new LogicException('Can only reconcile pending imported payments.');
+        if ($this->importStatus === PaymentImportStatus::Pending) {
+            return;
         }
-        $this->recordThat(new PaymentImportReconciled($currentTime, $this->id, $withPayment->id));
+        if ($this->importStatus === PaymentImportStatus::Review) {
+            return;
+        }
+        throw new LogicException('Can only reconcile pending or review imported payments.');
     }
 
     public function acceptImport(DateTimeImmutable $currentTime): void
@@ -419,8 +437,8 @@ class Payment extends BasicAggregateRoot
         if ($this->importStatus === PaymentImportStatus::Accepted) {
             return;
         }
-        if ($this->importStatus !== PaymentImportStatus::Pending) {
-            throw new LogicException('Can only accept pending imported payments.');
+        if ($this->importStatus !== PaymentImportStatus::Review) {
+            throw new LogicException('Can only accept payment import in review.');
         }
         $this->recordThat(new PaymentImportAccepted($currentTime, $this->id));
     }
@@ -431,9 +449,21 @@ class Payment extends BasicAggregateRoot
         if ($this->importStatus === PaymentImportStatus::Rejected) {
             return;
         }
-        if ($this->importStatus !== PaymentImportStatus::Pending) {
-            throw new LogicException('Can only reject pending imported payments.');
+        if ($this->importStatus !== PaymentImportStatus::Review) {
+            throw new LogicException('Can only reject payment import in review.');
         }
         $this->recordThat(new PaymentImportRejected($currentTime, $this->id));
+    }
+
+    public function moveToReview(DateTimeImmutable $currentTime): void
+    {
+        // Idempotency guard
+        if ($this->importStatus === PaymentImportStatus::Review) {
+            return;
+        }
+        if ($this->importStatus !== PaymentImportStatus::Pending) {
+            throw new LogicException('Can only move pending imported payments to review.');
+        }
+        $this->recordThat(new PaymentImportInReview($currentTime, $this->id));
     }
 }

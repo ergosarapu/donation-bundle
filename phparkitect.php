@@ -10,6 +10,7 @@ use Arkitect\Expression\ForClasses\ResideInOneOfTheseNamespaces;
 use Arkitect\Rules\Rule;
 use ErgoSarapu\DonationBundle\IntegrationContracts\IntegrationCommandInterface;
 use ErgoSarapu\DonationBundle\IntegrationContracts\IntegrationEventInterface;
+use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandInterface;
 use Patchlevel\EventSourcing\Aggregate\AggregateRootId;
 use Patchlevel\EventSourcing\Aggregate\BasicAggregateRoot;
 use Patchlevel\EventSourcing\Attribute\Aggregate;
@@ -88,6 +89,15 @@ return static function (Config $config): void {
             true
         ))
         ->because('we want to keep the application layer clean from infrastructure details');
+
+    $rules[] = Rule::allClasses()
+        ->that(new ResideInOneOfTheseNamespaces('*\BCDonations\Application\Command\*'))
+        ->should(new Implement(CommandInterface::class))
+        ->because('we want all commands to implement the marker interface');
+    $rules[] = Rule::allClasses()
+        ->that(new ResideInOneOfTheseNamespaces('*\BCPayments\Application\Command\*'))
+        ->should(new Implement(CommandInterface::class))
+        ->because('we want all commands to implement the marker interface');
 
     // Integration contracts
     $rules[] = Rule::allClasses()

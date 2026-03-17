@@ -10,6 +10,7 @@ use Behat\Hook\BeforeScenario;
 use Behat\Step\Given;
 use Behat\Step\Then;
 use Behat\Step\When;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Command\CreatePayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\CreatePaymentMethod;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\ImportPaymentsFromFile;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsAuthorized;
@@ -20,6 +21,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentFileImportResul
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetPayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetPendingPayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model\Payment;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Iban;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCredentialValue;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportStatus;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodAction;
@@ -28,6 +30,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodResult;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodUnusable;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodUnusableReason;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRedirectUrlSetUp;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentReference;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRequest;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\UnusablePaymentMethodCreated;
@@ -48,6 +51,8 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\URL;
 use ErgoSarapu\DonationBundle\Tests\Acceptance\Payments\FakeGateway;
@@ -60,6 +65,7 @@ use Webmozart\Assert\Assert;
 class PaymentsContext implements Context
 {
     private PaymentId $lastPaymentId;
+    private PaymentId $existingCapturedPaymentId;
     private PaymentMethodId $lastPaymentMethodId;
     private string $lastUploadedPaymentImportFile;
 
@@ -418,10 +424,10 @@ class PaymentsContext implements Context
         $this->eventBus->assertNotDispatched(PaymentMethodUnusable::class);
     }
 
-    #[Given('payment import file has been uploaded')]
-    public function paymentImportFileHasBeenUploaded(): void
+    #[Given(':fileName has been uploaded')]
+    public function paymentImportFileHasBeenUploaded(string $fileName): void
     {
-        $this->lastUploadedPaymentImportFile = __DIR__ . '/../../../Unit/Payments/Infrastructure/Fixtures/single_entry_private_debtor.camt.xml';
+        $this->lastUploadedPaymentImportFile = __DIR__ . '/../../../Unit/Payments/Infrastructure/Fixtures/' . $fileName;
     }
 
     #[When('import payments from file')]
@@ -435,12 +441,102 @@ class PaymentsContext implements Context
         $this->lastPaymentId = $result->pendingPaymentIds[0];
     }
 
-    #[Then('payment is imported with import status Pending')]
-    public function paymentIsImportedWithImportStatusPending(): void
+    #[Given('payment with same details as in single_entry_private_debtor.camt.xml already exists')]
+    public function paymentWithSameDetailsAlreadyExists(): void
+    {
+        // Create a payment with the same details as the one in single_entry_private_debtor.camt.xml
+        // This will allow automatic reconciliation when the file is imported
+        $this->existingCapturedPaymentId = PaymentId::generate();
+
+        $command = new CreatePayment(
+            paymentId: $this->existingCapturedPaymentId,
+            status: PaymentStatus::Captured,
+            amount: new Money(10000, new Currency('EUR')), // 100.00 EUR
+            description: new ShortDescription('Donation'),
+            gateway: null,
+            email: null,
+            name: new PersonName('Mati', 'Karu'),
+            nationalIdCode: new NationalIdCode('39876543210'),
+            paymentAppliedToId: null,
+            initiatedAt: new \DateTimeImmutable('2025-11-24'),
+            capturedAt: new \DateTimeImmutable('2025-11-24'),
+            gatewayTransactionId: null,
+            bankReference: null,
+            paymentReference: new PaymentReference('11223344556677'),
+            legacyPaymentNumber: null,
+            iban: new Iban('GB94BARC10201530093459'),
+        );
+
+        $result = $this->commandBus->send($command);
+        Assert::isInstanceOf($result->result, PaymentId::class);
+        /** @var PaymentId $paymentId */
+        $paymentId = $result->result;
+        $this->existingCapturedPaymentId = $paymentId;
+    }
+
+    #[Given('payment with different details from single_entry_private_debtor.camt.xml already exists')]
+    public function paymentWithDifferentDetailsAlreadyExists(): void
+    {
+        // Create a payment with different details from single_entry_private_debtor.camt.xml
+        // This will NOT match the imported payment (low match score)
+        $this->existingCapturedPaymentId = PaymentId::generate();
+
+        $command = new CreatePayment(
+            paymentId: $this->existingCapturedPaymentId,
+            status: PaymentStatus::Captured,
+            amount: new Money(25000, new Currency('EUR')), // Different amount: 250.00 EUR
+            description: new ShortDescription('Different Donation'),
+            gateway: null,
+            email: null,
+            name: new PersonName('Jane', 'Smith'), // Different name
+            nationalIdCode: new NationalIdCode('98765432100'), // Different ID
+            paymentAppliedToId: null,
+            initiatedAt: new \DateTimeImmutable('2025-11-20'),
+            capturedAt: new \DateTimeImmutable('2025-11-20'),
+            gatewayTransactionId: null,
+            bankReference: null,
+            paymentReference: new PaymentReference('99887766554433'), // Different reference
+            legacyPaymentNumber: null,
+            iban: new Iban('EE382200221020145685'), // Different IBAN
+        );
+
+        $result = $this->commandBus->send($command);
+        Assert::isInstanceOf($result->result, PaymentId::class);
+        /** @var PaymentId $paymentId */
+        $paymentId = $result->result;
+        $this->existingCapturedPaymentId = $paymentId;
+    }
+
+    #[Then('the imported payment is reconciled with existing payment')]
+    public function theImportedPaymentIsReconciledWithExistingPayment(): void
     {
         $payment = $this->queryBus->ask(new GetPayment($this->lastPaymentId));
         Assert::isInstanceOf($payment, Payment::class);
         /** @var Payment $payment */
-        Assert::eq($payment->getImportStatus(), PaymentImportStatus::Pending);
+        Assert::eq($payment->getImportStatus(), PaymentImportStatus::Reconciled);
+        Assert::notNull($payment->getReconciledWith(), 'Payment should have reconciledWith value');
+        Assert::eq(
+            $payment->getReconciledWith(),
+            $this->existingCapturedPaymentId->toString(),
+            'Payment should be reconciled with the existing captured payment'
+        );
+    }
+
+    #[Then('the imported payment is in review state')]
+    public function theImportedPaymentIsInReviewState(): void
+    {
+        $payment = $this->queryBus->ask(new GetPayment($this->lastPaymentId));
+        Assert::isInstanceOf($payment, Payment::class);
+        /** @var Payment $payment */
+        Assert::eq($payment->getImportStatus(), PaymentImportStatus::Review);
+    }
+
+    #[Then('the imported payment is not reconciled with existing payment')]
+    public function paymentIsNotReconciledWithExistingPayment(): void
+    {
+        $payment = $this->queryBus->ask(new GetPayment($this->lastPaymentId));
+        Assert::isInstanceOf($payment, Payment::class);
+        /** @var Payment $payment */
+        Assert::null($payment->getReconciledWith(), 'Payment should not have reconciledWith value');
     }
 }

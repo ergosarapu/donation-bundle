@@ -12,6 +12,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCaptured;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCreated;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentFailed;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportAccepted;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportInReview;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportPending;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportReconciled;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportRejected;
@@ -114,8 +115,9 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         $payment->setGivenName($event->name?->givenName);
         $payment->setFamilyName($event->name?->familyName);
         $payment->setNationalIdCode($event->nationalIdCode?->value);
-        $payment->setProcessorReference($event->processorReference?->value);
+        $payment->setGatewayTransactionId($event->gatewayTransactionId?->value);
         $payment->setBankReference($event->bankReference?->value);
+        $payment->setReference($event->paymentReference?->value);
         $payment->setLegacyPaymentNumber($event->legacyPaymentNumber?->value);
         $payment->setIban($event->iban?->value);
         $this->persist($payment);
@@ -245,6 +247,16 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         $payment->setUpdatedAt($event->occuredOn);
         $payment->setImportStatus($event->importStatus);
         $payment->setReconciledWith($event->reconciledWith->toString());
+        $this->flush($message);
+    }
+
+    #[Subscribe(PaymentImportInReview::class)]
+    public function onPaymentImportInReview(Message $message): void
+    {
+        $event = $this->getEvent($message, PaymentImportInReview::class);
+        $payment = $this->findOneOrThrow($event->paymentId);
+        $payment->setUpdatedAt($event->occuredOn);
+        $payment->setImportStatus($event->importStatus);
         $this->flush($message);
     }
 

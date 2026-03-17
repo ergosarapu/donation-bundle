@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle;
 
 use DateInterval;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportPending;
 use ErgoSarapu\DonationBundle\DependencyInjection\Compiler\RegisterQueryCompilerPass;
 use ErgoSarapu\DonationBundle\IntegrationContracts\IntegrationCommandInterface;
 use ErgoSarapu\DonationBundle\IntegrationContracts\IntegrationEventInterface;
@@ -300,8 +301,9 @@ class DonationBundle extends AbstractBundle
                     ],
                 ],
                 'transports' => [
-                    'event' => 'sync://',
                     'command' => 'sync://',
+                    'event_low_priority' => 'sync://',
+                    'event' => 'sync://',
                     'delayed' => [
                         'dsn' => 'doctrine://messenger',
                         'options' => [
@@ -312,6 +314,8 @@ class DonationBundle extends AbstractBundle
                 'routing' => [
                     CommandInterface::class => 'command',
                     IntegrationCommandInterface::class => 'command',
+                    // There may be lot of payment import pending events during import, route them to separate low priority queue to avoid blocking other important events
+                    PaymentImportPending::class => 'event_low_priority',
                     DomainEventInterface::class => 'event',
                     IntegrationEventInterface::class => 'event',
                 ],

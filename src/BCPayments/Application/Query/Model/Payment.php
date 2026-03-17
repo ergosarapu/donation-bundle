@@ -35,7 +35,7 @@ class Payment
     private ?string $bic = null;
     private ?string $sourceIdentifier = null;
     private ?string $bankReference = null;
-    private ?string $processorReference = null;
+    private ?string $gatewayTransactionId = null;
     private ?string $legacyPaymentNumber = null;
 
     private ?DateTimeImmutable $bookingDate = null;
@@ -266,14 +266,14 @@ class Payment
         $this->bankReference = $bankReference;
     }
 
-    public function getProcessorReference(): ?string
+    public function getGatewayTransactionId(): ?string
     {
-        return $this->processorReference;
+        return $this->gatewayTransactionId;
     }
 
-    public function setProcessorReference(?string $processorReference): void
+    public function setGatewayTransactionId(?string $gatewayTransactionId): void
     {
-        $this->processorReference = $processorReference;
+        $this->gatewayTransactionId = $gatewayTransactionId;
     }
 
     public function getLegacyPaymentNumber(): ?string

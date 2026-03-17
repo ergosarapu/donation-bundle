@@ -9,6 +9,7 @@ use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\AccountHolderName;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\BankReference;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Bic;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\GatewayTransactionId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Iban;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\LegacyPaymentNumber;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
@@ -20,6 +21,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCredentialValue;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentDidNotSucceed;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentFailed;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportAccepted;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportInReview;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportPending;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportReconciled;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportRejected;
@@ -36,7 +38,6 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRequest;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentReservedForGatewayCall;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentSucceeded;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\ProcessorReference;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
@@ -89,8 +90,9 @@ class PaymentTest extends AggregateRootTestCase
     {
         $name = new PersonName('John', 'Doe');
         $nationalIdCode = new NationalIdCode('12345678901');
-        $processorReference = new ProcessorReference('proc-ref-123');
+        $gatewayTransactionId = new GatewayTransactionId('gateway-tx-123');
         $bankReference = new BankReference('bank-ref-456');
+        $paymentReference = new PaymentReference('payment-ref-789');
         $legacyPaymentId = new LegacyPaymentNumber('legacy-789');
         $iban = new Iban('EE382200221020145685');
         $gateway = new Gateway('test-gateway');
@@ -108,8 +110,9 @@ class PaymentTest extends AggregateRootTestCase
             $nationalIdCode,
             $this->now->sub(new DateInterval('P1D')),
             $this->now->add(new DateInterval('P1D')),
-            $processorReference,
+            $gatewayTransactionId,
             $bankReference,
+            $paymentReference,
             $legacyPaymentId,
             $iban,
         ))->then(
@@ -126,8 +129,9 @@ class PaymentTest extends AggregateRootTestCase
                 $this->email,
                 $name,
                 $nationalIdCode,
-                $processorReference,
+                $gatewayTransactionId,
                 $bankReference,
+                $paymentReference,
                 $legacyPaymentId,
                 $iban,
             )
@@ -1034,22 +1038,9 @@ class PaymentTest extends AggregateRootTestCase
 
     public function testAcceptImport(): void
     {
-        $sourceIdentifier = new PaymentImportSourceIdentifier('source-123');
-        $this->given(new PaymentImportPending(
+        $this->given(new PaymentImportInReview(
             $this->now,
             $this->paymentId,
-            $sourceIdentifier,
-            null,
-            PaymentStatus::Settled,
-            $this->amount,
-            $this->description,
-            $this->now,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
         ))
         ->when(fn (Payment $payment) => $payment->acceptImport($this->now))
         ->then(
@@ -1070,30 +1061,7 @@ class PaymentTest extends AggregateRootTestCase
         ->then();
     }
 
-    public function testAcceptImportOnRejectedThrows(): void
-    {
-        $this->given(new PaymentImportRejected(
-            $this->now,
-            $this->paymentId,
-        ))
-        ->when(fn (Payment $payment) => $payment->acceptImport($this->now))
-        ->expectsException(LogicException::class)
-        ->expectsExceptionMessage('Can only accept pending imported payments.');
-    }
-
-    public function testAcceptImportOnReconciledThrows(): void
-    {
-        $this->given(new PaymentImportReconciled(
-            $this->now,
-            $this->paymentId,
-            PaymentId::generate(),
-        ))
-        ->when(fn (Payment $payment) => $payment->acceptImport($this->now))
-        ->expectsException(LogicException::class)
-        ->expectsExceptionMessage('Can only accept pending imported payments.');
-    }
-
-    public function testRejectImport(): void
+    public function testAcceptImportOnPendingThrows(): void
     {
         $sourceIdentifier = new PaymentImportSourceIdentifier('source-123');
         $this->given(new PaymentImportPending(
@@ -1111,6 +1079,40 @@ class PaymentTest extends AggregateRootTestCase
             null,
             null,
             null,
+        ))
+        ->when(fn (Payment $payment) => $payment->acceptImport($this->now))
+        ->expectsException(LogicException::class)
+        ->expectsExceptionMessage('Can only accept payment import in review.');
+    }
+
+    public function testAcceptImportOnRejectedThrows(): void
+    {
+        $this->given(new PaymentImportRejected(
+            $this->now,
+            $this->paymentId,
+        ))
+        ->when(fn (Payment $payment) => $payment->acceptImport($this->now))
+        ->expectsException(LogicException::class)
+        ->expectsExceptionMessage('Can only accept payment import in review.');
+    }
+
+    public function testAcceptImportOnReconciledThrows(): void
+    {
+        $this->given(new PaymentImportReconciled(
+            $this->now,
+            $this->paymentId,
+            PaymentId::generate(),
+        ))
+        ->when(fn (Payment $payment) => $payment->acceptImport($this->now))
+        ->expectsException(LogicException::class)
+        ->expectsExceptionMessage('Can only accept payment import in review.');
+    }
+
+    public function testRejectImport(): void
+    {
+        $this->given(new PaymentImportInReview(
+            $this->now,
+            $this->paymentId,
         ))
         ->when(fn (Payment $payment) => $payment->rejectImport($this->now))
         ->then(
@@ -1131,6 +1133,30 @@ class PaymentTest extends AggregateRootTestCase
         ->then();
     }
 
+    public function testRejectImportOnPendingThrows(): void
+    {
+        $sourceIdentifier = new PaymentImportSourceIdentifier('source-123');
+        $this->given(new PaymentImportPending(
+            $this->now,
+            $this->paymentId,
+            $sourceIdentifier,
+            null,
+            PaymentStatus::Settled,
+            $this->amount,
+            $this->description,
+            $this->now,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+        ))
+        ->when(fn (Payment $payment) => $payment->rejectImport($this->now))
+        ->expectsException(LogicException::class)
+        ->expectsExceptionMessage('Can only reject payment import in review.');
+    }
+
     public function testRejectImportOnAcceptedThrows(): void
     {
         $this->given(new PaymentImportAccepted(
@@ -1139,7 +1165,7 @@ class PaymentTest extends AggregateRootTestCase
         ))
         ->when(fn (Payment $payment) => $payment->rejectImport($this->now))
         ->expectsException(LogicException::class)
-        ->expectsExceptionMessage('Can only reject pending imported payments.');
+        ->expectsExceptionMessage('Can only reject payment import in review.');
     }
 
     public function testRejectImportOnReconciledThrows(): void
@@ -1151,10 +1177,65 @@ class PaymentTest extends AggregateRootTestCase
         ))
         ->when(fn (Payment $payment) => $payment->rejectImport($this->now))
         ->expectsException(LogicException::class)
-        ->expectsExceptionMessage('Can only reject pending imported payments.');
+        ->expectsExceptionMessage('Can only reject payment import in review.');
     }
 
-    public function testReconcileImport(): void
+    public function testMoveImportToReview(): void
+    {
+        $sourceIdentifier = new PaymentImportSourceIdentifier('source-123');
+        $this->given(new PaymentImportPending(
+            $this->now,
+            $this->paymentId,
+            $sourceIdentifier,
+            null,
+            PaymentStatus::Settled,
+            $this->amount,
+            $this->description,
+            $this->now,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+        ))
+        ->when(fn (Payment $payment) => $payment->moveToReview($this->now))
+        ->then(
+            new PaymentImportInReview(
+                $this->now,
+                $this->paymentId,
+            )
+        );
+    }
+
+    public function testMoveImportToReviewIdempotent(): void
+    {
+        $this->given(new PaymentImportInReview(
+            $this->now,
+            $this->paymentId,
+        ))
+        ->when(fn (Payment $payment) => $payment->moveToReview($this->now))
+        ->then();
+    }
+
+    public function testMoveImportToReviewThrowsWhenNotPendingImport(): void
+    {
+        $this->given(new PaymentInitiated(
+            $this->now,
+            $this->paymentId,
+            $this->amount,
+            $this->gateway,
+            $this->description,
+            $this->appliedTo,
+            $this->email,
+            null,
+        ))
+        ->when(fn (Payment $payment) => $payment->moveToReview($this->now))
+        ->expectsException(LogicException::class)
+        ->expectsExceptionMessage('Can only move pending imported payments to review.');
+    }
+
+    public function testReconcilePendingImport(): void
     {
         $importedPaymentId = PaymentId::generate();
         $existingPaymentId = PaymentId::generate();
@@ -1162,8 +1243,9 @@ class PaymentTest extends AggregateRootTestCase
 
         $name = new PersonName('Jane', 'Doe');
         $nationalIdCode = new NationalIdCode('12345678901');
-        $processorReference = new ProcessorReference('proc-ref-123');
+        $gatewayTransactionId = new GatewayTransactionId('proc-ref-123');
         $bankReference = new BankReference('bank-ref-456');
+        $paymentReference = new PaymentReference('payment-ref-789');
         $legacyPaymentId = new LegacyPaymentNumber('legacy-789');
         $iban = new Iban('EE382200221020145685');
 
@@ -1180,8 +1262,9 @@ class PaymentTest extends AggregateRootTestCase
             $nationalIdCode,
             $this->now->sub(new DateInterval('P1D')),
             $this->now->add(new DateInterval('P1D')),
-            $processorReference,
+            $gatewayTransactionId,
             $bankReference,
+            $paymentReference,
             $legacyPaymentId,
             $iban,
         );
@@ -1202,6 +1285,72 @@ class PaymentTest extends AggregateRootTestCase
             null,
             null,
         ))
+        ->when(fn (Payment $payment) => $payment->reconcileImport($this->now, $existingPayment))
+        ->then(
+            new PaymentImportReconciled(
+                $this->now,
+                $importedPaymentId,
+                $existingPaymentId,
+            )
+        );
+    }
+
+    public function testReconcileInReviewImport(): void
+    {
+        $importedPaymentId = PaymentId::generate();
+        $existingPaymentId = PaymentId::generate();
+        $sourceIdentifier = new PaymentImportSourceIdentifier('source-123');
+
+        $name = new PersonName('Jane', 'Doe');
+        $nationalIdCode = new NationalIdCode('12345678901');
+        $gatewayTransactionId = new GatewayTransactionId('proc-ref-123');
+        $bankReference = new BankReference('bank-ref-456');
+        $paymentReference = new PaymentReference('payment-ref-789');
+        $legacyPaymentId = new LegacyPaymentNumber('legacy-789');
+        $iban = new Iban('EE382200221020145685');
+
+        $existingPayment = Payment::create(
+            $this->now,
+            $existingPaymentId,
+            PaymentStatus::Captured,
+            $this->amount,
+            $this->description,
+            $this->gateway,
+            $this->appliedTo,
+            $this->email,
+            $name,
+            $nationalIdCode,
+            $this->now->sub(new DateInterval('P1D')),
+            $this->now->add(new DateInterval('P1D')),
+            $gatewayTransactionId,
+            $bankReference,
+            $paymentReference,
+            $legacyPaymentId,
+            $iban,
+        );
+
+        $this->given(
+            new PaymentImportPending(
+                $this->now,
+                $importedPaymentId,
+                $sourceIdentifier,
+                null,
+                PaymentStatus::Settled,
+                $this->amount,
+                $this->description,
+                $this->now,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+            ),
+            new PaymentImportInReview(
+                $this->now,
+                $importedPaymentId,
+            )
+        )
         ->when(fn (Payment $payment) => $payment->reconcileImport($this->now, $existingPayment))
         ->then(
             new PaymentImportReconciled(
@@ -1277,6 +1426,7 @@ class PaymentTest extends AggregateRootTestCase
             null,
             null,
             null,
+            null,
         );
 
         $this->given(new PaymentImportPending(
@@ -1320,6 +1470,7 @@ class PaymentTest extends AggregateRootTestCase
             null,
             null,
             null,
+            null,
         );
 
         $this->given(
@@ -1346,7 +1497,7 @@ class PaymentTest extends AggregateRootTestCase
         )
         ->when(fn (Payment $payment) => $payment->reconcileImport($this->now, $existingPayment))
         ->expectsException(LogicException::class)
-        ->expectsExceptionMessage('Can only reconcile pending imported payments.');
+        ->expectsExceptionMessage('Can only reconcile pending or review imported payments.');
     }
 
     public function testReconcileAcceptedImportThrows(): void
@@ -1365,6 +1516,7 @@ class PaymentTest extends AggregateRootTestCase
             null,
             $this->now->sub(new DateInterval('P1D')),
             $this->now->add(new DateInterval('P1D')),
+            null,
             null,
             null,
             null,
@@ -1395,7 +1547,7 @@ class PaymentTest extends AggregateRootTestCase
         )
         ->when(fn (Payment $payment) => $payment->reconcileImport($this->now, $existingPayment))
         ->expectsException(LogicException::class)
-        ->expectsExceptionMessage('Can only reconcile pending imported payments.');
+        ->expectsExceptionMessage('Can only reconcile pending or review imported payments.');
     }
 
     public function testReconcileNonImportImportThrows(): void
@@ -1418,6 +1570,7 @@ class PaymentTest extends AggregateRootTestCase
             null,
             null,
             null,
+            null,
         );
 
         $this->given(new PaymentInitiated(
@@ -1432,6 +1585,6 @@ class PaymentTest extends AggregateRootTestCase
         ))
         ->when(fn (Payment $payment) => $payment->reconcileImport($this->now, $existingPayment))
         ->expectsException(LogicException::class)
-        ->expectsExceptionMessage('Can only reconcile pending imported payments.');
+        ->expectsExceptionMessage('Can only reconcile pending or review imported payments.');
     }
 }

@@ -291,6 +291,9 @@ return function (ContainerConfigurator $container) {
     $services->set('donation_bundle.payments.application.payment.command_handler.import_payments_from_file', \ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\ImportPaymentsFromFileHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
+    $services->set('donation_bundle.payments.application.payment.command_handler.move_payment_import_to_review', \ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\MovePaymentImportToReviewHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
 
     // **********************
     // *** Query Handlers ***
@@ -420,6 +423,9 @@ return function (ContainerConfigurator $container) {
         ->autoconfigure(true)
         ->autowire(true);
     $services->set('donation_bundle.application.payments.domain_event_handler.payment_method_unusable', \ErgoSarapu\DonationBundle\BCPayments\Application\EventHandler\Domain\PaymentMethodUnusableHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.application.payments.domain_event_handler.try_reconcile_payment_import', \ErgoSarapu\DonationBundle\BCPayments\Application\EventHandler\Domain\TryReconcilePaymentImportHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
 

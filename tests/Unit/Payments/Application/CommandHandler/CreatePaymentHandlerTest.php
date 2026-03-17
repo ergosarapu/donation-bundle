@@ -9,11 +9,12 @@ use ErgoSarapu\DonationBundle\BCPayments\Application\Command\CreatePayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\CreatePaymentHandler;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\BankReference;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\GatewayTransactionId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Iban;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\LegacyPaymentNumber;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentReference;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\ProcessorReference;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
@@ -59,8 +60,9 @@ class CreatePaymentHandlerTest extends TestCase
         $nationalIdCode = new NationalIdCode('12345678901');
         $initiatedAt = new DateTimeImmutable('2024-02-01');
         $capturedAt = new DateTimeImmutable('2024-02-02');
-        $processorReference = new ProcessorReference('proc-ref-123');
+        $gatewayTransactionId = new GatewayTransactionId('gateway-tx-123');
         $bankReference = new BankReference('bank-ref-456');
+        $paymentReference = new PaymentReference('1234567890');
         $legacyPaymentIdentifier = new LegacyPaymentNumber('legacy-789');
         $iban = new Iban('GB94BARC10201530093459');
         $gateway = new Gateway('test-gateway');
@@ -77,8 +79,9 @@ class CreatePaymentHandlerTest extends TestCase
             $appliedTo,
             $initiatedAt,
             $capturedAt,
-            $processorReference,
+            $gatewayTransactionId,
             $bankReference,
+            $paymentReference,
             $legacyPaymentIdentifier,
             $iban,
         );
