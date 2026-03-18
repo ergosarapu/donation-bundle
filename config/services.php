@@ -151,6 +151,18 @@ return function (ContainerConfigurator $container) {
             ->addArgument(\ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\Campaign::class));
     $services->alias(\ErgoSarapu\DonationBundle\BCDonations\Application\Port\CampaignRepositoryInterface::class, 'donation_bundle.infrastructure.donations.repository.adapter.patchlevel_campaign_repository');
 
+    $services->set('donation_bundle.infrastructure.identities.repository.adapter.patchlevel_entity_claim_repository', \ErgoSarapu\DonationBundle\BCIdentities\Infrastructure\Adapter\PatchlevelEntityClaimRepository::class)
+        ->arg(0, (new Definition(\Patchlevel\EventSourcing\Repository\Repository::class))
+            ->setFactory([new Reference(\Patchlevel\EventSourcing\Repository\RepositoryManager::class), 'get'])
+            ->addArgument(\ErgoSarapu\DonationBundle\BCIdentities\Domain\EntityClaim\EntityClaim::class));
+    $services->alias(\ErgoSarapu\DonationBundle\BCIdentities\Application\Port\EntityClaimRepositoryInterface::class, 'donation_bundle.infrastructure.identities.repository.adapter.patchlevel_entity_claim_repository');
+
+    $services->set('donation_bundle.infrastructure.identities.repository.adapter.patchlevel_identity_repository', \ErgoSarapu\DonationBundle\BCIdentities\Infrastructure\Adapter\PatchlevelIdentityRepository::class)
+        ->arg(0, (new Definition(\Patchlevel\EventSourcing\Repository\Repository::class))
+            ->setFactory([new Reference(\Patchlevel\EventSourcing\Repository\RepositoryManager::class), 'get'])
+            ->addArgument(\ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\Identity::class));
+    $services->alias(\ErgoSarapu\DonationBundle\BCIdentities\Application\Port\IdentityRepositoryInterface::class, 'donation_bundle.infrastructure.identities.repository.adapter.patchlevel_identity_repository');
+
     // ***********************
     // *** Payment Imports ***
     // ***********************
@@ -298,6 +310,14 @@ return function (ContainerConfigurator $container) {
         ->autoconfigure(true)
         ->autowire(true);
 
+    // Identities command handlers
+    $services->set('donation_bundle.identities.application.command_handler.claim_identity', \ErgoSarapu\DonationBundle\BCIdentities\Application\CommandHandler\ClaimIdentityHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.identities.application.command_handler.claim_identity_integration', \ErgoSarapu\DonationBundle\BCIdentities\Application\CommandHandler\Integration\ClaimIdentityHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+
     // **********************
     // *** Query Handlers ***
     // **********************
@@ -432,6 +452,9 @@ return function (ContainerConfigurator $container) {
         ->autoconfigure(true)
         ->autowire(true);
     $services->set('donation_bundle.application.payments.domain_event_handler.try_reconcile_payment_import', \ErgoSarapu\DonationBundle\BCPayments\Application\EventHandler\Domain\TryReconcilePaymentImportHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.application.payments.domain_event_handler.payment_import_pending_claim_identity', \ErgoSarapu\DonationBundle\BCPayments\Application\EventHandler\Domain\PaymentImportPendingClaimIdentityHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
 
