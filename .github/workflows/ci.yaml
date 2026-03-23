@@ -6,6 +6,7 @@ on:
       - master
       - 'feature/**'
       - ddd
+      - resolve-identity
   pull_request:
     branches:
       - master
