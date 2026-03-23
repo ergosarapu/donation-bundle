@@ -14,4 +14,10 @@ final class PersonName
         public readonly string $familyName
     ) {
     }
+
+    public function equals(self $other): bool
+    {
+        return $this->givenName === $other->givenName
+            && $this->familyName === $other->familyName;
+    }
 }

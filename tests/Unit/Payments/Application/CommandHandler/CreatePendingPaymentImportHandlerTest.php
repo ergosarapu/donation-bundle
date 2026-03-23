@@ -11,7 +11,6 @@ use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentRepositoryInter
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\AccountHolderName;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\BankReference;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Bic;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Iban;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportSourceIdentifier;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentReference;
@@ -19,6 +18,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\OrganisationRegCode;

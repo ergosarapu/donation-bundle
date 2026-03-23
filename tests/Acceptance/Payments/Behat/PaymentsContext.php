@@ -21,7 +21,6 @@ use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentFileImportResul
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetPayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetPendingPayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model\Payment;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Iban;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCredentialValue;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportStatus;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodAction;
@@ -44,12 +43,13 @@ use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\PaymentSucceed
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\UnusablePaymentMethodCreatedIntegrationEvent;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\UsablePaymentMethodCreatedIntegrationEvent;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\QueryBusInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
@@ -129,7 +129,7 @@ class PaymentsContext implements Context
             $this->getDefaultTestMoney(),
             new Gateway('test-gateway'),
             new ShortDescription('Test Payment'),
-            PaymentAppliedToId::generate(),
+            ExternalEntityId::generate(),
             new Email('test@example.com'),
             $paymentMethodAction,
         );

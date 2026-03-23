@@ -1,0 +1,154 @@
+<?php
+
+declare(strict_types=1);
+
+namespace ErgoSarapu\DonationBundle\BCIdentities\Infrastructure\Projection;
+
+use ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model\Claim;
+use ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Port\ClaimProjectionRepositoryInterface;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimCreated;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimInReview;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresented;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimResolved;
+use ErgoSarapu\DonationBundle\SharedInfrastructure\Patchlevel\ProjectorTrait;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ClaimId;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\RawName;
+use Patchlevel\EventSourcing\Attribute\Projector;
+use Patchlevel\EventSourcing\Attribute\Subscribe;
+use Patchlevel\EventSourcing\Attribute\Teardown;
+use Patchlevel\EventSourcing\Message\Message;
+use Patchlevel\EventSourcing\Subscription\Subscriber\SubscriberUtil;
+
+#[Projector('claim')]
+final class ClaimProjector implements ClaimProjectionRepositoryInterface
+{
+    use SubscriberUtil;
+    use ProjectorTrait;
+
+    public function findOne(ClaimId $claimId): ?Claim
+    {
+        /** @var Claim|null $claim */
+        $claim = $this->getEntityManager()->getRepository(Claim::class)->find($claimId->toString());
+
+        return $claim;
+    }
+
+    public function findInReview(): array
+    {
+        /** @var list<Claim> $claims */
+        $claims = $this->getEntityManager()->getRepository(Claim::class)->findBy(
+            ['inReview' => true],
+            ['updatedAt' => 'ASC', 'createdAt' => 'ASC'],
+        );
+
+        return $claims;
+    }
+
+    public function countInReview(): int
+    {
+        $qb = $this->getEntityManager()->createQueryBuilder();
+        $qb->select('COUNT(c.claimId)')
+            ->from(Claim::class, 'c')
+            ->where('c.inReview = :inReview')
+            ->setParameter('inReview', true);
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
+    }
+
+    #[Subscribe(ClaimCreated::class)]
+    public function onClaimCreated(Message $message): void
+    {
+        $event = $this->getEvent($message, ClaimCreated::class);
+
+        if ($this->findOne($event->claimId) !== null) {
+            return;
+        }
+
+        $claim = new Claim();
+        $claim->setClaimId($event->claimId->toString());
+        $claim->setPaymentId($event->source->getPaymentId()?->toString());
+        $claim->setDonationId($event->source->getDonationId()?->toString());
+        $claim->setInReview(false);
+        $claim->setResolved(false);
+        $claim->setReviewReason(null);
+        $claim->setCreatedAt($event->occuredOn);
+        $claim->setUpdatedAt($event->occuredOn);
+        $this->persist($claim);
+
+        $this->flush($message);
+    }
+
+    #[Subscribe(ClaimPresented::class)]
+    public function onClaimPresented(Message $message): void
+    {
+        $event = $this->getEvent($message, ClaimPresented::class);
+        $claim = $this->findOneOrThrow($event->claimId);
+        $value = $event->value;
+        $claim->setUpdatedAt($event->occuredOn);
+
+        if ($value instanceof PersonName) {
+            $claim->setGivenName($value->givenName);
+            $claim->setFamilyName($value->familyName);
+        }
+        if ($value instanceof RawName) {
+            $claim->setRawName($value->toString());
+        }
+        if ($value instanceof Email) {
+            $claim->setEmail($value->toString());
+        }
+        if ($value instanceof Iban) {
+            $claim->setIban($value->value);
+        }
+        if ($value instanceof NationalIdCode) {
+            $claim->setNationalIdCode($value->value);
+        }
+        $this->flush($message);
+    }
+
+    #[Subscribe(ClaimInReview::class)]
+    public function onClaimInReview(Message $message): void
+    {
+        $event = $this->getEvent($message, ClaimInReview::class);
+        $claim = $this->findOneOrThrow($event->claimId);
+        $claim->setUpdatedAt($event->occuredOn);
+        $claim->setInReview(true);
+        $claim->setReviewReason($event->reason->value);
+
+        $this->flush($message);
+    }
+
+    #[Subscribe(ClaimResolved::class)]
+    public function onClaimResolved(Message $message): void
+    {
+        $event = $this->getEvent($message, ClaimResolved::class);
+        $claim = $this->findOneOrThrow($event->claimId);
+        $claim->setUpdatedAt($event->occuredOn);
+        $claim->setInReview(false);
+        $claim->setResolved(true);
+        $claim->setReviewReason(null);
+        $claim->setIdentityId($event->identityId->toString());
+
+        $this->flush($message);
+    }
+
+    #[Teardown]
+    public function teardown(): void
+    {
+        $this->getEntityManager()->createQuery('DELETE FROM ' . Claim::class)->execute();
+    }
+
+    private function findOneOrThrow(ClaimId $claimId): Claim
+    {
+        $claim = $this->findOne($claimId);
+
+        if ($claim === null) {
+            throw new \RuntimeException(sprintf('%s not found for claimId (%s)', Claim::class, $claimId->toString()));
+        }
+
+        return $claim;
+    }
+}

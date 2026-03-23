@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ErgoSarapu\DonationBundle\BCPayments\Domain\Payment;
+namespace ErgoSarapu\DonationBundle\SharedKernel\ValueObject;
 
 use Patchlevel\Hydrator\Normalizer\ObjectNormalizer;
 

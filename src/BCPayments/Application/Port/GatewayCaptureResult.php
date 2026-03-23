@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCPayments\Application\Port;
 
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodResult;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 
 interface GatewayCaptureResult
@@ -16,4 +17,6 @@ interface GatewayCaptureResult
     public function getCapturedAmount(): Money;
 
     public function getPaymentMethodResult(): ?PaymentMethodResult;
+
+    public function getIban(): ?Iban;
 }

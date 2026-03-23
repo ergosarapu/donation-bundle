@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCPayments\Domain\Payment;
 
 use DateTimeImmutable;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\OrganisationRegCode;
@@ -32,7 +33,7 @@ class Payment extends BasicAggregateRoot
     private ShortDescription $description;
     private ?Email $email;
     private PaymentStatus $status;
-    private ?PaymentAppliedToId $appliedTo = null;
+    private ?ExternalEntityId $appliedTo = null;
     private bool $succeedRecorded = false;
     private bool $gatewayCallReserved = false;
     private ?PaymentMethodAction $paymentMethodAction;
@@ -67,7 +68,7 @@ class Payment extends BasicAggregateRoot
         Money $amount,
         ShortDescription $description,
         ?Gateway $gateway,
-        ?PaymentAppliedToId $appliedTo,
+        ?ExternalEntityId $appliedTo,
         ?Email $email,
         ?PersonName $name,
         ?NationalIdCode $nationalIdCode,
@@ -289,14 +290,26 @@ class Payment extends BasicAggregateRoot
         $this->failTransitionValidation($this->status, PaymentStatus::Authorized);
     }
 
-    public function markCaptured(DateTimeImmutable $currentTime, Money $capturedAmount, ?PaymentMethodResult $paymentMethodResult): void
-    {
+    public function markCaptured(
+        DateTimeImmutable $currentTime,
+        Money $capturedAmount,
+        ?PaymentMethodResult $paymentMethodResult,
+        ?Iban $iban = null,
+    ): void {
         // Idempotency guard
         if ($this->status === PaymentStatus::Captured) {
             return;
         }
         $this->validateTransitionToCaptured();
-        $this->recordThat(new PaymentCaptured($currentTime, $this->id, $capturedAmount, $this->appliedTo, $this->paymentMethodAction, $paymentMethodResult));
+        $this->recordThat(new PaymentCaptured(
+            $currentTime,
+            $this->id,
+            $capturedAmount,
+            $this->appliedTo,
+            $this->paymentMethodAction,
+            $paymentMethodResult,
+            $iban,
+        ));
         $this->recordSucceeded($currentTime);
     }
 

@@ -200,6 +200,9 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         $payment->setCapturedAt($event->occuredOn);
         $payment->setStatus($event->status);
         $payment->setAmount($event->capturedAmount->amount());
+        if ($event->iban !== null) {
+            $payment->setIban($event->iban->value);
+        }
         $this->flush($message);
     }
 

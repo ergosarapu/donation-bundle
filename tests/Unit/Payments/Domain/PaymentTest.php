@@ -10,7 +10,6 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\AccountHolderName;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\BankReference;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Bic;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\GatewayReference;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Iban;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\LegacyPaymentNumber;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentAuthorized;
@@ -38,12 +37,13 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRequest;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentReservedForGatewayCall;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentSucceeded;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\OrganisationRegCode;
@@ -67,7 +67,7 @@ class PaymentTest extends AggregateRootTestCase
 
     private ShortDescription $description;
 
-    private PaymentAppliedToId $appliedTo;
+    private ExternalEntityId $appliedTo;
 
     protected function aggregateClass(): string
     {
@@ -83,7 +83,7 @@ class PaymentTest extends AggregateRootTestCase
         $this->gateway = new Gateway('test');
         $this->email = new Email('example@example.com');
         $this->description = new ShortDescription('Test payment');
-        $this->appliedTo = PaymentAppliedToId::generate();
+        $this->appliedTo = ExternalEntityId::generate();
     }
 
     public function testCreate(): void

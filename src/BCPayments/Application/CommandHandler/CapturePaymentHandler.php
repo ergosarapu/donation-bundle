@@ -38,7 +38,12 @@ class CapturePaymentHandler implements CommandHandlerInterface
         $result = $this->paymentGateway->capture($gatewayRequest, $command->credentialValue);
 
         if ($result->isSuccess()) {
-            $this->commandBus->dispatch(new MarkPaymentAsCaptured($paymentId, $result->getCapturedAmount(), $result->getPaymentMethodResult()));
+            $this->commandBus->dispatch(new MarkPaymentAsCaptured(
+                $paymentId,
+                $result->getCapturedAmount(),
+                $result->getPaymentMethodResult(),
+                $result->getIban(),
+            ));
             return;
         }
 

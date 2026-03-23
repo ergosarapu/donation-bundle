@@ -12,7 +12,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodAction;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRequest;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
@@ -50,7 +50,7 @@ class InitiatePaymentHandlerTest extends TestCase
         $amount = new Money(5000, new Currency('EUR'));
         $gateway = new Gateway('test-gateway');
         $description = new ShortDescription('Test donation');
-        $appliedTo = PaymentAppliedToId::generate();
+        $appliedTo = ExternalEntityId::generate();
         $email = new Email('donor@example.com');
         $methodAction = PaymentMethodAction::forRequest(
             PaymentMethodId::generate(),
