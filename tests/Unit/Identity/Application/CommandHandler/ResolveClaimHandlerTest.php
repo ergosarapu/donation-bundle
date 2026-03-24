@@ -99,6 +99,7 @@ final class ResolveClaimHandlerTest extends TestCase
                 $savedClaim = $claim;
             });
 
+        $this->identityRepository->expects($this->never())->method('has');
         $this->identityRepository->expects($this->never())->method('load');
         $this->identityRepository->expects($this->never())->method('save');
         $this->transactionManager->expects($this->never())->method('transactional');
@@ -265,6 +266,7 @@ final class ResolveClaimHandlerTest extends TestCase
             ->with(null, $iban, null)
             ->willReturn([]);
 
+        $this->identityRepository->expects($this->once())->method('has')->willReturn(false);
         $this->identityRepository->expects($this->never())->method('load');
 
         /** @var ?Identity $savedIdentity */

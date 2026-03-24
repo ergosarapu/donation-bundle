@@ -9,6 +9,7 @@ use ErgoSarapu\DonationBundle\BCIdentities\Application\Command\PresentClaimEvide
 use ErgoSarapu\DonationBundle\BCIdentities\Application\Command\ResolveClaim;
 use ErgoSarapu\DonationBundle\BCIdentities\Application\Port\ClaimRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\Claim;
+use ErgoSarapu\DonationBundle\IntegrationContracts\Identities\ValueObject\ClaimPresentation;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\CommandHandlerInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ClaimId;
@@ -57,12 +58,13 @@ final class PresentClaimEvidenceHandler implements CommandHandlerInterface
 
     private function presentClaimEvidence(Claim $claim, PresentClaimEvidence $command, DateTimeImmutable $currentTime): void
     {
-        array_map(
-            static function (object $presentation) use ($claim, $currentTime): null {
-                $claim->present($currentTime, $presentation->value, $presentation->evidenceLevel);
-                return null;
-            },
+        array_reduce(
             $command->presentations,
+            static function (Claim $claim, ClaimPresentation $presentation) use ($currentTime): Claim {
+                $claim->present($currentTime, $presentation->value, $presentation->evidenceLevel);
+                return $claim;
+            },
+            $claim,
         );
     }
 }
