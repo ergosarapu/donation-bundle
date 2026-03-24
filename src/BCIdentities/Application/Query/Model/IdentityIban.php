@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model;
 
-final class IdentityIban
+class IdentityIban
 {
     private int $id;
     private Identity $identity;
