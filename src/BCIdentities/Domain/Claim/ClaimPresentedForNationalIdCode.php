@@ -2,28 +2,28 @@
 
 declare(strict_types=1);
 
-namespace ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity;
+namespace ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim;
 
 use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\AbstractTimestampedEvent;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\DomainEventInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ClaimId;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\IdentityId;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\RawName;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ClaimEvidenceLevel;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
 use Patchlevel\EventSourcing\Attribute\Event;
 use Patchlevel\Hydrator\Attribute\DataSubjectId;
 use Patchlevel\Hydrator\Attribute\PersonalData;
 
-#[Event(name: 'identity.raw_name_changed')]
-final class IdentityRawNameChanged extends AbstractTimestampedEvent implements DomainEventInterface
+#[Event(name: 'claim.presented_for_national_id_code')]
+final class ClaimPresentedForNationalIdCode extends AbstractTimestampedEvent implements DomainEventInterface
 {
     public function __construct(
         DateTimeImmutable $occuredOn,
         #[DataSubjectId]
         public readonly ClaimId $claimId,
-        public readonly IdentityId $identityId,
         #[PersonalData]
-        public readonly RawName $rawName,
+        public readonly ?NationalIdCode $value,
+        public readonly ClaimEvidenceLevel $evidenceLevel,
     ) {
         parent::__construct($occuredOn);
     }

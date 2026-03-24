@@ -23,13 +23,33 @@ use Patchlevel\EventSourcing\Attribute\Id;
 #[Aggregate(name: 'claim')]
 final class Claim extends BasicAggregateRoot
 {
-    /** @var array<string, class-string> */
-    public const VALUE_DISCRIMINATOR_TO_CLASS_MAP = [
-        'personName' => PersonName::class,
-        'rawName' => RawName::class,
-        'email' => Email::class,
-        'iban' => Iban::class,
-        'nationalIdCode' => NationalIdCode::class,
+    /** @var array<class-string, array<string, int>> */
+    private const SCORE_LOOKUP = [
+        NationalIdCode::class => [
+            ClaimEvidenceLevel::Observed->value => 9,
+            ClaimEvidenceLevel::VerifiedByUser->value => 80,
+            ClaimEvidenceLevel::Verified->value => 100,
+        ],
+        Iban::class => [
+            ClaimEvidenceLevel::Observed->value => 8,
+            ClaimEvidenceLevel::VerifiedByUser->value => 80,
+            ClaimEvidenceLevel::Verified->value => 100,
+        ],
+        Email::class => [
+            ClaimEvidenceLevel::Observed->value => 7,
+            ClaimEvidenceLevel::VerifiedByUser->value => 80,
+            ClaimEvidenceLevel::Verified->value => 100,
+        ],
+        PersonName::class => [
+            ClaimEvidenceLevel::Observed->value => 6,
+            ClaimEvidenceLevel::VerifiedByUser->value => 80,
+            ClaimEvidenceLevel::Verified->value => 100,
+        ],
+        RawName::class => [
+            ClaimEvidenceLevel::Observed->value => 5,
+            ClaimEvidenceLevel::VerifiedByUser->value => 80,
+            ClaimEvidenceLevel::Verified->value => 100,
+        ],
     ];
 
     private const RESOLUTION_THRESHOLD = 80;
@@ -38,7 +58,7 @@ final class Claim extends BasicAggregateRoot
     private ClaimId $id;
     private ClaimSource $source;
     private bool $inReview = false;
-    /** @var array<class-string, object> */
+    /** @var array<class-string, ?object> */
     private array $presentedValues = [];
     /** @var array<class-string, ClaimEvidenceLevel> */
     private array $presentedEvidenceLevels = [];
@@ -60,6 +80,7 @@ final class Claim extends BasicAggregateRoot
 
     public function resolve(DateTimeImmutable $currentTime, IdentityId $identityId): void
     {
+        // Idempotency check
         if ($this->identityId?->toString() === $identityId->toString()) {
             return;
         }
@@ -68,51 +89,49 @@ final class Claim extends BasicAggregateRoot
             throw new LogicException('Claim is already resolved to another identity.');
         }
 
+        if (!$this->isResolvable()) {
+            throw new LogicException('Claim is not resolvable.');
+        }
+
         $this->recordThat(new ClaimResolved($currentTime, $this->id, $this->source, $identityId));
     }
 
     public function markInReview(DateTimeImmutable $currentTime, ClaimReviewReason $reason): void
     {
-        if ($this->identityId !== null || $this->inReview) {
+        if ($this->inReview) {
             return;
+        }
+
+        if ($this->identityId !== null) {
+            throw new LogicException('Cannot mark claim in review when it is already resolved.');
         }
 
         $this->recordThat(new ClaimInReview($currentTime, $this->id, $this->source, $reason));
     }
 
-    public function id(): ClaimId
+    public function personName(): ?PersonName
     {
-        return $this->id;
+        return $this->resolvableTypedValue(PersonName::class);
     }
 
-    public function source(): ClaimSource
+    public function rawName(): ?RawName
     {
-        return $this->source;
+        return $this->resolvableTypedValue(RawName::class);
     }
 
-    public function personName(bool $requireResolutionThreshold = false): ?PersonName
+    public function email(): ?Email
     {
-        return $this->typedValue(PersonName::class, $requireResolutionThreshold);
+        return $this->resolvableTypedValue(Email::class);
     }
 
-    public function rawName(bool $requireResolutionThreshold = false): ?RawName
+    public function iban(): ?Iban
     {
-        return $this->typedValue(RawName::class, $requireResolutionThreshold);
+        return $this->resolvableTypedValue(Iban::class);
     }
 
-    public function email(bool $requireResolutionThreshold = false): ?Email
+    public function nationalIdCode(): ?NationalIdCode
     {
-        return $this->typedValue(Email::class, $requireResolutionThreshold);
-    }
-
-    public function iban(bool $requireResolutionThreshold = false): ?Iban
-    {
-        return $this->typedValue(Iban::class, $requireResolutionThreshold);
-    }
-
-    public function nationalIdCode(bool $requireResolutionThreshold = false): ?NationalIdCode
-    {
-        return $this->typedValue(NationalIdCode::class, $requireResolutionThreshold);
+        return $this->resolvableTypedValue(NationalIdCode::class);
     }
 
     #[Apply]
@@ -123,17 +142,44 @@ final class Claim extends BasicAggregateRoot
     }
 
     #[Apply]
-    protected function applyClaimPresented(ClaimPresented $event): void
+    protected function applyClaimPresentedForPersonName(ClaimPresentedForPersonName $event): void
     {
-        $this->presentedValues[$event->value::class] = $event->value;
-        $this->presentedEvidenceLevels[$event->value::class] = $event->evidenceLevel;
+        $this->presentedValues[PersonName::class] = $event->value;
+        $this->presentedEvidenceLevels[PersonName::class] = $event->evidenceLevel;
+    }
+
+    #[Apply]
+    protected function applyClaimPresentedForRawName(ClaimPresentedForRawName $event): void
+    {
+        $this->presentedValues[RawName::class] = $event->value;
+        $this->presentedEvidenceLevels[RawName::class] = $event->evidenceLevel;
+    }
+
+    #[Apply]
+    protected function applyClaimPresentedForEmail(ClaimPresentedForEmail $event): void
+    {
+        $this->presentedValues[Email::class] = $event->value;
+        $this->presentedEvidenceLevels[Email::class] = $event->evidenceLevel;
+    }
+
+    #[Apply]
+    protected function applyClaimPresentedForIban(ClaimPresentedForIban $event): void
+    {
+        $this->presentedValues[Iban::class] = $event->value;
+        $this->presentedEvidenceLevels[Iban::class] = $event->evidenceLevel;
+    }
+
+    #[Apply]
+    protected function applyClaimPresentedForNationalIdCode(ClaimPresentedForNationalIdCode $event): void
+    {
+        $this->presentedValues[NationalIdCode::class] = $event->value;
+        $this->presentedEvidenceLevels[NationalIdCode::class] = $event->evidenceLevel;
     }
 
     #[Apply]
     protected function applyClaimResolved(ClaimResolved $event): void
     {
         $this->inReview = false;
-        $this->reviewReason = null;
         $this->identityId = $event->identityId;
     }
 
@@ -141,60 +187,36 @@ final class Claim extends BasicAggregateRoot
     protected function applyClaimInReview(ClaimInReview $event): void
     {
         $this->inReview = true;
-        $this->reviewReason = $event->reason;
     }
 
+    /**
+     * @param Email|RawName|Iban|PersonName|NationalIdCode $value
+     * @param ClaimEvidenceLevel $evidenceLevel
+     * @return bool
+     */
     private function shouldPresent(
-        object|null $currentValue,
-        object $newValue,
-        ?ClaimEvidenceLevel $currentEvidenceLevel,
-        ClaimEvidenceLevel $newEvidenceLevel,
+        object $value,
+        ClaimEvidenceLevel $evidenceLevel,
     ): bool {
+        $className = $value::class;
+        $currentValue = $this->value($className);
         if ($currentValue === null) {
             return true;
         }
-
-        if ($currentValue == $newValue && $currentEvidenceLevel?->rank() >= $newEvidenceLevel->rank()) {
+        $currentEvidenceLevel = $this->presentedEvidenceLevels[$className];
+        if (!$currentValue->equals($value)) {
+            return true;
+        }
+        if ($evidenceLevel->rank() < $currentEvidenceLevel->rank()) {
             return false;
         }
-
         return true;
     }
 
-    private function scoreFor(string $className, ?ClaimEvidenceLevel $level): int
+    private function scoreFor(string $className, ClaimEvidenceLevel $level): int
     {
-        return match ($className) {
-            NationalIdCode::class => match ($level) {
-                ClaimEvidenceLevel::Observed => 9,
-                ClaimEvidenceLevel::VerifiedByUser => 80,
-                ClaimEvidenceLevel::Verified => 100,
-                null => 0,
-            },
-            Iban::class => match ($level) {
-                ClaimEvidenceLevel::Observed => 8,
-                ClaimEvidenceLevel::VerifiedByUser => 80,
-                ClaimEvidenceLevel::Verified => 100,
-                null => 0,
-            },
-            Email::class => match ($level) {
-                ClaimEvidenceLevel::Observed => 7,
-                ClaimEvidenceLevel::VerifiedByUser => 80,
-                ClaimEvidenceLevel::Verified => 100,
-                null => 0,
-            },
-            PersonName::class => match ($level) {
-                ClaimEvidenceLevel::Observed => 6,
-                ClaimEvidenceLevel::VerifiedByUser => 80,
-                ClaimEvidenceLevel::Verified => 100,
-                null => 0,
-            },
-            RawName::class => match ($level) {
-                ClaimEvidenceLevel::Observed => 5,
-                ClaimEvidenceLevel::VerifiedByUser => 80,
-                ClaimEvidenceLevel::Verified => 100,
-                null => 0,
-            },
-        };
+        return self::SCORE_LOOKUP[$className][$level->value]
+            ?? throw new LogicException(sprintf('Unsupported claim value class "%s".', $className));
     }
 
     private function meetsThreshold(string $className, int $threshold): bool
@@ -202,38 +224,38 @@ final class Claim extends BasicAggregateRoot
         return $this->scoreFor($className, $this->evidenceLevelFor($className)) >= $threshold;
     }
 
-    public function allExistingAttributesExceedResolutionThreshold(): bool
+    public function isResolvable(): bool
     {
-        foreach (self::VALUE_DISCRIMINATOR_TO_CLASS_MAP as $className) {
-            if ($this->value($className) !== null && !$this->meetsThreshold($className, self::RESOLUTION_THRESHOLD)) {
-                return false;
-            }
-        }
-
-        return true;
+        return [] === array_filter(
+            $this->presentedValues,
+            // The value may be null in case of personal data deletion
+            fn (?object $value, string $className): bool => $value === null
+                || !$this->meetsThreshold($className, self::RESOLUTION_THRESHOLD),
+            ARRAY_FILTER_USE_BOTH,
+        );
     }
 
     /**
      * @template TValue of object
      * @param class-string<TValue> $className
-     * @param bool $requireResolutionThreshold
      * @return TValue|null
      */
-    private function typedValue(string $className, bool $requireResolutionThreshold = false): ?object
+    private function resolvableTypedValue(string $className): ?object
     {
         $value = $this->value($className);
 
         if (!$value instanceof $className) {
             return null;
         }
-
-        if ($requireResolutionThreshold && !$this->meetsThreshold($className, self::RESOLUTION_THRESHOLD)) {
-            return null;
+        if ($this->meetsThreshold($className, self::RESOLUTION_THRESHOLD)) {
+            return $value;
         }
-
-        return $value;
+        return null;
     }
 
+    /**
+     * @param Email|Iban|NationalIdCode|PersonName|RawName|class-string $value
+     */
     public function present(DateTimeImmutable $currentTime, object|string $value, ClaimEvidenceLevel $evidenceLevel): bool
     {
         if (is_string($value)) {
@@ -243,6 +265,9 @@ final class Claim extends BasicAggregateRoot
         return $this->presentValue($currentTime, $value, $evidenceLevel);
     }
 
+    /**
+     * @param class-string $className
+     */
     private function upgradePresentedType(DateTimeImmutable $currentTime, string $className, ClaimEvidenceLevel $evidenceLevel): bool
     {
         $value = $this->value($className);
@@ -254,22 +279,28 @@ final class Claim extends BasicAggregateRoot
         return $this->presentValue($currentTime, $value, $evidenceLevel);
     }
 
+
+    /**
+     * @param Email|Iban|NationalIdCode|PersonName|RawName $value
+     */
     private function presentValue(DateTimeImmutable $currentTime, object $value, ClaimEvidenceLevel $evidenceLevel): bool
     {
         $className = $value::class;
-        $currentValue = $this->value($className);
 
-        if (!$this->shouldPresent($currentValue, $value, $this->presentedEvidenceLevels[$className] ?? null, $evidenceLevel)) {
+        if (!$this->shouldPresent($value, $evidenceLevel)) {
             return false;
         }
 
-        $this->recordThat(new ClaimPresented(
-            $currentTime,
-            $this->id,
-            $value,
-            $evidenceLevel,
-        ));
+        $event = match ($className) {
+            PersonName::class => new ClaimPresentedForPersonName($currentTime, $this->id, $value, $evidenceLevel),
+            RawName::class => new ClaimPresentedForRawName($currentTime, $this->id, $value, $evidenceLevel),
+            Email::class => new ClaimPresentedForEmail($currentTime, $this->id, $value, $evidenceLevel),
+            Iban::class => new ClaimPresentedForIban($currentTime, $this->id, $value, $evidenceLevel),
+            NationalIdCode::class => new ClaimPresentedForNationalIdCode($currentTime, $this->id, $value, $evidenceLevel),
+            default => throw new LogicException(sprintf('Unsupported claim value class "%s".', $className)),
+        };
 
+        $this->recordThat($event);
         return true;
     }
 
@@ -278,15 +309,8 @@ final class Claim extends BasicAggregateRoot
         return $this->presentedValues[$className] ?? null;
     }
 
-    /**
-     * @param array<class-string, ClaimEvidenceLevel> $overrides
-     */
-    private function evidenceLevelFor(string $className, array $overrides = []): ?ClaimEvidenceLevel
+    private function evidenceLevelFor(string $className): ClaimEvidenceLevel
     {
-        if (!isset($this->presentedValues[$className]) && !isset($overrides[$className])) {
-            return null;
-        }
-
-        return $overrides[$className] ?? $this->presentedEvidenceLevels[$className] ?? null;
+        return $this->presentedEvidenceLevels[$className];
     }
 }

@@ -30,14 +30,13 @@ final class PresentClaimEvidenceHandler implements CommandHandlerInterface
             ? $this->claimRepository->load($claimId)
             : Claim::create($currentTime, $command->source);
 
-
         foreach ($command->presentations as $presentation) {
             $claim->present($currentTime, $presentation->value, $presentation->evidenceLevel);
         }
 
         $this->claimRepository->save($claim);
 
-        if ($claim->allExistingAttributesExceedResolutionThreshold()) {
+        if ($claim->isResolvable()) {
             $this->commandBus->dispatch(new ResolveClaim($command->source));
         }
     }

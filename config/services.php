@@ -246,9 +246,6 @@ return function (ContainerConfigurator $container) {
     $services->set('donation_bundle.identities.application.command_handler.present_claim_evidence', \ErgoSarapu\DonationBundle\BCIdentities\Application\CommandHandler\PresentClaimEvidenceHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
-    $services->set('donation_bundle.identities.application.command_handler.present_claim_evidence_level', \ErgoSarapu\DonationBundle\BCIdentities\Application\CommandHandler\PresentClaimEvidenceLevelHandler::class)
-        ->autoconfigure(true)
-        ->autowire(true);
     $services->set('donation_bundle.identities.application.command_handler.resolve_claim', \ErgoSarapu\DonationBundle\BCIdentities\Application\CommandHandler\ResolveClaimHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
@@ -444,22 +441,7 @@ return function (ContainerConfigurator $container) {
         ->autowire(true);
 
     // Identities
-    $services->set('donation_bundle.application.identities.integration_event_handler.claim_evidence_level_presented', \ErgoSarapu\DonationBundle\BCIdentities\Application\EventHandler\Integration\ClaimEvidenceLevelPresentedHandler::class)
-        ->autoconfigure(true)
-        ->autowire(true);
-    $services->set('donation_bundle.application.identities.integration_event_handler.email_claim_presented', \ErgoSarapu\DonationBundle\BCIdentities\Application\EventHandler\Integration\EmailClaimPresentedHandler::class)
-        ->autoconfigure(true)
-        ->autowire(true);
-    $services->set('donation_bundle.application.identities.integration_event_handler.iban_claim_presented', \ErgoSarapu\DonationBundle\BCIdentities\Application\EventHandler\Integration\IbanClaimPresentedHandler::class)
-        ->autoconfigure(true)
-        ->autowire(true);
-    $services->set('donation_bundle.application.identities.integration_event_handler.national_id_code_claim_presented', \ErgoSarapu\DonationBundle\BCIdentities\Application\EventHandler\Integration\NationalIdCodeClaimPresentedHandler::class)
-        ->autoconfigure(true)
-        ->autowire(true);
-    $services->set('donation_bundle.application.identities.integration_event_handler.person_name_claim_presented', \ErgoSarapu\DonationBundle\BCIdentities\Application\EventHandler\Integration\PersonNameClaimPresentedHandler::class)
-        ->autoconfigure(true)
-        ->autowire(true);
-    $services->set('donation_bundle.application.identities.integration_event_handler.raw_name_claim_presented', \ErgoSarapu\DonationBundle\BCIdentities\Application\EventHandler\Integration\RawNameClaimPresentedHandler::class)
+    $services->set('donation_bundle.application.identities.integration_event_handler.claim_presented', \ErgoSarapu\DonationBundle\BCIdentities\Application\EventHandler\Integration\ClaimPresentedHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
 
@@ -499,6 +481,12 @@ return function (ContainerConfigurator $container) {
         ->autoconfigure(true)
         ->autowire(true);
     $services->set('donation_bundle.application.payments.domain_event_handler.try_reconcile_payment_import', \ErgoSarapu\DonationBundle\BCPayments\Application\EventHandler\Domain\TryReconcilePaymentImportHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.application.payments.domain_event_handler.payment_import_accepted', \ErgoSarapu\DonationBundle\BCPayments\Application\EventHandler\Domain\PaymentImportAcceptedHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.application.payments.domain_event_handler.payment_import_reconciled', \ErgoSarapu\DonationBundle\BCPayments\Application\EventHandler\Domain\PaymentImportReconciledHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
     // *************

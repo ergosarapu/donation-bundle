@@ -15,9 +15,10 @@ final class PersonName
     ) {
     }
 
-    public function equals(self $other): bool
+    public function equals(?self $other): bool
     {
-        return $this->givenName === $other->givenName
+        return $other !== null
+            && $this->givenName === $other->givenName
             && $this->familyName === $other->familyName;
     }
 }

@@ -33,9 +33,9 @@ final class ResolveClaimHandler implements CommandHandlerInterface
         $claimId = ClaimId::generateDeterministic($command->source);
         $claim = $this->claimRepository->load($claimId);
         $identityIds = $this->identityLookup->lookup(
-            email: $claim->email(requireResolutionThreshold: true),
-            iban: $claim->iban(requireResolutionThreshold: true),
-            nationalIdCode: $claim->nationalIdCode(requireResolutionThreshold: true),
+            email: $claim->email(),
+            iban: $claim->iban(),
+            nationalIdCode: $claim->nationalIdCode(),
         );
 
         if (count($identityIds) > 1) {
@@ -51,13 +51,23 @@ final class ResolveClaimHandler implements CommandHandlerInterface
             ? Identity::create($currentTime, IdentityId::generate())
             : $this->identityRepository->load($identityId);
 
-        $reviewReason = $identity->resolveClaim($currentTime, $claim);
+        $mergeResult = $identity->mergePersonalData(
+            $currentTime,
+            $claimId,
+            $claim->personName(),
+            $claim->nationalIdCode(),
+            $claim->rawName(),
+            $claim->email(),
+            $claim->iban(),
+        );
 
-        if ($reviewReason !== null) {
-            $claim->markInReview($currentTime, $reviewReason);
+        if ($mergeResult->isConflict()) {
+            $claim->markInReview($currentTime, ClaimReviewReason::MergeConflict);
             $this->claimRepository->save($claim);
             return;
         }
+
+        $claim->resolve($currentTime, $identityId);
 
         $this->transactionManager->transactional(function () use ($claim, $identity): void {
             $this->identityRepository->save($identity);

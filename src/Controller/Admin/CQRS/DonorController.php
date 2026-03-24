@@ -53,9 +53,9 @@ class DonorController extends AbstractCQRSController
             IdField::new('identityId')->setDisabled()->hideOnIndex(),
             TextField::new('givenName')->setDisabled(),
             TextField::new('familyName')->setDisabled(),
-            CollectionField::new('rawNames')->formatValue(fn ($value) => is_array($value) ? implode(', ', $value) : $value),
-            CollectionField::new('emails')->formatValue(fn ($value) => is_array($value) ? implode(', ', $value) : $value),
-            CollectionField::new('ibans')->setLabel('IBANs')->formatValue(fn ($value) => is_array($value) ? implode(', ', $value) : $value),
+            CollectionField::new('rawNames')->formatValue(fn (array $value) => implode(', ', $value)),
+            CollectionField::new('emails')->formatValue(fn (array $value) =>  implode(', ', $value)),
+            CollectionField::new('ibans')->setLabel('IBANs')->formatValue(fn (array $value) =>  implode(', ', $value)),
             TextField::new('nationalIdCode')->setDisabled(),
             ];
     }

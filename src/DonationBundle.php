@@ -48,14 +48,18 @@ use ErgoSarapu\DonationBundle\BCIdentities\Application\Command\PresentClaimEvide
 use ErgoSarapu\DonationBundle\BCIdentities\Application\Command\ResolveClaim;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimCreated;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimInReview;
-use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresented;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForEmail;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForIban;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForNationalIdCode;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForPersonName;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForRawName;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimResolved;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityCreated;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityEmailAdded;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityIbanAdded;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityNationalIdCodeChanged;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityPersonNameChanged;
-use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityRawNameChanged;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityRawNameAdded;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\AcceptPaymentImport;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\CapturePayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\CreatePayment;
@@ -550,12 +554,16 @@ class DonationBundle extends AbstractBundle
                 // BCIdentities
                 ClaimCreated::class,
                 ClaimInReview::class,
-                ClaimPresented::class,
+                ClaimPresentedForEmail::class,
+                ClaimPresentedForIban::class,
+                ClaimPresentedForNationalIdCode::class,
+                ClaimPresentedForPersonName::class,
+                ClaimPresentedForRawName::class,
                 ClaimResolved::class,
                 IdentityCreated::class,
                 IdentityEmailAdded::class,
                 IdentityIbanAdded::class,
-                IdentityRawNameChanged::class,
+                IdentityRawNameAdded::class,
                 IdentityNationalIdCodeChanged::class,
                 IdentityPersonNameChanged::class,
                 // BCPayments

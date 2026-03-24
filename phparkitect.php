@@ -8,7 +8,6 @@ use Arkitect\Expression\ForClasses\Implement;
 use Arkitect\Expression\ForClasses\NotHaveDependencyOutsideNamespace;
 use Arkitect\Expression\ForClasses\ResideInOneOfTheseNamespaces;
 use Arkitect\Rules\Rule;
-use ErgoSarapu\DonationBundle\BCIdentities\Infrastructure\Hydrator\MixedTypeObjectNormalizer;
 use ErgoSarapu\DonationBundle\IntegrationContracts\IntegrationCommandInterface;
 use ErgoSarapu\DonationBundle\IntegrationContracts\IntegrationEventInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandInterface;
@@ -55,10 +54,7 @@ return static function (Config $config): void {
 
     $rules[] = Rule::allClasses()
         ->that(new ResideInOneOfTheseNamespaces('*\BCIdentities\Domain'))
-        ->should(new NotHaveDependencyOutsideNamespace('*\BCIdentities\Domain\*', [
-            MixedTypeObjectNormalizer::class,
-            ...$domainDepsToExclude
-        ], true))
+        ->should(new NotHaveDependencyOutsideNamespace('*\BCIdentities\Domain\*', $domainDepsToExclude, true))
         ->because('we want to keep the domain layer independent')
     ;
 

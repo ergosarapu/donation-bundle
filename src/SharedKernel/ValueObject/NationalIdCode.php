@@ -14,8 +14,8 @@ final class NationalIdCode
     ) {
     }
 
-    public function equals(self $other): bool
+    public function equals(?self $other): bool
     {
-        return $this->value === $other->value;
+        return $other !== null && $this->value === $other->value;
     }
 }

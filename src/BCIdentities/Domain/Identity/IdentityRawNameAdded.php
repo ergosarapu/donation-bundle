@@ -2,29 +2,28 @@
 
 declare(strict_types=1);
 
-namespace ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim;
+namespace ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity;
 
 use DateTimeImmutable;
-use ErgoSarapu\DonationBundle\BCIdentities\Infrastructure\Hydrator\MixedTypeObjectNormalizer;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\AbstractTimestampedEvent;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\DomainEventInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ClaimId;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ClaimEvidenceLevel;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\IdentityId;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\RawName;
 use Patchlevel\EventSourcing\Attribute\Event;
 use Patchlevel\Hydrator\Attribute\DataSubjectId;
 use Patchlevel\Hydrator\Attribute\PersonalData;
 
-#[Event(name: 'claim.presented')]
-final class ClaimPresented extends AbstractTimestampedEvent implements DomainEventInterface
+#[Event(name: 'identity.raw_name_added')]
+final class IdentityRawNameAdded extends AbstractTimestampedEvent implements DomainEventInterface
 {
     public function __construct(
         DateTimeImmutable $occuredOn,
         #[DataSubjectId]
         public readonly ClaimId $claimId,
+        public readonly IdentityId $identityId,
         #[PersonalData]
-        #[MixedTypeObjectNormalizer(Claim::VALUE_DISCRIMINATOR_TO_CLASS_MAP)]
-        public readonly object $value,
-        public readonly ClaimEvidenceLevel $evidenceLevel,
+        public readonly ?RawName $rawName,
     ) {
         parent::__construct($occuredOn);
     }

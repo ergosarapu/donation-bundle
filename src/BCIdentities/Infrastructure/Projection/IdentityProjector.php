@@ -13,7 +13,7 @@ use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityEmailAdded;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityIbanAdded;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityNationalIdCodeChanged;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityPersonNameChanged;
-use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityRawNameChanged;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityRawNameAdded;
 use ErgoSarapu\DonationBundle\SharedInfrastructure\Patchlevel\ProjectorTrait;
 use Patchlevel\EventSourcing\Attribute\Projector;
 use Patchlevel\EventSourcing\Attribute\Subscribe;
@@ -73,10 +73,10 @@ final class IdentityProjector implements IdentityProjectionRepositoryInterface
         return $identities;
     }
 
-    #[Subscribe(IdentityRawNameChanged::class)]
+    #[Subscribe(IdentityRawNameAdded::class)]
     public function onIdentityNameChanged(Message $message): void
     {
-        $event = $this->getEvent($message, IdentityRawNameChanged::class);
+        $event = $this->getEvent($message, IdentityRawNameAdded::class);
         $identity = $this->loadOrCreateIdentity($event->identityId->toString());
         $identity->addRawName($event->rawName->toString());
 

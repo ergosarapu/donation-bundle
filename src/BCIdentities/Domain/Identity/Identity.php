@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity;
 
 use DateTimeImmutable;
-use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\Claim;
-use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimReviewReason;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ClaimId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\IdentityId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
@@ -39,63 +38,153 @@ final class Identity extends BasicAggregateRoot
         return $identity;
     }
 
-    public function resolveClaim(DateTimeImmutable $currentTime, Claim $claim): ?ClaimReviewReason
+    private function mergePersonName(DateTimeImmutable $currentTime, ClaimId $claimId, ?PersonName $personName): MergeAttempt
     {
-        $reviewReason = $this->resolveClaimReviewReason($claim);
-
-        if ($reviewReason !== null) {
-            return $reviewReason;
+        if ($personName === null) {
+            return MergeAttempt::noChange();
         }
 
-        $claimId = $claim->id();
-
-        if ($claim->rawName() !== null && !isset($this->rawNames[$claim->rawName()->toString()])) {
-            $this->recordThat(new IdentityRawNameChanged($currentTime, $claimId, $this->id, $claim->rawName()));
+        if ($personName->equals($this->personName)) {
+            return MergeAttempt::noChange();
         }
 
-        if ($this->personName === null && $claim->personName() !== null) {
-            $this->recordThat(new IdentityPersonNameChanged($currentTime, $claimId, $this->id, $claim->personName()));
+        if ($this->personName !== null) {
+            return MergeAttempt::conflict();
         }
 
-        if ($claim->email() !== null && !isset($this->emails[$claim->email()->toString()])) {
-            $this->recordThat(new IdentityEmailAdded($currentTime, $claimId, $this->id, $claim->email()));
-        }
-
-        if ($claim->iban() !== null && !isset($this->ibans[$claim->iban()->value])) {
-            $this->recordThat(new IdentityIbanAdded($currentTime, $claimId, $this->id, $claim->iban()));
-        }
-
-        if ($this->nationalIdCode === null && $claim->nationalIdCode() !== null) {
-            $this->recordThat(new IdentityNationalIdCodeChanged($currentTime, $claimId, $this->id, $claim->nationalIdCode()));
-        }
-
-        $claim->resolve($currentTime, $this->id);
-
-        return null;
+        return MergeAttempt::changed(
+            new IdentityPersonNameChanged($currentTime, $claimId, $this->id, $personName)
+        );
     }
 
-    private function resolveClaimReviewReason(Claim $claim): ?ClaimReviewReason
+    private function mergeNationalIdCode(DateTimeImmutable $currentTime, ClaimId $claimId, ?NationalIdCode $nationalIdCode): MergeAttempt
     {
-        if (!$claim->allExistingAttributesExceedResolutionThreshold()) {
-            return ClaimReviewReason::AttributeBelowThreshold;
+        if ($nationalIdCode === null) {
+            return MergeAttempt::noChange();
         }
 
-        if ($this->hasConflictingClaim($claim)) {
-            return ClaimReviewReason::ConflictingClaimValue;
+        if ($nationalIdCode->equals($this->nationalIdCode)) {
+            return MergeAttempt::noChange();
         }
 
-        return null;
+        if ($this->nationalIdCode !== null) {
+            return MergeAttempt::conflict();
+        }
+
+        return MergeAttempt::changed(
+            new IdentityNationalIdCodeChanged($currentTime, $claimId, $this->id, $nationalIdCode)
+        );
     }
 
-    private function hasConflictingClaim(Claim $claim): bool
+    private function mergeRawName(DateTimeImmutable $currentTime, ClaimId $claimId, ?RawName $rawName): MergeAttempt
     {
-        if ($this->personName !== null && $claim->personName() !== null && !$this->personName->equals($claim->personName())) {
-            return true;
+        if ($rawName === null) {
+            return MergeAttempt::noChange();
         }
 
-        return $this->nationalIdCode !== null
-            && $claim->nationalIdCode() !== null
-            && !$this->nationalIdCode->equals($claim->nationalIdCode());
+        if (isset($this->rawNames[$rawName->toString()])) {
+            return MergeAttempt::noChange();
+        }
+
+        return MergeAttempt::changed(
+            new IdentityRawNameAdded($currentTime, $claimId, $this->id, $rawName)
+        );
+    }
+
+    private function mergeEmail(DateTimeImmutable $currentTime, ClaimId $claimId, ?Email $email): MergeAttempt
+    {
+        if ($email === null) {
+            return MergeAttempt::noChange();
+        }
+
+        if (isset($this->emails[$email->toString()])) {
+            return MergeAttempt::noChange();
+        }
+
+        return MergeAttempt::changed(
+            new IdentityEmailAdded($currentTime, $claimId, $this->id, $email)
+        );
+    }
+
+    private function mergeIban(DateTimeImmutable $currentTime, ClaimId $claimId, ?Iban $iban): MergeAttempt
+    {
+        if ($iban === null) {
+            return MergeAttempt::noChange();
+        }
+
+        if (isset($this->ibans[$iban->value])) {
+            return MergeAttempt::noChange();
+        }
+
+        return MergeAttempt::changed(
+            new IdentityIbanAdded($currentTime, $claimId, $this->id, $iban)
+        );
+    }
+
+    private function collectMergeAttempts(
+        DateTimeImmutable $currentTime,
+        ClaimId $claimId,
+        ?PersonName $personName,
+        ?NationalIdCode $nationalIdCode,
+        ?RawName $rawName,
+        ?Email $email,
+        ?Iban $iban,
+    ): array {
+        return [
+            $this->mergePersonName($currentTime, $claimId, $personName),
+            $this->mergeNationalIdCode($currentTime, $claimId, $nationalIdCode),
+            $this->mergeRawName($currentTime, $claimId, $rawName),
+            $this->mergeEmail($currentTime, $claimId, $email),
+            $this->mergeIban($currentTime, $claimId, $iban),
+        ];
+    }
+
+    /** @param list<MergeAttempt> $attempts */
+    private function hasConflicts(array $attempts): bool
+    {
+        return [] !== array_filter(
+            $attempts,
+            static fn (MergeAttempt $attempt): bool => $attempt->hasConflict,
+        );
+    }
+
+    /** @param list<MergeAttempt> $attempts */
+    private function recordAttemptEvents(array $attempts): void
+    {
+        $attemptsWithEvents = array_filter(
+            $attempts,
+            static fn (MergeAttempt $attempt): bool => $attempt->event !== null,
+        );
+
+        array_walk(
+            $attemptsWithEvents,
+            function (MergeAttempt $attempt): void {
+                /** @var object $event */
+                $event = $attempt->event;
+                $this->recordThat($event);
+            },
+        );
+    }
+
+    public function mergePersonalData(
+        DateTimeImmutable $currentTime,
+        ClaimId $claimId,
+        ?PersonName $personName,
+        ?NationalIdCode $nationalIdCode,
+        ?RawName $rawName,
+        ?Email $email,
+        ?Iban $iban,
+    ): MergeResult {
+        $attempts = $this->collectMergeAttempts($currentTime, $claimId, $personName, $nationalIdCode, $rawName, $email, $iban);
+
+        // Check for conflicts
+        if ($this->hasConflicts($attempts)) {
+            return MergeResult::conflict();
+        }
+
+        $this->recordAttemptEvents($attempts);
+
+        return MergeResult::success();
     }
 
     #[Apply]
@@ -105,7 +194,7 @@ final class Identity extends BasicAggregateRoot
     }
 
     #[Apply]
-    protected function applyIdentityNameChanged(IdentityRawNameChanged $event): void
+    protected function applyIdentityNameChanged(IdentityRawNameAdded $event): void
     {
         $this->rawNames[$event->rawName->toString()] = $event->rawName;
     }
