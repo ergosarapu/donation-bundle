@@ -121,6 +121,7 @@ final class Identity extends BasicAggregateRoot
         );
     }
 
+    /** @return list<MergeAttempt> */
     private function collectMergeAttempts(
         DateTimeImmutable $currentTime,
         ClaimId $claimId,

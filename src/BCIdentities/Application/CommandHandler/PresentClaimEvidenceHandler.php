@@ -57,12 +57,8 @@ final class PresentClaimEvidenceHandler implements CommandHandlerInterface
 
     private function presentClaimEvidence(Claim $claim, PresentClaimEvidence $command, DateTimeImmutable $currentTime): void
     {
-        array_map(
-            static function (object $presentation) use ($claim, $currentTime): null {
-                $claim->present($currentTime, $presentation->value, $presentation->evidenceLevel);
-                return null;
-            },
-            $command->presentations,
-        );
+        foreach ($command->presentations as $presentation) {
+            $claim->present($currentTime, $presentation->value, $presentation->evidenceLevel);
+        }
     }
 }
