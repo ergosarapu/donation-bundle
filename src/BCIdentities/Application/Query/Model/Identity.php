@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model;
 
-final class Identity
+class Identity
 {
     private string $identityId;
     private ?string $givenName = null;

@@ -6,7 +6,7 @@ namespace ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model;
 
 use DateTimeImmutable;
 
-final class Claim
+class Claim
 {
     private string $claimId;
     private ?string $paymentId = null;
