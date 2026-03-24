@@ -18,6 +18,7 @@ use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForIban;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForPersonName;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimResolved;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimReviewReason;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\ClaimMerged;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\Identity;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityCreated;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityIbanAdded;
@@ -232,7 +233,10 @@ final class ResolveClaimHandlerTest extends TestCase
 
         self::assertInstanceOf(Identity::class, $savedIdentity);
         self::assertEquals(
-            [new IdentityIbanAdded($this->now, $claimId, $identityId, $iban)],
+            [
+                new IdentityIbanAdded($this->now, $claimId, $identityId, $iban),
+                new ClaimMerged($this->now, $claimId, $identityId),
+            ],
             $savedIdentity->releaseEvents(),
         );
 
@@ -291,12 +295,14 @@ final class ResolveClaimHandlerTest extends TestCase
 
         self::assertInstanceOf(Identity::class, $savedIdentity);
         $identityEvents = $savedIdentity->releaseEvents();
-        self::assertCount(2, $identityEvents);
+        self::assertCount(3, $identityEvents);
         self::assertInstanceOf(IdentityCreated::class, $identityEvents[0]);
         self::assertInstanceOf(IdentityIbanAdded::class, $identityEvents[1]);
+        self::assertInstanceOf(ClaimMerged::class, $identityEvents[2]);
 
         $resolvedIdentityId = $identityEvents[0]->identityId;
         self::assertEquals(new IdentityIbanAdded($this->now, $claimId, $resolvedIdentityId, $iban), $identityEvents[1]);
+        self::assertEquals(new ClaimMerged($this->now, $claimId, $resolvedIdentityId), $identityEvents[2]);
 
         self::assertInstanceOf(Claim::class, $savedClaim);
         self::assertEquals(

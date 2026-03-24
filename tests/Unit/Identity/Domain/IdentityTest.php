@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\Tests\Unit\Identity\Domain;
 
 use DateTimeImmutable;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\ClaimMerged;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\Identity;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityCreated;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityEmailAdded;
@@ -60,30 +61,33 @@ final class IdentityTest extends AggregateRootTestCase
             ->then(new IdentityCreated($this->now, $this->identityId));
     }
 
-    public function testMergePersonalDataWithNoValuesDoesNothingAndReturnsSuccess(): void
+    public function testMergeClaimDataWithNoValuesMergesClaim(): void
     {
         /** @var ?MergeResult $result */
         $result = null;
 
         $this->given(new IdentityCreated($this->now, $this->identityId))
             ->when(function (Identity $identity) use (&$result): void {
-                $result = $identity->mergePersonalData($this->now, $this->claimId, null, null, null, null, null);
+                $result = $identity->mergeClaimData($this->now, $this->claimId, null, null, null, null, null);
             })
-            ->then(function () use (&$result): void {
-                self::assertNotNull($result);
-                self::assertTrue($result->isSuccess());
-                self::assertFalse($result->isConflict());
-            });
+            ->then(
+                new ClaimMerged($this->now, $this->claimId, $this->identityId),
+                function () use (&$result): void {
+                    self::assertNotNull($result);
+                    self::assertTrue($result->isSuccess());
+                    self::assertFalse($result->isConflict());
+                },
+            );
     }
 
-    public function testMergePersonalDataRecordsEventsForNewValues(): void
+    public function testMergeClaimDataMergesClaimAndRecordsEventsForNewValues(): void
     {
         /** @var ?MergeResult $result */
         $result = null;
 
         $this->given(new IdentityCreated($this->now, $this->identityId))
             ->when(function (Identity $identity) use (&$result): void {
-                $result = $identity->mergePersonalData(
+                $result = $identity->mergeClaimData(
                     $this->now,
                     $this->claimId,
                     $this->personName,
@@ -99,6 +103,7 @@ final class IdentityTest extends AggregateRootTestCase
                 new IdentityRawNameAdded($this->now, $this->claimId, $this->identityId, $this->rawName),
                 new IdentityEmailAdded($this->now, $this->claimId, $this->identityId, $this->email),
                 new IdentityIbanAdded($this->now, $this->claimId, $this->identityId, $this->iban),
+                new ClaimMerged($this->now, $this->claimId, $this->identityId),
                 function () use (&$result): void {
                     self::assertNotNull($result);
                     self::assertTrue($result->isSuccess());
@@ -107,7 +112,7 @@ final class IdentityTest extends AggregateRootTestCase
             );
     }
 
-    public function testMergePersonalDataWithExistingMatchingValuesDoesNothing(): void
+    public function testMergeClaimDataWithExistingMatchingValuesMergesClaim(): void
     {
         /** @var ?MergeResult $result */
         $result = null;
@@ -121,7 +126,7 @@ final class IdentityTest extends AggregateRootTestCase
             new IdentityIbanAdded($this->now, $this->claimId, $this->identityId, $this->iban),
         )
             ->when(function (Identity $identity) use (&$result): void {
-                $result = $identity->mergePersonalData(
+                $result = $identity->mergeClaimData(
                     $this->now,
                     $this->claimId,
                     $this->personName,
@@ -131,14 +136,17 @@ final class IdentityTest extends AggregateRootTestCase
                     $this->iban,
                 );
             })
-            ->then(function () use (&$result): void {
-                self::assertNotNull($result);
-                self::assertTrue($result->isSuccess());
-                self::assertFalse($result->isConflict());
-            });
+            ->then(
+                new ClaimMerged($this->now, $this->claimId, $this->identityId),
+                function () use (&$result): void {
+                    self::assertNotNull($result);
+                    self::assertTrue($result->isSuccess());
+                    self::assertFalse($result->isConflict());
+                },
+            );
     }
 
-    public function testMergePersonalDataReturnsConflictForDifferentPersonNameWithoutRecordingEvents(): void
+    public function testMergeClaimDataReturnsConflictForDifferentPersonNameWithoutRecordingEvents(): void
     {
         /** @var ?MergeResult $result */
         $result = null;
@@ -148,7 +156,7 @@ final class IdentityTest extends AggregateRootTestCase
             new IdentityPersonNameChanged($this->now, $this->claimId, $this->identityId, $this->personName),
         )
             ->when(function (Identity $identity) use (&$result): void {
-                $result = $identity->mergePersonalData(
+                $result = $identity->mergeClaimData(
                     $this->now,
                     $this->claimId,
                     new PersonName('Janet', 'Doe'),
@@ -165,7 +173,7 @@ final class IdentityTest extends AggregateRootTestCase
             });
     }
 
-    public function testMergePersonalDataReturnsConflictForDifferentNationalIdCodeWithoutRecordingEvents(): void
+    public function testMergeClaimDataReturnsConflictForDifferentNationalIdCodeWithoutRecordingEvents(): void
     {
         /** @var ?MergeResult $result */
         $result = null;
@@ -175,7 +183,7 @@ final class IdentityTest extends AggregateRootTestCase
             new IdentityNationalIdCodeChanged($this->now, $this->claimId, $this->identityId, $this->nationalIdCode),
         )
             ->when(function (Identity $identity) use (&$result): void {
-                $result = $identity->mergePersonalData(
+                $result = $identity->mergeClaimData(
                     $this->now,
                     $this->claimId,
                     null,

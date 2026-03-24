@@ -166,7 +166,7 @@ final class Identity extends BasicAggregateRoot
         );
     }
 
-    public function mergePersonalData(
+    public function mergeClaimData(
         DateTimeImmutable $currentTime,
         ClaimId $claimId,
         ?PersonName $personName,
@@ -183,6 +183,7 @@ final class Identity extends BasicAggregateRoot
         }
 
         $this->recordAttemptEvents($attempts);
+        $this->recordThat(new ClaimMerged($currentTime, $claimId, $this->id));
 
         return MergeResult::success();
     }
@@ -221,5 +222,10 @@ final class Identity extends BasicAggregateRoot
     protected function applyIdentityNationalIdCodeChanged(IdentityNationalIdCodeChanged $event): void
     {
         $this->nationalIdCode = $event->nationalIdCode;
+    }
+
+    #[Apply]
+    protected function applyClaimMerged(ClaimMerged $event): void
+    {
     }
 }

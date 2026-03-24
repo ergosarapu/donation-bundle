@@ -50,7 +50,7 @@ final class ResolveClaimHandler implements CommandHandlerInterface
         $identityId = $identityIds[0] ?? IdentityId::generate();
         $identity = $this->loadOrCreateIdentity($identityId, $currentTime);
 
-        $mergeResult = $identity->mergePersonalData(
+        $mergeResult = $identity->mergeClaimData(
             $currentTime,
             $claimId,
             $claim->personName(),

@@ -54,6 +54,7 @@ use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForNationa
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForPersonName;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForRawName;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimResolved;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\ClaimMerged;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityCreated;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityEmailAdded;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityIbanAdded;
@@ -560,6 +561,7 @@ class DonationBundle extends AbstractBundle
                 ClaimPresentedForPersonName::class,
                 ClaimPresentedForRawName::class,
                 ClaimResolved::class,
+                ClaimMerged::class,
                 IdentityCreated::class,
                 IdentityEmailAdded::class,
                 IdentityIbanAdded::class,
