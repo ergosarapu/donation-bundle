@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\BCIdentities\Application\CommandHandler;
 
+use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCIdentities\Application\Command\ResolveClaim;
 use ErgoSarapu\DonationBundle\BCIdentities\Application\Port\ClaimRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCIdentities\Application\Port\IdentityLookupInterface;
@@ -46,10 +47,8 @@ final class ResolveClaimHandler implements CommandHandlerInterface
 
         // Note the lookup may return no matches if the lookup table is eventually consistent and possibly matching identity has not been projected yet
         // In this case we are creating possibly duplicate identity, which may require some cleanup/merge process later.
-        $identityId = $identityIds[0] ?? null;
-        $identity = $identityId === null
-            ? Identity::create($currentTime, IdentityId::generate())
-            : $this->identityRepository->load($identityId);
+        $identityId = $identityIds[0] ?? IdentityId::generate();
+        $identity = $this->loadOrCreateIdentity($identityId, $currentTime);
 
         $mergeResult = $identity->mergePersonalData(
             $currentTime,
@@ -74,4 +73,14 @@ final class ResolveClaimHandler implements CommandHandlerInterface
             $this->claimRepository->save($claim);
         });
     }
+
+    private function loadOrCreateIdentity(IdentityId $identityId, DateTimeImmutable $currentTime): Identity
+    {
+        if ($this->identityRepository->has($identityId)) {
+            return $this->identityRepository->load($identityId);
+        }
+
+        return Identity::create($currentTime, $identityId);
+    }
+
 }

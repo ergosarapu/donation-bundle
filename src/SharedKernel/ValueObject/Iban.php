@@ -13,4 +13,9 @@ final class Iban
         public readonly string $value,
     ) {
     }
+
+    public function equals(self $other): bool
+    {
+        return $this->value === $other->value;
+    }
 }

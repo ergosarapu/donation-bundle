@@ -207,7 +207,7 @@ final class Claim extends BasicAggregateRoot
         if (!$currentValue->equals($value)) {
             return true;
         }
-        if ($evidenceLevel->rank() < $currentEvidenceLevel->rank()) {
+        if ($evidenceLevel->rank() <= $currentEvidenceLevel->rank()) {
             return false;
         }
         return true;
@@ -256,39 +256,41 @@ final class Claim extends BasicAggregateRoot
     /**
      * @param Email|Iban|NationalIdCode|PersonName|RawName|class-string $value
      */
-    public function present(DateTimeImmutable $currentTime, object|string $value, ClaimEvidenceLevel $evidenceLevel): bool
+    public function present(DateTimeImmutable $currentTime, object|string $value, ClaimEvidenceLevel $evidenceLevel): void
     {
         if (is_string($value)) {
-            return $this->upgradePresentedType($currentTime, $value, $evidenceLevel);
+            $this->upgradePresentedType($currentTime, $value, $evidenceLevel);
+
+            return;
         }
 
-        return $this->presentValue($currentTime, $value, $evidenceLevel);
+        $this->presentValue($currentTime, $value, $evidenceLevel);
     }
 
     /**
      * @param class-string $className
      */
-    private function upgradePresentedType(DateTimeImmutable $currentTime, string $className, ClaimEvidenceLevel $evidenceLevel): bool
+    private function upgradePresentedType(DateTimeImmutable $currentTime, string $className, ClaimEvidenceLevel $evidenceLevel): void
     {
         $value = $this->value($className);
 
         if ($value === null) {
-            return false;
+            return;
         }
 
-        return $this->presentValue($currentTime, $value, $evidenceLevel);
+        $this->presentValue($currentTime, $value, $evidenceLevel);
     }
 
 
     /**
      * @param Email|Iban|NationalIdCode|PersonName|RawName $value
      */
-    private function presentValue(DateTimeImmutable $currentTime, object $value, ClaimEvidenceLevel $evidenceLevel): bool
+    private function presentValue(DateTimeImmutable $currentTime, object $value, ClaimEvidenceLevel $evidenceLevel): void
     {
         $className = $value::class;
 
         if (!$this->shouldPresent($value, $evidenceLevel)) {
-            return false;
+            return;
         }
 
         $event = match ($className) {
@@ -301,7 +303,6 @@ final class Claim extends BasicAggregateRoot
         };
 
         $this->recordThat($event);
-        return true;
     }
 
     private function value(string $className): ?object
