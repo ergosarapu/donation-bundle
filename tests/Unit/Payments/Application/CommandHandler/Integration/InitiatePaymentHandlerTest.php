@@ -9,7 +9,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\Integration\
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Command\InitiatePaymentIntegrationCommand;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandResult;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
@@ -39,7 +39,7 @@ class InitiatePaymentHandlerTest extends TestCase
         $amount = new Money(5000, new Currency('EUR'));
         $gateway = new Gateway('test-gateway');
         $description = new ShortDescription('Test donation');
-        $appliedTo = PaymentAppliedToId::generate();
+        $appliedTo = ExternalEntityId::generate();
         $email = new Email('donor@example.com');
         $requestPaymentMethodId = PaymentMethodId::generate();
 
@@ -81,7 +81,7 @@ class InitiatePaymentHandlerTest extends TestCase
         $amount = new Money(5000, new Currency('EUR'));
         $gateway = new Gateway('test-gateway');
         $description = new ShortDescription('Test donation');
-        $appliedTo = PaymentAppliedToId::generate();
+        $appliedTo = ExternalEntityId::generate();
         $email = new Email('donor@example.com');
         $usePaymentMethodId = PaymentMethodId::generate();
 
@@ -123,7 +123,7 @@ class InitiatePaymentHandlerTest extends TestCase
         $amount = new Money(5000, new Currency('EUR'));
         $gateway = new Gateway('test-gateway');
         $description = new ShortDescription('Test donation');
-        $appliedTo = PaymentAppliedToId::generate();
+        $appliedTo = ExternalEntityId::generate();
         $email = new Email('donor@example.com');
 
         $integrationCommand = new InitiatePaymentIntegrationCommand(

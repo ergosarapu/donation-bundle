@@ -5,13 +5,112 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle;
 
 use DateInterval;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Command\AcceptDonation;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Command\ActivateCampaign;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Command\ActivateRecurringPlan;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Command\ArchiveCampaign;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Command\CompleteRecurringDonationAttempt;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Command\CompleteRecurringPlanRenewal;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Command\CreateCampaign;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Command\CreateDonation;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Command\CreateRecurringPlan;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Command\FailDonation;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Command\FailRecurringPlan;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Command\InitiateDonation;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Command\InitiateRecurringPlan;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Command\InitiateRecurringPlanRenewal;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Command\MarkRecurringPlanAsFailing;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Command\ReActivateRecurringPlan;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Command\UpdateCampaignDonationDescription;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Command\UpdateCampaignName;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Command\UpdateCampaignPublicTitle;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignActivated;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignArchived;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignCreated;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignDonationDescriptionUpdated;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignNameUpdated;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignPublicTitleUpdated;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationAccepted;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationCreated;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationFailed;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationInitiated;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanActivated;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanCanceled;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanCreated;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanExpired;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanFailed;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanFailing;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanInitiated;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanRenewalCompleted;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanRenewalInitiated;
+use ErgoSarapu\DonationBundle\BCIdentities\Application\Command\CreateIdentity;
+use ErgoSarapu\DonationBundle\BCIdentities\Application\Command\PresentClaimEvidence;
+use ErgoSarapu\DonationBundle\BCIdentities\Application\Command\ResolveClaim;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimCreated;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimInReview;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForEmail;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForIban;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForNationalIdCode;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForPersonName;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForRawName;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimResolved;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\ClaimMerged;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityCreated;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityEmailAdded;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityIbanAdded;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityNationalIdCodeChanged;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityPersonNameChanged;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityRawNameAdded;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Command\AcceptPaymentImport;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Command\CapturePayment;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Command\CreatePayment;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Command\CreatePaymentMethod;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Command\CreatePendingPaymentImport;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Command\GenerateRedirectCaptureUrl;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Command\ImportPaymentsFromFile;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Command\InitiatePayment;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsAuthorized;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsCanceled;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsCaptured;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsFailed;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsRefunded;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MovePaymentImportToReview;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Command\ReconcilePaymentImport;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Command\RejectPaymentImport;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Command\UpdatePaymentMethod;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Command\UsePaymentMethod;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentAuthorized;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCanceled;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCaptured;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCreated;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentDidNotSucceed;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentFailed;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportAccepted;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportInReview;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportPending;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportReconciled;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportRejected;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentInitiated;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodUnusable;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodUsePermitted;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodUseRejected;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRedirectUrlSetUp;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentReleasedForGatewayCall;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentReservedForGatewayCall;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentSucceeded;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\UnusablePaymentMethodCreated;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\UsablePaymentMethodCreated;
 use ErgoSarapu\DonationBundle\DependencyInjection\Compiler\RegisterQueryCompilerPass;
-use ErgoSarapu\DonationBundle\IntegrationContracts\IntegrationCommandInterface;
-use ErgoSarapu\DonationBundle\IntegrationContracts\IntegrationEventInterface;
+use ErgoSarapu\DonationBundle\IntegrationContracts\Donations\Command\InitiateDonationIntegrationCommand;
+use ErgoSarapu\DonationBundle\IntegrationContracts\Donations\Command\ReActivateRecurringPlanIntegrationCommand;
+use ErgoSarapu\DonationBundle\IntegrationContracts\Identities\Event\ClaimPresentedIntegrationEvent;
+use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Command\InitiatePaymentIntegrationCommand;
+use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\PaymentDidNotSucceedIntegrationEvent;
+use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\PaymentMethodUnusableIntegrationEvent;
+use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\PaymentSucceededIntegrationEvent;
+use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\UnusablePaymentMethodCreatedIntegrationEvent;
+use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\UsablePaymentMethodCreatedIntegrationEvent;
 use ErgoSarapu\DonationBundle\Repository\ResetPasswordRequestRepository;
-use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Event\DomainEventInterface;
 use Exception;
 use Symfony\Component\AssetMapper\AssetMapperInterface;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
@@ -239,6 +338,13 @@ class DonationBundle extends AbstractBundle
                                 'alias' => 'PaymentsReadModel',
                                 'is_bundle' => false,
                             ],
+                            'IdentitiesReadModel' => [
+                                'type' => 'xml',
+                                'dir' => __DIR__ . '/../config/doctrine/identities',
+                                'prefix' => 'ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model',
+                                'alias' => 'IdentitiesReadModel',
+                                'is_bundle' => false,
+                            ],
                             'SharedReadModel' => [
                                 'type' => 'xml',
                                 'dir' => __DIR__ . '/../config/doctrine/shared',
@@ -265,6 +371,13 @@ class DonationBundle extends AbstractBundle
                                 'dir' => __DIR__ . '/../config/doctrine/payments',
                                 'prefix' => 'ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model',
                                 'alias' => 'PaymentsReadModel',
+                                'is_bundle' => false,
+                            ],
+                            'IdentitiesReadModel' => [
+                                'type' => 'xml',
+                                'dir' => __DIR__ . '/../config/doctrine/identities',
+                                'prefix' => 'ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model',
+                                'alias' => 'IdentitiesReadModel',
                                 'is_bundle' => false,
                             ],
                             'SharedReadModel' => [
@@ -311,14 +424,7 @@ class DonationBundle extends AbstractBundle
                         ],
                     ],
                 ],
-                'routing' => [
-                    CommandInterface::class => 'command',
-                    IntegrationCommandInterface::class => 'command',
-                    // There may be lot of payment import pending events during import, route them to separate low priority queue to avoid blocking other important events
-                    PaymentImportPending::class => 'event_low_priority',
-                    DomainEventInterface::class => 'event',
-                    IntegrationEventInterface::class => 'event',
-                ],
+                'routing' => $this->getMessengerRouting(),
             ]
         ]);
 
@@ -333,10 +439,12 @@ class DonationBundle extends AbstractBundle
             'aggregates' => [
                 __DIR__ . '/BCDonations/Domain',
                 __DIR__ . '/BCPayments/Domain',
+                __DIR__ . '/BCIdentities/Domain',
             ],
             'events' => [
                 __DIR__ . '/BCDonations/Domain',
                 __DIR__ . '/BCPayments/Domain',
+                __DIR__ . '/BCIdentities/Domain',
             ],
             'headers' => [
                 __DIR__ . '/SharedInfrastructure/Messenger/Stamp',
@@ -349,6 +457,140 @@ class DonationBundle extends AbstractBundle
         ]);
 
         $this->prependAssetMapperConfig($builder);
+    }
+
+    private function getMessengerRouting(): array
+    {
+        return [
+            // Commands
+            ...array_fill_keys([
+                // BCDonations
+                AcceptDonation::class,
+                ActivateCampaign::class,
+                ActivateRecurringPlan::class,
+                ArchiveCampaign::class,
+                CompleteRecurringDonationAttempt::class,
+                CompleteRecurringPlanRenewal::class,
+                CreateCampaign::class,
+                CreateDonation::class,
+                CreateRecurringPlan::class,
+                FailDonation::class,
+                FailRecurringPlan::class,
+                InitiateDonation::class,
+                InitiateRecurringPlan::class,
+                InitiateRecurringPlanRenewal::class,
+                MarkRecurringPlanAsFailing::class,
+                ReActivateRecurringPlan::class,
+                UpdateCampaignDonationDescription::class,
+                UpdateCampaignName::class,
+                UpdateCampaignPublicTitle::class,
+                // BCIdentities
+                CreateIdentity::class,
+                PresentClaimEvidence::class,
+                ResolveClaim::class,
+                // BCPayments
+                AcceptPaymentImport::class,
+                CapturePayment::class,
+                CreatePayment::class,
+                CreatePaymentMethod::class,
+                CreatePendingPaymentImport::class,
+                GenerateRedirectCaptureUrl::class,
+                ImportPaymentsFromFile::class,
+                InitiatePayment::class,
+                MarkPaymentAsAuthorized::class,
+                MarkPaymentAsCanceled::class,
+                MarkPaymentAsCaptured::class,
+                MarkPaymentAsFailed::class,
+                MarkPaymentAsRefunded::class,
+                MovePaymentImportToReview::class,
+                ReconcilePaymentImport::class,
+                RejectPaymentImport::class,
+                UpdatePaymentMethod::class,
+                UsePaymentMethod::class,
+            ], 'command'),
+            // Integration Commands
+            ...array_fill_keys([
+                // BCDonations
+                InitiateDonationIntegrationCommand::class,
+                ReActivateRecurringPlanIntegrationCommand::class,
+                // BCPayments
+                InitiatePaymentIntegrationCommand::class,
+            ], 'command'),
+            // Integration Events
+            ...array_fill_keys([
+                // BCIdentities
+                ClaimPresentedIntegrationEvent::class,
+                // BCPayments
+                PaymentDidNotSucceedIntegrationEvent::class,
+                PaymentMethodUnusableIntegrationEvent::class,
+                PaymentSucceededIntegrationEvent::class,
+                UnusablePaymentMethodCreatedIntegrationEvent::class,
+                UsablePaymentMethodCreatedIntegrationEvent::class,
+            ], 'event'),
+            // Domain Events
+            // Payment import pending goes to low priority queue to avoid blocking during bulk imports
+            PaymentImportPending::class => 'event_low_priority',
+            // All other domain events go to standard event transport
+            ...array_fill_keys([
+                // BCDonations
+                CampaignActivated::class,
+                CampaignArchived::class,
+                CampaignCreated::class,
+                CampaignDonationDescriptionUpdated::class,
+                CampaignNameUpdated::class,
+                CampaignPublicTitleUpdated::class,
+                DonationAccepted::class,
+                DonationCreated::class,
+                DonationFailed::class,
+                DonationInitiated::class,
+                RecurringPlanActivated::class,
+                RecurringPlanCanceled::class,
+                RecurringPlanCreated::class,
+                RecurringPlanExpired::class,
+                RecurringPlanFailed::class,
+                RecurringPlanFailing::class,
+                RecurringPlanInitiated::class,
+                RecurringPlanRenewalCompleted::class,
+                RecurringPlanRenewalInitiated::class,
+                // BCIdentities
+                ClaimCreated::class,
+                ClaimInReview::class,
+                ClaimPresentedForEmail::class,
+                ClaimPresentedForIban::class,
+                ClaimPresentedForNationalIdCode::class,
+                ClaimPresentedForPersonName::class,
+                ClaimPresentedForRawName::class,
+                ClaimResolved::class,
+                ClaimMerged::class,
+                IdentityCreated::class,
+                IdentityEmailAdded::class,
+                IdentityIbanAdded::class,
+                IdentityRawNameAdded::class,
+                IdentityNationalIdCodeChanged::class,
+                IdentityPersonNameChanged::class,
+                // BCPayments
+                PaymentAuthorized::class,
+                PaymentCanceled::class,
+                PaymentCaptured::class,
+                PaymentCreated::class,
+                PaymentDidNotSucceed::class,
+                PaymentFailed::class,
+                PaymentImportAccepted::class,
+                PaymentImportInReview::class,
+                PaymentImportReconciled::class,
+                PaymentImportRejected::class,
+                PaymentInitiated::class,
+                PaymentMethodUnusable::class,
+                PaymentMethodUsePermitted::class,
+                PaymentMethodUseRejected::class,
+                PaymentRedirectUrlSetUp::class,
+                PaymentReleasedForGatewayCall::class,
+                PaymentReservedForGatewayCall::class,
+                PaymentSucceeded::class,
+                UnusablePaymentMethodCreated::class,
+                UsablePaymentMethodCreated::class,
+            ], 'event'),
+        ];
     }
 
     public function build(ContainerBuilder $builder): void

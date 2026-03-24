@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ErgoSarapu\DonationBundle\BCPayments\Domain\Payment;
+namespace ErgoSarapu\DonationBundle\SharedKernel\ValueObject;
 
 use Patchlevel\Hydrator\Normalizer\ObjectNormalizer;
 
@@ -12,5 +12,10 @@ final class Iban
     public function __construct(
         public readonly string $value,
     ) {
+    }
+
+    public function equals(self $other): bool
+    {
+        return $this->value === $other->value;
     }
 }

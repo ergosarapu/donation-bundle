@@ -9,6 +9,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentGatewayInterfac
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\GatewayPaymentRequest;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCredentialValue;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodResult;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\URL;
 use Exception;
@@ -101,6 +102,11 @@ class FakeGateway implements PaymentGatewayInterface
                 public function isTransientFailure(): bool
                 {
                     return $this->transientFailure;
+                }
+
+                public function getIban(): ?Iban
+                {
+                    return null;
                 }
             }
         );

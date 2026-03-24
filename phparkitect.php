@@ -52,6 +52,12 @@ return static function (Config $config): void {
         ->because('we want to keep the domain layer independent')
     ;
 
+    $rules[] = Rule::allClasses()
+        ->that(new ResideInOneOfTheseNamespaces('*\BCIdentities\Domain'))
+        ->should(new NotHaveDependencyOutsideNamespace('*\BCIdentities\Domain\*', $domainDepsToExclude, true))
+        ->because('we want to keep the domain layer independent')
+    ;
+
     // Application layer
     $applicationDepsToExclude = [
         BasicAggregateRoot::class,
@@ -91,11 +97,29 @@ return static function (Config $config): void {
         ->because('we want to keep the application layer clean from infrastructure details');
 
     $rules[] = Rule::allClasses()
+        ->that(new ResideInOneOfTheseNamespaces(
+            '*\BCIdentities\Application\*',
+        ))
+        ->should(new NotHaveDependencyOutsideNamespace(
+            '*\BCIdentities\Application\*',
+            array_merge(
+                $applicationDepsToExclude,
+                ['ErgoSarapu\DonationBundle\BCIdentities\Domain']
+            ),
+            true
+        ))
+        ->because('we want to keep the application layer clean from infrastructure details');
+
+    $rules[] = Rule::allClasses()
         ->that(new ResideInOneOfTheseNamespaces('*\BCDonations\Application\Command\*'))
         ->should(new Implement(CommandInterface::class))
         ->because('we want all commands to implement the marker interface');
     $rules[] = Rule::allClasses()
         ->that(new ResideInOneOfTheseNamespaces('*\BCPayments\Application\Command\*'))
+        ->should(new Implement(CommandInterface::class))
+        ->because('we want all commands to implement the marker interface');
+    $rules[] = Rule::allClasses()
+        ->that(new ResideInOneOfTheseNamespaces('*\BCIdentities\Application\Command\*'))
         ->should(new Implement(CommandInterface::class))
         ->because('we want all commands to implement the marker interface');
 
@@ -106,6 +130,10 @@ return static function (Config $config): void {
         ->because('we want all integration commands to implement the marker interface');
     $rules[] = Rule::allClasses()
         ->that(new ResideInOneOfTheseNamespaces('*\IntegrationContracts\Payments\Command'))
+        ->should(new Implement(IntegrationCommandInterface::class))
+        ->because('we want all integration commands to implement the marker interface');
+    $rules[] = Rule::allClasses()
+        ->that(new ResideInOneOfTheseNamespaces('*\IntegrationContracts\Identities\Command'))
         ->should(new Implement(IntegrationCommandInterface::class))
         ->because('we want all integration commands to implement the marker interface');
 

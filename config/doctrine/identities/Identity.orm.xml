@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                  https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <entity name="ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model\Identity" table="projection_identity">
+        <id name="identityId" type="string" column="identity_id" length="36" />
+        <field name="givenName" type="string" column="given_name" length="100" nullable="true" />
+        <field name="familyName" type="string" column="family_name" length="100" nullable="true" />
+        <field name="nationalIdCode" type="string" column="national_id_code" length="50" nullable="true" />
+        <one-to-many field="rawNames" target-entity="ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model\IdentityRawName" mapped-by="identity" orphan-removal="true">
+            <cascade>
+                <cascade-persist />
+                <cascade-remove />
+            </cascade>
+            <order-by>
+                <order-by-field name="id" direction="ASC" />
+            </order-by>
+        </one-to-many>
+        <one-to-many field="emails" target-entity="ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model\IdentityEmail" mapped-by="identity" orphan-removal="true">
+            <cascade>
+                <cascade-persist />
+                <cascade-remove />
+            </cascade>
+            <order-by>
+                <order-by-field name="id" direction="ASC" />
+            </order-by>
+        </one-to-many>
+        <one-to-many field="ibans" target-entity="ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model\IdentityIban" mapped-by="identity" orphan-removal="true">
+            <cascade>
+                <cascade-persist />
+                <cascade-remove />
+            </cascade>
+            <order-by>
+                <order-by-field name="id" direction="ASC" />
+            </order-by>
+        </one-to-many>
+
+        <indexes>
+            <index name="idx_projection_identity_national_id_code" columns="national_id_code" />
+        </indexes>
+    </entity>
+</doctrine-mapping>

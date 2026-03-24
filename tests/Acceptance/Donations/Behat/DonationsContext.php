@@ -43,7 +43,7 @@ use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\PaymentSucceed
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\UnusablePaymentMethodCreatedIntegrationEvent;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\UsablePaymentMethodCreatedIntegrationEvent;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\QueryBusInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
@@ -216,7 +216,7 @@ class DonationsContext implements Context
         $this->eventBus->send(new PaymentSucceededIntegrationEvent(
             $this->lastPaymentId,
             $this->getDefaultTestMoney(),
-            PaymentAppliedToId::fromString($this->lastDonationId->toString()),
+            ExternalEntityId::fromString($this->lastDonationId->toString()),
         ));
     }
 
@@ -225,7 +225,7 @@ class DonationsContext implements Context
     {
         $this->eventBus->send(new PaymentDidNotSucceedIntegrationEvent(
             $this->lastPaymentId,
-            PaymentAppliedToId::fromString($this->lastDonationId->toString()),
+            ExternalEntityId::fromString($this->lastDonationId->toString()),
         ));
     }
 

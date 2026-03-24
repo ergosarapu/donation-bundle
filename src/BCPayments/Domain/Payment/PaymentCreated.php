@@ -7,10 +7,11 @@ namespace ErgoSarapu\DonationBundle\BCPayments\Domain\Payment;
 use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\AbstractTimestampedEvent;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\DomainEventInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
@@ -33,7 +34,7 @@ class PaymentCreated extends AbstractTimestampedEvent implements DomainEventInte
         #[PersonalData]
         public readonly ?ShortDescription $description,
         public readonly ?Gateway $gateway,
-        public readonly ?PaymentAppliedToId $appliedTo,
+        public readonly ?ExternalEntityId $appliedTo,
         #[PersonalData]
         public readonly ?Email $email,
         #[PersonalData]

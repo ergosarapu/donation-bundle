@@ -10,17 +10,17 @@ use ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\CreatePaymen
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\BankReference;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\GatewayReference;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Iban;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\LegacyPaymentNumber;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentReference;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentAppliedToId;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
@@ -54,7 +54,7 @@ class CreatePaymentHandlerTest extends TestCase
         $paymentId = PaymentId::generate();
         $amount = new Money(5000, new Currency('EUR'));
         $description = new ShortDescription('Test payment');
-        $appliedTo = PaymentAppliedToId::generate();
+        $appliedTo = ExternalEntityId::generate();
         $email = new Email('donor@example.com');
         $name = new PersonName('John', 'Doe');
         $nationalIdCode = new NationalIdCode('12345678901');

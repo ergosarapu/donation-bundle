@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                  https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <entity name="ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model\IdentityEmail" table="projection_identity_email">
+        <id name="id" type="integer" column="id">
+            <generator strategy="AUTO" />
+        </id>
+        <many-to-one field="identity" target-entity="ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model\Identity" inversed-by="emails">
+            <join-column name="identity_id" referenced-column-name="identity_id" nullable="false" on-delete="CASCADE" />
+        </many-to-one>
+        <field name="email" type="string" column="email" length="100" />
+
+        <!-- <unique-constraints>
+            <unique-constraint name="uniq_projection_identity_email_identity_email" columns="identity_id,email" />
+        </unique-constraints> -->
+
+        <indexes>
+            <index name="idx_projection_identity_email_email" columns="email" />
+        </indexes>
+    </entity>
+</doctrine-mapping>

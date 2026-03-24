@@ -33,6 +33,8 @@
       <directory>./src/BCDonations/Application/CommandHandler</directory>
       <directory>./src/BCPayments/Domain</directory>
       <directory>./src/BCPayments/Application/CommandHandler</directory>
+      <directory>./src/BCIdentities/Domain</directory>
+      <directory>./src/BCIdentities/Application/CommandHandler</directory>
     </include>
   </source>
 </phpunit>

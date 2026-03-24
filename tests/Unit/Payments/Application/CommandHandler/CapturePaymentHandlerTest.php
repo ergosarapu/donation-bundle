@@ -22,6 +22,7 @@ use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -81,6 +82,7 @@ class CapturePaymentHandlerTest extends TestCase
         $captureResult->method('isSuccess')->willReturn(true);
         $captureResult->method('getCapturedAmount')->willReturn($capturedAmount);
         $captureResult->method('getPaymentMethodResult')->willReturn($methodResult);
+        $captureResult->method('getIban')->willReturn(new Iban('EE471000001020145685'));
 
         $this->paymentRepository->expects($this->once())
             ->method('load')
@@ -103,7 +105,8 @@ class CapturePaymentHandlerTest extends TestCase
                 return $command instanceof MarkPaymentAsCaptured &&
                     $command->paymentId === $this->command->paymentId &&
                     $command->capturedAmount->equals($capturedAmount) &&
-                    $command->paymentMethodResult === $methodResult;
+                    $command->paymentMethodResult === $methodResult &&
+                    $command->iban?->value === 'EE471000001020145685';
             }))
             ->willReturn(new CommandResult(null, 'test-correlation-id'));
 
