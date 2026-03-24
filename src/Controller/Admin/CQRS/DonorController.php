@@ -8,7 +8,7 @@ use Doctrine\ORM\Event\PreUpdateEventArgs;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
-use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model\Identity;
@@ -53,9 +53,9 @@ class DonorController extends AbstractCQRSController
             IdField::new('identityId')->setDisabled()->hideOnIndex(),
             TextField::new('givenName')->setDisabled(),
             TextField::new('familyName')->setDisabled(),
-            CollectionField::new('rawNames')->formatValue(fn (array $value) => implode(', ', $value)),
-            CollectionField::new('emails')->formatValue(fn (array $value) =>  implode(', ', $value)),
-            CollectionField::new('ibans')->setLabel('IBANs')->formatValue(fn (array $value) =>  implode(', ', $value)),
+            ArrayField::new('rawNames'),
+            ArrayField::new('emails'),
+            ArrayField::new('ibans')->setLabel('IBANs'),
             TextField::new('nationalIdCode')->setDisabled(),
             ];
     }
