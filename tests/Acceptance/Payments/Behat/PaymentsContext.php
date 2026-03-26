@@ -18,8 +18,8 @@ use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsCancel
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsCaptured;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsFailed;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentFileImportResult;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetInitiatedPayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetPayment;
-use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetPendingPayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model\Payment;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCredentialValue;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportStatus;
@@ -314,7 +314,7 @@ class PaymentsContext implements Context
     #[Then('payment is initiated')]
     public function paymentIsInitiated(): void
     {
-        $payment = $this->queryBus->ask(new GetPendingPayment($this->lastPaymentId));
+        $payment = $this->queryBus->ask(new GetInitiatedPayment($this->lastPaymentId));
         Assert::isInstanceOf($payment, Payment::class);
         $this->lastPaymentId = PaymentId::fromString($payment->getPaymentId());
     }

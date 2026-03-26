@@ -344,7 +344,7 @@ return function (ContainerConfigurator $container) {
     $services->set('donation_bundle.application.donations.query_handler.get_donations', \ErgoSarapu\DonationBundle\BCDonations\Application\Query\Handler\GetDonationsHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
-    $services->set('donation_bundle.application.donations.query_handler.get_pending_donation', \ErgoSarapu\DonationBundle\BCDonations\Application\Query\Handler\GetPendingDonationHandler::class)
+    $services->set('donation_bundle.application.donations.query_handler.get_initiated_donation', \ErgoSarapu\DonationBundle\BCDonations\Application\Query\Handler\GetInitiatedDonationHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
     $services->set('donation_bundle.application.donations.query_handler.get_recurring_plan', \ErgoSarapu\DonationBundle\BCDonations\Application\Query\Handler\GetRecurringPlanHandler::class)
@@ -353,7 +353,7 @@ return function (ContainerConfigurator $container) {
     $services->set('donation_bundle.application.donations.query_handler.get_recurring_plan_by_payment_method', \ErgoSarapu\DonationBundle\BCDonations\Application\Query\Handler\GetRecurringPlanByPaymentMethodHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
-    $services->set('donation_bundle.application.donations.query_handler.get_pending_recurring_plan', \ErgoSarapu\DonationBundle\BCDonations\Application\Query\Handler\GetPendingRecurringPlanHandler::class)
+    $services->set('donation_bundle.application.donations.query_handler.get_initiated_recurring_plan', \ErgoSarapu\DonationBundle\BCDonations\Application\Query\Handler\GetInitiatedRecurringPlanHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
 
@@ -369,7 +369,7 @@ return function (ContainerConfigurator $container) {
     $services->set('donation_bundle.application.payments.query_handler.get_payment', \ErgoSarapu\DonationBundle\BCPayments\Application\Query\Handler\GetPaymentHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
-    $services->set('donation_bundle.application.payments.query_handler.get_pending_payment', \ErgoSarapu\DonationBundle\BCPayments\Application\Query\Handler\GetPendingPaymentHandler::class)
+    $services->set('donation_bundle.application.payments.query_handler.get_initiated_payment', \ErgoSarapu\DonationBundle\BCPayments\Application\Query\Handler\GetInitiatedPaymentHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
     $services->set('donation_bundle.application.payments.query_handler.get_matching_payments', \ErgoSarapu\DonationBundle\BCPayments\Application\Query\Handler\GetMatchingPaymentsHandler::class)

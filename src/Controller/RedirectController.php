@@ -42,9 +42,9 @@ class RedirectController extends AbstractController
             // Redirect to self after short delay to allow for projection to complete
             return $this->render('@Donation/redirect.html.twig', ['targetUrl' => $selfUrl, 'redirectAfterMilliseconds' => 1000]);
         }
-        if ($donation->getStatus() !== DonationStatus::Pending) {
+        if ($donation->getStatus() !== DonationStatus::Initiated) {
             // Maybe redirect to home?
-            throw new BadRequestHttpException('Donation is not pending');
+            throw new BadRequestHttpException('Donation is not ' . DonationStatus::Initiated->value);
         }
         return $this->handlePaymentRedirection($donation, $selfUrl);
 
@@ -58,9 +58,9 @@ class RedirectController extends AbstractController
             // Redirect to self after short delay to allow for projection to complete
             return $this->render('@Donation/redirect.html.twig', ['targetUrl' => $selfUrl, 'redirectAfterMilliseconds' => 1000]);
         }
-        if ($payment->getStatus() !== PaymentStatus::Pending) {
+        if ($payment->getStatus() !== PaymentStatus::Initiated) {
             // Maybe redirect to home?
-            throw new BadRequestHttpException('Payment is not pending');
+            throw new BadRequestHttpException('Payment is not ' . PaymentStatus::Initiated->value);
         }
         return $this->render('@Donation/redirect.html.twig', ['targetUrl' => $payment->getRedirectUrl(), 'redirectAfterMilliseconds' => 0]);
     }

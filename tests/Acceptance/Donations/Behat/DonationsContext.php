@@ -16,7 +16,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Application\Command\UpdateCampaignName
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\UpdateCampaignPublicTitle;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetCampaign;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetDonation;
-use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetPendingDonation;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetInitiatedDonation;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetRecurringPlan;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\Campaign;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\Donation;
@@ -142,7 +142,7 @@ class DonationsContext implements Context
     #[Then('donation is initiated')]
     public function donationIsInitiated(): void
     {
-        $donation = $this->queryBus->ask(new GetPendingDonation($this->lastDonationId));
+        $donation = $this->queryBus->ask(new GetInitiatedDonation($this->lastDonationId));
         Assert::isInstanceOf($donation, Donation::class);
         /** @var Donation $donation */
         $this->lastPaymentId = PaymentId::fromString($donation->getPaymentId());
@@ -152,7 +152,7 @@ class DonationsContext implements Context
     #[Then('donation is initiated for the renewal')]
     public function donationIsInitiatedForTheRenewal(): void
     {
-        $donation = $this->queryBus->ask(new GetPendingDonation($this->lastDonationId));
+        $donation = $this->queryBus->ask(new GetInitiatedDonation($this->lastDonationId));
         Assert::isInstanceOf($donation, Donation::class);
         /** @var Donation $donation */
         $this->lastPaymentId = PaymentId::fromString($donation->getPaymentId());

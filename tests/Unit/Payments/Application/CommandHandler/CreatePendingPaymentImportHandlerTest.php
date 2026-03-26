@@ -64,7 +64,7 @@ class CreatePendingPaymentImportHandlerTest extends TestCase
         $this->command = new CreatePendingPaymentImport(
             $sourceIdentifier,
             $bankReference,
-            PaymentStatus::Pending,
+            PaymentStatus::Initiated,
             $amount,
             $description,
             $bookingDate,
@@ -129,7 +129,7 @@ class CreatePendingPaymentImportHandlerTest extends TestCase
         $commandWithNulls = new CreatePendingPaymentImport(
             new PaymentImportSourceIdentifier('source-789'),
             new BankReference('ref-789'), // Bank reference is required
-            PaymentStatus::Pending,
+            PaymentStatus::Initiated,
             new Money(1000, new Currency('USD')),
             null,
             new DateTimeImmutable('2024-02-03'),

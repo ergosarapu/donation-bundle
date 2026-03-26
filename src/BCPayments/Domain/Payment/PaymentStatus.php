@@ -6,7 +6,7 @@ namespace ErgoSarapu\DonationBundle\BCPayments\Domain\Payment;
 
 enum PaymentStatus: String
 {
-    case Pending = 'pending';
+    case Initiated = 'initiated';
     case Canceled = 'canceled';
     case Failed = 'failed';
     case Authorized = 'authorized';

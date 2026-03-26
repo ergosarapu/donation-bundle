@@ -61,7 +61,7 @@ class CreateRecurringPlanHandlerTest extends TestCase
 
         $this->command = new CreateRecurringPlan(
             $recurringPlanId,
-            RecurringPlanStatus::Pending,
+            RecurringPlanStatus::Initiated,
             $interval,
             $initialDonationId,
             $campaignId,

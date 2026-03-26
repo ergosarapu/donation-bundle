@@ -91,7 +91,7 @@ class RecurringPlanTest extends AggregateRootTestCase
         $this->when(fn () => RecurringPlan::create(
             $this->now,
             $recurringPlanId,
-            RecurringPlanStatus::Pending,
+            RecurringPlanStatus::Initiated,
             $this->interval,
             $initialDonationId,
             $this->campaignId,
@@ -107,7 +107,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->now,
                 $this->now,
                 $recurringPlanId,
-                RecurringPlanStatus::Pending,
+                RecurringPlanStatus::Initiated,
                 $this->interval,
                 $initialDonationId,
                 $this->campaignId,
@@ -131,7 +131,7 @@ class RecurringPlanTest extends AggregateRootTestCase
         $this->when(fn () => RecurringPlan::create(
             $this->now,
             $recurringPlanId,
-            RecurringPlanStatus::Pending,
+            RecurringPlanStatus::Initiated,
             $this->interval,
             $initialDonationId,
             $this->campaignId,

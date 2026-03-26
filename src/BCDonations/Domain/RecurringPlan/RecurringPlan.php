@@ -282,7 +282,7 @@ class RecurringPlan extends BasicAggregateRoot
     public function activate(DateTimeImmutable $currentTime): void
     {
         match ($this->status) {
-            RecurringPlanStatus::Pending => $this->calculateNextRenewalTimeAndActivate($currentTime),
+            RecurringPlanStatus::Initiated => $this->calculateNextRenewalTimeAndActivate($currentTime),
             default => throw new RecurringPlanActivateNotAllowedException('Activate not allowed from status: ' . $this->status->value),
         };
     }
@@ -326,7 +326,7 @@ class RecurringPlan extends BasicAggregateRoot
     {
         match ($this->status) {
             RecurringPlanStatus::Failing,
-            RecurringPlanStatus::Pending,
+            RecurringPlanStatus::Initiated,
             RecurringPlanStatus::Active => $this->recordThat(new RecurringPlanCanceled($currentTime, $this->id)),
             default => throw new RecurringPlanCancelNotAllowedException('Cancelling not allowed from status: ' . $this->status->value),
         };
@@ -336,7 +336,7 @@ class RecurringPlan extends BasicAggregateRoot
     {
         match ($this->status) {
             RecurringPlanStatus::Failing,
-            RecurringPlanStatus::Pending,
+            RecurringPlanStatus::Initiated,
             RecurringPlanStatus::Active => $this->recordThat(new RecurringPlanFailed($currentTime, $this->id)),
             default => throw new RecurringPlanFailNotAllowedException('Fail not allowed from status: ' . $this->status->value),
         };

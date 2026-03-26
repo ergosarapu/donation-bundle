@@ -284,7 +284,7 @@ class Payment extends BasicAggregateRoot
 
     public function validateTransitionToAuthorized(): void
     {
-        if ($this->status === PaymentStatus::Pending) {
+        if ($this->status === PaymentStatus::Initiated) {
             return;
         }
         $this->failTransitionValidation($this->status, PaymentStatus::Authorized);
@@ -315,7 +315,7 @@ class Payment extends BasicAggregateRoot
 
     public function validateTransitionToCaptured(): void
     {
-        if ($this->status === PaymentStatus::Pending) {
+        if ($this->status === PaymentStatus::Initiated) {
             return;
         }
         if ($this->status === PaymentStatus::Authorized) {
@@ -337,7 +337,7 @@ class Payment extends BasicAggregateRoot
 
     public function validateTransitionToCanceled(): void
     {
-        if ($this->status === PaymentStatus::Pending) {
+        if ($this->status === PaymentStatus::Initiated) {
             return;
         }
         $this->failTransitionValidation($this->status, PaymentStatus::Canceled);
@@ -356,7 +356,7 @@ class Payment extends BasicAggregateRoot
 
     public function validateTransitionToFailed(): void
     {
-        if ($this->status === PaymentStatus::Pending) {
+        if ($this->status === PaymentStatus::Initiated) {
             return;
         }
         if ($this->status === PaymentStatus::Authorized) {
@@ -394,8 +394,8 @@ class Payment extends BasicAggregateRoot
             return null;
         }
 
-        if ($this->status !== PaymentStatus::Pending) {
-            throw new LogicException('Can only initiate gateway call for pending payment.');
+        if ($this->status !== PaymentStatus::Initiated) {
+            throw new LogicException('Can only initiate gateway call for initiated payment.');
         }
 
         $this->recordThat(new PaymentReservedForGatewayCall($currentTime, $this->id));

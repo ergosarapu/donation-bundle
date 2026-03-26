@@ -60,7 +60,7 @@ class RecurringPlanController extends AbstractCQRSController
                 ->setDisabled()
                 ->formatValue(function (RecurringPlanStatus $value) {
                     $styles = [
-                        RecurringPlanStatus::Pending->value => ['color' => 'warning', 'icon' => ''],
+                        RecurringPlanStatus::Initiated->value => ['color' => 'warning', 'icon' => ''],
                         RecurringPlanStatus::Active->value => ['color' => 'success', 'icon' => ''],
                         RecurringPlanStatus::Failing->value => ['color' => 'danger', 'icon' => '⚠️ '],
                         RecurringPlanStatus::Failed->value => ['color' => 'dark', 'icon' => ''],

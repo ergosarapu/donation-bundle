@@ -69,7 +69,7 @@ class CreatePaymentHandlerTest extends TestCase
 
         $this->command = new CreatePayment(
             $paymentId,
-            PaymentStatus::Pending,
+            PaymentStatus::Initiated,
             $amount,
             $description,
             $gateway,

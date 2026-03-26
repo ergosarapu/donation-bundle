@@ -35,6 +35,6 @@ class PaymentInitiated extends AbstractTimestampedEvent implements DomainEventIn
         public readonly ?PaymentMethodAction $paymentMethodAction = null,
     ) {
         parent::__construct($occuredOn);
-        $this->status = PaymentStatus::Pending;
+        $this->status = PaymentStatus::Initiated;
     }
 }

@@ -66,7 +66,7 @@ abstract class AbstractPaymentController extends AbstractCQRSController
                 ->setDisabled()
                 ->formatValue(function (PaymentStatus $value) {
                     $colors = [
-                        PaymentStatus::Pending->value => 'warning',
+                        PaymentStatus::Initiated->value => 'warning',
                         PaymentStatus::Authorized->value => 'info',
                         PaymentStatus::Captured->value => 'success',
                         PaymentStatus::Settled->value => 'success',

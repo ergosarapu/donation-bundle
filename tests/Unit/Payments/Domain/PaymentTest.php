@@ -100,7 +100,7 @@ class PaymentTest extends AggregateRootTestCase
         $this->when(fn () => Payment::create(
             $this->now,
             $this->paymentId,
-            PaymentStatus::Pending,
+            PaymentStatus::Initiated,
             $this->amount,
             $this->description,
             $gateway,
@@ -121,7 +121,7 @@ class PaymentTest extends AggregateRootTestCase
                 $this->now->sub(new DateInterval('P1D')),
                 $this->now->add(new DateInterval('P1D')),
                 $this->paymentId,
-                PaymentStatus::Pending,
+                PaymentStatus::Initiated,
                 $this->amount,
                 $this->description,
                 $gateway,
@@ -155,7 +155,7 @@ class PaymentTest extends AggregateRootTestCase
             $this->paymentId,
             $sourceIdentifier,
             $bankReference,
-            PaymentStatus::Pending,
+            PaymentStatus::Initiated,
             $this->amount,
             $this->description,
             $bookingDate,
@@ -171,7 +171,7 @@ class PaymentTest extends AggregateRootTestCase
                 $this->paymentId,
                 $sourceIdentifier,
                 $bankReference,
-                PaymentStatus::Pending,
+                PaymentStatus::Initiated,
                 $this->amount,
                 $this->description,
                 $bookingDate,
@@ -196,7 +196,7 @@ class PaymentTest extends AggregateRootTestCase
             $this->paymentId,
             $sourceIdentifier,
             $bankReference,
-            PaymentStatus::Pending,
+            PaymentStatus::Initiated,
             $this->amount,
             null,
             $bookingDate,
@@ -212,7 +212,7 @@ class PaymentTest extends AggregateRootTestCase
                 $this->paymentId,
                 $sourceIdentifier,
                 $bankReference,
-                PaymentStatus::Pending,
+                PaymentStatus::Initiated,
                 $this->amount,
                 null,
                 $bookingDate,
@@ -819,7 +819,7 @@ class PaymentTest extends AggregateRootTestCase
         )->when(fn (Payment $payment) => $payment->markRefunded(
             $this->now,
             new Money(0, new Currency('EUR')),
-        ))->expectsException(LogicException::class)->expectsExceptionMessage('Cannot transition from pending to refunded.');
+        ))->expectsException(LogicException::class)->expectsExceptionMessage('Cannot transition from initiated to refunded.');
     }
 
     public function testMarkRefudedOnCanceledThrows(): void
@@ -955,7 +955,7 @@ class PaymentTest extends AggregateRootTestCase
         )->then();
     }
 
-    public function testReserveGatewayCallThrowsWhenNotPending(): void
+    public function testReserveGatewayCallThrowsWhenNotInitiated(): void
     {
         $this->given(new PaymentAuthorized(
             $this->now,
@@ -966,7 +966,7 @@ class PaymentTest extends AggregateRootTestCase
         ->when(fn (Payment $payment) => $payment->reserveGatewayCall(
             $this->now,
         ))
-        ->expectsException(LogicException::class)->expectsExceptionMessage('Can only initiate gateway call for pending payment.');
+        ->expectsException(LogicException::class)->expectsExceptionMessage('Can only initiate gateway call for initiated payment.');
     }
 
     public function testReleaseGatewayCall(): void

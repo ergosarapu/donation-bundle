@@ -7,8 +7,8 @@ namespace ErgoSarapu\DonationBundle\Tests\Integration\Donations;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\InitiateRecurringPlan;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetDonation;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetDonations;
-use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetPendingDonation;
-use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetPendingRecurringPlan;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetInitiatedDonation;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetInitiatedRecurringPlan;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetRecurringPlan;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\Donation;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\RecurringPlan;
@@ -21,8 +21,8 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringInterval
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanStatus;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsCaptured;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsFailed;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetInitiatedPayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetPayment;
-use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetPendingPayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model\Payment;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Donations\Command\InitiateDonationIntegrationCommand;
@@ -85,15 +85,15 @@ class InitiateDonationTest extends KernelTestCase
         $this->commandBus->dispatch($initiateDonation);
 
         /** @var ?Donation $donation */
-        $donation = $this->queryBus->ask(new GetPendingDonation($donationRequest->donationId));
+        $donation = $this->queryBus->ask(new GetInitiatedDonation($donationRequest->donationId));
         $this->assertNotNull($donation);
-        $this->assertEquals(DonationStatus::Pending, $donation->getStatus());
+        $this->assertEquals(DonationStatus::Initiated, $donation->getStatus());
 
         /** @var ?Payment $payment */
-        $payment = $this->queryBus->ask(new GetPendingPayment(PaymentId::fromString($donation->getPaymentId())));
+        $payment = $this->queryBus->ask(new GetInitiatedPayment(PaymentId::fromString($donation->getPaymentId())));
         $this->assertNotNull($payment);
         $this->assertNotNull($payment->getRedirectUrl());
-        $this->assertEquals(PaymentStatus::Pending, $payment->getStatus());
+        $this->assertEquals(PaymentStatus::Initiated, $payment->getStatus());
 
         // Mark payment as captured and expect donation to be accepted
         $this->commandBus->dispatch(new MarkPaymentAsCaptured(PaymentId::fromString($donation->getPaymentId()), $amount, null));
@@ -125,9 +125,9 @@ class InitiateDonationTest extends KernelTestCase
         $this->commandBus->dispatch($initiateDonation);
 
         /** @var ?Donation $donation */
-        $donation = $this->queryBus->ask(new GetPendingDonation($donationRequest->donationId));
+        $donation = $this->queryBus->ask(new GetInitiatedDonation($donationRequest->donationId));
         $this->assertNotNull($donation);
-        $this->assertEquals(DonationStatus::Pending, $donation->getStatus());
+        $this->assertEquals(DonationStatus::Initiated, $donation->getStatus());
 
         // Mark payment as not succeeded and expect donation to be failed
         $this->commandBus->dispatch(new MarkPaymentAsFailed(PaymentId::fromString($donation->getPaymentId()), null));
@@ -167,18 +167,18 @@ class InitiateDonationTest extends KernelTestCase
         );
         $this->commandBus->dispatch($initiateRecurringPlan);
 
-        // Recurring Donation is pending
+        // Recurring Plan is initiated
         /** @var ?RecurringPlan $recurringPlan */
-        $recurringPlan = $this->queryBus->ask(new GetPendingRecurringPlan($initiateRecurringPlan->recurringPlanId));
+        $recurringPlan = $this->queryBus->ask(new GetInitiatedRecurringPlan($initiateRecurringPlan->recurringPlanId));
         $this->assertNotNull($recurringPlan);
-        $this->assertEquals(RecurringPlanStatus::Pending, $recurringPlan->getStatus());
+        $this->assertEquals(RecurringPlanStatus::Initiated, $recurringPlan->getStatus());
         $this->assertEquals(0, $recurringPlan->getCumulativeReceivedAmount());
 
-        // Activation donation is pending
+        // Initial Donation is initiated
         /** @var ?Donation $activationDonation */
-        $activationDonation = $this->queryBus->ask(new GetPendingDonation(DonationId::fromString($recurringPlan->getInitialDonationId())));
+        $activationDonation = $this->queryBus->ask(new GetInitiatedDonation(DonationId::fromString($recurringPlan->getInitialDonationId())));
         $this->assertNotNull($activationDonation);
-        $this->assertEquals(DonationStatus::Pending, $activationDonation->getStatus());
+        $this->assertEquals(DonationStatus::Initiated, $activationDonation->getStatus());
 
         // Mark payment as captured and expect donation to be accepted
         $this->commandBus->dispatch(new MarkPaymentAsCaptured(PaymentId::fromString($activationDonation->getPaymentId()), $amount, null));

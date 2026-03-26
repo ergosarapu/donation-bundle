@@ -37,6 +37,6 @@ class RecurringPlanInitiated extends AbstractTimestampedEvent implements DomainE
         public readonly ShortDescription $description,
     ) {
         parent::__construct($occuredOn);
-        $this->status = RecurringPlanStatus::Pending;
+        $this->status = RecurringPlanStatus::Initiated;
     }
 }

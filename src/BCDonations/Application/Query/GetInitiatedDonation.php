@@ -7,7 +7,7 @@ namespace ErgoSarapu\DonationBundle\BCDonations\Application\Query;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\Query;
 
-class GetPendingDonation implements Query
+class GetInitiatedDonation implements Query
 {
     public function __construct(public readonly DonationId $donationId)
     {

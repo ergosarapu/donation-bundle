@@ -38,6 +38,6 @@ final class DonationInitiated extends AbstractTimestampedEvent implements Domain
         public readonly ?DonorDetails $donorDetails,
     ) {
         parent::__construct($occuredOn);
-        $this->status = DonationStatus::Pending;
+        $this->status = DonationStatus::Initiated;
     }
 }

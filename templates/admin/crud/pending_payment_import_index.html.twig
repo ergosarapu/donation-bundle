@@ -73,7 +73,7 @@
                 {% if entity.instance.matchingPayments is not empty %}
                     {% set sort_field_name = app.request.query.all['sort']|default({})|keys|first %}
                     {% set status_colors = {
-                        'Pending': 'warning', 'Authorized': 'info', 'Captured': 'success',
+                        'Initiated': 'warning', 'Authorized': 'info', 'Captured': 'success',
                         'Settled': 'success', 'Failed': 'danger', 'Canceled': 'secondary', 'Refunded': 'secondary'
                     } %}
 

@@ -6,7 +6,7 @@ namespace ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan;
 
 enum RecurringPlanStatus: String
 {
-    case Pending = 'pending'; // allowed transition to: failed, active, canceled
+    case Initiated = 'initiated'; // allowed transition to: failed, active, canceled
     case Failed = 'failed'; // allowed transition to: none
     case Active = 'active'; // allowed transition to: failed, failing, expired, canceled
     case Failing = 'failing'; // allowed transition to: failed, active, expired, canceled

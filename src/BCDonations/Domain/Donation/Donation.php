@@ -114,7 +114,7 @@ class Donation extends BasicAggregateRoot
 
     public function validateTransitionToAccepted(): void
     {
-        if ($this->status === DonationStatus::Pending) {
+        if ($this->status === DonationStatus::Initiated) {
             return;
         }
         if ($this->status === DonationStatus::Created) {
@@ -140,7 +140,7 @@ class Donation extends BasicAggregateRoot
 
     public function validateTransitionToFailed(): void
     {
-        if ($this->status === DonationStatus::Pending) {
+        if ($this->status === DonationStatus::Initiated) {
             return;
         }
         if ($this->status === DonationStatus::Created) {
