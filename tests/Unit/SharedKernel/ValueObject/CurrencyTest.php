@@ -21,12 +21,6 @@ class CurrencyTest extends TestCase
         $this->assertSame('EUR', $currency->code());
     }
 
-    public function testTrimsWhitespace(): void
-    {
-        $currency = new Currency('  USD  ');
-        $this->assertSame('USD', $currency->code());
-    }
-
     public function testEmptyStringThrows(): void
     {
         $this->expectException(\InvalidArgumentException::class);

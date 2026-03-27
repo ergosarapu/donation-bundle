@@ -15,12 +15,11 @@ final class Currency
 
     public function __construct(string $code)
     {
-        $trimmed = mb_trim($code);
-        if ($trimmed === '') {
+        if ($code === '') {
             throw new \InvalidArgumentException('Currency code cannot be empty.');
         }
-        $moneyCurrency = new MoneyCurrency($trimmed);
-        $contains = new ISOCurrencies()->contains($moneyCurrency);
+        $moneyCurrency = new MoneyCurrency($code);
+        $contains = (new ISOCurrencies())->contains($moneyCurrency);
         if (!$contains) {
             throw new \InvalidArgumentException(sprintf('"%s" is not a valid ISO currency code.', $moneyCurrency->getCode()));
         }
