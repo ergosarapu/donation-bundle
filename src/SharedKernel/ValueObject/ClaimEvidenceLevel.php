@@ -12,10 +12,13 @@ enum ClaimEvidenceLevel: string
 
     public function rank(): int
     {
-        return match ($this) {
-            self::Observed => 1,
-            self::VerifiedByUser => 2,
-            self::Verified => 3,
-        };
+        if ($this === self::Observed) {
+            return 1;
+        }
+        if ($this === self::VerifiedByUser) {
+            return 2;
+        }
+        // self::Verified
+        return 3;
     }
 }

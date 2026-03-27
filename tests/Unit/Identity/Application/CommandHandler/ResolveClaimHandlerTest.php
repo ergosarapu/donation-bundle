@@ -72,7 +72,7 @@ final class ResolveClaimHandlerTest extends TestCase
         $source = ClaimSource::forPayment(PaymentId::fromString('018e1234-0000-7000-8000-000000000011'));
         $claimId = ClaimId::generateDeterministic($source);
         $claim = $this->claimWithIban($source, $claimId, new Iban('EE471000001020145685'));
-        $command = new ResolveClaim($source);
+        $command = new ResolveClaim($claimId);
         $identityIdA = IdentityId::generate();
         $identityIdB = IdentityId::generate();
 
@@ -127,7 +127,7 @@ final class ResolveClaimHandlerTest extends TestCase
             new IdentityCreated($this->now, $identityId),
             new IdentityPersonNameChanged($this->now, $claimId, $identityId, new PersonName('Janet', 'Doe')),
         ]);
-        $command = new ResolveClaim($source);
+        $command = new ResolveClaim($claimId);
 
         $this->claimRepository->expects($this->once())
             ->method('load')
@@ -184,7 +184,7 @@ final class ResolveClaimHandlerTest extends TestCase
         $identity = Identity::createFromEvents([
             new IdentityCreated($this->now, $identityId),
         ]);
-        $command = new ResolveClaim($source);
+        $command = new ResolveClaim($claimId);
 
         $this->claimRepository->expects($this->once())
             ->method('load')
@@ -252,9 +252,9 @@ final class ResolveClaimHandlerTest extends TestCase
     {
         $source = ClaimSource::forPayment(PaymentId::fromString('018e1234-0000-7000-8000-000000000014'));
         $claimId = ClaimId::generateDeterministic($source);
-        $iban = new Iban('EE471000001020145686');
+        $iban = new Iban('GB29NWBK60161331926819');
         $claim = $this->claimWithIban($source, $claimId, $iban);
-        $command = new ResolveClaim($source);
+        $command = new ResolveClaim($claimId);
 
         $this->claimRepository->expects($this->once())
             ->method('load')

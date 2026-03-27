@@ -23,9 +23,8 @@ class CreatePendingPaymentImportHandler implements CommandHandlerInterface
     public function __invoke(CreatePendingPaymentImport $command): ?PaymentId
     {
         $paymentId = PaymentId::generateDeterministic(
-            $command->sourceIdentifier->value,
-            $command->bankReference->value,
-            $command->bookingDate
+            $command->sourceIdentifier->value . '|' . $command->bankReference->value,
+            $command->bookingDate->setTime(0, 0, 0, 0)->getTimestamp() * 1000
         );
 
         // Idempotency: Check if payment already exists

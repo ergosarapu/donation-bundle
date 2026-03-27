@@ -9,9 +9,19 @@ use Patchlevel\Hydrator\Normalizer\ObjectNormalizer;
 #[ObjectNormalizer]
 final class Email
 {
-    public function __construct(
-        private readonly string $value,
-    ) {
+    private readonly string $value;
+
+    public function __construct(string $value)
+    {
+        $trimmed = mb_trim($value);
+        if ($trimmed === '') {
+            throw new \InvalidArgumentException('Email cannot be empty.');
+        }
+        $normalized = mb_strtolower($trimmed);
+        if (filter_var($normalized, FILTER_VALIDATE_EMAIL) === false) {
+            throw new \InvalidArgumentException(sprintf('"%s" is not a valid email address.', $normalized));
+        }
+        $this->value = $normalized;
     }
 
     public function toString(): string

@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\Tests\Unit\SharedKernel\Identifier;
 
-use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use PHPUnit\Framework\TestCase;
 
 class PaymentIdTest extends TestCase
 {
+    // 2024-02-01 00:00:00 UTC in milliseconds
+    private const TIMESTAMP_MS = 1706745600000;
+    // 2024-03-15 00:00:00 UTC in milliseconds
+    private const TIMESTAMP_MS_OTHER = 1710460800000;
+
     public function testGenerate(): void
     {
         $id1 = PaymentId::generate();
@@ -31,12 +35,8 @@ class PaymentIdTest extends TestCase
 
     public function testGenerateDeterministicProducesSameIdForSameInputs(): void
     {
-        $sourceIdentifier = 'source-123';
-        $uniqueReference = 'ref-456';
-        $bookingDate = new DateTimeImmutable('2024-02-01 12:00:00');
-
-        $id1 = PaymentId::generateDeterministic($sourceIdentifier, $uniqueReference, $bookingDate);
-        $id2 = PaymentId::generateDeterministic($sourceIdentifier, $uniqueReference, $bookingDate);
+        $id1 = PaymentId::generateDeterministic('source-123|ref-456', self::TIMESTAMP_MS);
+        $id2 = PaymentId::generateDeterministic('source-123|ref-456', self::TIMESTAMP_MS);
 
         $this->assertEquals($id1->toString(), $id2->toString());
     }
@@ -45,117 +45,70 @@ class PaymentIdTest extends TestCase
     {
         // This test ensures the deterministic algorithm doesn't change unexpectedly.
         // If this test fails, it means the implementation has changed and may affect existing data.
-        $sourceIdentifier = 'test-source-123';
-        $uniqueReference = 'test-ref-456';
-        $bookingDate = new DateTimeImmutable('2024-02-01 12:00:00', new \DateTimeZone('UTC'));
+        // Timestamp: 2024-02-01 00:00:00 UTC = 1706745600000 ms
+        // Key: "test-source-123|test-ref-456"
+        $id = PaymentId::generateDeterministic('test-source-123|test-ref-456', self::TIMESTAMP_MS);
 
-        $id = PaymentId::generateDeterministic($sourceIdentifier, $uniqueReference, $bookingDate);
-
-        // Expected UUID generated with the current implementation
-        // This is a UUIDv7 based on:
-        // - Timestamp: 2024-02-01 12:00:00 UTC (1706788800000 milliseconds)
-        // - Hash seed: "test-source-123|test-ref-456"
-        $expectedUuid = '018d648a-4600-7674-a7f5-15ee46702090';
-
-        $this->assertEquals($expectedUuid, $id->toString());
+        $this->assertEquals('018d61f7-1800-7674-a7f5-15ee46702090', $id->toString());
     }
 
-    public function testGenerateDeterministicProducesDifferentIdForDifferentSourceIdentifier(): void
+    public function testGenerateDeterministicProducesDifferentIdForDifferentKey(): void
     {
-        $uniqueReference = 'ref-456';
-        $bookingDate = new DateTimeImmutable('2024-02-01 12:00:00');
-
-        $id1 = PaymentId::generateDeterministic('source-123', $uniqueReference, $bookingDate);
-        $id2 = PaymentId::generateDeterministic('source-789', $uniqueReference, $bookingDate);
+        $id1 = PaymentId::generateDeterministic('source-123|ref-456', self::TIMESTAMP_MS);
+        $id2 = PaymentId::generateDeterministic('source-789|ref-456', self::TIMESTAMP_MS);
 
         $this->assertNotEquals($id1->toString(), $id2->toString());
     }
 
-    public function testGenerateDeterministicProducesDifferentIdForDifferentUniqueReference(): void
+    public function testGenerateDeterministicProducesDifferentIdForDifferentTimestamp(): void
     {
-        $sourceIdentifier = 'source-123';
-        $bookingDate = new DateTimeImmutable('2024-02-01 12:00:00');
-
-        $id1 = PaymentId::generateDeterministic($sourceIdentifier, 'ref-456', $bookingDate);
-        $id2 = PaymentId::generateDeterministic($sourceIdentifier, 'ref-789', $bookingDate);
-
-        $this->assertNotEquals($id1->toString(), $id2->toString());
-    }
-
-    public function testGenerateDeterministicProducesDifferentIdForDifferentbookingDate(): void
-    {
-        $sourceIdentifier = 'source-123';
-        $uniqueReference = 'ref-456';
-
-        $id1 = PaymentId::generateDeterministic($sourceIdentifier, $uniqueReference, new DateTimeImmutable('2024-02-01 12:00:00'));
-        $id2 = PaymentId::generateDeterministic($sourceIdentifier, $uniqueReference, new DateTimeImmutable('2024-03-15 15:30:00'));
+        $id1 = PaymentId::generateDeterministic('source-123|ref-456', self::TIMESTAMP_MS);
+        $id2 = PaymentId::generateDeterministic('source-123|ref-456', self::TIMESTAMP_MS_OTHER);
 
         $this->assertNotEquals($id1->toString(), $id2->toString());
     }
 
     public function testGenerateDeterministicProducesValidUuidV7(): void
     {
-        $sourceIdentifier = 'source-123';
-        $uniqueReference = 'ref-456';
-        $bookingDate = new DateTimeImmutable('2024-02-01 12:00:00');
-
-        $id = PaymentId::generateDeterministic($sourceIdentifier, $uniqueReference, $bookingDate);
+        $id = PaymentId::generateDeterministic('source-123|ref-456', self::TIMESTAMP_MS);
         $uuidString = $id->toString();
 
-        // Check UUID format (8-4-4-4-12)
         $this->assertMatchesRegularExpression('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/', $uuidString);
 
-        // Check version is 7 (4th character of 3rd group should be '7')
         $parts = explode('-', $uuidString);
         $this->assertEquals('7', $parts[2][0]);
-
-        // Check variant is RFC 4122 (first character of 4th group should be '8', '9', 'a', or 'b')
         $this->assertContains($parts[3][0], ['8', '9', 'a', 'b']);
     }
 
-    public function testGenerateDeterministicIncludesTimestampFrombookingDate(): void
+    public function testGenerateDeterministicDifferentTimestampsProduceDifferentTimestampPart(): void
     {
-        $sourceIdentifier = 'source-123';
-        $uniqueReference = 'ref-456';
-        $date1 = new DateTimeImmutable('2024-02-01 12:00:00');
-        $date2 = new DateTimeImmutable('2024-02-01 12:00:01'); // 1 second later
+        // 2024-02-02 00:00:00 UTC = 1706832000000 ms
+        $id1 = PaymentId::generateDeterministic('source-123|ref-456', self::TIMESTAMP_MS);
+        $id2 = PaymentId::generateDeterministic('source-123|ref-456', 1706832000000);
 
-        $id1 = PaymentId::generateDeterministic($sourceIdentifier, $uniqueReference, $date1);
-        $id2 = PaymentId::generateDeterministic($sourceIdentifier, $uniqueReference, $date2);
-
-        // Different timestamps should produce different IDs even with same source and reference
-        $this->assertNotEquals($id1->toString(), $id2->toString());
-
-        // The first part of UUIDv7 contains the timestamp, so check they're different
         $parts1 = explode('-', $id1->toString());
         $parts2 = explode('-', $id2->toString());
 
-        // First two groups contain the timestamp
-        $timestamp1 = $parts1[0] . $parts1[1];
-        $timestamp2 = $parts2[0] . $parts2[1];
-
-        $this->assertNotEquals($timestamp1, $timestamp2);
+        $this->assertNotEquals($parts1[0] . $parts1[1], $parts2[0] . $parts2[1]);
     }
 
-    public function testGenerateDeterministicWithEmptyStrings(): void
+    public function testGenerateDeterministicWithEmptyKeyThrows(): void
     {
-        $bookingDate = new DateTimeImmutable('2024-02-01 12:00:00');
-
-        $id = PaymentId::generateDeterministic('', '', $bookingDate);
-
-        $this->assertInstanceOf(PaymentId::class, $id);
-        $this->assertNotEmpty($id->toString());
+        $this->expectException(\InvalidArgumentException::class);
+        PaymentId::generateDeterministic('', self::TIMESTAMP_MS);
     }
 
-    public function testGenerateDeterministicWithSpecialCharacters(): void
+    public function testGenerateDeterministicWithAsciiSpecialCharacters(): void
     {
-        $sourceIdentifier = 'source-with-special-chars-!@#$%^&*()';
-        $uniqueReference = 'ref-with-unicode-émojis-🎉';
-        $bookingDate = new DateTimeImmutable('2024-02-01 12:00:00');
-
-        $id = PaymentId::generateDeterministic($sourceIdentifier, $uniqueReference, $bookingDate);
+        $id = PaymentId::generateDeterministic('source-!@#$%^&*()|ref-456', self::TIMESTAMP_MS);
 
         $this->assertInstanceOf(PaymentId::class, $id);
         $this->assertMatchesRegularExpression('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/', $id->toString());
+    }
+
+    public function testGenerateDeterministicWithMultibyteKeyThrows(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        PaymentId::generateDeterministic('ref-émojis-🎉', self::TIMESTAMP_MS);
     }
 }

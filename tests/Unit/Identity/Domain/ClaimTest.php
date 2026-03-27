@@ -52,7 +52,7 @@ final class ClaimTest extends AggregateRootTestCase
         $this->personName = new PersonName('Jane', 'Doe');
         $this->email = new Email('example@example.com');
         $this->rawName = new RawName('Jane Doe');
-        $this->iban = new Iban('EE123456789012345678');
+        $this->iban = new Iban('EE382200221020145685');
         $this->nationalIdCode = new NationalIdCode('1234567890');
     }
 
@@ -60,7 +60,7 @@ final class ClaimTest extends AggregateRootTestCase
     {
         $claimId = ClaimId::generateDeterministic($this->source);
 
-        $this->when(fn () => Claim::create($this->now, $this->source))
+        $this->when(fn () => Claim::create($this->now, $claimId, $this->source))
             ->then(new ClaimCreated($this->now, $claimId, $this->source));
     }
 

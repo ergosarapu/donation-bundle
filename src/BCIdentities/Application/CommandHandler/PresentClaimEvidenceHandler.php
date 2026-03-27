@@ -44,7 +44,7 @@ final class PresentClaimEvidenceHandler implements CommandHandlerInterface
             return;
         }
 
-        $this->commandBus->dispatch(new ResolveClaim($command->source));
+        $this->commandBus->dispatch(new ResolveClaim($claimId));
     }
 
     private function loadOrCreateClaim(ClaimId $claimId, ClaimSource $source, DateTimeImmutable $currentTime): Claim
@@ -53,7 +53,7 @@ final class PresentClaimEvidenceHandler implements CommandHandlerInterface
             return $this->claimRepository->load($claimId);
         }
 
-        return Claim::create($currentTime, $source);
+        return Claim::create($currentTime, $claimId, $source);
     }
 
     private function presentClaimEvidence(Claim $claim, PresentClaimEvidence $command, DateTimeImmutable $currentTime): void

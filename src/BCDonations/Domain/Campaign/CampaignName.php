@@ -9,9 +9,18 @@ use Patchlevel\Hydrator\Normalizer\ObjectNormalizer;
 #[ObjectNormalizer]
 final class CampaignName
 {
-    public function __construct(
-        private readonly string $value,
-    ) {
+    private readonly string $value;
+
+    public function __construct(string $value)
+    {
+        $value = mb_trim($value);
+        if ($value === '') {
+            throw new \InvalidArgumentException('Campaign name cannot be empty.');
+        }
+        if (mb_strlen($value) > 64) {
+            throw new \InvalidArgumentException(sprintf('Campaign name cannot exceed 64 characters, got %d.', strlen($value)));
+        }
+        $this->value = $value;
     }
 
     public function toString(): string

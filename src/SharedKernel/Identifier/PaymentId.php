@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\SharedKernel\Identifier;
 
-use DateTimeImmutable;
 use Patchlevel\EventSourcing\Aggregate\AggregateRootId;
 use Patchlevel\EventSourcing\Aggregate\RamseyUuidV7Behaviour;
 use Ramsey\Uuid\Uuid;
@@ -14,29 +13,31 @@ class PaymentId implements AggregateRootId
     use RamseyUuidV7Behaviour;
 
     /**
-     * Generate a deterministic UUIDv7-based PaymentId from source identifier,
-     * unique reference, and date.
+     * Generate a deterministic UUIDv7-based PaymentId from a key and a unix timestamp.
      *
-     * This ensures that the same payment data always generates the same ID,
-     * enabling idempotent imports.
+     * The caller is responsible for composing a unique key that serves as the seed
+     * (e.g. by concatenating source identifier and unique reference), and for
+     * stripping any sub-day precision from the timestamp if date-only granularity is desired.
      *
-     * @param string $sourceIdentifier The source system identifier
-     * @param string $uniqueReference The unique reference (e.g. processor reference or bank reference)
-     * @param DateTimeImmutable $date The date of the payment
+     * This ensures that the same input always generates the same ID.
+     *
+     * @param string $key The seed key (caller-composed unique string)
+     * @param int $timestamp Unix timestamp in milliseconds
      * @return self
      */
     public static function generateDeterministic(
-        string $sourceIdentifier,
-        string $uniqueReference,
-        DateTimeImmutable $date
+        string $key,
+        int $timestamp
     ): self {
-        // Create a deterministic seed from source id and unique reference
-        $seed = $sourceIdentifier . '|' . $uniqueReference;
-        $hash = hash('sha256', $seed, true); // Get binary hash (32 bytes)
+        if ($key === '') {
+            throw new \InvalidArgumentException('Key must not be empty.');
+        }
 
-        // UUIDv7 structure: 48-bit timestamp + 12-bit random + 62-bit random
-        // Get milliseconds timestamp for UUIDv7
-        $timestamp = (int) ($date->getTimestamp() * 1000);
+        if (!mb_check_encoding($key, 'ASCII')) {
+            throw new \InvalidArgumentException('Key must contain ASCII characters only.');
+        }
+
+        $hash = hash('sha256', $key, true); // Get binary hash (32 bytes)
 
         // Build UUIDv7 bytes (16 bytes total)
         $bytes = '';
@@ -51,7 +52,8 @@ class PaymentId implements AggregateRootId
 
         // Bytes 8-15: variant (2 bits = 0b10) + 62-bit random from hash
         $bytes .= chr(0x80 | (ord($hash[2]) & 0x3F)); // Variant 10 + 6 random bits
-        $bytes .= substr($hash, 3, 7); // 56 more random bits (7 bytes)
+        // 56 more random bits (7 bytes)
+        $bytes .= $hash[3] . $hash[4] . $hash[5] . $hash[6] . $hash[7] . $hash[8] . $hash[9];
 
         // Create UUID from bytes
         $uuid = Uuid::fromBytes($bytes);

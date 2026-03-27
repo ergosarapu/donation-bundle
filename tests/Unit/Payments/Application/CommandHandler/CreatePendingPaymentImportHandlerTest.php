@@ -53,7 +53,7 @@ class CreatePendingPaymentImportHandlerTest extends TestCase
         $bankReference = new BankReference('ref-456');
         $amount = new Money(5000, new Currency('EUR'));
         $description = new ShortDescription('Test payment import');
-        $bookingDate = new DateTimeImmutable('2024-02-02');
+        $bookingDate = new DateTimeImmutable('2024-02-02 12:01:15');
         $accountHolderName = new AccountHolderName('John Doe');
         $nationalIdCode = new NationalIdCode('12345678901');
         $organizationRegCode = new OrganisationRegCode('12345678');
@@ -122,6 +122,38 @@ class CreatePendingPaymentImportHandlerTest extends TestCase
         $result = ($this->handler)($this->command);
 
         $this->assertNull($result);
+    }
+
+    public function testGeneratesDeterministicPaymentIdFromSourceIdentifierBankReferenceAndBookingDate(): void
+    {
+        // This test locks down the exact arguments passed to PaymentId::generateDeterministic.
+        // If the key composition or timestamp derivation changes in the handler, this test breaks.
+        $expectedId = PaymentId::generateDeterministic(
+            'source-123|ref-456',                                                       // sourceIdentifier|bankReference
+            (new DateTimeImmutable('2024-02-02'))->setTime(0, 0, 0, 0)->getTimestamp() * 1000
+        );
+
+        $this->paymentRepository->method('has')->willReturn(false);
+        $this->paymentRepository->method('save');
+
+        $command = new CreatePendingPaymentImport(
+            new PaymentImportSourceIdentifier('source-123'),
+            new BankReference('ref-456'),
+            PaymentStatus::Initiated,
+            new Money(5000, new Currency('EUR')),
+            new ShortDescription('Test deterministic ID'),
+            new DateTimeImmutable('2024-02-02 15:30:45'), // Booking date with time component
+            new AccountHolderName('John Doe'),
+            new NationalIdCode('12345678901'),
+            new OrganisationRegCode('12345678'),
+            new PaymentReference('1234567890'),
+            new Iban('EE382200221020145685'),
+            new Bic('HABAEE2X'),
+        );
+        $result = ($this->handler)($command);
+
+        $this->assertNotNull($result);
+        $this->assertSame($expectedId->toString(), $result->toString());
     }
 
     public function testCreatesPaymentImportWithNullableFields(): void

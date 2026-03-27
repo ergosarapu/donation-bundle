@@ -66,12 +66,13 @@ final class Claim extends BasicAggregateRoot
 
     public static function create(
         DateTimeImmutable $currentTime,
+        ClaimId $claimId,
         ClaimSource $source,
     ): self {
         $claim = new self();
         $claim->recordThat(new ClaimCreated(
             $currentTime,
-            ClaimId::generateDeterministic($source),
+            $claimId,
             $source,
         ));
 

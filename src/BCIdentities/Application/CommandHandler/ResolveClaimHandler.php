@@ -13,7 +13,6 @@ use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimReviewReason;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\Identity;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\CommandHandlerInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\TransactionManagerInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ClaimId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\IdentityId;
 use Psr\Clock\ClockInterface;
 
@@ -31,7 +30,7 @@ final class ResolveClaimHandler implements CommandHandlerInterface
     public function __invoke(ResolveClaim $command): void
     {
         $currentTime = $this->clock->now();
-        $claimId = ClaimId::generateDeterministic($command->source);
+        $claimId = $command->claimId;
         $claim = $this->claimRepository->load($claimId);
         $identityIds = $this->identityLookup->lookup(
             email: $claim->email(),

@@ -17,11 +17,11 @@ final class ClaimId implements AggregateRootId
     {
         $hash = hash('sha256', $source->deterministicKey(), true);
 
-        $bytes = substr($hash, 0, 6);
+        $bytes = $hash[0] . $hash[1] . $hash[2] . $hash[3] . $hash[4] . $hash[5];
         $bytes .= chr(0x70 | (ord($hash[6]) & 0x0F));
         $bytes .= $hash[7];
         $bytes .= chr(0x80 | (ord($hash[8]) & 0x3F));
-        $bytes .= substr($hash, 9, 7);
+        $bytes .= $hash[9] . $hash[10] . $hash[11] . $hash[12] . $hash[13] . $hash[14] . $hash[15];
 
         return self::fromString(Uuid::fromBytes($bytes)->toString());
     }

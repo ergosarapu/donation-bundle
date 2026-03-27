@@ -68,7 +68,7 @@ final class PresentClaimEvidenceHandlerTest extends TestCase
 
         $this->commandBus->expects($this->once())
             ->method('dispatch')
-            ->with(new ResolveClaim($source))
+            ->with(new ResolveClaim($claimId))
             ->willReturn(new CommandResult(null, 'correlation-id'));
 
         ($this->handler)($command);
@@ -81,7 +81,7 @@ final class PresentClaimEvidenceHandlerTest extends TestCase
     {
         $source = ClaimSource::forPayment(PaymentId::fromString('018e1234-0000-7000-8000-000000000002'));
         $claimId = ClaimId::generateDeterministic($source);
-        $claim = Claim::create($this->now, $source);
+        $claim = Claim::create($this->now, $claimId, $source);
         $claim->releaseEvents();
         $command = new PresentClaimEvidence(
             source: $source,
@@ -109,7 +109,7 @@ final class PresentClaimEvidenceHandlerTest extends TestCase
 
         $this->commandBus->expects($this->once())
             ->method('dispatch')
-            ->with(new ResolveClaim($source))
+            ->with(new ResolveClaim($claimId))
             ->willReturn(new CommandResult(null, 'correlation-id'));
 
         ($this->handler)($command);
@@ -122,7 +122,7 @@ final class PresentClaimEvidenceHandlerTest extends TestCase
     {
         $source = ClaimSource::forPayment(PaymentId::fromString('018e1234-0000-7000-8000-000000000003'));
         $claimId = ClaimId::generateDeterministic($source);
-        $claim = Claim::create($this->now, $source);
+        $claim = Claim::create($this->now, $claimId, $source);
         $claim->present($this->now, new Iban('EE471000001020145685'), ClaimEvidenceLevel::Verified);
         $claim->releaseEvents();
         $command = new PresentClaimEvidence(
