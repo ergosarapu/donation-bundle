@@ -310,10 +310,4 @@ class PaymentValueObjectsTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         new PaymentReference(str_repeat('a', 36));
     }
-
-    public function testPaymentReferenceMultibyteThrows(): void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        new PaymentReference('PAY-réf');
-    }
 }

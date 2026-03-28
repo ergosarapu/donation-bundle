@@ -17,10 +17,7 @@ final class PaymentReference
         if ($value === '') {
             throw new \InvalidArgumentException('Payment reference cannot be empty.');
         }
-        if (!mb_check_encoding($value, 'ASCII')) {
-            throw new \InvalidArgumentException('Payment reference must contain ASCII characters only.');
-        }
-        if (strlen($value) > 35) {
+        if (mb_strlen($value) > 35) {
             throw new \InvalidArgumentException(sprintf('Payment reference cannot exceed 35 characters, got %d.', strlen($value)));
         }
         $this->value = $value;
