@@ -40,7 +40,7 @@ class RecurringPlan extends BasicAggregateRoot
     private RecurringPlanStatus $status;
     private ?DateTimeImmutable $nextRenewalTime;
     private ?DonorDetails $donorDetails;
-    private ?ExternalEntityId $paymentMethodId;
+    private ExternalEntityId $paymentMethodId;
     private ShortDescription $description;
 
     public static function initiate(
@@ -135,7 +135,6 @@ class RecurringPlan extends BasicAggregateRoot
         $this->gateway = $event->gateway;
         $this->donorDetails = $event->donorDetails;
         $this->nextRenewalTime = null;
-        $this->paymentMethodId = null;
         $this->description = $event->description;
     }
 
@@ -196,10 +195,6 @@ class RecurringPlan extends BasicAggregateRoot
             RecurringPlanStatus::Active, RecurringPlanStatus::Failing => null,
             default => throw new RecurringPlanRenewalNotAllowedException('Only active and failing recurring plans can be renewed.'),
         };
-
-        if ($this->paymentMethodId === null) {
-            throw new LogicException('Cannot initiate renewal: payment method not assigned.');
-        }
 
         $renewalAction = RecurringPlanAction::forRenew($this->paymentMethodId);
         $this->recordThat(new RecurringPlanRenewalInitiated(
@@ -300,9 +295,6 @@ class RecurringPlan extends BasicAggregateRoot
             RecurringPlanStatus::Failing => null,
             default => throw new RecurringPlanReActivateNotAllowedException('Re-activate not allowed from status: ' . $this->status->value),
         };
-        if ($this->paymentMethodId === null) {
-            throw new LogicException('Cannot reactivate recurring plan: payment method not assigned.');
-        }
         $this->calculateNextRenewalTimeAndActivate($currentTime, $this->paymentMethodId);
     }
 

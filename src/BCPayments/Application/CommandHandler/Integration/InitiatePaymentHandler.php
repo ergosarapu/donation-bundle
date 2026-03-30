@@ -21,12 +21,7 @@ class InitiatePaymentHandler implements CommandHandlerInterface
 
     public function __invoke(InitiatePaymentIntegrationCommand $command): void
     {
-        $paymentMethodAction = null;
-        if ($command->requestPaymentMethodFor !== null && $command->paymentMethodId === null) {
-            $paymentMethodAction = PaymentMethodAction::forRequest(PaymentMethodId::generate(), $command->paymentId, $command->requestPaymentMethodFor);
-        } elseif ($command->paymentMethodId !== null) {
-            $paymentMethodAction = PaymentMethodAction::forUse(PaymentMethodId::fromString($command->paymentMethodId->toString()), $command->paymentId);
-        }
+        $paymentMethodAction = $this->resolvePaymentMethodAction($command);
         $paymentRequest = new PaymentRequest(
             $command->paymentId,
             $command->amount,
@@ -37,5 +32,18 @@ class InitiatePaymentHandler implements CommandHandlerInterface
             $paymentMethodAction,
         );
         $this->commandBus->dispatch(new InitiatePayment($paymentRequest));
+    }
+
+    private function resolvePaymentMethodAction(InitiatePaymentIntegrationCommand $command): ?PaymentMethodAction
+    {
+        if ($command->paymentMethodId !== null) {
+            return PaymentMethodAction::forUse(PaymentMethodId::fromString($command->paymentMethodId->toString()), $command->paymentId);
+        }
+
+        if ($command->requestPaymentMethodFor === null) {
+            return null;
+        }
+
+        return PaymentMethodAction::forRequest(PaymentMethodId::generate(), $command->paymentId, $command->requestPaymentMethodFor);
     }
 }
