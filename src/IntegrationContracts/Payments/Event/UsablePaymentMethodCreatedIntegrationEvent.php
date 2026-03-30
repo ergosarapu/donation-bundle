@@ -6,12 +6,11 @@ namespace ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event;
 
 use ErgoSarapu\DonationBundle\IntegrationContracts\IntegrationEventInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 
 class UsablePaymentMethodCreatedIntegrationEvent implements IntegrationEventInterface
 {
     public function __construct(
-        public readonly PaymentMethodId $paymentMethodId,
+        public readonly ExternalEntityId $paymentMethodId,
         public readonly ExternalEntityId $createdFor,
     ) {
     }

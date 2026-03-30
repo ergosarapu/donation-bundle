@@ -16,7 +16,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlan;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanStatus;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
@@ -51,7 +51,7 @@ class CreateRecurringPlanHandlerTest extends TestCase
         $recurringPlanId = RecurringPlanId::generate();
         $initialDonationId = DonationId::generate();
         $campaignId = CampaignId::generate();
-        $paymentMethodId = PaymentMethodId::generate();
+        $paymentMethodId = ExternalEntityId::generate();
         $interval = new RecurringInterval(RecurringInterval::Monthly);
         $amount = new Money(5000, new Currency('EUR'));
         $gateway = new Gateway('test-gateway');

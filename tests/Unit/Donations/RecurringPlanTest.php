@@ -31,7 +31,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanInit
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanRenewalCompleted;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanRenewalInitiated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanStatus;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
@@ -50,7 +50,7 @@ class RecurringPlanTest extends AggregateRootTestCase
 
     private RecurringPlanAction $recurringPlanActionForInit;
 
-    private PaymentMethodId $paymentMethodId;
+    private ExternalEntityId $paymentMethodId;
 
     private RecurringInterval $interval;
 
@@ -70,7 +70,7 @@ class RecurringPlanTest extends AggregateRootTestCase
         $this->now = new DateTimeImmutable('2024-02-01 00:00:00');
         $this->recurringPlanId = RecurringPlanId::generate();
         $this->recurringPlanActionForInit = RecurringPlanAction::forInit();
-        $this->paymentMethodId = PaymentMethodId::generate();
+        $this->paymentMethodId = ExternalEntityId::generate();
         $this->interval = new RecurringInterval(RecurringInterval::Monthly);
         $this->campaignId = CampaignId::generate();
         $this->amount = new Money(100, new Currency('EUR'));
@@ -88,7 +88,7 @@ class RecurringPlanTest extends AggregateRootTestCase
     {
         $recurringPlanId = RecurringPlanId::generate();
         $initialDonationId = DonationId::generate();
-        $paymentMethodId = PaymentMethodId::generate();
+        $paymentMethodId = ExternalEntityId::generate();
         $nextRenewalTime = $this->now->add($this->interval->toDateInterval());
 
         $this->when(fn () => RecurringPlan::create(
@@ -128,7 +128,7 @@ class RecurringPlanTest extends AggregateRootTestCase
     {
         $recurringPlanId = RecurringPlanId::generate();
         $initialDonationId = DonationId::generate();
-        $paymentMethodId = PaymentMethodId::generate();
+        $paymentMethodId = ExternalEntityId::generate();
         $nextRenewalTime = $this->now->add($this->interval->toDateInterval());
 
         $this->when(fn () => RecurringPlan::create(
@@ -206,7 +206,7 @@ class RecurringPlanTest extends AggregateRootTestCase
         $renewalDonationId = DonationId::generate()->toString();
         $nextRenewalTime = $this->now->add($this->interval->toDateInterval());
 
-        $renewalAction = RecurringPlanAction::forRenew(PaymentMethodId::generate());
+        $renewalAction = RecurringPlanAction::forRenew(ExternalEntityId::generate());
         $this->given(
             new RecurringPlanActivated(
                 $this->now,
@@ -257,7 +257,7 @@ class RecurringPlanTest extends AggregateRootTestCase
     {
         $renewalDonationId = DonationId::generate()->toString();
         $nextRenewalTime = $now->add($this->interval->toDateInterval());
-        $renewalAction = RecurringPlanAction::forRenew(PaymentMethodId::generate());
+        $renewalAction = RecurringPlanAction::forRenew(ExternalEntityId::generate());
 
         $this->given(
             new RecurringPlanActivated(
@@ -469,7 +469,7 @@ class RecurringPlanTest extends AggregateRootTestCase
     public function testFailedRecurringAttemptResultsFailing(): void
     {
         $renewalDonationId = DonationId::generate()->toString();
-        $renewalAction = RecurringPlanAction::forRenew(PaymentMethodId::generate());
+        $renewalAction = RecurringPlanAction::forRenew(ExternalEntityId::generate());
         $this->given(
             new RecurringPlanActivated(
                 $this->now,
@@ -506,7 +506,7 @@ class RecurringPlanTest extends AggregateRootTestCase
     {
         $renewalDonationId = DonationId::generate()->toString();
         $nextRenewalTime = $now->add($this->interval->toDateInterval());
-        $renewalAction = RecurringPlanAction::forRenew(PaymentMethodId::generate());
+        $renewalAction = RecurringPlanAction::forRenew(ExternalEntityId::generate());
 
         $this->given(
             new RecurringPlanActivated(
@@ -940,7 +940,7 @@ class RecurringPlanTest extends AggregateRootTestCase
     {
         $renewalTime = $this->now->add($this->interval->toDateInterval());
         $renewalDonationId = DonationId::generate()->toString();
-        $renewalAction = RecurringPlanAction::forRenew(PaymentMethodId::generate());
+        $renewalAction = RecurringPlanAction::forRenew(ExternalEntityId::generate());
         $this->given(
             new RecurringPlanActivated(
                 $this->now,
@@ -994,7 +994,7 @@ class RecurringPlanTest extends AggregateRootTestCase
     public function testCompleteRecurringAttemptRenewalIdMismatchIgnored(): void
     {
         $renewalTime = $this->now->add($this->interval->toDateInterval());
-        $renewalAction = RecurringPlanAction::forRenew(PaymentMethodId::generate());
+        $renewalAction = RecurringPlanAction::forRenew(ExternalEntityId::generate());
         $this->given(
             new RecurringPlanActivated(
                 $this->now,
@@ -1027,7 +1027,7 @@ class RecurringPlanTest extends AggregateRootTestCase
     {
         $renewalDonationId = DonationId::generate()->toString();
         $renewalTime = $this->now->add($this->interval->toDateInterval());
-        $renewalAction = RecurringPlanAction::forRenew(PaymentMethodId::generate());
+        $renewalAction = RecurringPlanAction::forRenew(ExternalEntityId::generate());
         $this->given(
             new RecurringPlanActivated(
                 $this->now,

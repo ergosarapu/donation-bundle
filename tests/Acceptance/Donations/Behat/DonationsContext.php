@@ -45,7 +45,6 @@ use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\UsablePaymentM
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\QueryBusInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
@@ -67,7 +66,7 @@ class DonationsContext implements Context
     private DonationId $lastDonationId;
     private PaymentId $lastPaymentId;
     private ?RecurringPlanId $lastRecurringPlanId;
-    private PaymentMethodId $lastPaymentMethodId;
+    private ExternalEntityId $lastPaymentMethodId;
     private RecurringInterval $lastRecurringInterval;
     private FrozenClock $clock;
     private CampaignId $lastCampaignId;
@@ -272,7 +271,7 @@ class DonationsContext implements Context
     #[When('usable payment method is created')]
     public function usablePaymentMethodIsCreated(): void
     {
-        $this->lastPaymentMethodId = PaymentMethodId::generate();
+        $this->lastPaymentMethodId = ExternalEntityId::generate();
         Assert::notNull($this->lastRecurringPlanId);
         $this->eventBus->send(new UsablePaymentMethodCreatedIntegrationEvent(
             $this->lastPaymentMethodId,
@@ -284,7 +283,7 @@ class DonationsContext implements Context
     #[When('unusable payment method is created')]
     public function unusablePaymentMethodIsCreated(): void
     {
-        $this->lastPaymentMethodId = PaymentMethodId::generate();
+        $this->lastPaymentMethodId = ExternalEntityId::generate();
         Assert::notNull($this->lastRecurringPlanId);
         $this->eventBus->send(new UnusablePaymentMethodCreatedIntegrationEvent(
             $this->lastPaymentMethodId,

@@ -7,7 +7,6 @@ namespace ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Command;
 use ErgoSarapu\DonationBundle\IntegrationContracts\IntegrationCommandInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
@@ -27,7 +26,7 @@ class InitiatePaymentIntegrationCommand implements IntegrationCommandInterface
         public readonly ShortDescription $description,
         public readonly ExternalEntityId $appliedTo,
         public readonly ?Email $email = null,
-        public readonly ?PaymentMethodId $paymentMethodId = null,
+        public readonly ?ExternalEntityId $paymentMethodId = null,
         public readonly ?ExternalEntityId $requestPaymentMethodFor = null,
     ) {
     }

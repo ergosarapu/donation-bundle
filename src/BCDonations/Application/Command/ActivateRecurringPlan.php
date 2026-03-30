@@ -6,13 +6,13 @@ namespace ErgoSarapu\DonationBundle\BCDonations\Application\Command;
 
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 
 final class ActivateRecurringPlan implements CommandInterface
 {
     public function __construct(
         public readonly RecurringPlanId $recurringPlanId,
-        public readonly PaymentMethodId $paymentMethodId,
+        public readonly ExternalEntityId $paymentMethodId,
     ) {
     }
 }

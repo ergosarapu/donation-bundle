@@ -12,7 +12,6 @@ use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandResult;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
@@ -42,7 +41,7 @@ class InitiatePaymentHandlerTest extends TestCase
         $description = new ShortDescription('Test donation');
         $appliedTo = ExternalEntityId::generate();
         $email = new Email('donor@example.com');
-        $usePaymentMethodId = PaymentMethodId::generate();
+        $usePaymentMethodId = ExternalEntityId::generate();
 
         $integrationCommand = new InitiatePaymentIntegrationCommand(
             $paymentId,
@@ -68,7 +67,7 @@ class InitiatePaymentHandlerTest extends TestCase
                     && $request->appliedTo === $appliedTo
                     && $request->email === $email
                     && $request->paymentMethodAction !== null
-                    && $request->paymentMethodAction->paymentMethodId === $usePaymentMethodId;
+                    && $request->paymentMethodAction->paymentMethodId->toString() === $usePaymentMethodId->toString();
             }))
             ->willReturn(new CommandResult(null, 'test-correlation-id'));
 

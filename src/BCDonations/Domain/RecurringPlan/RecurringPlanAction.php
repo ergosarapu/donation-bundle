@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan;
 
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use Patchlevel\Hydrator\Normalizer\ObjectNormalizer;
 
 #[ObjectNormalizer]
 class RecurringPlanAction
 {
     private function __construct(
-        public readonly ?PaymentMethodId $paymentMethodId,
+        public readonly ?ExternalEntityId $paymentMethodId,
         public readonly RecurringPlanActionIntent $intent,
     ) {
     }
@@ -25,7 +25,7 @@ class RecurringPlanAction
     }
 
     public static function forRenew(
-        PaymentMethodId $paymentMethodId,
+        ExternalEntityId $paymentMethodId,
     ): self {
         return new self(
             $paymentMethodId,

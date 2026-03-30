@@ -6,11 +6,11 @@ namespace ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\Integr
 
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\InitiatePayment;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodAction;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRequest;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Command\InitiatePaymentIntegrationCommand;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\CommandHandlerInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 
 class InitiatePaymentHandler implements CommandHandlerInterface
 {
@@ -25,7 +25,7 @@ class InitiatePaymentHandler implements CommandHandlerInterface
         if ($command->requestPaymentMethodFor !== null && $command->paymentMethodId === null) {
             $paymentMethodAction = PaymentMethodAction::forRequest(PaymentMethodId::generate(), $command->paymentId, $command->requestPaymentMethodFor);
         } elseif ($command->paymentMethodId !== null) {
-            $paymentMethodAction = PaymentMethodAction::forUse($command->paymentMethodId, $command->paymentId);
+            $paymentMethodAction = PaymentMethodAction::forUse(PaymentMethodId::fromString($command->paymentMethodId->toString()), $command->paymentId);
         }
         $paymentRequest = new PaymentRequest(
             $command->paymentId,

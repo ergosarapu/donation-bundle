@@ -6,8 +6,8 @@ namespace ErgoSarapu\DonationBundle\BCPayments\Infrastructure\Adapter;
 
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentMethodRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethod;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodId;
 use ErgoSarapu\DonationBundle\SharedInfrastructure\Patchlevel\PatchlevelRepositoryWrapperTrait;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 
 final class PatchlevelPaymentMethodRepository implements PaymentMethodRepositoryInterface
 {
