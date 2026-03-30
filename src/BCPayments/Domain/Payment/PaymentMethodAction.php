@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCPayments\Domain\Payment;
 
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use Patchlevel\Hydrator\Normalizer\ObjectNormalizer;
 
 #[ObjectNormalizer]

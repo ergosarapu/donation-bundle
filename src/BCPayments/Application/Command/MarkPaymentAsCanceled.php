@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\BCPayments\Application\Command;
 
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 
 class MarkPaymentAsCanceled implements CommandInterface
 {

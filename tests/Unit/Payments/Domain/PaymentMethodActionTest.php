@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\Tests\Unit\Payments\Domain;
 
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodAction;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use LogicException;
 use PHPUnit\Framework\TestCase;
 

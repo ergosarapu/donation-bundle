@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCPayments\Application\Port;
 
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
 
 interface PaymentRepositoryInterface
 {

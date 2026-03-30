@@ -7,9 +7,9 @@ namespace ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\ImportPaymentsFromFile;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentFileImportResult;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentImportDecoderInterface;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\CommandHandlerInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 
 class ImportPaymentsFromFileHandler implements CommandHandlerInterface
 {

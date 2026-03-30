@@ -9,7 +9,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsRefund
 use ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\MarkPaymentAsRefundedHandler;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use PHPUnit\Framework\MockObject\MockObject;

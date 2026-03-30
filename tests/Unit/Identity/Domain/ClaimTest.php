@@ -15,9 +15,9 @@ use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForPersonN
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForRawName;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimResolved;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimReviewReason;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ClaimId;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\IdentityId;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ClaimEvidenceLevel;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ClaimSource;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;

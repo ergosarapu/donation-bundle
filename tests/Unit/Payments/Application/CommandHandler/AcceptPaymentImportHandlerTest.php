@@ -9,7 +9,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Application\Command\AcceptPaymentImport
 use ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\AcceptPaymentImportHandler;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
