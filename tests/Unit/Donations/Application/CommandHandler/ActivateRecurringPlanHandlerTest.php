@@ -10,6 +10,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\ActivateRec
 use ErgoSarapu\DonationBundle\BCDonations\Application\Port\RecurringPlanRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlan;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
@@ -21,6 +22,7 @@ class ActivateRecurringPlanHandlerTest extends TestCase
     private RecurringPlanRepositoryInterface&MockObject $recurringPlanRepository;
     private DateTimeImmutable $now;
     private ActivateRecurringPlan $command;
+    private PaymentMethodId $paymentMethodId;
 
     protected function setUp(): void
     {
@@ -29,6 +31,7 @@ class ActivateRecurringPlanHandlerTest extends TestCase
         $this->recurringPlan = $this->createMock(RecurringPlan::class);
         $this->recurringPlanRepository = $this->createMock(RecurringPlanRepositoryInterface::class);
         $this->now = new DateTimeImmutable('2024-02-01 12:00:00');
+        $this->paymentMethodId = PaymentMethodId::generate();
 
         $clock = $this->createMock(ClockInterface::class);
         $clock->method('now')->willReturn($this->now);
@@ -39,7 +42,7 @@ class ActivateRecurringPlanHandlerTest extends TestCase
         );
 
         $recurringPlanId = RecurringPlanId::generate();
-        $this->command = new ActivateRecurringPlan($recurringPlanId);
+        $this->command = new ActivateRecurringPlan($recurringPlanId, $this->paymentMethodId);
     }
 
     public function testActivatesRecurringPlan(): void
@@ -50,7 +53,7 @@ class ActivateRecurringPlanHandlerTest extends TestCase
             ->willReturn($this->recurringPlan);
         $this->recurringPlan->expects($this->once())
             ->method('activate')
-            ->with($this->now);
+            ->with($this->now, $this->paymentMethodId);
         $this->recurringPlanRepository->expects($this->once())
             ->method('save')
             ->with($this->recurringPlan);

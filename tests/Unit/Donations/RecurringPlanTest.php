@@ -50,6 +50,8 @@ class RecurringPlanTest extends AggregateRootTestCase
 
     private RecurringPlanAction $recurringPlanActionForInit;
 
+    private PaymentMethodId $paymentMethodId;
+
     private RecurringInterval $interval;
 
     private CampaignId $campaignId;
@@ -68,6 +70,7 @@ class RecurringPlanTest extends AggregateRootTestCase
         $this->now = new DateTimeImmutable('2024-02-01 00:00:00');
         $this->recurringPlanId = RecurringPlanId::generate();
         $this->recurringPlanActionForInit = RecurringPlanAction::forInit();
+        $this->paymentMethodId = PaymentMethodId::generate();
         $this->interval = new RecurringInterval(RecurringInterval::Monthly);
         $this->campaignId = CampaignId::generate();
         $this->amount = new Money(100, new Currency('EUR'));
@@ -210,6 +213,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->recurringPlanId,
                 $nextRenewalTime,
                 $this->interval,
+                $this->paymentMethodId,
             ),
             new RecurringPlanFailing(
                 $this->now,
@@ -243,6 +247,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->recurringPlanId,
                 $nextRenewalTime,
                 $this->interval,
+                $this->paymentMethodId,
             )
         );
     }
@@ -260,6 +265,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 RecurringPlanId::fromString($recurringPlanId),
                 $nextRenewalTime,
                 $this->interval,
+                $this->paymentMethodId,
             ),
             new RecurringPlanRenewalInitiated(
                 $now,
@@ -301,7 +307,8 @@ class RecurringPlanTest extends AggregateRootTestCase
             $this->recurringPlanId,
             $this->now->add($this->interval->toDateInterval()),
             $this->interval,
-        ))->when(fn (RecurringPlan $plan) => $plan->activate($this->now))
+            $this->paymentMethodId,
+        ))->when(fn (RecurringPlan $plan) => $plan->activate($this->now, $this->paymentMethodId))
         ->expectsException(RecurringPlanActivateNotAllowedException::class);
     }
 
@@ -309,7 +316,7 @@ class RecurringPlanTest extends AggregateRootTestCase
     {
         $this
         ->given(new RecurringPlanFailed($this->now, $this->recurringPlanId))
-        ->when(fn (RecurringPlan $plan) => $plan->activate($this->now))
+        ->when(fn (RecurringPlan $plan) => $plan->activate($this->now, $this->paymentMethodId))
         ->expectsException(RecurringPlanActivateNotAllowedException::class);
     }
 
@@ -317,7 +324,7 @@ class RecurringPlanTest extends AggregateRootTestCase
     {
         $this
         ->given(new RecurringPlanExpired($this->now, $this->recurringPlanId))
-        ->when(fn (RecurringPlan $plan) => $plan->activate($this->now))
+        ->when(fn (RecurringPlan $plan) => $plan->activate($this->now, $this->paymentMethodId))
         ->expectsException(RecurringPlanActivateNotAllowedException::class);
     }
 
@@ -325,7 +332,7 @@ class RecurringPlanTest extends AggregateRootTestCase
     {
         $this
         ->given(new RecurringPlanCanceled($this->now, $this->recurringPlanId))
-        ->when(fn (RecurringPlan $plan) => $plan->activate($this->now))
+        ->when(fn (RecurringPlan $plan) => $plan->activate($this->now, $this->paymentMethodId))
         ->expectsException(RecurringPlanActivateNotAllowedException::class);
     }
 
@@ -342,12 +349,13 @@ class RecurringPlanTest extends AggregateRootTestCase
             $this->gateway,
             new DonorDetails($this->email),
             $this->description,
-        ))->when(fn (RecurringPlan $plan) => $plan->activate($this->now))
+        ))->when(fn (RecurringPlan $plan) => $plan->activate($this->now, $this->paymentMethodId))
         ->then(new RecurringPlanActivated(
             $this->now,
             $this->recurringPlanId,
             $this->now->add($this->interval->toDateInterval()),
             $this->interval,
+            $this->paymentMethodId,
         ));
     }
 
@@ -360,6 +368,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->recurringPlanId,
                 $activationNextRenewalTime,
                 $this->interval,
+                $this->paymentMethodId,
             ),
             new RecurringPlanFailing(
                 $activatedAt,
@@ -372,6 +381,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->recurringPlanId,
                 $expectedNextRenewalTime,
                 $this->interval,
+                $this->paymentMethodId,
             )
         );
     }
@@ -427,6 +437,7 @@ class RecurringPlanTest extends AggregateRootTestCase
             $this->recurringPlanId,
             $this->now->add($this->interval->toDateInterval()),
             $this->interval,
+            $this->paymentMethodId,
         ))->when(fn (RecurringPlan $plan) => $plan->reActivate($this->now))
         ->expectsException(RecurringPlanReActivateNotAllowedException::class);
     }
@@ -465,6 +476,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->recurringPlanId,
                 $this->now->add($this->interval->toDateInterval()),
                 $this->interval,
+                $this->paymentMethodId,
             ),
             new RecurringPlanRenewalInitiated(
                 $this->now,
@@ -502,6 +514,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 RecurringPlanId::fromString($recurringPlanId),
                 $nextRenewalTime,
                 $this->interval,
+                $this->paymentMethodId,
             ),
             new RecurringPlanRenewalInitiated(
                 $now,
@@ -551,6 +564,7 @@ class RecurringPlanTest extends AggregateRootTestCase
             $this->recurringPlanId,
             $this->now->add($this->interval->toDateInterval()),
             $this->interval,
+            $this->paymentMethodId,
         ))->when(fn (RecurringPlan $plan) => $plan->cancel($this->now))
         ->then(new RecurringPlanCanceled(
             $this->now,
@@ -624,6 +638,7 @@ class RecurringPlanTest extends AggregateRootTestCase
             $this->recurringPlanId,
             $this->now->add($this->interval->toDateInterval()),
             $this->interval,
+            $this->paymentMethodId,
         ))->when(fn (RecurringPlan $plan) => $plan->fail($this->now))
         ->then(new RecurringPlanFailed(
             $this->now,
@@ -676,7 +691,7 @@ class RecurringPlanTest extends AggregateRootTestCase
         $initialDonationId = DonationId::generate()->toString();
         $renewalDonationId = DonationId::generate()->toString();
         $renewalTime = $this->now->add($this->interval->toDateInterval());
-        $renewalAction = RecurringPlanAction::forRenew($this->recurringPlanActionForInit->paymentMethodId);
+        $renewalAction = RecurringPlanAction::forRenew($this->paymentMethodId);
 
         $this->given(
             new RecurringPlanInitiated(
@@ -696,6 +711,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->recurringPlanId,
                 $this->now->add($this->interval->toDateInterval()),
                 $this->interval,
+                $this->paymentMethodId,
             )
         )->when(fn (RecurringPlan $plan) => $plan->initiateRenewal($renewalTime, DonationId::fromString($renewalDonationId)))
         ->then(new RecurringPlanRenewalInitiated(
@@ -715,7 +731,7 @@ class RecurringPlanTest extends AggregateRootTestCase
     {
         $renewalTime = $this->now->add($this->interval->toDateInterval());
         $renewalDonationId = DonationId::generate()->toString();
-        $renewalAction = RecurringPlanAction::forRenew($this->recurringPlanActionForInit->paymentMethodId);
+        $renewalAction = RecurringPlanAction::forRenew($this->paymentMethodId);
 
         $this->given(
             new RecurringPlanInitiated(
@@ -735,6 +751,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->recurringPlanId,
                 $this->now->add($this->interval->toDateInterval()),
                 $this->interval,
+                $this->paymentMethodId,
             ),
             new RecurringPlanFailing(
                 $this->now,
@@ -776,6 +793,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->recurringPlanId,
                 $this->now->add($this->interval->toDateInterval()),
                 $this->interval,
+                $this->paymentMethodId,
             )
         )->when(fn (RecurringPlan $plan) => $plan->initiateRenewal($renewalTime, DonationId::generate()))
         ->expectsException(RecurringPlanRenewalNotDueYetException::class);
@@ -789,6 +807,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->recurringPlanId,
                 $this->now->add($this->interval->toDateInterval()),
                 $this->interval,
+                $this->paymentMethodId,
             ),
             new RecurringPlanRenewalInitiated(
                 $this->now,
@@ -842,7 +861,7 @@ class RecurringPlanTest extends AggregateRootTestCase
             ),
         )->when(fn (RecurringPlan $plan) => $plan->initiateRenewal($this->now, DonationId::generate()))
         ->expectsException(RecurringPlanRenewalNotAllowedException::class)
-        ->expectsExceptionMessage('Only active and failing recurring donations can be renewed.');
+        ->expectsExceptionMessage('Only active and failing recurring plans can be renewed.');
     }
 
     public function testInitiateRenewalOnFailedThrows(): void
@@ -867,7 +886,7 @@ class RecurringPlanTest extends AggregateRootTestCase
             )
         )->when(fn (RecurringPlan $plan) => $plan->initiateRenewal($this->now, DonationId::generate()))
         ->expectsException(RecurringPlanRenewalNotAllowedException::class)
-        ->expectsExceptionMessage('Only active and failing recurring donations can be renewed.');
+        ->expectsExceptionMessage('Only active and failing recurring plans can be renewed.');
     }
 
     public function testInitiateRenewalOnExpiredThrows(): void
@@ -891,7 +910,7 @@ class RecurringPlanTest extends AggregateRootTestCase
             )
         )->when(fn (RecurringPlan $plan) => $plan->initiateRenewal($this->now, DonationId::generate()))
         ->expectsException(RecurringPlanRenewalNotAllowedException::class)
-        ->expectsExceptionMessage('Only active and failing recurring donations can be renewed.');
+        ->expectsExceptionMessage('Only active and failing recurring plans can be renewed.');
     }
 
     public function testInitiateRenewalOnCanceledThrows(): void
@@ -928,6 +947,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->recurringPlanId,
                 $renewalTime,
                 $this->interval,
+                $this->paymentMethodId,
             ),
             new RecurringPlanRenewalInitiated(
                 $this->now,
@@ -961,6 +981,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->recurringPlanId,
                 $renewalTime,
                 $this->interval,
+                $this->paymentMethodId,
             )
         )->when(fn (RecurringPlan $plan) => $plan->completeRecurringAttempt(
             $renewalTime,
@@ -980,6 +1001,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->recurringPlanId,
                 $renewalTime,
                 $this->interval,
+                $this->paymentMethodId,
             ),
             new RecurringPlanRenewalInitiated(
                 $this->now,
@@ -1012,6 +1034,7 @@ class RecurringPlanTest extends AggregateRootTestCase
                 $this->recurringPlanId,
                 $renewalTime,
                 $this->interval,
+                $this->paymentMethodId,
             ),
             new RecurringPlanRenewalInitiated(
                 $this->now,

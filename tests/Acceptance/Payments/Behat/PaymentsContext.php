@@ -23,14 +23,11 @@ use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetPayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model\Payment;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCredentialValue;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportStatus;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodAction;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodActionIntent;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodResult;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodUnusable;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodUnusableReason;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRedirectUrlSetUp;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentReference;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRequest;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\UnusablePaymentMethodCreated;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\UsablePaymentMethodCreated;
@@ -122,27 +119,17 @@ class PaymentsContext implements Context
         return new Money(1000, new Currency('EUR'));
     }
 
-    private function createInitiatePaymentCommand(?PaymentMethodAction $paymentMethodAction = null): InitiatePaymentIntegrationCommand
+    private function createInitiatePaymentCommand(?PaymentMethodId $paymentMethodId = null, ?ExternalEntityId $requestPaymentMethodFor = null): InitiatePaymentIntegrationCommand
     {
-        $paymentRequest = new PaymentRequest(
-            $this->lastPaymentId,
-            $this->getDefaultTestMoney(),
-            new Gateway('test-gateway'),
-            new ShortDescription('Test Payment'),
-            ExternalEntityId::generate(),
-            new Email('test@example.com'),
-            $paymentMethodAction,
-        );
-
         return new InitiatePaymentIntegrationCommand(
-            paymentId: $paymentRequest->paymentId,
-            amount: $paymentRequest->amount,
-            gateway: $paymentRequest->gateway,
-            description: $paymentRequest->description,
-            appliedTo: $paymentRequest->appliedTo,
-            email: $paymentRequest->email,
-            paymentMethodId: $paymentMethodAction?->paymentMethodId,
-            usePaymentMethodId: $paymentMethodAction?->intent === PaymentMethodActionIntent::Use,
+            paymentId: $this->lastPaymentId,
+            amount: $this->getDefaultTestMoney(),
+            gateway: new Gateway('test-gateway'),
+            description: new ShortDescription('Test Payment'),
+            appliedTo: ExternalEntityId::generate(),
+            email: new Email('test@example.com'),
+            paymentMethodId: $paymentMethodId,
+            requestPaymentMethodFor: $requestPaymentMethodFor,
         );
     }
 
@@ -180,10 +167,12 @@ class PaymentsContext implements Context
     public function usablePaymentMethodExists(): void
     {
         $paymentMethodId = PaymentMethodId::generate();
+        $createFor = ExternalEntityId::generate();
         $this->lastPaymentMethodId = $paymentMethodId;
         $this->commandBus->send(new CreatePaymentMethod(
             $paymentMethodId,
             PaymentMethodResult::usable(new PaymentCredentialValue('credential-value')),
+            $createFor,
         ));
         $this->usablePaymentMethodIsCreated();
     }
@@ -192,10 +181,12 @@ class PaymentsContext implements Context
     public function unusablePaymentMethodExists(): void
     {
         $paymentMethodId = PaymentMethodId::generate();
+        $createFor = ExternalEntityId::generate();
         $this->lastPaymentMethodId = $paymentMethodId;
         $this->commandBus->send(new CreatePaymentMethod(
             $paymentMethodId,
             PaymentMethodResult::unusable(PaymentMethodUnusableReason::Expired),
+            $createFor,
         ));
         $this->unusablePaymentMethodIsCreated();
     }
@@ -210,6 +201,7 @@ class PaymentsContext implements Context
         $this->commandBus->send(new CreatePaymentMethod(
             PaymentMethodId::generate(),
             PaymentMethodResult::usable(new PaymentCredentialValue('credential-value')),
+            ExternalEntityId::generate(),
         ));
     }
 
@@ -232,18 +224,14 @@ class PaymentsContext implements Context
     public function initiatePaymentWithRequestToStorePaymentMethod(): void
     {
         $this->lastPaymentId = PaymentId::generate();
-        $paymentMethodId = PaymentMethodId::generate();
-        $this->lastPaymentMethodId = $paymentMethodId;
-        $action = PaymentMethodAction::forRequest($paymentMethodId, $this->lastPaymentId);
-        $this->sendInitiatePaymentCommand($this->createInitiatePaymentCommand($action));
+        $this->sendInitiatePaymentCommand($this->createInitiatePaymentCommand(requestPaymentMethodFor: ExternalEntityId::generate()));
     }
 
     #[When('initiate payment using stored payment method')]
     public function initiatePaymentUsingStoredPaymentMethod(): void
     {
         $this->lastPaymentId = PaymentId::generate();
-        $action = PaymentMethodAction::forUse($this->lastPaymentMethodId, $this->lastPaymentId);
-        $this->sendInitiatePaymentCommand($this->createInitiatePaymentCommand($action));
+        $this->sendInitiatePaymentCommand($this->createInitiatePaymentCommand($this->lastPaymentMethodId));
     }
 
     #[When('mark payment as authorized')]
@@ -351,30 +339,20 @@ class PaymentsContext implements Context
     public function usablePaymentMethodIsCreated(): void
     {
         $this->eventBus->assertDispatched(UsablePaymentMethodCreated::class, 1);
-        // Verify the PaymentMethodId in the event matches the expected one
         $events = $this->eventBus->dispatchedMessages(UsablePaymentMethodCreated::class);
         /** @var UsablePaymentMethodCreated $event */
         $event = $events[0];
-        Assert::eq(
-            $event->paymentMethodId->toString(),
-            $this->lastPaymentMethodId->toString(),
-            'PaymentMethodId in UsablePaymentMethodCreated event should match the expected PaymentMethodId'
-        );
+        $this->lastPaymentMethodId = $event->paymentMethodId;
     }
 
     #[Then('unusable payment method is created')]
     public function unusablePaymentMethodIsCreated(): void
     {
         $this->eventBus->assertDispatched(UnusablePaymentMethodCreated::class, 1);
-        // Verify the PaymentMethodId in the event matches the expected one
         $events = $this->eventBus->dispatchedMessages(UnusablePaymentMethodCreated::class);
         /** @var UnusablePaymentMethodCreated $event */
         $event = $events[0];
-        Assert::eq(
-            $event->paymentMethodId->toString(),
-            $this->lastPaymentMethodId->toString(),
-            'PaymentMethodId in UnusablePaymentMethodCreated event should match the expected PaymentMethodId'
-        );
+        $this->lastPaymentMethodId = $event->paymentMethodId;
     }
 
     #[Then('stored payment method is unusable')]

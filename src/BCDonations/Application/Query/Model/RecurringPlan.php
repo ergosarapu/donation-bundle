@@ -17,7 +17,6 @@ class RecurringPlan
     private string $interval;
     private RecurringPlanStatus $status;
     private ?string $donorEmail;
-    private ?string $paymentMethodId;
     private DateTimeImmutable $initiatedAt;
     private DateTimeImmutable $createdAt;
     private DateTimeImmutable $updatedAt;
@@ -135,15 +134,6 @@ class RecurringPlan
         $this->cumulativeReceivedAmount = $cumulativeReceivedAmount;
     }
 
-    public function getPaymentMethodId(): ?string
-    {
-        return $this->paymentMethodId;
-    }
-
-    public function setPaymentMethodId(?string $paymentMethodId): void
-    {
-        $this->paymentMethodId = $paymentMethodId;
-    }
     public function getNextRenewalTime(): ?DateTimeImmutable
     {
         return $this->nextRenewalTime;

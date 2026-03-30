@@ -20,7 +20,7 @@ class ActivateRecurringPlanHandler implements CommandHandlerInterface
     public function __invoke(ActivateRecurringPlan $command): void
     {
         $recurringPlan = $this->recurringPlanRepository->load($command->recurringPlanId);
-        $recurringPlan->activate($this->clock->now());
+        $recurringPlan->activate($this->clock->now(), $command->paymentMethodId);
         $this->recurringPlanRepository->save($recurringPlan);
     }
 }

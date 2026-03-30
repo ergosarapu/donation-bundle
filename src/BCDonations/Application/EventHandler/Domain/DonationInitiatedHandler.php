@@ -33,8 +33,10 @@ class DonationInitiatedHandler implements EventHandlerInterface
             $event->description,
             ExternalEntityId::fromString($event->donationId->toString()),
             $event->donorDetails?->email,
-            $event->recurringPlanAction?->paymentMethodId,
-            $event->recurringPlanAction?->intent === RecurringPlanActionIntent::Renew ? true : false,
+            $event->recurringPlanAction?->intent === RecurringPlanActionIntent::Renew ? $event->recurringPlanAction->paymentMethodId : null,
+            $event->recurringPlanAction?->intent === RecurringPlanActionIntent::Init && $event->recurringPlanId !== null
+                ? ExternalEntityId::fromString($event->recurringPlanId->toString())
+                : null,
         ));
 
         $source = ClaimSource::forDonation($event->donationId);

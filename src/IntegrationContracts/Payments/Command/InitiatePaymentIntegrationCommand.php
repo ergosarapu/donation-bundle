@@ -16,7 +16,9 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 class InitiatePaymentIntegrationCommand implements IntegrationCommandInterface
 {
     /**
-     * @param bool $usePaymentMethodId If true, paymentMethodId is for use, if false, it's for request.
+     * @param ?ExternalEntityId $requestPaymentMethodFor Non-null means BCPayments generates a new PaymentMethodId
+     *                                                   and uses this as `createFor` on the resulting payment method
+     *                                                   (only valid when paymentMethodId is null).
      */
     public function __construct(
         public readonly PaymentId $paymentId,
@@ -26,7 +28,7 @@ class InitiatePaymentIntegrationCommand implements IntegrationCommandInterface
         public readonly ExternalEntityId $appliedTo,
         public readonly ?Email $email = null,
         public readonly ?PaymentMethodId $paymentMethodId = null,
-        public readonly bool $usePaymentMethodId = false,
+        public readonly ?ExternalEntityId $requestPaymentMethodFor = null,
     ) {
     }
 }

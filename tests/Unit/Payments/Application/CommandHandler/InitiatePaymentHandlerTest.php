@@ -54,7 +54,8 @@ class InitiatePaymentHandlerTest extends TestCase
         $email = new Email('donor@example.com');
         $methodAction = PaymentMethodAction::forRequest(
             PaymentMethodId::generate(),
-            $paymentId
+            $paymentId,
+            ExternalEntityId::generate(),
         );
 
         $paymentRequest = new PaymentRequest(

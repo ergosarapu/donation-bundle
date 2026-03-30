@@ -174,8 +174,8 @@ class DonationsContext implements Context
 
         /** @var InitiatePaymentIntegrationCommand $command */
         $command = $messages[0];
-        Assert::notNull($command->paymentMethodId);
-        Assert::false($command->usePaymentMethodId);
+        Assert::null($command->paymentMethodId);
+        Assert::notNull($command->requestPaymentMethodFor);
         $this->commandBus->resetDispatched();
     }
 
@@ -188,7 +188,6 @@ class DonationsContext implements Context
         /** @var InitiatePaymentIntegrationCommand $command */
         $command = $messages[0];
         Assert::notNull($command->paymentMethodId);
-        Assert::true($command->usePaymentMethodId);
         $this->commandBus->resetDispatched();
     }
 
@@ -199,8 +198,6 @@ class DonationsContext implements Context
         $recurringPlan = $this->queryBus->ask(new GetRecurringPlan($this->lastRecurringPlanId));
         Assert::isInstanceOf($recurringPlan, RecurringPlan::class);
         Assert::eq($recurringPlan->getInitialDonationId(), $this->lastDonationId->toString());
-        Assert::notNull($recurringPlan->getPaymentMethodId());
-        $this->lastPaymentMethodId = PaymentMethodId::fromString($recurringPlan->getPaymentMethodId());
     }
 
     #[Given('initiated donation exists')]
@@ -265,16 +262,21 @@ class DonationsContext implements Context
     #[When('payment method gets unusable')]
     public function paymentMethodGetsUnusable(): void
     {
+        Assert::notNull($this->lastRecurringPlanId);
         $this->eventBus->send(new PaymentMethodUnusableIntegrationEvent(
             $this->lastPaymentMethodId,
+            ExternalEntityId::fromString($this->lastRecurringPlanId->toString()),
         ));
     }
 
     #[When('usable payment method is created')]
     public function usablePaymentMethodIsCreated(): void
     {
+        $this->lastPaymentMethodId = PaymentMethodId::generate();
+        Assert::notNull($this->lastRecurringPlanId);
         $this->eventBus->send(new UsablePaymentMethodCreatedIntegrationEvent(
             $this->lastPaymentMethodId,
+            ExternalEntityId::fromString($this->lastRecurringPlanId->toString()),
         ));
     }
 
@@ -282,8 +284,11 @@ class DonationsContext implements Context
     #[When('unusable payment method is created')]
     public function unusablePaymentMethodIsCreated(): void
     {
+        $this->lastPaymentMethodId = PaymentMethodId::generate();
+        Assert::notNull($this->lastRecurringPlanId);
         $this->eventBus->send(new UnusablePaymentMethodCreatedIntegrationEvent(
             $this->lastPaymentMethodId,
+            ExternalEntityId::fromString($this->lastRecurringPlanId->toString()),
         ));
     }
 

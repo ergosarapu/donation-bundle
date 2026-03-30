@@ -63,7 +63,7 @@ class CreatePaymentHandlerTest extends TestCase
         $gatewayReference = new GatewayReference('gateway-tx-123');
         $bankReference = new BankReference('bank-ref-456');
         $paymentReference = new PaymentReference('1234567890');
-        $legacyPaymentIdentifier = new LegacyPaymentNumber('legacy-789');
+        $legacyPaymentIdentifier = @new LegacyPaymentNumber('legacy-789');
         $iban = new Iban('GB94BARC10201530093459');
         $gateway = new Gateway('test-gateway');
 

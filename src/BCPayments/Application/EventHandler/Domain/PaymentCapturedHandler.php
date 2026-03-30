@@ -16,6 +16,7 @@ use ErgoSarapu\DonationBundle\IntegrationContracts\Identities\ValueObject\ClaimP
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\EventBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\EventHandlerInterface;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ClaimEvidenceLevel;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ClaimSource;
 
@@ -31,7 +32,7 @@ class PaymentCapturedHandler implements EventHandlerInterface
     {
         if ($event->paymentMethodAction !== null) {
             match ($event->paymentMethodAction->intent) {
-                PaymentMethodActionIntent::Request => $this->handleRequestIntent($event->paymentMethodAction, $event->paymentMethodResult),
+                PaymentMethodActionIntent::Request => $this->handleRequestIntent($event->paymentMethodAction, $event->paymentMethodResult, $event->paymentMethodAction->getCreateFor()),
                 PaymentMethodActionIntent::Use => $this->handleUseIntent($event->paymentMethodAction, $event->paymentMethodResult),
             };
         }
@@ -46,7 +47,8 @@ class PaymentCapturedHandler implements EventHandlerInterface
 
     private function handleRequestIntent(
         PaymentMethodAction $action,
-        ?PaymentMethodResult $paymentMethodResult
+        ?PaymentMethodResult $paymentMethodResult,
+        ExternalEntityId $createFor
     ): void {
         if ($paymentMethodResult === null) {
             $paymentMethodResult = PaymentMethodResult::unusable(PaymentMethodUnusableReason::RequestFailed);
@@ -54,6 +56,7 @@ class PaymentCapturedHandler implements EventHandlerInterface
         $this->commandBus->dispatch(new CreatePaymentMethod(
             $action->paymentMethodId,
             $paymentMethodResult,
+            $createFor,
         ));
     }
 

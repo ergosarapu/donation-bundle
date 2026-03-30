@@ -19,6 +19,7 @@ class UsablePaymentMethodCreatedHandler implements EventHandlerInterface
     {
         $this->eventBus->dispatch(new UsablePaymentMethodCreatedIntegrationEvent(
             $event->paymentMethodId,
+            $event->createdFor,
         ));
     }
 }

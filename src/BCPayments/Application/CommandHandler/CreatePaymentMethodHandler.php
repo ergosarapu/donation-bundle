@@ -25,7 +25,7 @@ class CreatePaymentMethodHandler implements CommandHandlerInterface
             return;
         }
 
-        $paymentMethod = PaymentMethod::create($this->clock->now(), $command->paymentMethodId, $command->paymentMethodResult);
+        $paymentMethod = PaymentMethod::create($this->clock->now(), $command->paymentMethodId, $command->paymentMethodResult, $command->createFor);
         try {
             $this->paymentMethodRepository->save($paymentMethod);
         } catch (AggregateAlreadyExistsException $e) {

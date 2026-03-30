@@ -11,7 +11,7 @@ use Patchlevel\Hydrator\Normalizer\ObjectNormalizer;
 class RecurringPlanAction
 {
     private function __construct(
-        public readonly PaymentMethodId $paymentMethodId,
+        public readonly ?PaymentMethodId $paymentMethodId,
         public readonly RecurringPlanActionIntent $intent,
     ) {
     }
@@ -19,7 +19,7 @@ class RecurringPlanAction
     public static function forInit(
     ): self {
         return new self(
-            PaymentMethodId::generate(),
+            null,
             RecurringPlanActionIntent::Init,
         );
     }

@@ -93,7 +93,7 @@ class PaymentTest extends AggregateRootTestCase
         $gatewayReference = new GatewayReference('gateway-ref-123');
         $bankReference = new BankReference('bank-ref-456');
         $paymentReference = new PaymentReference('payment-ref-789');
-        $legacyPaymentId = new LegacyPaymentNumber('legacy-789');
+        $legacyPaymentId = @new LegacyPaymentNumber('legacy-789');
         $iban = new Iban('EE382200221020145685');
         $gateway = new Gateway('test-gateway');
 
@@ -259,6 +259,7 @@ class PaymentTest extends AggregateRootTestCase
         $methodAction = PaymentMethodAction::forRequest(
             PaymentMethodId::generate(),
             $this->paymentId,
+            ExternalEntityId::generate(),
         );
         $paymentRequest = new PaymentRequest(
             $this->paymentId,
@@ -291,6 +292,7 @@ class PaymentTest extends AggregateRootTestCase
         $methodAction = PaymentMethodAction::forRequest(
             PaymentMethodId::generate(),
             PaymentId::generate(),
+            ExternalEntityId::generate(),
         );
         $paymentRequest = new PaymentRequest(
             $this->paymentId,
@@ -312,6 +314,7 @@ class PaymentTest extends AggregateRootTestCase
         $methodAction = PaymentMethodAction::forRequest(
             PaymentMethodId::generate(),
             $this->paymentId,
+            ExternalEntityId::generate(),
         );
         $methodResult = PaymentMethodResult::usable(new PaymentCredentialValue('token'));
         $this->given(new PaymentInitiated(
@@ -352,6 +355,7 @@ class PaymentTest extends AggregateRootTestCase
         $methodAction = PaymentMethodAction::forRequest(
             PaymentMethodId::generate(),
             $this->paymentId,
+            ExternalEntityId::generate(),
         );
         $methodResult = PaymentMethodResult::usable(new PaymentCredentialValue('token'));
         $this->given(new PaymentInitiated(
@@ -448,6 +452,7 @@ class PaymentTest extends AggregateRootTestCase
         $methodAction = PaymentMethodAction::forRequest(
             PaymentMethodId::generate(),
             $this->paymentId,
+            ExternalEntityId::generate(),
         );
         $methodResult = PaymentMethodResult::usable(new PaymentCredentialValue('token'));
         $this->given(new PaymentInitiated(
@@ -540,6 +545,7 @@ class PaymentTest extends AggregateRootTestCase
         $methodAction = PaymentMethodAction::forRequest(
             PaymentMethodId::generate(),
             $this->paymentId,
+            ExternalEntityId::generate(),
         );
         $methodResult = PaymentMethodResult::unusable(PaymentMethodUnusableReason::RequestFailed);
         $this->given(new PaymentInitiated(
@@ -660,6 +666,7 @@ class PaymentTest extends AggregateRootTestCase
         $methodAction = PaymentMethodAction::forRequest(
             PaymentMethodId::generate(),
             $this->paymentId,
+            ExternalEntityId::generate(),
         );
         $this->given(new PaymentInitiated(
             $this->now,
@@ -770,6 +777,7 @@ class PaymentTest extends AggregateRootTestCase
                 PaymentMethodAction::forRequest(
                     PaymentMethodId::generate(),
                     $this->paymentId,
+                    ExternalEntityId::generate(),
                 ),
             ),
             new PaymentCaptured(
@@ -1246,7 +1254,7 @@ class PaymentTest extends AggregateRootTestCase
         $gatewayReference = new GatewayReference('proc-ref-123');
         $bankReference = new BankReference('bank-ref-456');
         $paymentReference = new PaymentReference('payment-ref-789');
-        $legacyPaymentId = new LegacyPaymentNumber('legacy-789');
+        $legacyPaymentId = @new LegacyPaymentNumber('legacy-789');
         $iban = new Iban('EE382200221020145685');
 
         $existingPayment = Payment::create(
@@ -1306,7 +1314,7 @@ class PaymentTest extends AggregateRootTestCase
         $gatewayReference = new GatewayReference('proc-ref-123');
         $bankReference = new BankReference('bank-ref-456');
         $paymentReference = new PaymentReference('payment-ref-789');
-        $legacyPaymentId = new LegacyPaymentNumber('legacy-789');
+        $legacyPaymentId = @new LegacyPaymentNumber('legacy-789');
         $iban = new Iban('EE382200221020145685');
 
         $existingPayment = Payment::create(
