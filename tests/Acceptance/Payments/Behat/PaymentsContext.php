@@ -18,8 +18,8 @@ use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsCancel
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsCaptured;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsFailed;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentFileImportResult;
-use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetInitiatedPayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetPayment;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetPaymentByInitiatedCorrelationId;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model\Payment;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCredentialValue;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
@@ -64,6 +64,7 @@ class PaymentsContext implements Context
     private PaymentId $lastPaymentId;
     private PaymentId $existingCapturedPaymentId;
     private PaymentMethodId $lastPaymentMethodId;
+    private string $lastInitiatePaymentCorrelationId;
     private string $lastUploadedPaymentImportFile;
 
     public function __construct(
@@ -101,7 +102,8 @@ class PaymentsContext implements Context
 
     private function sendInitiatePaymentCommand(InitiatePaymentIntegrationCommand $command): void
     {
-        $this->commandBus->send($command);
+        $result = $this->commandBus->send($command);
+        $this->lastInitiatePaymentCorrelationId = $result->correlationId;
     }
 
     private function parsePaymentMethodResult(string $paymentMethodResult): ?PaymentMethodResult
@@ -122,7 +124,6 @@ class PaymentsContext implements Context
     private function createInitiatePaymentCommand(?PaymentMethodId $paymentMethodId = null, ?ExternalEntityId $requestPaymentMethodFor = null): InitiatePaymentIntegrationCommand
     {
         return new InitiatePaymentIntegrationCommand(
-            paymentId: $this->lastPaymentId,
             amount: $this->getDefaultTestMoney(),
             gateway: new Gateway('test-gateway'),
             description: new ShortDescription('Test Payment'),
@@ -216,21 +217,18 @@ class PaymentsContext implements Context
     #[When('initiate payment')]
     public function initiatePayment(): void
     {
-        $this->lastPaymentId = PaymentId::generate();
         $this->sendInitiatePaymentCommand($this->createInitiatePaymentCommand());
     }
 
     #[When('initiate payment with request to store payment method')]
     public function initiatePaymentWithRequestToStorePaymentMethod(): void
     {
-        $this->lastPaymentId = PaymentId::generate();
         $this->sendInitiatePaymentCommand($this->createInitiatePaymentCommand(requestPaymentMethodFor: ExternalEntityId::generate()));
     }
 
     #[When('initiate payment using stored payment method')]
     public function initiatePaymentUsingStoredPaymentMethod(): void
     {
-        $this->lastPaymentId = PaymentId::generate();
         $this->sendInitiatePaymentCommand($this->createInitiatePaymentCommand($this->lastPaymentMethodId));
     }
 
@@ -302,18 +300,17 @@ class PaymentsContext implements Context
     #[Then('payment is initiated')]
     public function paymentIsInitiated(): void
     {
-        $payment = $this->queryBus->ask(new GetInitiatedPayment($this->lastPaymentId));
+        $payment = $this->queryBus->ask(new GetPaymentByInitiatedCorrelationId($this->lastInitiatePaymentCorrelationId));
         Assert::isInstanceOf($payment, Payment::class);
         $this->lastPaymentId = PaymentId::fromString($payment->getPaymentId());
     }
 
     #[Then('payment is marked as :paymentState')]
-    public function paymentIsMarkedAsAuthorized(string $paymentState): void
+    public function paymentIsMarkedAs(string $paymentState): void
     {
-        $payment = $this->queryBus->ask(new GetPayment($this->lastPaymentId));
+        $payment = $this->queryBus->ask(new GetPaymentByInitiatedCorrelationId($this->lastInitiatePaymentCorrelationId));
         Assert::isInstanceOf($payment, Payment::class);
         Assert::eq($payment->getStatus(), PaymentStatus::from($paymentState));
-
     }
 
     #[Then('payment redirect URL is set up')]

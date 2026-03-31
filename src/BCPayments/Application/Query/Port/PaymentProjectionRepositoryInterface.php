@@ -13,5 +13,7 @@ interface PaymentProjectionRepositoryInterface
 {
     public function findOne(?PaymentId $id = null, ?PaymentStatus $status = null): ?Payment;
 
+    public function findOneByCorrelationId(string $correlationId): ?Payment;
+
     public function countBy(?PaymentImportStatus $importStatus = null): int;
 }

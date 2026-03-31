@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Command;
 
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
 use ErgoSarapu\DonationBundle\IntegrationContracts\IntegrationCommandInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
@@ -20,7 +19,6 @@ class InitiatePaymentIntegrationCommand implements IntegrationCommandInterface
      *                                                   (only valid when paymentMethodId is null).
      */
     public function __construct(
-        public readonly PaymentId $paymentId,
         public readonly Money $amount,
         public readonly Gateway $gateway,
         public readonly ShortDescription $description,

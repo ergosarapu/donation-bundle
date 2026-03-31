@@ -10,7 +10,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationStatus;
 class Donation
 {
     private string $donationId;
-    private string $paymentId;
+    private ?string $paymentId = null;
     private int $amount;
     private string $currency;
     private DonationStatus $status;
@@ -36,7 +36,7 @@ class Donation
         $this->donationId = $donationId;
     }
 
-    public function getPaymentId(): string
+    public function getPaymentId(): ?string
     {
         return $this->paymentId;
     }

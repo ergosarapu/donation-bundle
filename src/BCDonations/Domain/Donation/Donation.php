@@ -8,7 +8,7 @@ use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanAction;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use LogicException;
@@ -38,7 +38,6 @@ class Donation extends BasicAggregateRoot
             $donationRequest->donationId,
             $donationRequest->amount,
             $donationRequest->campaignId,
-            $donationRequest->paymentId,
             $donationRequest->gateway,
             $donationRequest->description,
             $recurringPlanId,
@@ -53,7 +52,7 @@ class Donation extends BasicAggregateRoot
         DonationId $donationId,
         Money $amount,
         CampaignId $campaignId,
-        PaymentId $paymentId,
+        ExternalEntityId $paymentId,
         ShortDescription $description,
         DonorDetails $donorDetails,
         ?RecurringPlanId $recurringPlanId,

@@ -8,7 +8,6 @@ use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanAction;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\AbstractTimestampedEvent;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\DomainEventInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
@@ -29,7 +28,6 @@ final class DonationInitiated extends AbstractTimestampedEvent implements Domain
         public readonly DonationId $donationId,
         public readonly Money $amount,
         public readonly CampaignId $campaignId,
-        public readonly PaymentId $paymentId,
         public readonly Gateway $gateway,
         public readonly ShortDescription $description,
         public readonly ?RecurringPlanId $recurringPlanId,

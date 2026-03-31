@@ -20,6 +20,7 @@ use Patchlevel\EventSourcing\Attribute\Id;
 use Patchlevel\Hydrator\Attribute\DataSubjectId;
 use Patchlevel\Hydrator\Attribute\PersonalData;
 use Patchlevel\Hydrator\Normalizer\ObjectNormalizer;
+use Ramsey\Uuid\Uuid;
 
 return static function (Config $config): void {
     $classSet = ClassSet::fromDir(__DIR__.'/src');
@@ -37,6 +38,7 @@ return static function (Config $config): void {
         DataSubjectId::class,
         Event::class,
         AggregateRootId::class,
+        Uuid::class,
         'ErgoSarapu\DonationBundle\SharedKernel'
     ];
 
@@ -145,6 +147,11 @@ return static function (Config $config): void {
         ->that(new ResideInOneOfTheseNamespaces('*\IntegrationContracts\Payments\Event'))
         ->should(new Implement(IntegrationEventInterface::class))
         ->because('we want all integration events to implement the marker interface');
+
+    $rules[] = Rule::allClasses()
+        ->that(new ResideInOneOfTheseNamespaces('*\IntegrationContracts'))
+        ->should(new NotHaveDependencyOutsideNamespace('*\IntegrationContracts\*', ['ErgoSarapu\DonationBundle\SharedKernel'], true))
+        ->because('we want to keep the integration contracts without dependencies');
 
     $config->add($classSet, ...$rules);
 };

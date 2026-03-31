@@ -14,9 +14,9 @@ return function (RoutingConfigurator $routes): void {
     $routes->add('donation_admin_login', '/login')
         ->controller('donation_bundle.controller.admin.login_controller');
 
-    $routes->add('donation_redirect', '/donate/{donationId}')
+    $routes->add('donation_redirect', '/donate/{correlationId}')
         ->controller('donation_bundle.controller.redirect_controller')
-        ->requirements(['donationId' => '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}']);
+        ->requirements(['correlationId' => '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}']);
 
     $routes->add('donation_command_status', '/api/command-status')
         ->controller('donation_bundle.controller.command_status_controller')

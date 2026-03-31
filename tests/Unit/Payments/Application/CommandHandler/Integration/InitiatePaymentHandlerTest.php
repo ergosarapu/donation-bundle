@@ -6,7 +6,6 @@ namespace ErgoSarapu\DonationBundle\Tests\Unit\Payments\Application\CommandHandl
 
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\InitiatePayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\Integration\InitiatePaymentHandler;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodActionIntent;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Command\InitiatePaymentIntegrationCommand;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
@@ -35,7 +34,6 @@ class InitiatePaymentHandlerTest extends TestCase
 
     public function testDispatchesInitiatePaymentCommandWithUsePaymentMethod(): void
     {
-        $paymentId = PaymentId::generate();
         $amount = new Money(5000, new Currency('EUR'));
         $gateway = new Gateway('test-gateway');
         $description = new ShortDescription('Test donation');
@@ -44,7 +42,6 @@ class InitiatePaymentHandlerTest extends TestCase
         $usePaymentMethodId = ExternalEntityId::generate();
 
         $integrationCommand = new InitiatePaymentIntegrationCommand(
-            $paymentId,
             $amount,
             $gateway,
             $description,
@@ -55,13 +52,12 @@ class InitiatePaymentHandlerTest extends TestCase
 
         $this->commandBus->expects($this->once())
             ->method('dispatch')
-            ->with($this->callback(function ($command) use ($paymentId, $amount, $gateway, $description, $appliedTo, $email, $usePaymentMethodId) {
+            ->with($this->callback(function ($command) use ($amount, $gateway, $description, $appliedTo, $email, $usePaymentMethodId) {
                 if (!$command instanceof InitiatePayment) {
                     return false;
                 }
                 $request = $command->paymentRequest;
-                return $request->paymentId === $paymentId
-                    && $request->amount === $amount
+                return $request->amount === $amount
                     && $request->gateway === $gateway
                     && $request->description === $description
                     && $request->appliedTo === $appliedTo
@@ -76,7 +72,6 @@ class InitiatePaymentHandlerTest extends TestCase
 
     public function testDispatchesInitiatePaymentCommandWithoutPaymentMethod(): void
     {
-        $paymentId = PaymentId::generate();
         $amount = new Money(5000, new Currency('EUR'));
         $gateway = new Gateway('test-gateway');
         $description = new ShortDescription('Test donation');
@@ -84,7 +79,6 @@ class InitiatePaymentHandlerTest extends TestCase
         $email = new Email('donor@example.com');
 
         $integrationCommand = new InitiatePaymentIntegrationCommand(
-            $paymentId,
             $amount,
             $gateway,
             $description,
@@ -94,13 +88,12 @@ class InitiatePaymentHandlerTest extends TestCase
 
         $this->commandBus->expects($this->once())
             ->method('dispatch')
-            ->with($this->callback(function ($command) use ($paymentId, $amount, $gateway, $description, $appliedTo, $email) {
+            ->with($this->callback(function ($command) use ($amount, $gateway, $description, $appliedTo, $email) {
                 if (!$command instanceof InitiatePayment) {
                     return false;
                 }
                 $request = $command->paymentRequest;
-                return $request->paymentId === $paymentId
-                    && $request->amount === $amount
+                return $request->amount === $amount
                     && $request->gateway === $gateway
                     && $request->description === $description
                     && $request->appliedTo === $appliedTo
@@ -114,7 +107,6 @@ class InitiatePaymentHandlerTest extends TestCase
 
     public function testDispatchesInitiatePaymentCommandWithRequestPaymentMethod(): void
     {
-        $paymentId = PaymentId::generate();
         $amount = new Money(5000, new Currency('EUR'));
         $gateway = new Gateway('test-gateway');
         $description = new ShortDescription('Test donation');
@@ -122,7 +114,6 @@ class InitiatePaymentHandlerTest extends TestCase
         $email = new Email('donor@example.com');
 
         $integrationCommand = new InitiatePaymentIntegrationCommand(
-            $paymentId,
             $amount,
             $gateway,
             $description,
@@ -134,13 +125,12 @@ class InitiatePaymentHandlerTest extends TestCase
 
         $this->commandBus->expects($this->once())
             ->method('dispatch')
-            ->with($this->callback(function ($command) use ($paymentId, $amount, $gateway, $description, $appliedTo, $email) {
+            ->with($this->callback(function ($command) use ($amount, $gateway, $description, $appliedTo, $email) {
                 if (!$command instanceof InitiatePayment) {
                     return false;
                 }
                 $request = $command->paymentRequest;
-                return $request->paymentId === $paymentId
-                    && $request->amount === $amount
+                return $request->amount === $amount
                     && $request->gateway === $gateway
                     && $request->description === $description
                     && $request->appliedTo === $appliedTo

@@ -27,7 +27,6 @@ class DonationInitiatedHandler implements EventHandlerInterface
     public function __invoke(DonationInitiated $event): void
     {
         $this->commandBus->dispatch(new InitiatePaymentIntegrationCommand(
-            $event->paymentId,
             $event->amount,
             $event->gateway,
             $event->description,

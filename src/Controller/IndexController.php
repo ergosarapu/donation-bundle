@@ -91,9 +91,9 @@ class IndexController extends AbstractController
                     $interval = new RecurringInterval($donation->getFrequency());
                 }
                 $command = new InitiateDonationIntegrationCommand($donationRequest, $interval);
-                $this->commandBus->dispatch($command);
+                $commandResult = $this->commandBus->dispatch($command);
                 $request->getSession()->remove('donation');
-                return $this->redirectToRoute('donation_redirect', ['donationId' => $command->donationRequest->donationId->toString()]);
+                return $this->redirectToRoute('donation_redirect', ['correlationId' => $commandResult->correlationId]);
             }
 
             $request->getSession()->set('donation', $donation);

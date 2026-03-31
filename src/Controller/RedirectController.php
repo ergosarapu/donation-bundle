@@ -4,13 +4,8 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\Controller;
 
-use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetDonation;
-use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\Donation;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationStatus;
-use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetPayment;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetPaymentByInitiatedCorrelationId;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model\Payment;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\QueryBusInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -24,43 +19,27 @@ class RedirectController extends AbstractController
     ) {
     }
 
-    public function __invoke(?string $donationId = null): Response
+    public function __invoke(?string $correlationId = null): Response
     {
-        if ($donationId === null) {
-            throw new BadRequestHttpException('Id must be provided');
+        if ($correlationId === null) {
+            throw new BadRequestHttpException('correlationId must be provided');
         }
 
-        return $this->handleDonationRedirection(DonationId::fromString($donationId));
-    }
+        $selfUrl = $this->generateUrl('donation_redirect', ['correlationId' => $correlationId]);
 
-    private function handleDonationRedirection(DonationId $donationId): Response
-    {
-        $selfUrl = $this->generateUrl('donation_redirect', ['donationId' => $donationId->toString()]);
-        /** @var ?Donation $donation  */
-        $donation = $this->queryBus->ask(new GetDonation($donationId));
-        if ($donation === null) {
-            // Redirect to self after short delay to allow for projection to complete
-            return $this->render('@Donation/redirect.html.twig', ['targetUrl' => $selfUrl, 'redirectAfterMilliseconds' => 1000]);
-        }
-        if ($donation->getStatus() !== DonationStatus::Initiated) {
-            // Maybe redirect to home?
-            throw new BadRequestHttpException('Donation is not ' . DonationStatus::Initiated->value);
-        }
-        return $this->handlePaymentRedirection($donation, $selfUrl);
-
-    }
-
-    private function handlePaymentRedirection(Donation $donation, string $selfUrl): Response
-    {
         /** @var ?Payment $payment  */
-        $payment = $this->queryBus->ask(new GetPayment(PaymentId::fromString($donation->getPaymentId())));
-        if ($payment === null || $payment->getRedirectUrl() === null) {
-            // Redirect to self after short delay to allow for projection to complete
+        $payment = $this->queryBus->ask(new GetPaymentByInitiatedCorrelationId($correlationId));
+        if ($payment === null) {
+            // Payment not yet projected — poll
             return $this->render('@Donation/redirect.html.twig', ['targetUrl' => $selfUrl, 'redirectAfterMilliseconds' => 1000]);
         }
         if ($payment->getStatus() !== PaymentStatus::Initiated) {
-            // Maybe redirect to home?
-            throw new BadRequestHttpException('Payment is not ' . PaymentStatus::Initiated->value);
+            // Payment reached a terminal state — stop polling
+            return $this->redirectToRoute('donation_thank_you');
+        }
+        if ($payment->getRedirectUrl() === null) {
+            // Initiated but redirect URL not yet set — poll
+            return $this->render('@Donation/redirect.html.twig', ['targetUrl' => $selfUrl, 'redirectAfterMilliseconds' => 1000]);
         }
         return $this->render('@Donation/redirect.html.twig', ['targetUrl' => $payment->getRedirectUrl(), 'redirectAfterMilliseconds' => 0]);
     }

@@ -32,7 +32,6 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorDetails;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringInterval;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanStatus;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Donations\Command\InitiateDonationIntegrationCommand;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Donations\Command\ReActivateRecurringPlanIntegrationCommand;
 use ErgoSarapu\DonationBundle\IntegrationContracts\IntegrationCommandInterface;
@@ -64,7 +63,6 @@ use Zenstruck\Messenger\Test\Transport\TestTransport;
 class DonationsContext implements Context
 {
     private DonationId $lastDonationId;
-    private PaymentId $lastPaymentId;
     private ?RecurringPlanId $lastRecurringPlanId;
     private ExternalEntityId $lastPaymentMethodId;
     private RecurringInterval $lastRecurringInterval;
@@ -143,8 +141,6 @@ class DonationsContext implements Context
     {
         $donation = $this->queryBus->ask(new GetInitiatedDonation($this->lastDonationId));
         Assert::isInstanceOf($donation, Donation::class);
-        /** @var Donation $donation */
-        $this->lastPaymentId = PaymentId::fromString($donation->getPaymentId());
         $this->lastRecurringPlanId = null;
     }
 
@@ -153,8 +149,6 @@ class DonationsContext implements Context
     {
         $donation = $this->queryBus->ask(new GetInitiatedDonation($this->lastDonationId));
         Assert::isInstanceOf($donation, Donation::class);
-        /** @var Donation $donation */
-        $this->lastPaymentId = PaymentId::fromString($donation->getPaymentId());
         Assert::notNull($recurringPlanId = $donation->getRecurringPlanId());
         $this->lastRecurringPlanId = RecurringPlanId::fromString($recurringPlanId);
     }
@@ -210,7 +204,7 @@ class DonationsContext implements Context
     public function paymentSucceeds(): void
     {
         $this->eventBus->send(new PaymentSucceededIntegrationEvent(
-            $this->lastPaymentId,
+            ExternalEntityId::generate(),
             $this->getDefaultTestMoney(),
             ExternalEntityId::fromString($this->lastDonationId->toString()),
         ));
@@ -220,7 +214,7 @@ class DonationsContext implements Context
     public function paymentFails(): void
     {
         $this->eventBus->send(new PaymentDidNotSucceedIntegrationEvent(
-            $this->lastPaymentId,
+            ExternalEntityId::generate(),
             ExternalEntityId::fromString($this->lastDonationId->toString()),
         ));
     }

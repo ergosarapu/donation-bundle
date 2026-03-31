@@ -16,7 +16,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationRequest;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorDetails;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanAction;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
+use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
@@ -68,7 +68,7 @@ class DonationTest extends AggregateRootTestCase
 
     public function testCreate(): void
     {
-        $paymentId = PaymentId::generate();
+        $paymentId = ExternalEntityId::generate();
 
         $this->when(fn () => Donation::create(
             $this->now,
@@ -117,7 +117,6 @@ class DonationTest extends AggregateRootTestCase
                 $this->donationId,
                 $this->amount,
                 $this->campaignId,
-                $donationRequest->paymentId,
                 $this->gateway,
                 $this->description,
                 $this->recurringPlanId,
@@ -129,22 +128,12 @@ class DonationTest extends AggregateRootTestCase
 
     public function testAcceptInitiated(): void
     {
-        $donationRequest = new DonationRequest(
-            $this->donationId,
-            $this->campaignId,
-            $this->amount,
-            $this->gateway,
-            $this->donorDetails,
-            $this->description,
-        );
-
         $this->given(
             new DonationInitiated(
                 $this->now,
                 $this->donationId,
                 $this->amount,
                 $this->campaignId,
-                $donationRequest->paymentId,
                 $this->gateway,
                 new ShortDescription('Description'),
                 $this->recurringPlanId,
@@ -170,22 +159,13 @@ class DonationTest extends AggregateRootTestCase
 
     public function testAcceptCreated(): void
     {
-        $donationRequest = new DonationRequest(
-            $this->donationId,
-            $this->campaignId,
-            $this->amount,
-            $this->gateway,
-            $this->donorDetails,
-            $this->description,
-        );
-
         $this->given(
             new DonationCreated(
                 $this->now,
                 $this->donationId,
                 $this->amount,
                 $this->campaignId,
-                $donationRequest->paymentId,
+                ExternalEntityId::generate(),
                 new ShortDescription('Description'),
                 $this->donorDetails,
                 $this->recurringPlanId,
@@ -247,22 +227,12 @@ class DonationTest extends AggregateRootTestCase
 
     public function testFailInitiated(): void
     {
-        $donationRequest = new DonationRequest(
-            $this->donationId,
-            $this->campaignId,
-            $this->amount,
-            $this->gateway,
-            new DonorDetails($this->email),
-            $this->description,
-        );
-
         $this->given(
             new DonationInitiated(
                 $this->now,
                 $this->donationId,
                 $this->amount,
                 $this->campaignId,
-                $donationRequest->paymentId,
                 $this->gateway,
                 new ShortDescription('Description'),
                 $this->recurringPlanId,
@@ -288,7 +258,7 @@ class DonationTest extends AggregateRootTestCase
                 $this->donationId,
                 $this->amount,
                 $this->campaignId,
-                PaymentId::generate(),
+                ExternalEntityId::generate(),
                 new ShortDescription('Description'),
                 $this->donorDetails,
                 $this->recurringPlanId,
@@ -313,7 +283,6 @@ class DonationTest extends AggregateRootTestCase
                 $this->donationId,
                 $this->amount,
                 $this->campaignId,
-                PaymentId::generate(),
                 $this->gateway,
                 new ShortDescription('Description'),
                 null,

@@ -7,7 +7,7 @@ namespace ErgoSarapu\DonationBundle\SharedInfrastructure\Patchlevel;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Query\Model\CommandStatus;
-use ErgoSarapu\DonationBundle\SharedInfrastructure\Messenger\Stamp\MessageMetadataStamp;
+use ErgoSarapu\DonationBundle\SharedInfrastructure\Messenger\Stamp\CorrelationIdStamp;
 use InvalidArgumentException;
 use Patchlevel\EventSourcing\Message\Message;
 
@@ -50,15 +50,15 @@ trait ProjectorTrait
 
     private function persistMetadata(Message $message): void
     {
-        if (!$message->hasHeader(MessageMetadataStamp::class)) {
+        if (!$message->hasHeader(CorrelationIdStamp::class)) {
             return;
         }
-        $metadata = $message->header(MessageMetadataStamp::class);
+        $correlationId = $message->header(CorrelationIdStamp::class);
 
-        $existing = $this->projectionEntityManager->getRepository(CommandStatus::class)->find($metadata->correlationId);
+        $existing = $this->projectionEntityManager->getRepository(CommandStatus::class)->find($correlationId->toString());
         if ($existing === null) {
             $commandStatus = new CommandStatus(
-                correlationId: $metadata->correlationId,
+                correlationId: $correlationId->toString(),
                 appliedAt: new DateTimeImmutable()
             );
 

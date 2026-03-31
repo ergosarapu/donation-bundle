@@ -22,6 +22,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentInitiated;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRedirectUrlSetUp;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRefunded;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
+use ErgoSarapu\DonationBundle\SharedInfrastructure\Messenger\Stamp\CorrelationIdStamp;
 use ErgoSarapu\DonationBundle\SharedInfrastructure\Patchlevel\ProjectorTrait;
 use Patchlevel\EventSourcing\Attribute\Projector;
 use Patchlevel\EventSourcing\Attribute\Subscribe;
@@ -38,6 +39,11 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
     public function findOne(?PaymentId $id = null, ?PaymentStatus $status = null): ?Payment
     {
         return $this->findOneByCriteria($this->buildCriteria($id, $status));
+    }
+
+    public function findOneByCorrelationId(string $correlationId): ?Payment
+    {
+        return $this->findOneByCriteria(['initiatedCorrelationId' => $correlationId]);
     }
 
     public function countBy(?PaymentImportStatus $importStatus = null): int
@@ -104,6 +110,10 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         $payment->setCurrency($event->amount->currency()->code());
         $payment->setStatus($event->status);
         $payment->setGateway($event->gateway->id());
+        $payment->setAppliedTo($event->appliedTo->toString());
+        if ($message->hasHeader(CorrelationIdStamp::class)) {
+            $payment->setInitiatedCorrelationId($message->header(CorrelationIdStamp::class)->toString());
+        }
         $this->persist($payment);
         $this->flush($message);
     }

@@ -6,7 +6,8 @@ Feature: Payment Method request, store and usage workflow
   Scenario: Initiate payment with request to store payment method
     Given gateway returns a redirect URL
     When initiate payment with request to store payment method
-    And mark payment as <payment_state> with <method_result> payment method result
+    Then payment is initiated
+    When mark payment as <payment_state> with <method_result> payment method result
     Then payment is marked as <payment_state>
     And <method_state> payment method is created
     And <method_state> payment method created integration event is emitted
@@ -51,6 +52,7 @@ Feature: Payment Method request, store and usage workflow
   Scenario: Payment captured without stored payment method
     Given gateway returns a redirect URL
     When initiate payment
-    And mark payment as captured
+    Then payment is initiated
+    When mark payment as captured
     Then payment is marked as captured
     And no payment method is stored

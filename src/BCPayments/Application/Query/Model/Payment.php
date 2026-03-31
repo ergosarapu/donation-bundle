@@ -19,6 +19,8 @@ class Payment
     private ?string $redirectUrl;
     private ?PaymentImportStatus $importStatus = null;
     private ?string $reconciledWith = null;
+    private ?string $appliedTo = null;
+    private ?string $initiatedCorrelationId = null;
     private ?string $description = null;
 
     private ?string $givenName = null;
@@ -149,6 +151,26 @@ class Payment
     public function setReconciledWith(?string $reconciledWith): void
     {
         $this->reconciledWith = $reconciledWith;
+    }
+
+    public function getAppliedTo(): ?string
+    {
+        return $this->appliedTo;
+    }
+
+    public function setAppliedTo(?string $appliedTo): void
+    {
+        $this->appliedTo = $appliedTo;
+    }
+
+    public function getInitiatedCorrelationId(): ?string
+    {
+        return $this->initiatedCorrelationId;
+    }
+
+    public function setInitiatedCorrelationId(?string $initiatedCorrelationId): void
+    {
+        $this->initiatedCorrelationId = $initiatedCorrelationId;
     }
 
     public function getDescription(): ?string
