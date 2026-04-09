@@ -17,7 +17,6 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\Recurri
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanReActivateNotAllowedException;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanRenewalNotAllowedException;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanRenewalNotDueYetException;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringInterval;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlan;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanAction;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanActivated;
@@ -35,6 +34,7 @@ use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Interval;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use InvalidArgumentException;
@@ -52,7 +52,7 @@ class RecurringPlanTest extends AggregateRootTestCase
 
     private ExternalEntityId $paymentMethodId;
 
-    private RecurringInterval $interval;
+    private Interval $interval;
 
     private CampaignId $campaignId;
 
@@ -71,7 +71,7 @@ class RecurringPlanTest extends AggregateRootTestCase
         $this->recurringPlanId = RecurringPlanId::generate();
         $this->recurringPlanActionForInit = RecurringPlanAction::forInit();
         $this->paymentMethodId = ExternalEntityId::generate();
-        $this->interval = new RecurringInterval(RecurringInterval::Monthly);
+        $this->interval = new Interval(Interval::Monthly);
         $this->campaignId = CampaignId::generate();
         $this->amount = new Money(100, new Currency('EUR'));
         $this->email = new Email('example@example.com');
@@ -392,7 +392,7 @@ class RecurringPlanTest extends AggregateRootTestCase
     public static function reActivationProvider(): iterable
     {
         $now = new DateTimeImmutable('2024-02-01 00:00:00');
-        $interval = (new RecurringInterval(RecurringInterval::Monthly))->toDateInterval();
+        $interval = (new Interval(Interval::Monthly))->toDateInterval();
         yield 're-activation before next renewal time' => [$now, $now->add($interval), $now->add($interval)->sub(DateInterval::createFromDateString('1 microsecond')), $now->add($interval)];
         yield 're-activation at next renewal time' => [$now, $now->add($interval), $now->add($interval), $now->add($interval)->add($interval)];
 

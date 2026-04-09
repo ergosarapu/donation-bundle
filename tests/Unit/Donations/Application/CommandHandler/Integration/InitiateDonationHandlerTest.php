@@ -7,17 +7,13 @@ namespace ErgoSarapu\DonationBundle\Tests\Unit\Donations\Application\CommandHand
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\InitiateDonation;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\InitiateRecurringPlan;
 use ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\Integration\InitiateDonationHandler;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationRequest;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorDetails;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringInterval;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Donations\Command\InitiateDonationIntegrationCommand;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandResult;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Interval;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -38,25 +34,24 @@ class InitiateDonationHandlerTest extends TestCase
 
     public function testDispatchesInitiateDonationCommandWhenNoRecurringInterval(): void
     {
-        $donationRequest = new DonationRequest(
-            DonationId::generate(),
-            CampaignId::generate(),
-            new Money(5000, new Currency('EUR')),
-            new Gateway('test-gateway'),
-            new DonorDetails(new Email('donor@example.com')),
-            new ShortDescription('Test donation')
-        );
+        $donationId = 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
 
         $integrationCommand = new InitiateDonationIntegrationCommand(
-            $donationRequest,
-            null
+            donationId: $donationId,
+            campaignId: 'f47ac10b-58cc-4372-a567-0e02b2c3d480',
+            amount: new Money(5000, new Currency('EUR')),
+            gateway: new Gateway('test-gateway'),
+            description: new ShortDescription('Test donation'),
+            donorEmail: new Email('donor@example.com'),
         );
 
         $this->commandBus->expects($this->once())
             ->method('dispatch')
-            ->with($this->callback(function ($command) use ($donationRequest) {
+            ->with($this->callback(function ($command) use ($donationId) {
                 return $command instanceof InitiateDonation
-                    && $command->donationRequest === $donationRequest;
+                    && $command->donationRequest->donationId->toString() === $donationId
+                    && $command->recurringPlanAction === null
+                    && $command->recurringPlanId === null;
             }))
             ->willReturn(new CommandResult(null, 'test-correlation-id'));
 
@@ -65,28 +60,24 @@ class InitiateDonationHandlerTest extends TestCase
 
     public function testDispatchesInitiateRecurringPlanCommandWhenRecurringIntervalProvided(): void
     {
-        $donationRequest = new DonationRequest(
-            DonationId::generate(),
-            CampaignId::generate(),
-            new Money(5000, new Currency('EUR')),
-            new Gateway('test-gateway'),
-            new DonorDetails(new Email('donor@example.com')),
-            new ShortDescription('Test donation')
-        );
-
-        $recurringInterval = new RecurringInterval(RecurringInterval::Monthly);
+        $donationId = 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
 
         $integrationCommand = new InitiateDonationIntegrationCommand(
-            $donationRequest,
-            $recurringInterval
+            donationId: $donationId,
+            campaignId: 'f47ac10b-58cc-4372-a567-0e02b2c3d480',
+            amount: new Money(5000, new Currency('EUR')),
+            gateway: new Gateway('test-gateway'),
+            description: new ShortDescription('Test donation'),
+            donorEmail: new Email('donor@example.com'),
+            recurringInterval: new Interval(Interval::Monthly),
         );
 
         $this->commandBus->expects($this->once())
             ->method('dispatch')
-            ->with($this->callback(function ($command) use ($recurringInterval, $donationRequest) {
+            ->with($this->callback(function ($command) use ($donationId) {
                 return $command instanceof InitiateRecurringPlan
-                    && $command->interval === $recurringInterval
-                    && $command->donationRequest === $donationRequest;
+                    && $command->interval->toString() === Interval::Monthly
+                    && $command->donationRequest->donationId->toString() === $donationId;
             }))
             ->willReturn(new CommandResult(null, 'test-correlation-id'));
 

@@ -26,10 +26,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignName;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignPublicTitle;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignStatus;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationRequest;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationStatus;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorDetails;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringInterval;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanStatus;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Donations\Command\InitiateDonationIntegrationCommand;
@@ -47,6 +44,7 @@ use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Interval;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use LogicException;
@@ -63,7 +61,7 @@ class DonationsContext implements Context
     private DonationId $lastDonationId;
     private ?RecurringPlanId $lastRecurringPlanId;
     private ExternalEntityId $lastPaymentMethodId;
-    private RecurringInterval $lastRecurringInterval;
+    private Interval $lastRecurringInterval;
     private FrozenClock $clock;
     private CampaignId $lastCampaignId;
     private ?Throwable $lastException = null;
@@ -104,15 +102,13 @@ class DonationsContext implements Context
     public function initiateOneTimeDonation(): void
     {
         $this->lastDonationId = DonationId::generate();
-        $donationRequest = new DonationRequest(
-            $this->lastDonationId,
-            CampaignId::generate(),
-            $this->getDefaultTestMoney(),
-            new Gateway('test'),
-            new DonorDetails(),
-            new ShortDescription('Test donation'),
+        $initiateDonation = new InitiateDonationIntegrationCommand(
+            donationId: $this->lastDonationId->toString(),
+            campaignId: CampaignId::generate()->toString(),
+            amount: $this->getDefaultTestMoney(),
+            gateway: new Gateway('test'),
+            description: new ShortDescription('Test donation'),
         );
-        $initiateDonation = new InitiateDonationIntegrationCommand($donationRequest);
         $this->commandBus->dispatch($initiateDonation);
         $this->integrationCommandTransport->processOrFail(1);
     }
@@ -121,18 +117,16 @@ class DonationsContext implements Context
     public function initiateRecurringDonation(): void
     {
         $this->lastDonationId = DonationId::generate();
-        $donationRequest = new DonationRequest(
-            $this->lastDonationId,
-            CampaignId::generate(),
-            $this->getDefaultTestMoney(),
-            new Gateway('test'),
-            new DonorDetails(
-                new Email('example@example.com')
-            ),
-            new ShortDescription('Test donation'),
+        $this->lastRecurringInterval = new Interval(Interval::Monthly);
+        $initiateRecurringDonation = new InitiateDonationIntegrationCommand(
+            donationId: $this->lastDonationId->toString(),
+            campaignId: CampaignId::generate()->toString(),
+            amount: $this->getDefaultTestMoney(),
+            gateway: new Gateway('test'),
+            description: new ShortDescription('Test donation'),
+            donorEmail: new Email('example@example.com'),
+            recurringInterval: $this->lastRecurringInterval,
         );
-        $this->lastRecurringInterval = new RecurringInterval(RecurringInterval::Monthly);
-        $initiateRecurringDonation = new InitiateDonationIntegrationCommand($donationRequest, $this->lastRecurringInterval);
         $this->commandBus->dispatch($initiateRecurringDonation);
         $this->integrationCommandTransport->processOrFail(1);
     }
@@ -359,7 +353,7 @@ class DonationsContext implements Context
         Assert::notNull($this->lastRecurringPlanId);
         $this->integrationCommandTransport->reset();
         $this->commandBus->dispatch(new ReActivateRecurringPlanIntegrationCommand(
-            $this->lastRecurringPlanId,
+            $this->lastRecurringPlanId->toString(),
         ));
         $this->integrationCommandTransport->processOrFail(1);
     }

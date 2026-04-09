@@ -6,7 +6,6 @@ namespace ErgoSarapu\DonationBundle\Tests\Unit\Donations\Application\CommandHand
 
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\ReActivateRecurringPlan;
 use ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\Integration\ReActivateRecurringPlanHandler;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Donations\Command\ReActivateRecurringPlanIntegrationCommand;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandResult;
@@ -28,7 +27,7 @@ class ReActivateRecurringPlanHandlerTest extends TestCase
 
     public function testDispatchesReActivateRecurringPlanCommand(): void
     {
-        $recurringPlanId = RecurringPlanId::generate();
+        $recurringPlanId = 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
 
         $integrationCommand = new ReActivateRecurringPlanIntegrationCommand($recurringPlanId);
 
@@ -36,7 +35,7 @@ class ReActivateRecurringPlanHandlerTest extends TestCase
             ->method('dispatch')
             ->with($this->callback(function ($command) use ($recurringPlanId) {
                 return $command instanceof ReActivateRecurringPlan
-                    && $command->recurringPlanId === $recurringPlanId;
+                    && $command->recurringPlanId->toString() === $recurringPlanId;
             }))
             ->willReturn(new CommandResult(null, 'test-correlation-id'));
 

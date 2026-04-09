@@ -12,6 +12,7 @@ use ErgoSarapu\DonationBundle\SharedKernel\Event\AbstractTimestampedEvent;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\DomainEventInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Interval;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use Patchlevel\EventSourcing\Attribute\Event;
@@ -27,7 +28,7 @@ class RecurringPlanCreated extends AbstractTimestampedEvent implements DomainEve
         #[DataSubjectId]
         public readonly RecurringPlanId $recurringPlanId,
         public readonly RecurringPlanStatus $status,
-        public readonly RecurringInterval $interval,
+        public readonly Interval $interval,
         public readonly DonationId $initialDonationId,
         public readonly CampaignId $campaignId,
         public readonly ExternalEntityId $paymentMethodId,

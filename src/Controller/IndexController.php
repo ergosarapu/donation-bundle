@@ -6,11 +6,7 @@ namespace ErgoSarapu\DonationBundle\Controller;
 
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetActiveCampaigns;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\Campaign;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationRequest;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorDetails;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringInterval;
 use ErgoSarapu\DonationBundle\Dto\DonationDto;
 use ErgoSarapu\DonationBundle\Form\DonationFormStep1Type;
 use ErgoSarapu\DonationBundle\Form\DonationFormStep2Type;
@@ -22,6 +18,7 @@ use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\QueryBusInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Interval;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
@@ -63,34 +60,26 @@ class IndexController extends AbstractController
                 if ($donation->getGateway() === null) {
                     throw new InvalidArgumentException('Gateway must be set at this point');
                 }
-                $gateway = new Gateway($donation->getGateway());
-
                 if ($donation->getAmount() === null) {
                     throw new InvalidArgumentException('Amount must be set at this point');
                 }
                 if ($donation->getCurrencyCode() === null) {
                     throw new InvalidArgumentException('Currency code must be set at this point');
                 }
-                $amount = new Money($donation->getAmount(), new Currency($donation->getCurrencyCode()));
-
-                $donationRequest = new DonationRequest(
-                    donationId: DonationId::generate(),
-                    campaignId: CampaignId::fromString($campaign->getCampaignId()),
-                    amount: $amount,
-                    gateway: $gateway,
-                    donorDetails: new DonorDetails(
-                        $this->getDomainEmail($donation),
-                        $this->getDomainPersonName($donation),
-                        $this->getDomainNationalIdCode($donation),
-                    ),
+                $donationId = DonationId::generate();
+                $command = new InitiateDonationIntegrationCommand(
+                    donationId: $donationId->toString(),
+                    campaignId: $campaign->getCampaignId(),
+                    amount: new Money($donation->getAmount(), new Currency($donation->getCurrencyCode())),
+                    gateway: new Gateway($donation->getGateway()),
                     description: new ShortDescription($campaign->getDonationDescription()),
+                    donorEmail: $donation->getEmail() !== null ? new Email($donation->getEmail()) : null,
+                    donorName: $donation->getGivenName() !== null && $donation->getFamilyName() !== null
+                        ? new PersonName($donation->getGivenName(), $donation->getFamilyName())
+                        : null,
+                    donorNationalIdCode: $donation->getNationalIdCode() !== null ? new NationalIdCode($donation->getNationalIdCode()) : null,
+                    recurringInterval: $donation->getFrequency() !== null ? new Interval($donation->getFrequency()) : null,
                 );
-
-                $interval = null;
-                if ($donation->getFrequency() !== null) {
-                    $interval = new RecurringInterval($donation->getFrequency());
-                }
-                $command = new InitiateDonationIntegrationCommand($donationRequest, $interval);
                 $commandResult = $this->commandBus->dispatch($command);
                 $request->getSession()->remove('donation');
                 return $this->redirectToRoute('donation_redirect', ['trackingId' => $commandResult->trackingId]);
@@ -175,30 +164,5 @@ class IndexController extends AbstractController
             throw new InvalidArgumentException('Multiple active campaigns found');
         }
         return $campaigns[0];
-    }
-
-
-    private function getDomainPersonName(DonationDto $donation): ?PersonName
-    {
-        if ($donation->getGivenName() === null && $donation->getFamilyName() === null) {
-            return null;
-        }
-        return new PersonName($donation->getGivenName(), $donation->getFamilyName());
-    }
-
-    private function getDomainEmail(DonationDto $donation): ?Email
-    {
-        if ($donation->getEmail() === null) {
-            return null;
-        }
-        return new Email($donation->getEmail());
-    }
-
-    private function getDomainNationalIdCode(DonationDto $donation): ?NationalIdCode
-    {
-        if ($donation->getNationalIdCode() === null) {
-            return null;
-        }
-        return new NationalIdCode($donation->getNationalIdCode());
     }
 }

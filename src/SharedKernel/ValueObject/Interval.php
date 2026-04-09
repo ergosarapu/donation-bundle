@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan;
+namespace ErgoSarapu\DonationBundle\SharedKernel\ValueObject;
 
 use DateInterval;
 use Patchlevel\Hydrator\Normalizer\ObjectNormalizer;
 
 #[ObjectNormalizer]
-final class RecurringInterval
+final class Interval
 {
     public const Monthly = 'P1M';
     public const Yearly = 'P1Y';

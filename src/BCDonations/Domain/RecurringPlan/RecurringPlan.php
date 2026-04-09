@@ -18,6 +18,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\Recurri
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanRenewalNotDueYetException;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Interval;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use InvalidArgumentException;
@@ -36,7 +37,7 @@ class RecurringPlan extends BasicAggregateRoot
     private CampaignId $campaignId;
     private Money $amount;
     private Gateway $gateway;
-    private RecurringInterval $interval;
+    private Interval $interval;
     private RecurringPlanStatus $status;
     private ?DateTimeImmutable $nextRenewalTime;
     private ?DonorDetails $donorDetails;
@@ -48,7 +49,7 @@ class RecurringPlan extends BasicAggregateRoot
         RecurringPlanId $recurringPlanId,
         RecurringPlanAction $recurringPlanAction,
         DonationRequest $initialDonationRequest,
-        RecurringInterval $interval,
+        Interval $interval,
     ): self {
         if ($initialDonationRequest->donorDetails->email === null) {
             throw new InvalidArgumentException('Recurring plan requires donor email');
@@ -74,7 +75,7 @@ class RecurringPlan extends BasicAggregateRoot
         DateTimeImmutable $currentTime,
         RecurringPlanId $recurringPlanId,
         RecurringPlanStatus $status,
-        RecurringInterval $interval,
+        Interval $interval,
         DonationId $initialDonationId,
         CampaignId $campaignId,
         ExternalEntityId $paymentMethodId,
