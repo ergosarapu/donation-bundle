@@ -7,6 +7,7 @@ namespace ErgoSarapu\DonationBundle\Tests\Unit\Donations\Application\CommandHand
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\InitiateDonation;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\InitiateRecurringPlan;
 use ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\Integration\InitiateDonationHandler;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Donations\Command\InitiateDonationIntegrationCommand;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandResult;
@@ -34,10 +35,7 @@ class InitiateDonationHandlerTest extends TestCase
 
     public function testDispatchesInitiateDonationCommandWhenNoRecurringInterval(): void
     {
-        $donationId = 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
-
         $integrationCommand = new InitiateDonationIntegrationCommand(
-            donationId: $donationId,
             campaignId: 'f47ac10b-58cc-4372-a567-0e02b2c3d480',
             amount: new Money(5000, new Currency('EUR')),
             gateway: new Gateway('test-gateway'),
@@ -47,23 +45,20 @@ class InitiateDonationHandlerTest extends TestCase
 
         $this->commandBus->expects($this->once())
             ->method('dispatch')
-            ->with($this->callback(function ($command) use ($donationId) {
+            ->with($this->callback(function ($command) {
                 return $command instanceof InitiateDonation
-                    && $command->donationRequest->donationId->toString() === $donationId
                     && $command->recurringPlanAction === null
                     && $command->recurringPlanId === null;
             }))
             ->willReturn(new CommandResult(null, 'test-correlation-id'));
 
-        ($this->handler)($integrationCommand);
+        $result = ($this->handler)($integrationCommand);
+        $this->assertInstanceOf(DonationId::class, $result);
     }
 
     public function testDispatchesInitiateRecurringPlanCommandWhenRecurringIntervalProvided(): void
     {
-        $donationId = 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
-
         $integrationCommand = new InitiateDonationIntegrationCommand(
-            donationId: $donationId,
             campaignId: 'f47ac10b-58cc-4372-a567-0e02b2c3d480',
             amount: new Money(5000, new Currency('EUR')),
             gateway: new Gateway('test-gateway'),
@@ -74,13 +69,13 @@ class InitiateDonationHandlerTest extends TestCase
 
         $this->commandBus->expects($this->once())
             ->method('dispatch')
-            ->with($this->callback(function ($command) use ($donationId) {
+            ->with($this->callback(function ($command) {
                 return $command instanceof InitiateRecurringPlan
-                    && $command->interval->toString() === Interval::Monthly
-                    && $command->donationRequest->donationId->toString() === $donationId;
+                    && $command->interval->toString() === Interval::Monthly;
             }))
             ->willReturn(new CommandResult(null, 'test-correlation-id'));
 
-        ($this->handler)($integrationCommand);
+        $result = ($this->handler)($integrationCommand);
+        $this->assertInstanceOf(DonationId::class, $result);
     }
 }

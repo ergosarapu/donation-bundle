@@ -16,6 +16,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Application\Command\UpdateCampaignName
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\UpdateCampaignPublicTitle;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetCampaign;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetDonation;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetDonationByTrackingId;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetInitiatedDonation;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetRecurringPlan;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\Campaign;
@@ -101,25 +102,31 @@ class DonationsContext implements Context
     #[When('initiate one time donation')]
     public function initiateOneTimeDonation(): void
     {
-        $this->lastDonationId = DonationId::generate();
         $initiateDonation = new InitiateDonationIntegrationCommand(
-            donationId: $this->lastDonationId->toString(),
             campaignId: CampaignId::generate()->toString(),
             amount: $this->getDefaultTestMoney(),
             gateway: new Gateway('test'),
             description: new ShortDescription('Test donation'),
         );
-        $this->commandBus->dispatch($initiateDonation);
+        $trackingId = $this->commandBus->dispatch($initiateDonation)->trackingId;
         $this->integrationCommandTransport->processOrFail(1);
+        $this->resolveDonationId($trackingId);
+    }
+
+    private function resolveDonationId(string $trackingId): void
+    {
+        $donation = $this->queryBus->ask(new GetDonationByTrackingId($trackingId));
+        Assert::isInstanceOf($donation, Donation::class, sprintf('Donation should be found for tracking id %s', $trackingId));
+        /** @var Donation $donation */
+        $donationId = $donation->getDonationId();
+        $this->lastDonationId = DonationId::fromString($donationId);
     }
 
     #[When('initiate recurring donation')]
     public function initiateRecurringDonation(): void
     {
-        $this->lastDonationId = DonationId::generate();
         $this->lastRecurringInterval = new Interval(Interval::Monthly);
         $initiateRecurringDonation = new InitiateDonationIntegrationCommand(
-            donationId: $this->lastDonationId->toString(),
             campaignId: CampaignId::generate()->toString(),
             amount: $this->getDefaultTestMoney(),
             gateway: new Gateway('test'),
@@ -127,8 +134,9 @@ class DonationsContext implements Context
             donorEmail: new Email('example@example.com'),
             recurringInterval: $this->lastRecurringInterval,
         );
-        $this->commandBus->dispatch($initiateRecurringDonation);
+        $trackingId = $this->commandBus->dispatch($initiateRecurringDonation)->trackingId;
         $this->integrationCommandTransport->processOrFail(1);
+        $this->resolveDonationId($trackingId);
     }
 
 

@@ -344,6 +344,9 @@ return function (ContainerConfigurator $container) {
     $services->set('donation_bundle.application.donations.query_handler.get_donations', \ErgoSarapu\DonationBundle\BCDonations\Application\Query\Handler\GetDonationsHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
+    $services->set('donation_bundle.application.donations.query_handler.get_donation_by_tracking_id', \ErgoSarapu\DonationBundle\BCDonations\Application\Query\Handler\GetDonationByTrackingIdHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
     $services->set('donation_bundle.application.donations.query_handler.get_initiated_donation', \ErgoSarapu\DonationBundle\BCDonations\Application\Query\Handler\GetInitiatedDonationHandler::class)
         ->autoconfigure(true)
         ->autowire(true);

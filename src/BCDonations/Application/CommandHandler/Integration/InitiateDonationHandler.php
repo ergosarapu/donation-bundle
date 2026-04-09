@@ -21,10 +21,11 @@ class InitiateDonationHandler implements CommandHandlerInterface
     ) {
     }
 
-    public function __invoke(InitiateDonationIntegrationCommand $command): void
+    public function __invoke(InitiateDonationIntegrationCommand $command): DonationId
     {
+        $donationId = DonationId::generate();
         $donationRequest = new DonationRequest(
-            donationId: DonationId::fromString($command->donationId),
+            donationId: $donationId,
             campaignId: CampaignId::fromString($command->campaignId),
             amount: $command->amount,
             gateway: $command->gateway,
@@ -41,5 +42,7 @@ class InitiateDonationHandler implements CommandHandlerInterface
         } else {
             $this->commandBus->dispatch(new InitiateDonation($donationRequest));
         }
+
+        return $donationId;
     }
 }

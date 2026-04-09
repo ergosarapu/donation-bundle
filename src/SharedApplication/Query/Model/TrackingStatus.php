@@ -12,6 +12,7 @@ class TrackingStatus
     private DateTimeImmutable $updatedAt;
     private ?string $paymentId = null;
     private ?string $paymentMethodId = null;
+    private ?string $donationId = null;
 
     public function setTrackingId(string $trackingId): self
     {
@@ -55,5 +56,16 @@ class TrackingStatus
     public function getPaymentMethodId(): ?string
     {
         return $this->paymentMethodId;
+    }
+
+    public function getDonationId(): ?string
+    {
+        return $this->donationId;
+    }
+
+    public function setDonationId(?string $donationId): self
+    {
+        $this->donationId = $donationId;
+        return $this;
     }
 }

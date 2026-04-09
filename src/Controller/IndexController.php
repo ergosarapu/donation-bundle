@@ -6,7 +6,6 @@ namespace ErgoSarapu\DonationBundle\Controller;
 
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetActiveCampaigns;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\Campaign;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
 use ErgoSarapu\DonationBundle\Dto\DonationDto;
 use ErgoSarapu\DonationBundle\Form\DonationFormStep1Type;
 use ErgoSarapu\DonationBundle\Form\DonationFormStep2Type;
@@ -66,9 +65,7 @@ class IndexController extends AbstractController
                 if ($donation->getCurrencyCode() === null) {
                     throw new InvalidArgumentException('Currency code must be set at this point');
                 }
-                $donationId = DonationId::generate();
                 $command = new InitiateDonationIntegrationCommand(
-                    donationId: $donationId->toString(),
                     campaignId: $campaign->getCampaignId(),
                     amount: new Money($donation->getAmount(), new Currency($donation->getCurrencyCode())),
                     gateway: new Gateway($donation->getGateway()),

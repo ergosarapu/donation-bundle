@@ -57,8 +57,12 @@ trait ProjectorTrait
         return $metadata->trackingId;
     }
 
-    private function persistTrackingPayload(string $trackingId, ?string $paymentId = null, ?string $paymentMethodId = null): void
-    {
+    private function persistTrackingPayload(
+        string $trackingId,
+        ?string $paymentId = null,
+        ?string $paymentMethodId = null,
+        ?string $donationId = null,
+    ): void {
         $status = $this->projectionEntityManager->getRepository(TrackingStatus::class)->find($trackingId);
         if ($status === null) {
             $status = new TrackingStatus();
@@ -73,7 +77,9 @@ trait ProjectorTrait
         if ($paymentMethodId !== null) {
             $status->setPaymentMethodId($paymentMethodId);
         }
-
+        if ($donationId !== null) {
+            $status->setDonationId($donationId);
+        }
         $this->projectionEntityManager->flush();
     }
 }

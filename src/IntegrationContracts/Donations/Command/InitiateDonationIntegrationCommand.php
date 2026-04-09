@@ -16,7 +16,6 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 final class InitiateDonationIntegrationCommand implements IntegrationCommandInterface
 {
     public function __construct(
-        public readonly string $donationId,
         public readonly string $campaignId,
         public readonly Money $amount,
         public readonly Gateway $gateway,

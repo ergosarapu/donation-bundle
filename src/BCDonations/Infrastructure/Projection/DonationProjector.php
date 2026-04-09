@@ -106,6 +106,7 @@ class DonationProjector implements DonationProjectionRepositoryInterface
         $donation->setFamilyName($event->donorDetails?->name?->familyName);
         $donation->setNationalIdCode($event->donorDetails?->nationalIdCode?->value);
         $this->persist($donation);
+        $this->persistTrackingPayload($this->getTrackingId($message), donationId: $event->donationId->toString());
         $this->flush($message);
     }
 
