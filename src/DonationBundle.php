@@ -296,6 +296,9 @@ class DonationBundle extends AbstractBundle
 
         $builder->prependExtensionConfig('doctrine', [
             'dbal' => [
+                'types' => [
+                    'datetime_immutable' => \ErgoSarapu\DonationBundle\SharedInfrastructure\Doctrine\Type\UTCDateTimeImmutableType::class,
+                ],
                 'default_connection' => 'default',
                 'connections' => [
                     'default' => [
