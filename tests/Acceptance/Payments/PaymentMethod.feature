@@ -25,18 +25,18 @@ Feature: Payment Method request, store and usage workflow
     Given usable payment method exists
     And gateway <gateway_result> payment with <method_result> payment method result
     When initiate payment using stored payment method
-    Then payment is marked as <payment_result>
+    Then payment is marked as <payment_state>
     And stored payment method is <method_state>
     And <method_integration_event> payment method integration event is emitted 
 
     Examples:
-      | gateway_result   | method_result | method_state | payment_result | method_integration_event |
-      | captures         | no            | usable       | captured       | no                       |
-      | captures         | usable        | usable       | captured       | no                       |
-      | captures         | unusable      | unusable     | captured       | unusable                 |
-      | fails to capture | no            | usable       | failed         | no                       |
-      | fails to capture | usable        | usable       | failed         | no                       |
-      | fails to capture | unusable      | unusable     | failed         | unusable                 |
+      | gateway_result   | method_result | method_state | payment_state | method_integration_event |
+      | captures         | no            | usable       | captured      | no                       |
+      | captures         | usable        | usable       | captured      | no                       |
+      | captures         | unusable      | unusable     | captured      | unusable                 |
+      | fails to capture | no            | usable       | failed        | no                       |
+      | fails to capture | usable        | usable       | failed        | no                       |
+      | fails to capture | unusable      | unusable     | failed        | unusable                 |
 
   Scenario: Payment capture fails with unusable stored payment method
     Given unusable payment method exists

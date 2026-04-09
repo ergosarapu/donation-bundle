@@ -6,7 +6,7 @@ namespace ErgoSarapu\DonationBundle\SharedApplication\Port\Command;
 
 final class CommandResult
 {
-    public function __construct(public readonly mixed $result, public readonly string $correlationId)
+    public function __construct(public readonly mixed $result, public readonly string $trackingId)
     {
     }
 }

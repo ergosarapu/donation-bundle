@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                  https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="ErgoSarapu\DonationBundle\SharedApplication\Query\Model\TrackingStatus" table="projection_tracking_status">
+        <id name="trackingId" type="string" column="tracking_id" length="36">
+            <generator strategy="NONE"/>
+        </id>
+        <field name="updatedAt" type="datetime_immutable" column="updated_at" nullable="false"/>
+        <field name="paymentId" type="string" column="payment_id" length="36" nullable="true"/>
+        <field name="paymentMethodId" type="string" column="payment_method_id" length="36" nullable="true"/>
+    </entity>
+</doctrine-mapping>

@@ -6,13 +6,10 @@ namespace ErgoSarapu\DonationBundle\SharedApplication\Query;
 
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\Query;
 
-class GetCommandStatuses implements Query
+class GetTrackingStatus implements Query
 {
-    /**
-     * @param array<string> $commandCorrelationIds
-     */
     public function __construct(
-        public readonly array $commandCorrelationIds,
+        public readonly string $trackingId,
     ) {
     }
 }

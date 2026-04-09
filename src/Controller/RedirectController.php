@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\Controller;
 
-use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetPaymentByInitiatedCorrelationId;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetPaymentByTrackingId;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model\Payment;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\QueryBusInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class RedirectController extends AbstractController
 {
@@ -19,22 +18,18 @@ class RedirectController extends AbstractController
     ) {
     }
 
-    public function __invoke(?string $correlationId = null): Response
+    public function __invoke(string $trackingId): Response
     {
-        if ($correlationId === null) {
-            throw new BadRequestHttpException('correlationId must be provided');
-        }
-
-        $selfUrl = $this->generateUrl('donation_redirect', ['correlationId' => $correlationId]);
+        $selfUrl = $this->generateUrl('donation_redirect', ['trackingId' => $trackingId]);
 
         /** @var ?Payment $payment  */
-        $payment = $this->queryBus->ask(new GetPaymentByInitiatedCorrelationId($correlationId));
+        $payment = $this->queryBus->ask(new GetPaymentByTrackingId($trackingId));
         if ($payment === null) {
             // Payment not yet projected — poll
             return $this->render('@Donation/redirect.html.twig', ['targetUrl' => $selfUrl, 'redirectAfterMilliseconds' => 1000]);
         }
         if ($payment->getStatus() !== PaymentStatus::Initiated) {
-            // Payment reached a terminal state — stop polling
+            // Payment not in initiated state — stop polling
             return $this->redirectToRoute('donation_thank_you');
         }
         if ($payment->getRedirectUrl() === null) {

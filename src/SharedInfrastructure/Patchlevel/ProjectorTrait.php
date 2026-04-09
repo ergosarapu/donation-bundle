@@ -6,8 +6,8 @@ namespace ErgoSarapu\DonationBundle\SharedInfrastructure\Patchlevel;
 
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
-use ErgoSarapu\DonationBundle\SharedApplication\Query\Model\CommandStatus;
-use ErgoSarapu\DonationBundle\SharedInfrastructure\Messenger\Stamp\CorrelationIdStamp;
+use ErgoSarapu\DonationBundle\SharedApplication\Query\Model\TrackingStatus;
+use ErgoSarapu\DonationBundle\SharedInfrastructure\Messenger\Stamp\MessageMetadataStamp;
 use InvalidArgumentException;
 use Patchlevel\EventSourcing\Message\Message;
 
@@ -44,25 +44,34 @@ trait ProjectorTrait
 
     private function flush(Message $message): void
     {
-        $this->persistMetadata($message);
+        $this->persistTrackingPayload($this->getTrackingId($message));
         $this->projectionEntityManager->flush();
     }
 
-    private function persistMetadata(Message $message): void
+    private function getTrackingId(Message $message): string
     {
-        if (!$message->hasHeader(CorrelationIdStamp::class)) {
-            return;
+        if (!$message->hasHeader(MessageMetadataStamp::class)) {
+            throw new InvalidArgumentException('MessageMetadataStamp is missing from the message.');
         }
-        $correlationId = $message->header(CorrelationIdStamp::class);
+        $metadata = $message->header(MessageMetadataStamp::class);
+        return $metadata->trackingId;
+    }
 
-        $existing = $this->projectionEntityManager->getRepository(CommandStatus::class)->find($correlationId->toString());
-        if ($existing === null) {
-            $commandStatus = new CommandStatus(
-                correlationId: $correlationId->toString(),
-                appliedAt: new DateTimeImmutable()
-            );
+    private function persistTrackingPayload(string $trackingId, ?string $paymentId = null, ?string $paymentMethodId = null): void
+    {
+        $status = $this->projectionEntityManager->getRepository(TrackingStatus::class)->find($trackingId);
+        if ($status === null) {
+            $status = new TrackingStatus();
+            $status->setTrackingId($trackingId);
+            $this->persist($status);
+        }
 
-            $this->persist($commandStatus);
+        $status->setUpdatedAt(new DateTimeImmutable());
+        if ($paymentId !== null) {
+            $status->setPaymentId($paymentId);
+        }
+        if ($paymentMethodId !== null) {
+            $status->setPaymentMethodId($paymentMethodId);
         }
 
         $this->projectionEntityManager->flush();

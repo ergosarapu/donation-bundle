@@ -26,6 +26,10 @@ class AcceptanceTestingKernel extends DonationBundleTestingKernel
                 'transports' => [
                     // Intercept delayed messages to avoid triggering immediate handling
                     'delayed' => 'test://?intercept=true&catch_exceptions=false&support_delay_stamp=true',
+
+                    // Intercept integration messages to avoid triggering handler outside of bounded context under testing
+                    'integration_command' => 'test://?intercept=true&catch_exceptions=false&support_delay_stamp=true',
+                    'integration_event' => 'test://?intercept=true&catch_exceptions=false&support_delay_stamp=true',
                 ],
             ]
         ]);

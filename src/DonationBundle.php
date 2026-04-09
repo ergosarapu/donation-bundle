@@ -415,8 +415,10 @@ class DonationBundle extends AbstractBundle
                 ],
                 'transports' => [
                     'command' => 'sync://',
+                    'integration_command' => 'sync://',
                     'event_low_priority' => 'sync://',
                     'event' => 'sync://',
+                    'integration_event' => 'sync://',
                     'delayed' => [
                         'dsn' => 'doctrine://messenger',
                         'options' => [
@@ -515,7 +517,7 @@ class DonationBundle extends AbstractBundle
                 ReActivateRecurringPlanIntegrationCommand::class,
                 // BCPayments
                 InitiatePaymentIntegrationCommand::class,
-            ], 'command'),
+            ], 'integration_command'),
             // Integration Events
             ...array_fill_keys([
                 // BCIdentities
@@ -526,7 +528,7 @@ class DonationBundle extends AbstractBundle
                 PaymentSucceededIntegrationEvent::class,
                 UnusablePaymentMethodCreatedIntegrationEvent::class,
                 UsablePaymentMethodCreatedIntegrationEvent::class,
-            ], 'event'),
+            ], 'integration_event'),
             // Domain Events
             // Payment import pending goes to low priority queue to avoid blocking during bulk imports
             PaymentImportPending::class => 'event_low_priority',

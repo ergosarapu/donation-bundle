@@ -5,26 +5,23 @@ export default class extends Controller {
     connect() {
     }
 
-    startPolling(cmdCorIds) {
+    startPolling(trackingId) {
         const pollInterval = setInterval(async () => {
             try {
-                const queryString = cmdCorIds.map(id => `ids[]=${encodeURIComponent(id)}`).join('&');
-                const response = await fetch(`/api/command-status?${queryString}`);
+                const response = await fetch(`/api/status/${trackingId}`);
                 
-                if (!response.ok) {
-                    console.error('Failed to fetch command status:', response.status);
+                if (response.status !== 200) {
+                    console.error('Failed to fetch tracking status:', response.status);
                     return;
                 }
                 
                 const data = await response.json();
+
+                console.log('Polling response:', data.length); 
                 
-                console.log('Polling response:', data.length, 'of', cmdCorIds.length);
-                
-                if (Array.isArray(data) && data.length === cmdCorIds.length) {
-                    clearInterval(pollInterval);
-                    clearTimeout(pollTimeout);
-                    window.location.reload();
-                }
+                clearInterval(pollInterval);
+                clearTimeout(pollTimeout);
+                window.location.reload();
             } catch (error) {
                 console.error('Error polling command status:', error);
             }
@@ -95,9 +92,30 @@ export default class extends Controller {
                 console.log('Form submitted successfully via AJAX');
             } else {
                 console.error('Form submission failed:', response.status, data);
+                
+                // If HTML response, replace entire document
+                if (contentType && contentType.includes('text/html')) {
+                    document.open();
+                    document.write(data);
+                    document.close();
+                } else {
+                    // For non-HTML, show alert
+                    const errorMessage = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+                    alert(`Form submission failed (${response.status}):\n\n${errorMessage}`);
+                    
+                    // Re-enable the button
+                    if (button) {
+                        button.disabled = false;
+                        const icon = button.querySelector('.btn-icon i');
+                        if (icon) {
+                            icon.className = 'fa fa-exclamation-circle';
+                        }
+                    }
+                }
+                return;
             }
 
-            this.startPolling([data.correlationId]);
+            this.startPolling(data.trackingId);
         } else {
             console.log('Intercepted event on non-form element:', event.target);
         }

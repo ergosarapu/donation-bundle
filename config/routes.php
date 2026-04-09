@@ -14,12 +14,15 @@ return function (RoutingConfigurator $routes): void {
     $routes->add('donation_admin_login', '/login')
         ->controller('donation_bundle.controller.admin.login_controller');
 
-    $routes->add('donation_redirect', '/donate/{correlationId}')
+    $routes->add('donation_redirect', '/donate/{trackingId}')
         ->controller('donation_bundle.controller.redirect_controller')
-        ->requirements(['correlationId' => '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}']);
+        ->requirements(['trackingId' => '[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{12}'])
+        ->methods(['GET'])
+    ;
 
-    $routes->add('donation_command_status', '/api/command-status')
-        ->controller('donation_bundle.controller.command_status_controller')
+    $routes->add('donation_tracking_status', '/api/status/{trackingId}')
+        ->controller('donation_bundle.controller.tracking_status_controller')
+        ->requirements(['trackingId' => '[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{12}'])
         ->methods(['GET']);
 
     $routes->add('donation_thank_you', '/thank-you')

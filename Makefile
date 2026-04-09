@@ -26,7 +26,7 @@ behat:																				## run behat acceptance tests
 
 .PHONY: phpunit-integration
 phpunit-integration:																## run phpunit integration tests
-	vendor/bin/phpunit --testdox --testsuite=Integration --exclude-filter '/SubscriptionManagerTest|InitiateDonationTest/'
+	vendor/bin/phpunit --testdox --testsuite=Integration
 
 .PHONY: phpunit-functional
 phpunit-functional:																	## run phpunit functional tests

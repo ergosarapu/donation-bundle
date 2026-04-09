@@ -64,7 +64,7 @@ return function (ContainerConfigurator $container) {
     // *** API Controllers ***
     // ***********************
 
-    $services->set('donation_bundle.controller.command_status_controller', \ErgoSarapu\DonationBundle\Controller\CommandStatusController::class)
+    $services->set('donation_bundle.controller.tracking_status_controller', \ErgoSarapu\DonationBundle\Controller\TrackingStatusController::class)
         ->autoconfigure(true)
         ->autowire(true);
 
@@ -350,9 +350,6 @@ return function (ContainerConfigurator $container) {
     $services->set('donation_bundle.application.donations.query_handler.get_recurring_plan', \ErgoSarapu\DonationBundle\BCDonations\Application\Query\Handler\GetRecurringPlanHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
-    $services->set('donation_bundle.application.donations.query_handler.get_recurring_plan_by_payment_method', \ErgoSarapu\DonationBundle\BCDonations\Application\Query\Handler\GetRecurringPlanByPaymentMethodHandler::class)
-        ->autoconfigure(true)
-        ->autowire(true);
     $services->set('donation_bundle.application.donations.query_handler.get_initiated_recurring_plan', \ErgoSarapu\DonationBundle\BCDonations\Application\Query\Handler\GetInitiatedRecurringPlanHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
@@ -369,7 +366,13 @@ return function (ContainerConfigurator $container) {
     $services->set('donation_bundle.application.payments.query_handler.get_payment', \ErgoSarapu\DonationBundle\BCPayments\Application\Query\Handler\GetPaymentHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
-    $services->set('donation_bundle.application.payments.query_handler.get_initiated_payment', \ErgoSarapu\DonationBundle\BCPayments\Application\Query\Handler\GetInitiatedPaymentHandler::class)
+    $services->set('donation_bundle.application.payments.query_handler.get_payment_method', \ErgoSarapu\DonationBundle\BCPayments\Application\Query\Handler\GetPaymentMethodHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.application.payments.query_handler.get_payment_by_tracking_id', \ErgoSarapu\DonationBundle\BCPayments\Application\Query\Handler\GetPaymentByTrackingIdHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.application.payments.query_handler.get_payment_method_by_tracking_id', \ErgoSarapu\DonationBundle\BCPayments\Application\Query\Handler\GetPaymentMethodByTrackingIdHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
     $services->set('donation_bundle.application.payments.query_handler.get_matching_payments', \ErgoSarapu\DonationBundle\BCPayments\Application\Query\Handler\GetMatchingPaymentsHandler::class)
@@ -387,7 +390,7 @@ return function (ContainerConfigurator $container) {
         ->autowire(true);
 
     // Shared
-    $services->set('donation_bundle.application.shared.query_handler.get_command_statuses', \ErgoSarapu\DonationBundle\SharedApplication\Query\Handler\GetCommandStatusesHandler::class)
+    $services->set('donation_bundle.application.shared.query_handler.get_tracking_status', \ErgoSarapu\DonationBundle\SharedApplication\Query\Handler\GetTrackingStatusHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
 
@@ -545,6 +548,12 @@ return function (ContainerConfigurator $container) {
         ->tag('event_sourcing.subscriber');
     $services->alias(\ErgoSarapu\DonationBundle\BCPayments\Application\Query\Port\PaymentProjectionRepositoryInterface::class, 'donation_bundle.infrastructure.projector.payment');
 
+    $services->set('donation_bundle.infrastructure.projector.payment_method', \ErgoSarapu\DonationBundle\BCPayments\Infrastructure\Projection\PaymentMethodProjector::class)
+        ->autoconfigure(true)
+        ->autowire(true)
+        ->tag('event_sourcing.subscriber');
+    $services->alias(\ErgoSarapu\DonationBundle\BCPayments\Application\Query\Port\PaymentMethodProjectionRepositoryInterface::class, 'donation_bundle.infrastructure.projector.payment_method');
+
     // Identities
 
     $services->set('donation_bundle.infrastructure.identities.projector.identity', \ErgoSarapu\DonationBundle\BCIdentities\Infrastructure\Projection\IdentityProjector::class)
@@ -563,10 +572,10 @@ return function (ContainerConfigurator $container) {
     $services->alias(\ErgoSarapu\DonationBundle\BCIdentities\Application\Port\IdentityLookupInterface::class, 'donation_bundle.infrastructure.identities.identity_lookup');
 
     // Shared
-    $services->set('donation_bundle.infrastructure.shared.command_status_projection_repository', \ErgoSarapu\DonationBundle\SharedInfrastructure\Adapter\CommandStatusProjectionRepository::class)
+    $services->set('donation_bundle.infrastructure.shared.tracking_status_projection_repository', \ErgoSarapu\DonationBundle\SharedInfrastructure\Adapter\TrackingStatusProjectionRepository::class)
         ->autoconfigure(true)
         ->autowire(true);
-    $services->alias(\ErgoSarapu\DonationBundle\SharedApplication\Query\Port\CommandStatusProjectionRepositoryInterface::class, 'donation_bundle.infrastructure.shared.command_status_projection_repository');
+    $services->alias(\ErgoSarapu\DonationBundle\SharedApplication\Query\Port\TrackingStatusProjectionRepositoryInterface::class, 'donation_bundle.infrastructure.shared.tracking_status_projection_repository');
 
     // ******************
     // *** Processors ***
@@ -586,12 +595,14 @@ return function (ContainerConfigurator $container) {
         ->autowire(true);
     $services->alias(\Patchlevel\EventSourcing\Repository\MessageDecorator\MessageDecorator::class, 'donation_bundle.infrastructure.message.patchlevel_message_decorator');
 
-    // Messenger Context and Middleware
-    $services->set('donation_bundle.infrastructure.messenger.message_context', \ErgoSarapu\DonationBundle\SharedInfrastructure\Messenger\MessageContext::class);
-    $services->alias(\ErgoSarapu\DonationBundle\SharedInfrastructure\Messenger\MessageContext::class, 'donation_bundle.infrastructure.messenger.message_context');
+    // Messenger Metadata Context and Middleware
+    $services->set('donation_bundle.infrastructure.messenger.metadata_context', \ErgoSarapu\DonationBundle\SharedInfrastructure\Messenger\MetadataContext::class)
+        ->autoconfigure(true)
+    ;
+    $services->alias(\ErgoSarapu\DonationBundle\SharedInfrastructure\Messenger\MetadataContext::class, 'donation_bundle.infrastructure.messenger.metadata_context');
 
     $services->set('donation_bundle.infrastructure.messenger.message_metadata_middleware', \ErgoSarapu\DonationBundle\SharedInfrastructure\Messenger\Middleware\MessageMetadataMiddleware::class)
-        ->arg(0, new Reference('donation_bundle.infrastructure.messenger.message_context'))
+        ->arg(0, new Reference('donation_bundle.infrastructure.messenger.metadata_context'))
         ->autoconfigure(false);
 
     // Default allowed classes for write (bundle internal - not meant to be overridden)

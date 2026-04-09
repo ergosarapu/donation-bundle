@@ -22,7 +22,6 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentInitiated;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRedirectUrlSetUp;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRefunded;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
-use ErgoSarapu\DonationBundle\SharedInfrastructure\Messenger\Stamp\CorrelationIdStamp;
 use ErgoSarapu\DonationBundle\SharedInfrastructure\Patchlevel\ProjectorTrait;
 use Patchlevel\EventSourcing\Attribute\Projector;
 use Patchlevel\EventSourcing\Attribute\Subscribe;
@@ -111,10 +110,10 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         $payment->setStatus($event->status);
         $payment->setGateway($event->gateway->id());
         $payment->setAppliedTo($event->appliedTo->toString());
-        if ($message->hasHeader(CorrelationIdStamp::class)) {
-            $payment->setInitiatedCorrelationId($message->header(CorrelationIdStamp::class)->toString());
-        }
+        $payment->setDescription($event->description->toString());
         $this->persist($payment);
+        $trackingId = $this->getTrackingId($message);
+        $this->persistTrackingPayload($trackingId, paymentId: $payment->getPaymentId());
         $this->flush($message);
     }
 

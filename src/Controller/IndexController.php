@@ -93,7 +93,7 @@ class IndexController extends AbstractController
                 $command = new InitiateDonationIntegrationCommand($donationRequest, $interval);
                 $commandResult = $this->commandBus->dispatch($command);
                 $request->getSession()->remove('donation');
-                return $this->redirectToRoute('donation_redirect', ['correlationId' => $commandResult->correlationId]);
+                return $this->redirectToRoute('donation_redirect', ['trackingId' => $commandResult->trackingId]);
             }
 
             $request->getSession()->set('donation', $donation);

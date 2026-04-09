@@ -19,28 +19,26 @@ use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsCaptur
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MarkPaymentAsFailed;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentFileImportResult;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetPayment;
-use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetPaymentByInitiatedCorrelationId;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetPaymentByTrackingId;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetPaymentMethod;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetPaymentMethodByTrackingId;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model\Payment;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model\PaymentMethod;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCredentialValue;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportStatus;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodResult;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodUnusable;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodUnusableReason;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRedirectUrlSetUp;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentReference;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\UnusablePaymentMethodCreated;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\UsablePaymentMethodCreated;
-use ErgoSarapu\DonationBundle\IntegrationContracts\IntegrationCommandInterface;
-use ErgoSarapu\DonationBundle\IntegrationContracts\IntegrationEventInterface;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Command\InitiatePaymentIntegrationCommand;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\PaymentDidNotSucceedIntegrationEvent;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\PaymentMethodUnusableIntegrationEvent;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\PaymentSucceededIntegrationEvent;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\UnusablePaymentMethodCreatedIntegrationEvent;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\UsablePaymentMethodCreatedIntegrationEvent;
+use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\QueryBusInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
@@ -53,25 +51,27 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\URL;
 use ErgoSarapu\DonationBundle\Tests\Acceptance\Payments\FakeGateway;
-use ErgoSarapu\DonationBundle\Tests\Helpers\TestCommandBus;
-use ErgoSarapu\DonationBundle\Tests\Helpers\TestEventBus;
 use Exception;
 use Patchlevel\EventSourcing\Subscription\Engine\SubscriptionEngine;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Webmozart\Assert\Assert;
+use Zenstruck\Messenger\Test\Transport\TestTransport;
 
 class PaymentsContext implements Context
 {
     private PaymentId $lastPaymentId;
     private PaymentId $existingCapturedPaymentId;
     private PaymentMethodId $lastPaymentMethodId;
-    private string $lastInitiatePaymentCorrelationId;
     private string $lastUploadedPaymentImportFile;
 
     public function __construct(
         private readonly SubscriptionEngine $subscriptionEngine,
         private readonly FakeGateway $gateway,
-        private readonly TestCommandBus $commandBus,
-        private readonly TestEventBus $eventBus,
+        #[Autowire(service: 'messenger.transport.integration_command')]
+        private readonly TestTransport $integrationCommandTransport,
+        #[Autowire(service: 'messenger.transport.integration_event')]
+        private readonly TestTransport $integrationEventTransport,
+        private readonly CommandBusInterface $commandBus,
         private readonly QueryBusInterface $queryBus,
     ) {
         $this->initProjections();
@@ -80,10 +80,8 @@ class PaymentsContext implements Context
     #[BeforeScenario]
     public function resetTransports(): void
     {
-        $this->eventBus->reset();
-        $this->eventBus->intercept(IntegrationEventInterface::class);
-        $this->commandBus->reset();
-        $this->commandBus->intercept(IntegrationCommandInterface::class);
+        $this->integrationCommandTransport->reset();
+        $this->integrationEventTransport->reset();
     }
 
     #[BeforeScenario]
@@ -100,10 +98,21 @@ class PaymentsContext implements Context
         $this->subscriptionEngine->remove();
     }
 
-    private function sendInitiatePaymentCommand(InitiatePaymentIntegrationCommand $command): void
+    private function dispatchInitiatePaymentCommand(InitiatePaymentIntegrationCommand $command): void
     {
-        $result = $this->commandBus->send($command);
-        $this->lastInitiatePaymentCorrelationId = $result->correlationId;
+        $this->integrationCommandTransport->reset();
+        $trackingId = $this->commandBus->dispatch($command)->trackingId;
+        $this->integrationCommandTransport->processOrFail(1);
+        $this->resolvePaymentId($trackingId);
+    }
+
+    private function resolvePaymentId(string $trackingId): void
+    {
+        $payment = $this->queryBus->ask(new GetPaymentByTrackingId($trackingId));
+        Assert::isInstanceOf($payment, Payment::class, 'Payment should be found for tracking ID: ' . $trackingId);
+        /** @var Payment $payment */
+        $paymentId = $payment->getPaymentId();
+        $this->lastPaymentId = PaymentId::fromString($paymentId);
     }
 
     private function parsePaymentMethodResult(string $paymentMethodResult): ?PaymentMethodResult
@@ -167,27 +176,23 @@ class PaymentsContext implements Context
     #[Given('usable payment method exists')]
     public function usablePaymentMethodExists(): void
     {
-        $paymentMethodId = PaymentMethodId::generate();
-        $createFor = ExternalEntityId::generate();
-        $this->lastPaymentMethodId = $paymentMethodId;
-        $this->commandBus->send(new CreatePaymentMethod(
-            $paymentMethodId,
+        $this->lastPaymentMethodId = PaymentMethodId::generate();
+        $this->commandBus->dispatch(new CreatePaymentMethod(
+            $this->lastPaymentMethodId,
             PaymentMethodResult::usable(new PaymentCredentialValue('credential-value')),
-            $createFor,
+            ExternalEntityId::generate(),
         ));
-        $this->usablePaymentMethodIsCreated();
+        $this->integrationEventTransport->reset();
     }
 
     #[Given('unusable payment method exists')]
     public function unusablePaymentMethodExists(): void
     {
-        $paymentMethodId = PaymentMethodId::generate();
-        $createFor = ExternalEntityId::generate();
-        $this->lastPaymentMethodId = $paymentMethodId;
-        $this->commandBus->send(new CreatePaymentMethod(
-            $paymentMethodId,
+        $this->lastPaymentMethodId = PaymentMethodId::generate();
+        $this->commandBus->dispatch(new CreatePaymentMethod(
+            $this->lastPaymentMethodId,
             PaymentMethodResult::unusable(PaymentMethodUnusableReason::Expired),
-            $createFor,
+            ExternalEntityId::generate(),
         ));
         $this->unusablePaymentMethodIsCreated();
     }
@@ -199,7 +204,7 @@ class PaymentsContext implements Context
         $this->lastPaymentMethodId = PaymentMethodId::generate();
         // Store a different payment method to ensure the specified one does not exist,
         // allowing to test the non-existence scenario.
-        $this->commandBus->send(new CreatePaymentMethod(
+        $this->commandBus->dispatch(new CreatePaymentMethod(
             PaymentMethodId::generate(),
             PaymentMethodResult::usable(new PaymentCredentialValue('credential-value')),
             ExternalEntityId::generate(),
@@ -217,25 +222,25 @@ class PaymentsContext implements Context
     #[When('initiate payment')]
     public function initiatePayment(): void
     {
-        $this->sendInitiatePaymentCommand($this->createInitiatePaymentCommand());
+        $this->dispatchInitiatePaymentCommand($this->createInitiatePaymentCommand());
     }
 
     #[When('initiate payment with request to store payment method')]
     public function initiatePaymentWithRequestToStorePaymentMethod(): void
     {
-        $this->sendInitiatePaymentCommand($this->createInitiatePaymentCommand(requestPaymentMethodFor: ExternalEntityId::generate()));
+        $this->dispatchInitiatePaymentCommand($this->createInitiatePaymentCommand(requestPaymentMethodFor: ExternalEntityId::generate()));
     }
 
     #[When('initiate payment using stored payment method')]
     public function initiatePaymentUsingStoredPaymentMethod(): void
     {
-        $this->sendInitiatePaymentCommand($this->createInitiatePaymentCommand($this->lastPaymentMethodId));
+        $this->dispatchInitiatePaymentCommand($this->createInitiatePaymentCommand($this->lastPaymentMethodId));
     }
 
     #[When('mark payment as authorized')]
     public function markPaymentAsAuthorized(): void
     {
-        $this->commandBus->send(
+        $this->commandBus->dispatch(
             new MarkPaymentAsAuthorized(
                 $this->lastPaymentId,
                 $this->getDefaultTestMoney(),
@@ -247,7 +252,7 @@ class PaymentsContext implements Context
     #[When('mark payment as captured')]
     public function markPaymentAsCaptured(): void
     {
-        $this->commandBus->send(
+        $this->commandBus->dispatch(
             new MarkPaymentAsCaptured(
                 $this->lastPaymentId,
                 $this->getDefaultTestMoney(),
@@ -259,38 +264,54 @@ class PaymentsContext implements Context
     #[When('mark payment as captured with :paymentMethodResult payment method result')]
     public function markPaymentAsCapturedWithPaymentMethodResult(?string $paymentMethodResult = null): void
     {
-        $result = $paymentMethodResult ? $this->parsePaymentMethodResult($paymentMethodResult) : null;
-        $this->commandBus->send(
+        $methodResult = $paymentMethodResult ? $this->parsePaymentMethodResult($paymentMethodResult) : null;
+        $trackingId = $this->commandBus->dispatch(
             new MarkPaymentAsCaptured(
                 $this->lastPaymentId,
                 $this->getDefaultTestMoney(),
-                $result,
+                $methodResult,
             )
-        );
+        )->trackingId;
+        $this->resolvePaymentMethodId($trackingId);
     }
 
     #[When('mark payment as failed')]
     public function markPaymentAsFailed(): void
     {
-        $this->markPaymentAsFailedWithPaymentMethodResult(null);
+        $this->commandBus->dispatch(
+            new MarkPaymentAsFailed(
+                $this->lastPaymentId,
+                null
+            )
+        );
     }
 
     #[When('mark payment as failed with :paymentMethodResult payment method result')]
     public function markPaymentAsFailedWithPaymentMethodResult(?string $paymentMethodResult = null): void
     {
         $result = $paymentMethodResult ? $this->parsePaymentMethodResult($paymentMethodResult) : null;
-        $this->commandBus->send(
+        $trackingId = $this->commandBus->dispatch(
             new MarkPaymentAsFailed(
                 $this->lastPaymentId,
                 $result,
             )
-        );
+        )->trackingId;
+        $this->resolvePaymentMethodId($trackingId);
+    }
+
+    private function resolvePaymentMethodId(string $trackingId): void
+    {
+        $paymentMethod = $this->queryBus->ask(new GetPaymentMethodByTrackingId($trackingId));
+        Assert::isInstanceOf($paymentMethod, PaymentMethod::class, 'Payment method should be found for tracking ID: ' . $trackingId);
+        /** @var PaymentMethod $paymentMethod */
+        $paymentMethodId = $paymentMethod->getPaymentMethodId();
+        $this->lastPaymentMethodId = PaymentMethodId::fromString($paymentMethodId);
     }
 
     #[When('mark payment as canceled')]
     public function markPaymentAsCanceled(): void
     {
-        $this->commandBus->send(
+        $this->commandBus->dispatch(
             new MarkPaymentAsCanceled(
                 $this->lastPaymentId
             )
@@ -300,103 +321,101 @@ class PaymentsContext implements Context
     #[Then('payment is initiated')]
     public function paymentIsInitiated(): void
     {
-        $payment = $this->queryBus->ask(new GetPaymentByInitiatedCorrelationId($this->lastInitiatePaymentCorrelationId));
+        $payment = $this->queryBus->ask(new GetPayment($this->lastPaymentId));
         Assert::isInstanceOf($payment, Payment::class);
-        $this->lastPaymentId = PaymentId::fromString($payment->getPaymentId());
+        /** @var Payment $payment */
+        Assert::eq($payment->getStatus(), PaymentStatus::Initiated);
     }
 
     #[Then('payment is marked as :paymentState')]
     public function paymentIsMarkedAs(string $paymentState): void
     {
-        $payment = $this->queryBus->ask(new GetPaymentByInitiatedCorrelationId($this->lastInitiatePaymentCorrelationId));
+        $payment = $this->queryBus->ask(new GetPayment($this->lastPaymentId));
         Assert::isInstanceOf($payment, Payment::class);
+        /** @var Payment $payment */
         Assert::eq($payment->getStatus(), PaymentStatus::from($paymentState));
     }
 
     #[Then('payment redirect URL is set up')]
     public function paymentRedirectUrlIsSetUp(): void
     {
-        $this->eventBus->assertDispatched(PaymentRedirectUrlSetUp::class, 1);
+        $payment = $this->queryBus->ask(new GetPayment($this->lastPaymentId));
+        Assert::isInstanceOf($payment, Payment::class);
+        /** @var Payment $payment */
+        Assert::eq($payment->getRedirectUrl(), 'https://example.com/capture');
     }
 
     #[Then('payment succeeded integration event is emitted')]
     public function paymentSucceededIntegrationEventIsEmitted(): void
     {
-        $this->eventBus->assertDispatched(PaymentSucceededIntegrationEvent::class, 1);
+        $this->integrationEventTransport->queue()->assertContains(PaymentSucceededIntegrationEvent::class, 1);
     }
 
     #[Then('payment did not succeed integration event is emitted')]
     public function paymentDidNotSucceedIntegrationEventIsEmitted(): void
     {
-        $this->eventBus->assertDispatched(PaymentDidNotSucceedIntegrationEvent::class, 1);
+        $this->integrationEventTransport->queue()->assertContains(PaymentDidNotSucceedIntegrationEvent::class, 1);
     }
 
     #[Then('usable payment method is created')]
     #[Then('stored payment method is usable')]
     public function usablePaymentMethodIsCreated(): void
     {
-        $this->eventBus->assertDispatched(UsablePaymentMethodCreated::class, 1);
-        $events = $this->eventBus->dispatchedMessages(UsablePaymentMethodCreated::class);
-        /** @var UsablePaymentMethodCreated $event */
-        $event = $events[0];
-        $this->lastPaymentMethodId = $event->paymentMethodId;
+        $paymentMethod = $this->queryBus->ask(new GetPaymentMethod($this->lastPaymentMethodId));
+        Assert::isInstanceOf($paymentMethod, PaymentMethod::class);
+        /** @var PaymentMethod $paymentMethod */
+        Assert::null($paymentMethod->getUnusableReason());
     }
 
     #[Then('unusable payment method is created')]
     public function unusablePaymentMethodIsCreated(): void
     {
-        $this->eventBus->assertDispatched(UnusablePaymentMethodCreated::class, 1);
-        $events = $this->eventBus->dispatchedMessages(UnusablePaymentMethodCreated::class);
-        /** @var UnusablePaymentMethodCreated $event */
-        $event = $events[0];
-        $this->lastPaymentMethodId = $event->paymentMethodId;
+        $paymentMethod = $this->queryBus->ask(new GetPaymentMethod($this->lastPaymentMethodId));
+        Assert::isInstanceOf($paymentMethod, PaymentMethod::class);
+        /** @var PaymentMethod $paymentMethod */
+        Assert::notNull($paymentMethod->getUnusableReason());
+        $this->lastPaymentMethodId = PaymentMethodId::fromString($paymentMethod->getPaymentMethodId());
     }
 
     #[Then('stored payment method is unusable')]
     public function storedPaymentMethodIsUnusable(): void
     {
-        $this->eventBus->assertDispatched(PaymentMethodUnusable::class, 1);
-        // Verify the PaymentMethodId in the event matches the expected one
-        $events = $this->eventBus->dispatchedMessages(PaymentMethodUnusable::class);
-        /** @var PaymentMethodUnusable $event */
-        $event = $events[0];
-        Assert::eq(
-            $event->paymentMethodId->toString(),
-            $this->lastPaymentMethodId->toString(),
-            'PaymentMethodId in PaymentMethodUnusable event should match the expected PaymentMethodId'
-        );
+        $paymentMethod = $this->queryBus->ask(new GetPaymentMethod($this->lastPaymentMethodId));
+        Assert::isInstanceOf($paymentMethod, PaymentMethod::class);
+        /** @var PaymentMethod $paymentMethod */
+        Assert::notNull($paymentMethod->getUnusableReason());
     }
 
     #[Then('no payment method integration event is emitted')]
     public function noPaymentMethodIntegrationEventIsEmitted(): void
     {
-        $this->eventBus->assertNotDispatched(PaymentMethodUnusableIntegrationEvent::class);
+        $this->integrationEventTransport->queue()->assertNotContains(UsablePaymentMethodCreatedIntegrationEvent::class);
     }
 
     #[Then('unusable payment method integration event is emitted')]
     public function unusablePaymentMethodIntegrationEventIsEmitted(): void
     {
-        $this->eventBus->assertDispatched(PaymentMethodUnusableIntegrationEvent::class, 1);
+        $this->integrationEventTransport->queue()->assertContains(PaymentMethodUnusableIntegrationEvent::class);
     }
 
 
     #[Then('usable payment method created integration event is emitted')]
     public function usablePaymentMethodCreatedIntegrationEventIsEmitted(): void
     {
-        $this->eventBus->assertDispatched(UsablePaymentMethodCreatedIntegrationEvent::class, 1);
+        $this->integrationEventTransport->queue()->assertContains(UsablePaymentMethodCreatedIntegrationEvent::class, 1);
     }
 
     #[Then('unusable payment method created integration event is emitted')]
     public function unusablePaymentMethodCreatedIntegrationEventIsEmitted(): void
     {
-        $this->eventBus->assertDispatched(UnusablePaymentMethodCreatedIntegrationEvent::class, 1);
+        $this->integrationEventTransport->queue()->assertContains(UnusablePaymentMethodCreatedIntegrationEvent::class, 1);
     }
 
     #[Then('no payment method is stored')]
     public function noPaymentMethodIsStored(): void
     {
-        $this->eventBus->assertNotDispatched(UsablePaymentMethodCreated::class);
-        $this->eventBus->assertNotDispatched(PaymentMethodUnusable::class);
+        $this->integrationEventTransport->queue()->assertNotContains(UsablePaymentMethodCreatedIntegrationEvent::class);
+        $this->integrationEventTransport->queue()->assertNotContains(UnusablePaymentMethodCreatedIntegrationEvent::class);
     }
 
     #[Given(':fileName has been uploaded')]
@@ -408,11 +427,11 @@ class PaymentsContext implements Context
     #[When('import payments from file')]
     public function importPaymentsFromFile(): void
     {
-        $commandResult = $this->commandBus->send(new ImportPaymentsFromFile($this->lastUploadedPaymentImportFile));
+        $commandResult = $this->commandBus->dispatch(new ImportPaymentsFromFile($this->lastUploadedPaymentImportFile));
         Assert::isInstanceOf($commandResult->result, PaymentFileImportResult::class);
         /** @var PaymentFileImportResult $result */
         $result = $commandResult->result;
-        Assert::greaterThan(count($result->pendingPaymentIds), 0);
+        Assert::eq(count($result->pendingPaymentIds), 1);
         $this->lastPaymentId = $result->pendingPaymentIds[0];
     }
 
@@ -442,7 +461,7 @@ class PaymentsContext implements Context
             iban: new Iban('GB94BARC10201530093459'),
         );
 
-        $result = $this->commandBus->send($command);
+        $result = $this->commandBus->dispatch($command);
         Assert::isInstanceOf($result->result, PaymentId::class);
         /** @var PaymentId $paymentId */
         $paymentId = $result->result;
@@ -475,7 +494,7 @@ class PaymentsContext implements Context
             iban: new Iban('EE382200221020145685'), // Different IBAN
         );
 
-        $result = $this->commandBus->send($command);
+        $result = $this->commandBus->dispatch($command);
         Assert::isInstanceOf($result->result, PaymentId::class);
         /** @var PaymentId $paymentId */
         $paymentId = $result->result;

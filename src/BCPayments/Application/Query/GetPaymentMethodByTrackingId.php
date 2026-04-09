@@ -6,10 +6,10 @@ namespace ErgoSarapu\DonationBundle\BCPayments\Application\Query;
 
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\Query;
 
-class GetPaymentByInitiatedCorrelationId implements Query
+class GetPaymentMethodByTrackingId implements Query
 {
     public function __construct(
-        public readonly string $correlationId,
+        public readonly string $trackingId,
     ) {
     }
 }

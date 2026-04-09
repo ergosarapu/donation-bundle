@@ -7,7 +7,7 @@ namespace ErgoSarapu\DonationBundle\SharedInfrastructure\Adapter\Bus;
 use ErgoSarapu\DonationBundle\SharedApplication\Message\DelayedMessage;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandResult;
-use ErgoSarapu\DonationBundle\SharedInfrastructure\Messenger\Stamp\CorrelationIdStamp;
+use ErgoSarapu\DonationBundle\SharedInfrastructure\Messenger\Stamp\MessageMetadataStamp;
 use RuntimeException;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\DelayStamp;
@@ -32,14 +32,14 @@ class SymfonyMessengerCommandBus implements CommandBusInterface
         }
 
         $result = $envelope->last(HandledStamp::class)?->getResult();
-        $correlationStamp = $envelope->last(CorrelationIdStamp::class);
-        if ($correlationStamp === null) {
-            throw new RuntimeException('CorrelationIdStamp is missing from the envelope.');
+        $metadataStamp = $envelope->last(MessageMetadataStamp::class);
+        if ($metadataStamp === null) {
+            throw new RuntimeException('MessageMetadataStap is missing from the envelope.');
         }
 
         return new CommandResult(
             result: $result,
-            correlationId: $correlationStamp->toString()
+            trackingId: $metadataStamp->trackingId,
         );
     }
 }
