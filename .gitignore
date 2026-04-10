@@ -8,4 +8,3 @@ composer.lock
 /var/testdb.sqlite
 .phpunit.cache
 .coverage
-camt_examples
