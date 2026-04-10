@@ -16,7 +16,6 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationRequest;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorDetails;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanAction;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
@@ -24,6 +23,7 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use LogicException;
 use Patchlevel\EventSourcing\PhpUnit\Test\AggregateRootTestCase;
+use Ramsey\Uuid\Uuid;
 
 class DonationTest extends AggregateRootTestCase
 {
@@ -68,7 +68,7 @@ class DonationTest extends AggregateRootTestCase
 
     public function testCreate(): void
     {
-        $paymentId = ExternalEntityId::generate();
+        $paymentId = Uuid::uuid7()->toString();
 
         $this->when(fn () => Donation::create(
             $this->now,
@@ -165,7 +165,7 @@ class DonationTest extends AggregateRootTestCase
                 $this->donationId,
                 $this->amount,
                 $this->campaignId,
-                ExternalEntityId::generate(),
+                Uuid::uuid7()->toString(),
                 new ShortDescription('Description'),
                 $this->donorDetails,
                 $this->recurringPlanId,
@@ -258,7 +258,7 @@ class DonationTest extends AggregateRootTestCase
                 $this->donationId,
                 $this->amount,
                 $this->campaignId,
-                ExternalEntityId::generate(),
+                Uuid::uuid7()->toString(),
                 new ShortDescription('Description'),
                 $this->donorDetails,
                 $this->recurringPlanId,

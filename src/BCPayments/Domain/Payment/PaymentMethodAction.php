@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\BCPayments\Domain\Payment;
 
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use Patchlevel\Hydrator\Normalizer\ObjectNormalizer;
 
 #[ObjectNormalizer]
@@ -14,14 +13,14 @@ class PaymentMethodAction
         public readonly PaymentMethodId $paymentMethodId,
         public readonly PaymentId $paymentId,
         public readonly PaymentMethodActionIntent $intent,
-        private readonly ?ExternalEntityId $createFor = null,
+        private readonly ?string $createFor = null,
     ) {
     }
 
     public static function forRequest(
         PaymentMethodId $paymentMethodId,
         PaymentId $paymentId,
-        ExternalEntityId $createFor,
+        string $createFor,
     ): self {
         return new self(
             $paymentMethodId,
@@ -31,7 +30,7 @@ class PaymentMethodAction
         );
     }
 
-    public function getCreateFor(): ExternalEntityId
+    public function getCreateFor(): string
     {
         if ($this->createFor === null) {
             throw new \LogicException('CreateFor is only available for request intent.');

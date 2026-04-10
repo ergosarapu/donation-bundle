@@ -7,6 +7,7 @@ namespace ErgoSarapu\DonationBundle\Tests\Unit\Donations\Application\CommandHand
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\ReActivateRecurringPlan;
 use ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\Integration\ReActivateRecurringPlanHandler;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Donations\Command\ReActivateRecurringPlanIntegrationCommand;
+use ErgoSarapu\DonationBundle\IntegrationContracts\ValueObject\EntityId;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandResult;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -29,7 +30,7 @@ class ReActivateRecurringPlanHandlerTest extends TestCase
     {
         $recurringPlanId = 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
 
-        $integrationCommand = new ReActivateRecurringPlanIntegrationCommand($recurringPlanId);
+        $integrationCommand = new ReActivateRecurringPlanIntegrationCommand(new EntityId($recurringPlanId));
 
         $this->commandBus->expects($this->once())
             ->method('dispatch')

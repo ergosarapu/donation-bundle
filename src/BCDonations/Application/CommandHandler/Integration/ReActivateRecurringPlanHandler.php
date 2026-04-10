@@ -20,7 +20,7 @@ class ReActivateRecurringPlanHandler implements CommandHandlerInterface
     public function __invoke(ReActivateRecurringPlanIntegrationCommand $command): void
     {
         $this->commandBus->dispatch(new ReActivateRecurringPlan(
-            RecurringPlanId::fromString($command->recurringPlanId),
+            RecurringPlanId::fromString($command->recurringPlanId->toString()),
         ));
     }
 }

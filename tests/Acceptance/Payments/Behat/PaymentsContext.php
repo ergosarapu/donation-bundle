@@ -38,9 +38,9 @@ use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\PaymentMethodU
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\PaymentSucceededIntegrationEvent;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\UnusablePaymentMethodCreatedIntegrationEvent;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\UsablePaymentMethodCreatedIntegrationEvent;
+use ErgoSarapu\DonationBundle\IntegrationContracts\ValueObject\EntityId;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\QueryBusInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
@@ -53,6 +53,7 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\URL;
 use ErgoSarapu\DonationBundle\Tests\Acceptance\Payments\FakeGateway;
 use Exception;
 use Patchlevel\EventSourcing\Subscription\Engine\SubscriptionEngine;
+use Ramsey\Uuid\Uuid;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Webmozart\Assert\Assert;
 use Zenstruck\Messenger\Test\Transport\TestTransport;
@@ -130,15 +131,15 @@ class PaymentsContext implements Context
         return new Money(1000, new Currency('EUR'));
     }
 
-    private function createInitiatePaymentCommand(?PaymentMethodId $paymentMethodId = null, ?ExternalEntityId $requestPaymentMethodFor = null): InitiatePaymentIntegrationCommand
+    private function createInitiatePaymentCommand(?PaymentMethodId $paymentMethodId = null, ?EntityId $requestPaymentMethodFor = null): InitiatePaymentIntegrationCommand
     {
         return new InitiatePaymentIntegrationCommand(
             amount: $this->getDefaultTestMoney(),
             gateway: new Gateway('test-gateway'),
             description: new ShortDescription('Test Payment'),
-            appliedTo: ExternalEntityId::generate(),
+            appliedTo: new EntityId(Uuid::uuid7()->toString()),
             email: new Email('test@example.com'),
-            paymentMethodId: $paymentMethodId !== null ? ExternalEntityId::fromString($paymentMethodId->toString()) : null,
+            paymentMethodId: $paymentMethodId !== null ? new EntityId($paymentMethodId->toString()) : null,
             requestPaymentMethodFor: $requestPaymentMethodFor,
         );
     }
@@ -180,7 +181,7 @@ class PaymentsContext implements Context
         $this->commandBus->dispatch(new CreatePaymentMethod(
             $this->lastPaymentMethodId,
             PaymentMethodResult::usable(new PaymentCredentialValue('credential-value')),
-            ExternalEntityId::generate(),
+            Uuid::uuid7()->toString(),
         ));
         $this->integrationEventTransport->reset();
     }
@@ -192,7 +193,7 @@ class PaymentsContext implements Context
         $this->commandBus->dispatch(new CreatePaymentMethod(
             $this->lastPaymentMethodId,
             PaymentMethodResult::unusable(PaymentMethodUnusableReason::Expired),
-            ExternalEntityId::generate(),
+            Uuid::uuid7()->toString(),
         ));
         $this->unusablePaymentMethodIsCreated();
     }
@@ -207,7 +208,7 @@ class PaymentsContext implements Context
         $this->commandBus->dispatch(new CreatePaymentMethod(
             PaymentMethodId::generate(),
             PaymentMethodResult::usable(new PaymentCredentialValue('credential-value')),
-            ExternalEntityId::generate(),
+            Uuid::uuid7()->toString(),
         ));
     }
 
@@ -228,7 +229,7 @@ class PaymentsContext implements Context
     #[When('initiate payment with request to store payment method')]
     public function initiatePaymentWithRequestToStorePaymentMethod(): void
     {
-        $this->dispatchInitiatePaymentCommand($this->createInitiatePaymentCommand(requestPaymentMethodFor: ExternalEntityId::generate()));
+        $this->dispatchInitiatePaymentCommand($this->createInitiatePaymentCommand(requestPaymentMethodFor: new EntityId(Uuid::uuid7()->toString())));
     }
 
     #[When('initiate payment using stored payment method')]

@@ -9,10 +9,10 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanActi
 use ErgoSarapu\DonationBundle\IntegrationContracts\Identities\Event\ClaimPresentedIntegrationEvent;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Identities\ValueObject\ClaimPresentation;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Command\InitiatePaymentIntegrationCommand;
+use ErgoSarapu\DonationBundle\IntegrationContracts\ValueObject\EntityId;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\EventBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\EventHandlerInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ClaimEvidenceLevel;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ClaimSource;
 
@@ -30,11 +30,13 @@ class DonationInitiatedHandler implements EventHandlerInterface
             $event->amount,
             $event->gateway,
             $event->description,
-            ExternalEntityId::fromString($event->donationId->toString()),
+            new EntityId($event->donationId->toString()),
             $event->donorDetails?->email,
-            $event->recurringPlanAction?->intent === RecurringPlanActionIntent::Renew ? $event->recurringPlanAction->paymentMethodId : null,
+            $event->recurringPlanAction?->intent === RecurringPlanActionIntent::Renew && $event->recurringPlanAction->paymentMethodId !== null
+                ? new EntityId($event->recurringPlanAction->paymentMethodId)
+                : null,
             $event->recurringPlanAction?->intent === RecurringPlanActionIntent::Init && $event->recurringPlanId !== null
-                ? ExternalEntityId::fromString($event->recurringPlanId->toString())
+                ? new EntityId($event->recurringPlanId->toString())
                 : null,
         ));
 

@@ -7,7 +7,6 @@ namespace ErgoSarapu\DonationBundle\BCPayments\Domain\Payment;
 use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\AbstractTimestampedEvent;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\DomainEventInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use Patchlevel\EventSourcing\Attribute\Event;
 
 #[Event(name: 'payment.did_not_succeed')]
@@ -16,7 +15,7 @@ class PaymentDidNotSucceed extends AbstractTimestampedEvent implements DomainEve
     public function __construct(
         DateTimeImmutable $occuredOn,
         public readonly PaymentId $paymentId,
-        public readonly ?ExternalEntityId $appliedTo = null,
+        public readonly ?string $appliedTo = null,
     ) {
         parent::__construct($occuredOn);
 

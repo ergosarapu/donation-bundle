@@ -17,10 +17,10 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodUsePermitte
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodUseRejected;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\UnusablePaymentMethodCreated;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\UsablePaymentMethodCreated;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use InvalidArgumentException;
 use Patchlevel\EventSourcing\PhpUnit\Test\AggregateRootTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Ramsey\Uuid\Uuid;
 
 class PaymentMethodTest extends AggregateRootTestCase
 {
@@ -43,7 +43,7 @@ class PaymentMethodTest extends AggregateRootTestCase
         $paymentMethodId = PaymentMethodId::generate();
         $paymentMethodResult = PaymentMethodResult::usable(new PaymentCredentialValue('value'));
         $value = new PaymentCredentialValue('value');
-        $createFor = ExternalEntityId::generate();
+        $createFor = Uuid::uuid7()->toString();
 
         $this->when(fn () => PaymentMethod::create(
             $this->now,
@@ -65,7 +65,7 @@ class PaymentMethodTest extends AggregateRootTestCase
     {
         $paymentMethodId = PaymentMethodId::generate();
         $paymentMethodResult = PaymentMethodResult::unusable($reason);
-        $createFor = ExternalEntityId::generate();
+        $createFor = Uuid::uuid7()->toString();
 
         $this->when(fn () => PaymentMethod::create(
             $this->now,
@@ -98,7 +98,7 @@ class PaymentMethodTest extends AggregateRootTestCase
         $paymentMethodId = PaymentMethodId::generate();
         $paymentMethodResult = PaymentMethodResult::usable(new PaymentCredentialValue('new value'));
         $value = new PaymentCredentialValue('value');
-        $createFor = ExternalEntityId::generate();
+        $createFor = Uuid::uuid7()->toString();
         $this->given(
             new UsablePaymentMethodCreated(
                 $this->now,
@@ -118,7 +118,7 @@ class PaymentMethodTest extends AggregateRootTestCase
     public function testUpdateUsableToUnusable(): void
     {
         $paymentMethodId = PaymentMethodId::generate();
-        $createFor = ExternalEntityId::generate();
+        $createFor = Uuid::uuid7()->toString();
         $paymentMethodResult = PaymentMethodResult::unusable(PaymentMethodUnusableReason::Revoked);
         $this->given(
             new UsablePaymentMethodCreated(
@@ -148,7 +148,7 @@ class PaymentMethodTest extends AggregateRootTestCase
     {
         $paymentMethodId = PaymentMethodId::generate();
         $paymentMethodResult = PaymentMethodResult::unusable($reason);
-        $createFor = ExternalEntityId::generate();
+        $createFor = Uuid::uuid7()->toString();
         $this->given(
             new PaymentMethodUnusable(
                 $this->now,
@@ -169,7 +169,7 @@ class PaymentMethodTest extends AggregateRootTestCase
     {
         $paymentMethodId = PaymentMethodId::generate();
         $value = new PaymentCredentialValue('value');
-        $createFor = ExternalEntityId::generate();
+        $createFor = Uuid::uuid7()->toString();
 
         $this->given(
             new UsablePaymentMethodCreated(
@@ -196,7 +196,7 @@ class PaymentMethodTest extends AggregateRootTestCase
             PaymentId::generate(),
         );
         $value = new PaymentCredentialValue('value');
-        $createFor = ExternalEntityId::generate();
+        $createFor = Uuid::uuid7()->toString();
 
         $this->given(
             new UsablePaymentMethodCreated(
@@ -227,7 +227,7 @@ class PaymentMethodTest extends AggregateRootTestCase
             $paymentMethodId,
             PaymentId::generate(),
         );
-        $createFor = ExternalEntityId::generate();
+        $createFor = Uuid::uuid7()->toString();
         $this->given(
             new PaymentMethodUnusable(
                 $this->now,
@@ -256,7 +256,7 @@ class PaymentMethodTest extends AggregateRootTestCase
             PaymentId::generate(),
         );
         $value = new PaymentCredentialValue('value');
-        $createFor = ExternalEntityId::generate();
+        $createFor = Uuid::uuid7()->toString();
         $this->given(
             new UsablePaymentMethodCreated(
                 $this->now,

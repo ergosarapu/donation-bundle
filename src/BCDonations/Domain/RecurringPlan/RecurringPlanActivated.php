@@ -7,7 +7,6 @@ namespace ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan;
 use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\AbstractTimestampedEvent;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\DomainEventInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Interval;
 use Patchlevel\EventSourcing\Attribute\Event;
 
@@ -21,7 +20,7 @@ class RecurringPlanActivated extends AbstractTimestampedEvent implements DomainE
         public readonly RecurringPlanId $id,
         public readonly DateTimeImmutable $nextRenewalTime,
         public readonly Interval $interval,
-        public readonly ExternalEntityId $paymentMethodId,
+        public readonly string $paymentMethodId,
     ) {
         parent::__construct($occuredOn);
         $this->status = RecurringPlanStatus::Active;

@@ -6,9 +6,9 @@ namespace ErgoSarapu\DonationBundle\BCPayments\Application\EventHandler\Domain;
 
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\UnusablePaymentMethodCreated;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\UnusablePaymentMethodCreatedIntegrationEvent;
+use ErgoSarapu\DonationBundle\IntegrationContracts\ValueObject\EntityId;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\EventBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\EventHandlerInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 
 class UnusablePaymentMethodCreatedHandler implements EventHandlerInterface
 {
@@ -19,8 +19,8 @@ class UnusablePaymentMethodCreatedHandler implements EventHandlerInterface
     public function __invoke(UnusablePaymentMethodCreated $event): void
     {
         $this->eventBus->dispatch(new UnusablePaymentMethodCreatedIntegrationEvent(
-            ExternalEntityId::fromString($event->paymentMethodId->toString()),
-            $event->createdFor,
+            new EntityId($event->paymentMethodId->toString()),
+            new EntityId($event->createdFor),
         ));
     }
 }

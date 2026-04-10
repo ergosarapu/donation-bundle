@@ -16,7 +16,6 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentReference;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
@@ -28,6 +27,7 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
+use Ramsey\Uuid\Uuid;
 
 class CreatePaymentHandlerTest extends TestCase
 {
@@ -54,7 +54,7 @@ class CreatePaymentHandlerTest extends TestCase
         $paymentId = PaymentId::generate();
         $amount = new Money(5000, new Currency('EUR'));
         $description = new ShortDescription('Test payment');
-        $appliedTo = ExternalEntityId::generate();
+        $appliedTo = Uuid::uuid7()->toString();
         $email = new Email('donor@example.com');
         $name = new PersonName('John', 'Doe');
         $nationalIdCode = new NationalIdCode('12345678901');

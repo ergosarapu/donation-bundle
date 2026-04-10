@@ -39,7 +39,6 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRequest;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentReservedForGatewayCall;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentSucceeded;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
@@ -52,6 +51,7 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\URL;
 use LogicException;
 use Patchlevel\EventSourcing\PhpUnit\Test\AggregateRootTestCase;
+use Ramsey\Uuid\Uuid;
 
 class PaymentTest extends AggregateRootTestCase
 {
@@ -67,7 +67,7 @@ class PaymentTest extends AggregateRootTestCase
 
     private ShortDescription $description;
 
-    private ExternalEntityId $appliedTo;
+    private string $appliedTo;
 
     protected function aggregateClass(): string
     {
@@ -83,7 +83,7 @@ class PaymentTest extends AggregateRootTestCase
         $this->gateway = new Gateway('test');
         $this->email = new Email('example@example.com');
         $this->description = new ShortDescription('Test payment');
-        $this->appliedTo = ExternalEntityId::generate();
+        $this->appliedTo = Uuid::uuid7()->toString();
     }
 
     public function testCreate(): void
@@ -259,7 +259,7 @@ class PaymentTest extends AggregateRootTestCase
         $methodAction = PaymentMethodAction::forRequest(
             PaymentMethodId::generate(),
             $this->paymentId,
-            ExternalEntityId::generate(),
+            Uuid::uuid7()->toString(),
         );
         $paymentRequest = new PaymentRequest(
             $this->paymentId,
@@ -292,7 +292,7 @@ class PaymentTest extends AggregateRootTestCase
         $methodAction = PaymentMethodAction::forRequest(
             PaymentMethodId::generate(),
             PaymentId::generate(),
-            ExternalEntityId::generate(),
+            Uuid::uuid7()->toString(),
         );
         $paymentRequest = new PaymentRequest(
             $this->paymentId,
@@ -314,7 +314,7 @@ class PaymentTest extends AggregateRootTestCase
         $methodAction = PaymentMethodAction::forRequest(
             PaymentMethodId::generate(),
             $this->paymentId,
-            ExternalEntityId::generate(),
+            Uuid::uuid7()->toString(),
         );
         $methodResult = PaymentMethodResult::usable(new PaymentCredentialValue('token'));
         $this->given(new PaymentInitiated(
@@ -355,7 +355,7 @@ class PaymentTest extends AggregateRootTestCase
         $methodAction = PaymentMethodAction::forRequest(
             PaymentMethodId::generate(),
             $this->paymentId,
-            ExternalEntityId::generate(),
+            Uuid::uuid7()->toString(),
         );
         $methodResult = PaymentMethodResult::usable(new PaymentCredentialValue('token'));
         $this->given(new PaymentInitiated(
@@ -452,7 +452,7 @@ class PaymentTest extends AggregateRootTestCase
         $methodAction = PaymentMethodAction::forRequest(
             PaymentMethodId::generate(),
             $this->paymentId,
-            ExternalEntityId::generate(),
+            Uuid::uuid7()->toString(),
         );
         $methodResult = PaymentMethodResult::usable(new PaymentCredentialValue('token'));
         $this->given(new PaymentInitiated(
@@ -545,7 +545,7 @@ class PaymentTest extends AggregateRootTestCase
         $methodAction = PaymentMethodAction::forRequest(
             PaymentMethodId::generate(),
             $this->paymentId,
-            ExternalEntityId::generate(),
+            Uuid::uuid7()->toString(),
         );
         $methodResult = PaymentMethodResult::unusable(PaymentMethodUnusableReason::RequestFailed);
         $this->given(new PaymentInitiated(
@@ -666,7 +666,7 @@ class PaymentTest extends AggregateRootTestCase
         $methodAction = PaymentMethodAction::forRequest(
             PaymentMethodId::generate(),
             $this->paymentId,
-            ExternalEntityId::generate(),
+            Uuid::uuid7()->toString(),
         );
         $this->given(new PaymentInitiated(
             $this->now,
@@ -777,7 +777,7 @@ class PaymentTest extends AggregateRootTestCase
                 PaymentMethodAction::forRequest(
                     PaymentMethodId::generate(),
                     $this->paymentId,
-                    ExternalEntityId::generate(),
+                    Uuid::uuid7()->toString(),
                 ),
             ),
             new PaymentCaptured(

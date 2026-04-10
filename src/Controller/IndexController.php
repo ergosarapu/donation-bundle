@@ -12,6 +12,7 @@ use ErgoSarapu\DonationBundle\Form\DonationFormStep2Type;
 use ErgoSarapu\DonationBundle\Form\DonationFormStep3Type;
 use ErgoSarapu\DonationBundle\Form\FormOptionsProvider;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Donations\Command\InitiateDonationIntegrationCommand;
+use ErgoSarapu\DonationBundle\IntegrationContracts\ValueObject\EntityId;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\QueryBusInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
@@ -66,7 +67,7 @@ class IndexController extends AbstractController
                     throw new InvalidArgumentException('Currency code must be set at this point');
                 }
                 $command = new InitiateDonationIntegrationCommand(
-                    campaignId: $campaign->getCampaignId(),
+                    campaignId: new EntityId($campaign->getCampaignId()),
                     amount: new Money($donation->getAmount(), new Currency($donation->getCurrencyCode())),
                     gateway: new Gateway($donation->getGateway()),
                     description: new ShortDescription($campaign->getDonationDescription()),

@@ -10,7 +10,6 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorDetails;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\AbstractTimestampedEvent;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\DomainEventInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Interval;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
@@ -31,7 +30,7 @@ class RecurringPlanCreated extends AbstractTimestampedEvent implements DomainEve
         public readonly Interval $interval,
         public readonly DonationId $initialDonationId,
         public readonly CampaignId $campaignId,
-        public readonly ExternalEntityId $paymentMethodId,
+        public readonly string $paymentMethodId,
         public readonly Money $amount,
         public readonly Gateway $gateway,
         #[PersonalData]

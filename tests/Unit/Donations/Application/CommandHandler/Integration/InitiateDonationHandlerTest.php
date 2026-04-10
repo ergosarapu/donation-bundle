@@ -9,6 +9,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Application\Command\InitiateRecurringP
 use ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\Integration\InitiateDonationHandler;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Donations\Command\InitiateDonationIntegrationCommand;
+use ErgoSarapu\DonationBundle\IntegrationContracts\ValueObject\EntityId;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandResult;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
@@ -36,7 +37,7 @@ class InitiateDonationHandlerTest extends TestCase
     public function testDispatchesInitiateDonationCommandWhenNoRecurringInterval(): void
     {
         $integrationCommand = new InitiateDonationIntegrationCommand(
-            campaignId: 'f47ac10b-58cc-4372-a567-0e02b2c3d480',
+            campaignId: new EntityId('f47ac10b-58cc-4372-a567-0e02b2c3d480'),
             amount: new Money(5000, new Currency('EUR')),
             gateway: new Gateway('test-gateway'),
             description: new ShortDescription('Test donation'),
@@ -59,7 +60,7 @@ class InitiateDonationHandlerTest extends TestCase
     public function testDispatchesInitiateRecurringPlanCommandWhenRecurringIntervalProvided(): void
     {
         $integrationCommand = new InitiateDonationIntegrationCommand(
-            campaignId: 'f47ac10b-58cc-4372-a567-0e02b2c3d480',
+            campaignId: new EntityId('f47ac10b-58cc-4372-a567-0e02b2c3d480'),
             amount: new Money(5000, new Currency('EUR')),
             gateway: new Gateway('test-gateway'),
             description: new ShortDescription('Test donation'),

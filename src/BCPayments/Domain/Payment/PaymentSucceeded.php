@@ -7,7 +7,6 @@ namespace ErgoSarapu\DonationBundle\BCPayments\Domain\Payment;
 use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\AbstractTimestampedEvent;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\DomainEventInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use Patchlevel\EventSourcing\Attribute\Event;
 
@@ -18,7 +17,7 @@ class PaymentSucceeded extends AbstractTimestampedEvent implements DomainEventIn
         DateTimeImmutable $occuredOn,
         public readonly PaymentId $paymentId,
         public readonly Money $amount,
-        public readonly ?ExternalEntityId $appliedTo = null,
+        public readonly ?string $appliedTo = null,
     ) {
         parent::__construct($occuredOn);
     }

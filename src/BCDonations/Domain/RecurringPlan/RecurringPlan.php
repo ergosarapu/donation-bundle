@@ -16,7 +16,6 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\Recurri
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanReActivateNotAllowedException;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanRenewalNotAllowedException;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanRenewalNotDueYetException;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Interval;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
@@ -41,7 +40,7 @@ class RecurringPlan extends BasicAggregateRoot
     private RecurringPlanStatus $status;
     private ?DateTimeImmutable $nextRenewalTime;
     private ?DonorDetails $donorDetails;
-    private ExternalEntityId $paymentMethodId;
+    private string $paymentMethodId;
     private ShortDescription $description;
 
     public static function initiate(
@@ -78,7 +77,7 @@ class RecurringPlan extends BasicAggregateRoot
         Interval $interval,
         DonationId $initialDonationId,
         CampaignId $campaignId,
-        ExternalEntityId $paymentMethodId,
+        string $paymentMethodId,
         Money $amount,
         Gateway $gateway,
         DonorDetails $donorDetails,
@@ -282,7 +281,7 @@ class RecurringPlan extends BasicAggregateRoot
         $this->recordThat(new RecurringPlanFailing($currentTime, $this->id));
     }
 
-    public function activate(DateTimeImmutable $currentTime, ExternalEntityId $paymentMethodId): void
+    public function activate(DateTimeImmutable $currentTime, string $paymentMethodId): void
     {
         match ($this->status) {
             RecurringPlanStatus::Initiated => $this->calculateNextRenewalTimeAndActivate($currentTime, $paymentMethodId),
@@ -299,7 +298,7 @@ class RecurringPlan extends BasicAggregateRoot
         $this->calculateNextRenewalTimeAndActivate($currentTime, $this->paymentMethodId);
     }
 
-    private function calculateNextRenewalTimeAndActivate(DateTimeImmutable $now, ExternalEntityId $paymentMethodId): void
+    private function calculateNextRenewalTimeAndActivate(DateTimeImmutable $now, string $paymentMethodId): void
     {
         $this->recordThat(
             new RecurringPlanActivated(

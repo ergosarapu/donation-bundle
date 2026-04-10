@@ -65,7 +65,7 @@ class PaymentMethodProjector implements PaymentMethodProjectionRepositoryInterfa
         $paymentMethod = new PaymentMethod();
         $paymentMethod->setPaymentMethodId($event->paymentMethodId->toString());
         $paymentMethod->setUpdatedAt($event->occuredOn);
-        $paymentMethod->setCreatedFor($event->createdFor->toString());
+        $paymentMethod->setCreatedFor($event->createdFor);
         $this->persist($paymentMethod);
         $this->persistTrackingPayload($this->getTrackingId($message), paymentMethodId: $event->paymentMethodId->toString());
         $this->flush($message);
@@ -82,7 +82,7 @@ class PaymentMethodProjector implements PaymentMethodProjectionRepositoryInterfa
         $paymentMethod = new PaymentMethod();
         $paymentMethod->setPaymentMethodId($event->paymentMethodId->toString());
         $paymentMethod->setUpdatedAt($event->occuredOn);
-        $paymentMethod->setCreatedFor($event->createdFor->toString());
+        $paymentMethod->setCreatedFor($event->createdFor);
         $paymentMethod->setUnusableReason($event->reason);
         $this->persist($paymentMethod);
         $this->persistTrackingPayload($this->getTrackingId($message), paymentMethodId: $event->paymentMethodId->toString());

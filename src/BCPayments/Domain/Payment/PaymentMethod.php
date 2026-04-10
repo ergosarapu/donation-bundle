@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCPayments\Domain\Payment;
 
 use DateTimeImmutable;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use InvalidArgumentException;
 use Patchlevel\EventSourcing\Aggregate\BasicAggregateRoot;
 use Patchlevel\EventSourcing\Attribute\Aggregate;
@@ -18,13 +17,13 @@ class PaymentMethod extends BasicAggregateRoot
     #[Id]
     private PaymentMethodId $id;
     private ?PaymentCredentialValue $value;
-    private ExternalEntityId $createFor;
+    private string $createFor;
 
     public static function create(
         DateTimeImmutable $currentTime,
         PaymentMethodId $paymentMethodId,
         PaymentMethodResult $paymentMethodResult,
-        ExternalEntityId $createFor,
+        string $createFor,
     ): self {
         $paymentMethod = new self();
         if (!$paymentMethodResult->isUsable()) {

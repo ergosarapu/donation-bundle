@@ -7,9 +7,9 @@ namespace ErgoSarapu\DonationBundle\Tests\Unit\Payments\Domain;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodAction;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodId;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use LogicException;
 use PHPUnit\Framework\TestCase;
+use Ramsey\Uuid\Uuid;
 
 class PaymentMethodActionTest extends TestCase
 {
@@ -17,7 +17,7 @@ class PaymentMethodActionTest extends TestCase
     {
         $paymentMethodId = PaymentMethodId::generate();
         $paymentId = PaymentId::generate();
-        $createFor = ExternalEntityId::generate();
+        $createFor = Uuid::uuid7()->toString();
 
         $action = PaymentMethodAction::forRequest($paymentMethodId, $paymentId, $createFor);
 

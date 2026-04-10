@@ -29,7 +29,7 @@ class UsablePaymentMethodCreatedHandler implements EventHandlerInterface
         $this->commandBus->dispatch(
             new ActivateRecurringPlan(
                 $recurringPlanId,
-                $event->paymentMethodId,
+                $event->paymentMethodId->toString(),
             )
         );
     }

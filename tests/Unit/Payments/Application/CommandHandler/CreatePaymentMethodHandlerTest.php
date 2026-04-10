@@ -13,10 +13,10 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethod;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodResult;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
+use Ramsey\Uuid\Uuid;
 
 class CreatePaymentMethodHandlerTest extends TestCase
 {
@@ -44,7 +44,7 @@ class CreatePaymentMethodHandlerTest extends TestCase
         $methodResult = PaymentMethodResult::usable(
             new PaymentCredentialValue('token_123')
         );
-        $createdFor = ExternalEntityId::generate();
+        $createdFor = Uuid::uuid7()->toString();
         $this->command = new CreatePaymentMethod($paymentMethodId, $methodResult, $createdFor);
     }
 

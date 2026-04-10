@@ -13,7 +13,6 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodResult;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodUnusableReason;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\EventHandlerInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 
 class PaymentFailedHandler implements EventHandlerInterface
 {
@@ -33,7 +32,7 @@ class PaymentFailedHandler implements EventHandlerInterface
         };
     }
 
-    private function handleRequestIntent(PaymentMethodAction $action, ExternalEntityId $createFor): void
+    private function handleRequestIntent(PaymentMethodAction $action, string $createFor): void
     {
         $this->commandBus->dispatch(new CreatePaymentMethod(
             $action->paymentMethodId,

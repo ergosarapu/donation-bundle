@@ -9,7 +9,6 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\AbstractTimestampedEvent;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\DomainEventInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use Patchlevel\EventSourcing\Attribute\Event;
@@ -27,7 +26,7 @@ final class DonationCreated extends AbstractTimestampedEvent implements DomainEv
         public readonly DonationId $donationId,
         public readonly Money $amount,
         public readonly CampaignId $campaignId,
-        public readonly ExternalEntityId $paymentId,
+        public readonly string $paymentId,
         #[PersonalData]
         public readonly ?ShortDescription $description,
         #[PersonalData]

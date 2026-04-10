@@ -38,10 +38,10 @@ use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\PaymentMethodU
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\PaymentSucceededIntegrationEvent;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\UnusablePaymentMethodCreatedIntegrationEvent;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\UsablePaymentMethodCreatedIntegrationEvent;
+use ErgoSarapu\DonationBundle\IntegrationContracts\ValueObject\EntityId;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\EventBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\QueryBusInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
@@ -52,6 +52,7 @@ use LogicException;
 use Patchlevel\EventSourcing\Clock\FrozenClock;
 use Patchlevel\EventSourcing\Subscription\Engine\SubscriptionEngine;
 use Psr\Clock\ClockInterface;
+use Ramsey\Uuid\Uuid;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Throwable;
 use Webmozart\Assert\Assert;
@@ -61,7 +62,7 @@ class DonationsContext implements Context
 {
     private DonationId $lastDonationId;
     private ?RecurringPlanId $lastRecurringPlanId;
-    private ExternalEntityId $lastPaymentMethodId;
+    private string $lastPaymentMethodId;
     private Interval $lastRecurringInterval;
     private FrozenClock $clock;
     private CampaignId $lastCampaignId;
@@ -103,7 +104,7 @@ class DonationsContext implements Context
     public function initiateOneTimeDonation(): void
     {
         $initiateDonation = new InitiateDonationIntegrationCommand(
-            campaignId: CampaignId::generate()->toString(),
+            campaignId: new EntityId(CampaignId::generate()->toString()),
             amount: $this->getDefaultTestMoney(),
             gateway: new Gateway('test'),
             description: new ShortDescription('Test donation'),
@@ -127,7 +128,7 @@ class DonationsContext implements Context
     {
         $this->lastRecurringInterval = new Interval(Interval::Monthly);
         $initiateRecurringDonation = new InitiateDonationIntegrationCommand(
-            campaignId: CampaignId::generate()->toString(),
+            campaignId: new EntityId(CampaignId::generate()->toString()),
             amount: $this->getDefaultTestMoney(),
             gateway: new Gateway('test'),
             description: new ShortDescription('Test donation'),
@@ -173,7 +174,7 @@ class DonationsContext implements Context
         $this->integrationCommandTransport->reset();
         Assert::null($command->paymentMethodId);
         Assert::notNull($command->requestPaymentMethodFor);
-        Assert::eq($command->requestPaymentMethodFor->toString(), $this->lastRecurringPlanId?->toString());
+        Assert::eq($command->requestPaymentMethodFor, $this->lastRecurringPlanId?->toString());
     }
 
     #[Then('initiate payment integration command is sent with request to use payment method')]
@@ -207,9 +208,9 @@ class DonationsContext implements Context
     {
         $this->integrationEventTransport->reset();
         $this->eventBus->dispatch(new PaymentSucceededIntegrationEvent(
-            ExternalEntityId::generate(),
+            new EntityId(Uuid::uuid7()->toString()),
             $this->getDefaultTestMoney(),
-            ExternalEntityId::fromString($this->lastDonationId->toString()),
+            new EntityId($this->lastDonationId->toString()),
         ));
         $this->integrationEventTransport->processOrFail(1);
     }
@@ -219,8 +220,8 @@ class DonationsContext implements Context
     {
         $this->integrationEventTransport->reset();
         $this->eventBus->dispatch(new PaymentDidNotSucceedIntegrationEvent(
-            ExternalEntityId::generate(),
-            ExternalEntityId::fromString($this->lastDonationId->toString()),
+            new EntityId(Uuid::uuid7()->toString()),
+            new EntityId($this->lastDonationId->toString()),
         ));
         $this->integrationEventTransport->processOrFail(1);
     }
@@ -264,8 +265,8 @@ class DonationsContext implements Context
         Assert::notNull($this->lastRecurringPlanId);
         $this->integrationEventTransport->reset();
         $this->eventBus->dispatch(new PaymentMethodUnusableIntegrationEvent(
-            $this->lastPaymentMethodId,
-            ExternalEntityId::fromString($this->lastRecurringPlanId->toString()),
+            new EntityId($this->lastPaymentMethodId),
+            new EntityId($this->lastRecurringPlanId->toString()),
         ));
         $this->integrationEventTransport->processOrFail(1);
     }
@@ -273,12 +274,12 @@ class DonationsContext implements Context
     #[When('usable payment method is created')]
     public function usablePaymentMethodIsCreated(): void
     {
-        $this->lastPaymentMethodId = ExternalEntityId::generate();
+        $this->lastPaymentMethodId = Uuid::uuid7()->toString();
         Assert::notNull($this->lastRecurringPlanId);
         $this->integrationEventTransport->reset();
         $this->eventBus->dispatch(new UsablePaymentMethodCreatedIntegrationEvent(
-            $this->lastPaymentMethodId,
-            ExternalEntityId::fromString($this->lastRecurringPlanId->toString()),
+            new EntityId($this->lastPaymentMethodId),
+            new EntityId($this->lastRecurringPlanId->toString()),
         ));
         $this->integrationEventTransport->processOrFail(1);
     }
@@ -287,12 +288,12 @@ class DonationsContext implements Context
     #[When('unusable payment method is created')]
     public function unusablePaymentMethodIsCreated(): void
     {
-        $this->lastPaymentMethodId = ExternalEntityId::generate();
+        $this->lastPaymentMethodId = Uuid::uuid7()->toString();
         Assert::notNull($this->lastRecurringPlanId);
         $this->integrationEventTransport->reset();
         $this->eventBus->dispatch(new UnusablePaymentMethodCreatedIntegrationEvent(
-            $this->lastPaymentMethodId,
-            ExternalEntityId::fromString($this->lastRecurringPlanId->toString()),
+            new EntityId($this->lastPaymentMethodId),
+            new EntityId($this->lastRecurringPlanId->toString()),
         ));
         $this->integrationEventTransport->processOrFail(1);
     }
@@ -361,7 +362,7 @@ class DonationsContext implements Context
         Assert::notNull($this->lastRecurringPlanId);
         $this->integrationCommandTransport->reset();
         $this->commandBus->dispatch(new ReActivateRecurringPlanIntegrationCommand(
-            $this->lastRecurringPlanId->toString(),
+            new EntityId($this->lastRecurringPlanId->toString()),
         ));
         $this->integrationCommandTransport->processOrFail(1);
     }

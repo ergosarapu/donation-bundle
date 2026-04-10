@@ -16,7 +16,6 @@ use ErgoSarapu\DonationBundle\IntegrationContracts\Identities\ValueObject\ClaimP
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\EventBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\EventHandlerInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ClaimEvidenceLevel;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ClaimSource;
 
@@ -48,7 +47,7 @@ class PaymentCapturedHandler implements EventHandlerInterface
     private function handleRequestIntent(
         PaymentMethodAction $action,
         ?PaymentMethodResult $paymentMethodResult,
-        ExternalEntityId $createFor
+        string $createFor
     ): void {
         if ($paymentMethodResult === null) {
             $paymentMethodResult = PaymentMethodResult::unusable(PaymentMethodUnusableReason::RequestFailed);

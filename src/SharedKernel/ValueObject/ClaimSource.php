@@ -6,7 +6,6 @@ namespace ErgoSarapu\DonationBundle\SharedKernel\ValueObject;
 
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use Patchlevel\Hydrator\Normalizer\ObjectNormalizer;
 
 #[ObjectNormalizer]
@@ -14,7 +13,7 @@ final class ClaimSource
 {
     private function __construct(
         private readonly ClaimContext $context,
-        private readonly ExternalEntityId $id,
+        private readonly string $id,
     ) {
     }
 
@@ -34,7 +33,7 @@ final class ClaimSource
             return null;
         }
 
-        return PaymentId::fromString($this->id->toString());
+        return PaymentId::fromString($this->id);
     }
 
     public function getDonationId(): ?DonationId
@@ -43,21 +42,21 @@ final class ClaimSource
             return null;
         }
 
-        return DonationId::fromString($this->id->toString());
+        return DonationId::fromString($this->id);
     }
 
     public function deterministicKey(): string
     {
-        return $this->context->value . '|' . $this->id->toString();
+        return $this->context->value . '|' . $this->id;
     }
 
     public static function forPayment(PaymentId $paymentId): self
     {
-        return new self(ClaimContext::Payment, ExternalEntityId::fromString($paymentId->toString()));
+        return new self(ClaimContext::Payment, $paymentId->toString());
     }
 
     public static function forDonation(DonationId $donationId): self
     {
-        return new self(ClaimContext::Donation, ExternalEntityId::fromString($donationId->toString()));
+        return new self(ClaimContext::Donation, $donationId->toString());
     }
 }

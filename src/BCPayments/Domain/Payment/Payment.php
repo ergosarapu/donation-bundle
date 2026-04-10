@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCPayments\Domain\Payment;
 
 use DateTimeImmutable;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
@@ -32,7 +31,7 @@ class Payment extends BasicAggregateRoot
     private ShortDescription $description;
     private ?Email $email;
     private PaymentStatus $status;
-    private ?ExternalEntityId $appliedTo = null;
+    private ?string $appliedTo = null;
     private bool $succeedRecorded = false;
     private bool $gatewayCallReserved = false;
     private ?PaymentMethodAction $paymentMethodAction;
@@ -67,7 +66,7 @@ class Payment extends BasicAggregateRoot
         Money $amount,
         ShortDescription $description,
         ?Gateway $gateway,
-        ?ExternalEntityId $appliedTo,
+        ?string $appliedTo,
         ?Email $email,
         ?PersonName $name,
         ?NationalIdCode $nationalIdCode,

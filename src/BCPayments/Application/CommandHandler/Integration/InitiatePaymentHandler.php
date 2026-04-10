@@ -29,7 +29,7 @@ class InitiatePaymentHandler implements CommandHandlerInterface
             $command->amount,
             $command->gateway,
             $command->description,
-            $command->appliedTo,
+            $command->appliedTo->toString(),
             $command->email,
             $paymentMethodAction,
         );
@@ -46,6 +46,6 @@ class InitiatePaymentHandler implements CommandHandlerInterface
             return null;
         }
 
-        return PaymentMethodAction::forRequest(PaymentMethodId::generate(), $paymentId, $command->requestPaymentMethodFor);
+        return PaymentMethodAction::forRequest(PaymentMethodId::generate(), $paymentId, $command->requestPaymentMethodFor->toString());
     }
 }

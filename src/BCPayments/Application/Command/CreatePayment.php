@@ -12,7 +12,6 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentReference;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
@@ -32,7 +31,7 @@ final class CreatePayment implements CommandInterface
         public readonly ?Email $email,
         public readonly ?PersonName $name,
         public readonly ?NationalIdCode $nationalIdCode,
-        public readonly ?ExternalEntityId $paymentAppliedToId,
+        public readonly ?string $paymentAppliedToId,
         public readonly DateTimeImmutable $initiatedAt,
         public readonly ?DateTimeImmutable $capturedAt,
         public readonly ?GatewayReference $gatewayReference,

@@ -11,7 +11,6 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorDetails;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanStatus;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Interval;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
@@ -25,7 +24,7 @@ final class CreateRecurringPlan implements CommandInterface
         public readonly Interval $interval,
         public readonly DonationId $initialDonationId,
         public readonly CampaignId $campaignId,
-        public readonly ExternalEntityId $paymentMethodId,
+        public readonly string $paymentMethodId,
         public readonly Money $amount,
         public readonly Gateway $gateway,
         public readonly DonorDetails $donorDetails,

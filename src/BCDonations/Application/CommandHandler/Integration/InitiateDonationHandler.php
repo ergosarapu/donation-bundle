@@ -26,7 +26,7 @@ class InitiateDonationHandler implements CommandHandlerInterface
         $donationId = DonationId::generate();
         $donationRequest = new DonationRequest(
             donationId: $donationId,
-            campaignId: CampaignId::fromString($command->campaignId),
+            campaignId: CampaignId::fromString($command->campaignId->toString()),
             amount: $command->amount,
             gateway: $command->gateway,
             donorDetails: new DonorDetails(
