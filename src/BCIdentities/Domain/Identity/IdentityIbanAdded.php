@@ -22,7 +22,7 @@ final class IdentityIbanAdded extends AbstractTimestampedEvent implements Domain
         public readonly ClaimId $claimId,
         public readonly IdentityId $identityId,
         #[PersonalData]
-        public readonly Iban $iban,
+        public readonly ?Iban $iban,
     ) {
         parent::__construct($occuredOn);
     }

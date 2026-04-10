@@ -6,6 +6,7 @@ namespace ErgoSarapu\DonationBundle\Tests\Unit\Identity\Domain;
 
 use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimId;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimSource;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\ClaimMerged;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\Identity;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityCreated;
@@ -16,8 +17,6 @@ use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityNationalIdCod
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityPersonNameChanged;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityRawNameAdded;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\MergeResult;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ClaimSource;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
@@ -46,7 +45,7 @@ final class IdentityTest extends AggregateRootTestCase
         parent::setUp();
         $this->now = new DateTimeImmutable('2026-01-01 10:00:00');
         $this->identityId = IdentityId::generate();
-        $claimSource = ClaimSource::forPayment(PaymentId::fromString('018e1234-0000-7000-8000-000000000001'));
+        $claimSource = ClaimSource::forPayment('018e1234-0000-7000-8000-000000000001');
         $this->claimId = ClaimId::generateDeterministic($claimSource);
         $this->personName = new PersonName('Jane', 'Doe');
         $this->nationalIdCode = new NationalIdCode('60001019906');
@@ -198,5 +197,42 @@ final class IdentityTest extends AggregateRootTestCase
                 self::assertFalse($result->isSuccess());
                 self::assertTrue($result->isConflict());
             });
+    }
+
+    /**
+     * Events containing personal data may become nulls, cover this case with test
+     */
+    public function testPersonalDataNullsHandled(): void
+    {
+        /** @var ?MergeResult $result */
+        $result = null;
+
+        $this->given(
+            new IdentityCreated($this->now, $this->identityId),
+            new IdentityPersonNameChanged($this->now, $this->claimId, $this->identityId, null),
+            new IdentityNationalIdCodeChanged($this->now, $this->claimId, $this->identityId, null),
+            new IdentityRawNameAdded($this->now, $this->claimId, $this->identityId, null),
+            new IdentityEmailAdded($this->now, $this->claimId, $this->identityId, null),
+            new IdentityIbanAdded($this->now, $this->claimId, $this->identityId, null),
+        )->when(
+            function (Identity $identity) use (&$result): void {
+                $result = $identity->mergeClaimData(
+                    $this->now,
+                    $this->claimId,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                );
+            },
+        )->then(
+            new ClaimMerged($this->now, $this->claimId, $this->identityId),
+            function () use (&$result): void {
+                self::assertNotNull($result);
+                self::assertTrue($result->isSuccess());
+                self::assertFalse($result->isConflict());
+            }
+        );
     }
 }

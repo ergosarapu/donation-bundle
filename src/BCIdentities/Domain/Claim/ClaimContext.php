@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ErgoSarapu\DonationBundle\SharedKernel\ValueObject;
+namespace ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim;
 
 enum ClaimContext: string
 {

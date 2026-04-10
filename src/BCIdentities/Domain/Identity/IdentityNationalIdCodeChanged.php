@@ -22,7 +22,7 @@ final class IdentityNationalIdCodeChanged extends AbstractTimestampedEvent imple
         public readonly ClaimId $claimId,
         public readonly IdentityId $identityId,
         #[PersonalData]
-        public readonly NationalIdCode $nationalIdCode,
+        public readonly ?NationalIdCode $nationalIdCode,
     ) {
         parent::__construct($occuredOn);
     }

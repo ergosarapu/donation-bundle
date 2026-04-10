@@ -10,13 +10,13 @@ use ErgoSarapu\DonationBundle\BCIdentities\Application\Command\ResolveClaim;
 use ErgoSarapu\DonationBundle\BCIdentities\Application\CommandHandler\PresentClaimEvidenceHandler;
 use ErgoSarapu\DonationBundle\BCIdentities\Application\Port\ClaimRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\Claim;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimEvidenceLevel as DomainClaimEvidenceLevel;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimId;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimSource;
+use ErgoSarapu\DonationBundle\IntegrationContracts\Identities\ValueObject\ClaimEvidenceLevel;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Identities\ValueObject\ClaimPresentation;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandResult;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ClaimEvidenceLevel;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ClaimSource;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -46,7 +46,7 @@ final class PresentClaimEvidenceHandlerTest extends TestCase
 
     public function testCreatesClaimAndDispatchesResolve(): void
     {
-        $source = ClaimSource::forPayment(PaymentId::fromString('018e1234-0000-7000-8000-000000000001'));
+        $source = ClaimSource::forPayment('018e1234-0000-7000-8000-000000000001');
         $claimId = ClaimId::generateDeterministic($source);
         $command = new PresentClaimEvidence(
             source: $source,
@@ -79,7 +79,7 @@ final class PresentClaimEvidenceHandlerTest extends TestCase
 
     public function testLoadsClaimAndDispatchesResolve(): void
     {
-        $source = ClaimSource::forPayment(PaymentId::fromString('018e1234-0000-7000-8000-000000000002'));
+        $source = ClaimSource::forPayment('018e1234-0000-7000-8000-000000000002');
         $claimId = ClaimId::generateDeterministic($source);
         $claim = Claim::create($this->now, $claimId, $source);
         $claim->releaseEvents();
@@ -120,10 +120,10 @@ final class PresentClaimEvidenceHandlerTest extends TestCase
 
     public function testClaimAggregateNotSavedWhenEvidenceDoesNotChangeState(): void
     {
-        $source = ClaimSource::forPayment(PaymentId::fromString('018e1234-0000-7000-8000-000000000003'));
+        $source = ClaimSource::forPayment('018e1234-0000-7000-8000-000000000003');
         $claimId = ClaimId::generateDeterministic($source);
         $claim = Claim::create($this->now, $claimId, $source);
-        $claim->present($this->now, new Iban('EE471000001020145685'), ClaimEvidenceLevel::Verified);
+        $claim->present($this->now, new Iban('EE471000001020145685'), DomainClaimEvidenceLevel::Verified);
         $claim->releaseEvents();
         $command = new PresentClaimEvidence(
             source: $source,
@@ -148,7 +148,7 @@ final class PresentClaimEvidenceHandlerTest extends TestCase
 
     public function testResolveClaimNotDispatchedWhenClaimIsNotResolvable(): void
     {
-        $source = ClaimSource::forPayment(PaymentId::fromString('018e1234-0000-7000-8000-000000000004'));
+        $source = ClaimSource::forPayment('018e1234-0000-7000-8000-000000000004');
         $claimId = ClaimId::generateDeterministic($source);
         $command = new PresentClaimEvidence(
             source: $source,

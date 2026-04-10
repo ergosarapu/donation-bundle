@@ -52,20 +52,15 @@ class Identity
      */
     public function getRawNames(): array
     {
-        return array_values(array_map(
-            static fn (IdentityRawName $rawName): string => $rawName->getRawName(),
-            $this->rawNames->toArray(),
-        ));
+        $result = [];
+        foreach ($this->rawNames as $rawName) {
+            $result[] = $rawName->getRawName();
+        }
+        return $result;
     }
 
     public function addRawName(string $rawName): void
     {
-        foreach ($this->rawNames as $currentRawName) {
-            if ($currentRawName->getRawName() === $rawName) {
-                return;
-            }
-        }
-
         $this->appendToCollection($this->rawNames, new IdentityRawName($this, $rawName));
     }
 
@@ -74,20 +69,15 @@ class Identity
      */
     public function getEmails(): array
     {
-        return array_values(array_map(
-            static fn (IdentityEmail $email): string => $email->getEmail(),
-            $this->emails->toArray(),
-        ));
+        $result = [];
+        foreach ($this->emails as $email) {
+            $result[] = $email->getEmail();
+        }
+        return $result;
     }
 
     public function addEmail(string $email): void
     {
-        foreach ($this->emails as $currentEmail) {
-            if ($currentEmail->getEmail() === $email) {
-                return;
-            }
-        }
-
         $this->appendToCollection($this->emails, new IdentityEmail($this, $email));
     }
 
@@ -96,20 +86,15 @@ class Identity
      */
     public function getIbans(): array
     {
-        return array_values(array_map(
-            static fn (IdentityIban $iban): string => $iban->getIban(),
-            $this->ibans->toArray(),
-        ));
+        $result = [];
+        foreach ($this->ibans as $iban) {
+            $result[] = $iban->getIban();
+        }
+        return $result;
     }
 
     public function addIban(string $iban): void
     {
-        foreach ($this->ibans as $currentIban) {
-            if ($currentIban->getIban() === $iban) {
-                return;
-            }
-        }
-
         $this->appendToCollection($this->ibans, new IdentityIban($this, $iban));
     }
 
@@ -123,6 +108,11 @@ class Identity
         $this->nationalIdCode = $nationalIdCode;
     }
 
+    /**
+     * @template T of object
+     * @param iterable<int, T> $items
+     * @param T $item
+     */
     private function appendToCollection(iterable &$items, object $item): void
     {
         if (is_array($items)) {
@@ -133,6 +123,8 @@ class Identity
 
         if (method_exists($items, 'add')) {
             $items->add($item);
+
+            return;
         }
     }
 

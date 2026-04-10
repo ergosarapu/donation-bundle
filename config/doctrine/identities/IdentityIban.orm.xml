@@ -12,10 +12,6 @@
         </many-to-one>
         <field name="iban" type="string" column="iban" length="50" />
 
-        <unique-constraints>
-            <unique-constraint name="uniq_projection_identity_iban_identity_iban" columns="identity_id,iban" />
-        </unique-constraints>
-
         <indexes>
             <index name="idx_projection_identity_iban_iban" columns="iban" />
         </indexes>

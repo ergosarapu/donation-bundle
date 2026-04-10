@@ -22,7 +22,7 @@ final class IdentityEmailAdded extends AbstractTimestampedEvent implements Domai
         public readonly ClaimId $claimId,
         public readonly IdentityId $identityId,
         #[PersonalData]
-        public readonly Email $email,
+        public readonly ?Email $email,
     ) {
         parent::__construct($occuredOn);
     }

@@ -6,8 +6,6 @@ namespace ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim;
 
 use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityId;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ClaimEvidenceLevel;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ClaimSource;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
@@ -57,7 +55,7 @@ final class Claim extends BasicAggregateRoot
     private ClaimId $id;
     private ClaimSource $source;
     private bool $inReview = false;
-    /** @var array<class-string, ?object> */
+    /** @var array<class-string, Email|Iban|NationalIdCode|PersonName|RawName|null> */
     private array $presentedValues = [];
     /** @var array<class-string, ClaimEvidenceLevel> */
     private array $presentedEvidenceLevels = [];
@@ -189,13 +187,8 @@ final class Claim extends BasicAggregateRoot
         $this->inReview = true;
     }
 
-    /**
-     * @param Email|RawName|Iban|PersonName|NationalIdCode $value
-     * @param ClaimEvidenceLevel $evidenceLevel
-     * @return bool
-     */
     private function shouldPresent(
-        object $value,
+        Email|Iban|NationalIdCode|PersonName|RawName $value,
         ClaimEvidenceLevel $evidenceLevel,
     ): bool {
         $className = $value::class;
@@ -282,30 +275,28 @@ final class Claim extends BasicAggregateRoot
     }
 
 
-    /**
-     * @param Email|Iban|NationalIdCode|PersonName|RawName $value
-     */
-    private function presentValue(DateTimeImmutable $currentTime, object $value, ClaimEvidenceLevel $evidenceLevel): void
+    private function presentValue(DateTimeImmutable $currentTime, Email|Iban|NationalIdCode|PersonName|RawName $value, ClaimEvidenceLevel $evidenceLevel): void
     {
-        $className = $value::class;
-
         if (!$this->shouldPresent($value, $evidenceLevel)) {
             return;
         }
 
-        $event = match ($className) {
-            PersonName::class => new ClaimPresentedForPersonName($currentTime, $this->id, $value, $evidenceLevel),
-            RawName::class => new ClaimPresentedForRawName($currentTime, $this->id, $value, $evidenceLevel),
-            Email::class => new ClaimPresentedForEmail($currentTime, $this->id, $value, $evidenceLevel),
-            Iban::class => new ClaimPresentedForIban($currentTime, $this->id, $value, $evidenceLevel),
-            NationalIdCode::class => new ClaimPresentedForNationalIdCode($currentTime, $this->id, $value, $evidenceLevel),
-            default => throw new LogicException(sprintf('Unsupported claim value class "%s".', $className)),
-        };
+        if ($value instanceof PersonName) {
+            $event = new ClaimPresentedForPersonName($currentTime, $this->id, $value, $evidenceLevel);
+        } elseif ($value instanceof RawName) {
+            $event = new ClaimPresentedForRawName($currentTime, $this->id, $value, $evidenceLevel);
+        } elseif ($value instanceof Email) {
+            $event = new ClaimPresentedForEmail($currentTime, $this->id, $value, $evidenceLevel);
+        } elseif ($value instanceof Iban) {
+            $event = new ClaimPresentedForIban($currentTime, $this->id, $value, $evidenceLevel);
+        } else {
+            $event = new ClaimPresentedForNationalIdCode($currentTime, $this->id, $value, $evidenceLevel);
+        }
 
         $this->recordThat($event);
     }
 
-    private function value(string $className): ?object
+    private function value(string $className): Email|Iban|NationalIdCode|PersonName|RawName|null
     {
         return $this->presentedValues[$className] ?? null;
     }

@@ -6,11 +6,12 @@ namespace ErgoSarapu\DonationBundle\BCDonations\Application\EventHandler\Domain;
 
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationCreated;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Identities\Event\ClaimPresentedIntegrationEvent;
+use ErgoSarapu\DonationBundle\IntegrationContracts\Identities\ValueObject\ClaimerContext;
+use ErgoSarapu\DonationBundle\IntegrationContracts\Identities\ValueObject\ClaimEvidenceLevel;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Identities\ValueObject\ClaimPresentation;
+use ErgoSarapu\DonationBundle\IntegrationContracts\ValueObject\EntityId;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\EventBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\EventHandlerInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ClaimEvidenceLevel;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ClaimSource;
 
 final class DonationCreatedHandler implements EventHandlerInterface
 {
@@ -21,7 +22,6 @@ final class DonationCreatedHandler implements EventHandlerInterface
 
     public function __invoke(DonationCreated $event): void
     {
-        $source = ClaimSource::forDonation($event->donationId);
         $presentations = [];
 
         if ($event->donorDetails?->name !== null) {
@@ -37,7 +37,7 @@ final class DonationCreatedHandler implements EventHandlerInterface
         }
 
         if ($presentations !== []) {
-            $this->eventBus->dispatch(new ClaimPresentedIntegrationEvent($source, $presentations));
+            $this->eventBus->dispatch(new ClaimPresentedIntegrationEvent(new EntityId($event->donationId->toString()), ClaimerContext::Donation, $presentations));
         }
     }
 }

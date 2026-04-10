@@ -12,10 +12,6 @@
         </many-to-one>
         <field name="email" type="string" column="email" length="100" />
 
-        <!-- <unique-constraints>
-            <unique-constraint name="uniq_projection_identity_email_identity_email" columns="identity_id,email" />
-        </unique-constraints> -->
-
         <indexes>
             <index name="idx_projection_identity_email_email" columns="email" />
         </indexes>

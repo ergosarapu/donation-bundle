@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\IntegrationContracts\Identities\ValueObject;
 
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ClaimEvidenceLevel;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
@@ -13,8 +12,11 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\RawName;
 
 final class ClaimPresentation
 {
+    /**
+     * @param PersonName|RawName|Email|Iban|NationalIdCode|class-string<PersonName>|class-string<RawName>|class-string<Email>|class-string<Iban>|class-string<NationalIdCode> $value
+     */
     public function __construct(
-        public readonly object|string $value,
+        public readonly mixed $value,
         public readonly ClaimEvidenceLevel $evidenceLevel,
     ) {
     }

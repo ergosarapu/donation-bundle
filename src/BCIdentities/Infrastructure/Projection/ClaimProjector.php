@@ -74,8 +74,8 @@ final class ClaimProjector implements ClaimProjectionRepositoryInterface
 
         $claim = new Claim();
         $claim->setClaimId($event->claimId->toString());
-        $claim->setPaymentId($event->source->getPaymentId()?->toString());
-        $claim->setDonationId($event->source->getDonationId()?->toString());
+        $claim->setPaymentId($event->source->isPaymentContext() ? $event->source->getId() : null);
+        $claim->setDonationId($event->source->isDonationContext() ? $event->source->getId() : null);
         $claim->setInReview(false);
         $claim->setResolved(false);
         $claim->setReviewReason(null);

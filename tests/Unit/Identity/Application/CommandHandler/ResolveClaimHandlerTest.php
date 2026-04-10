@@ -12,6 +12,7 @@ use ErgoSarapu\DonationBundle\BCIdentities\Application\Port\IdentityLookupInterf
 use ErgoSarapu\DonationBundle\BCIdentities\Application\Port\IdentityRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\Claim;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimCreated;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimEvidenceLevel;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimId;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimInReview;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForEmail;
@@ -19,16 +20,14 @@ use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForIban;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForPersonName;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimResolved;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimReviewReason;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimSource;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\ClaimMerged;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\Identity;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityCreated;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityIbanAdded;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityId;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityPersonNameChanged;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\TransactionManagerInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ClaimEvidenceLevel;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ClaimSource;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
@@ -69,7 +68,7 @@ final class ResolveClaimHandlerTest extends TestCase
 
     public function testMarksClaimInReviewWhenMultipleIdentityMatchesFound(): void
     {
-        $source = ClaimSource::forPayment(PaymentId::fromString('018e1234-0000-7000-8000-000000000011'));
+        $source = ClaimSource::forPayment('018e1234-0000-7000-8000-000000000011');
         $claimId = ClaimId::generateDeterministic($source);
         $claim = $this->claimWithIban($source, $claimId, new Iban('EE471000001020145685'));
         $command = new ResolveClaim($claimId);
@@ -115,7 +114,7 @@ final class ResolveClaimHandlerTest extends TestCase
 
     public function testMarksClaimInReviewWhenIdentityMergeConflicts(): void
     {
-        $source = ClaimSource::forPayment(PaymentId::fromString('018e1234-0000-7000-8000-000000000012'));
+        $source = ClaimSource::forPayment('018e1234-0000-7000-8000-000000000012');
         $claimId = ClaimId::generateDeterministic($source);
         $identityId = IdentityId::generate();
         $claim = Claim::createFromEvents([
@@ -176,7 +175,7 @@ final class ResolveClaimHandlerTest extends TestCase
 
     public function testLoadsIdentityAndResolvesClaimTransactionally(): void
     {
-        $source = ClaimSource::forPayment(PaymentId::fromString('018e1234-0000-7000-8000-000000000013'));
+        $source = ClaimSource::forPayment('018e1234-0000-7000-8000-000000000013');
         $claimId = ClaimId::generateDeterministic($source);
         $identityId = IdentityId::generate();
         $iban = new Iban('EE471000001020145685');
@@ -250,7 +249,7 @@ final class ResolveClaimHandlerTest extends TestCase
 
     public function testCreatesIdentityAndResolvesClaimTransactionallyWhenLookupHasNoMatches(): void
     {
-        $source = ClaimSource::forPayment(PaymentId::fromString('018e1234-0000-7000-8000-000000000014'));
+        $source = ClaimSource::forPayment('018e1234-0000-7000-8000-000000000014');
         $claimId = ClaimId::generateDeterministic($source);
         $iban = new Iban('GB29NWBK60161331926819');
         $claim = $this->claimWithIban($source, $claimId, $iban);

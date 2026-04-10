@@ -7,6 +7,7 @@ namespace ErgoSarapu\DonationBundle\Tests\Unit\Identity\Domain;
 use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\Claim;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimCreated;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimEvidenceLevel;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimId;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimInReview;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForEmail;
@@ -16,10 +17,8 @@ use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForPersonN
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForRawName;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimResolved;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimReviewReason;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimSource;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityId;
-use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ClaimEvidenceLevel;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ClaimSource;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
@@ -47,7 +46,7 @@ final class ClaimTest extends AggregateRootTestCase
     {
         parent::setUp();
         $this->now = new DateTimeImmutable('2026-01-01 10:00:00');
-        $this->source = ClaimSource::forPayment(PaymentId::fromString('018e1234-0000-7000-8000-000000000001'));
+        $this->source = ClaimSource::forPayment('018e1234-0000-7000-8000-000000000001');
 
         $this->personName = new PersonName('Jane', 'Doe');
         $this->email = new Email('example@example.com');
@@ -215,8 +214,7 @@ final class ClaimTest extends AggregateRootTestCase
         $this->given(new ClaimCreated($this->now, $claimId, $this->source))
             /** @phpstan-ignore-next-line */
             ->when(fn (Claim $claim) => $claim->present($this->now, new class () {}, ClaimEvidenceLevel::Observed))
-            ->expectsException(LogicException::class)
-            ->expectsExceptionMessage('Unsupported claim value class "class@anonymous');
+            ->expectsException(\TypeError::class);
     }
 
     public function testPresentDoesNotDowngradeEvidenceLevel(): void

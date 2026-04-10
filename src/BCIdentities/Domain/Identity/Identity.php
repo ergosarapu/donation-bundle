@@ -197,6 +197,9 @@ final class Identity extends BasicAggregateRoot
     #[Apply]
     protected function applyIdentityNameChanged(IdentityRawNameAdded $event): void
     {
+        if ($event->rawName === null) {
+            return;
+        }
         $this->rawNames[$event->rawName->toString()] = $event->rawName;
     }
 
@@ -209,12 +212,18 @@ final class Identity extends BasicAggregateRoot
     #[Apply]
     protected function applyIdentityEmailAdded(IdentityEmailAdded $event): void
     {
+        if ($event->email === null) {
+            return;
+        }
         $this->emails[$event->email->toString()] = $event->email;
     }
 
     #[Apply]
     protected function applyIdentityIbanAdded(IdentityIbanAdded $event): void
     {
+        if ($event->iban === null) {
+            return;
+        }
         $this->ibans[$event->iban->value] = $event->iban;
     }
 

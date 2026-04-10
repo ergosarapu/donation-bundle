@@ -7,7 +7,6 @@ namespace ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim;
 use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\AbstractTimestampedEvent;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\DomainEventInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ClaimSource;
 use Patchlevel\EventSourcing\Attribute\Event;
 use Patchlevel\Hydrator\Attribute\DataSubjectId;
 
@@ -19,7 +18,7 @@ final class ClaimInReview extends AbstractTimestampedEvent implements DomainEven
         #[DataSubjectId]
         public readonly ClaimId $claimId,
         public readonly ClaimSource $source,
-        public readonly ?ClaimReviewReason $reason = null,
+        public readonly ClaimReviewReason $reason,
     ) {
         parent::__construct($occuredOn);
     }

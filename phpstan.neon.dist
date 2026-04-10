@@ -5,6 +5,7 @@ parameters:
 	paths:
 		- src/BCPayments
 		- src/BCDonations
+		- src/BCIdentities
 		- src/SharedKernel
 		- src/SharedApplication
 		- src/SharedInfrastructure
