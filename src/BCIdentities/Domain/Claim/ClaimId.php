@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ErgoSarapu\DonationBundle\SharedKernel\Identifier;
+namespace ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim;
 
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ClaimSource;
 use Patchlevel\EventSourcing\Aggregate\AggregateRootId;

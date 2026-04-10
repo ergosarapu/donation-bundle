@@ -6,7 +6,7 @@ namespace ErgoSarapu\DonationBundle\BCIdentities\Infrastructure\Adapter;
 
 use ErgoSarapu\DonationBundle\BCIdentities\Application\Port\IdentityLookupInterface;
 use ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Port\IdentityProjectionRepositoryInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\IdentityId;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;

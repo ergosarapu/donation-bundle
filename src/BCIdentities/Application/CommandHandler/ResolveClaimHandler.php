@@ -11,9 +11,9 @@ use ErgoSarapu\DonationBundle\BCIdentities\Application\Port\IdentityLookupInterf
 use ErgoSarapu\DonationBundle\BCIdentities\Application\Port\IdentityRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimReviewReason;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\Identity;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityId;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\CommandHandlerInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\TransactionManagerInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\IdentityId;
 use Psr\Clock\ClockInterface;
 
 final class ResolveClaimHandler implements CommandHandlerInterface
