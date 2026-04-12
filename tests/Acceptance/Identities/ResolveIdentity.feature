@@ -25,6 +25,18 @@ Feature: Resolve Identities based on presented Claims
       | attribute        | existing_value | conflicting_value |
       | national id code | "38001085718"  | "49002010976"     |
       | person name      | "John" "Doe"   | "Jane" "Smith"    |
+      | org reg code     | "12345678"     | "87654321"        |
+
+  Scenario Outline: Claim with conflicting identity code type presented to existing Identity results merge conflict
+    Given an Identity with email "donor@example.com" and <existing_attribute> <existing_value> exists
+    When a Claim with email "donor@example.com" and <claimed_attribute> <claimed_value> is presented with sufficient evidence
+    Then Claim is marked for review
+    And Claim review reason is merge conflict
+
+    Examples:
+      | existing_attribute | existing_value | claimed_attribute | claimed_value |
+      | national id code   | "38001085718"  | org reg code      | "12345678"    |
+      | org reg code       | "12345678"     | national id code  | "38001085718" |
 
   Scenario: Claim presented with multiple matching Identity is marked for review
     Given an Identity with email "donor@example.com" exists

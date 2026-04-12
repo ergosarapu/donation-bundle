@@ -25,4 +25,9 @@ final class OrganisationRegCode
         }
         $this->value = $value;
     }
+
+    public function equals(?self $other): bool
+    {
+        return $other !== null && $this->value === $other->value;
+    }
 }

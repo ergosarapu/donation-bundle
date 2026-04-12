@@ -13,6 +13,7 @@ use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimInReview;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForEmail;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForIban;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForNationalIdCode;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForOrganisationRegCode;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForPersonName;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForRawName;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimResolved;
@@ -22,6 +23,7 @@ use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\OrganisationRegCode;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\RawName;
 use LogicException;
@@ -36,6 +38,7 @@ final class ClaimTest extends AggregateRootTestCase
     private RawName $rawName;
     private Iban $iban;
     private NationalIdCode $nationalIdCode;
+    private OrganisationRegCode $organisationRegCode;
 
     protected function aggregateClass(): string
     {
@@ -53,6 +56,7 @@ final class ClaimTest extends AggregateRootTestCase
         $this->rawName = new RawName('Jane Doe');
         $this->iban = new Iban('EE382200221020145685');
         $this->nationalIdCode = new NationalIdCode('1234567890');
+        $this->organisationRegCode = new OrganisationRegCode('12345678');
     }
 
     public function testCreate(): void
@@ -373,6 +377,61 @@ final class ClaimTest extends AggregateRootTestCase
             new ClaimPresentedForNationalIdCode($this->now, $claimId, $this->nationalIdCode, ClaimEvidenceLevel::Observed),
         )
             ->when(fn (Claim $claim) => $this->assertNull($claim->nationalIdCode()));
+    }
+
+    public function testPresentOrganisationRegCode(): void
+    {
+        $claimId = ClaimId::generateDeterministic($this->source);
+
+        $this->given(new ClaimCreated($this->now, $claimId, $this->source))
+            ->when(fn (Claim $claim) => $claim->present($this->now, $this->organisationRegCode, ClaimEvidenceLevel::Observed))
+            ->then(new ClaimPresentedForOrganisationRegCode($this->now, $claimId, $this->organisationRegCode, ClaimEvidenceLevel::Observed));
+    }
+
+    public function testOrganisationRegCodeValueOverThresholdReturnsValue(): void
+    {
+        $claimId = ClaimId::generateDeterministic($this->source);
+
+        $this->given(
+            new ClaimCreated($this->now, $claimId, $this->source),
+            new ClaimPresentedForOrganisationRegCode($this->now, $claimId, $this->organisationRegCode, ClaimEvidenceLevel::Verified),
+        )
+            ->when(fn (Claim $claim) => $this->assertEquals($this->organisationRegCode, $claim->organisationRegCode()));
+    }
+
+    public function testOrganisationRegCodeValueUnderThresholdReturnsNull(): void
+    {
+        $claimId = ClaimId::generateDeterministic($this->source);
+
+        $this->given(
+            new ClaimCreated($this->now, $claimId, $this->source),
+            new ClaimPresentedForOrganisationRegCode($this->now, $claimId, $this->organisationRegCode, ClaimEvidenceLevel::Observed),
+        )
+            ->when(fn (Claim $claim) => $this->assertNull($claim->organisationRegCode()));
+    }
+
+    public function testPresentNationalIdCodeWhenOrganisationRegCodeExistsThrowsLogicException(): void
+    {
+        $claimId = ClaimId::generateDeterministic($this->source);
+
+        $this->given(
+            new ClaimCreated($this->now, $claimId, $this->source),
+            new ClaimPresentedForOrganisationRegCode($this->now, $claimId, $this->organisationRegCode, ClaimEvidenceLevel::Verified),
+        )
+            ->when(fn (Claim $claim) => $claim->present($this->now, $this->nationalIdCode, ClaimEvidenceLevel::Verified))
+            ->expectsException(LogicException::class);
+    }
+
+    public function testPresentOrganisationRegCodeWhenNationalIdCodeExistsThrowsLogicException(): void
+    {
+        $claimId = ClaimId::generateDeterministic($this->source);
+
+        $this->given(
+            new ClaimCreated($this->now, $claimId, $this->source),
+            new ClaimPresentedForNationalIdCode($this->now, $claimId, $this->nationalIdCode, ClaimEvidenceLevel::Verified),
+        )
+            ->when(fn (Claim $claim) => $claim->present($this->now, $this->organisationRegCode, ClaimEvidenceLevel::Verified))
+            ->expectsException(LogicException::class);
     }
 
     public function testEmailPersonalDataDeleted(): void

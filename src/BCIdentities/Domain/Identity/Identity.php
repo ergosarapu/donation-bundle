@@ -9,6 +9,7 @@ use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\OrganisationRegCode;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\RawName;
 use Patchlevel\EventSourcing\Aggregate\BasicAggregateRoot;
@@ -25,6 +26,7 @@ final class Identity extends BasicAggregateRoot
     private array $rawNames = [];
     private ?PersonName $personName = null;
     private ?NationalIdCode $nationalIdCode = null;
+    private ?OrganisationRegCode $organisationRegCode = null;
     /** @var array<string, Email> */
     private array $emails = [];
     /** @var array<string, Iban> */
@@ -62,6 +64,10 @@ final class Identity extends BasicAggregateRoot
             return MergeAttempt::noChange();
         }
 
+        if ($this->organisationRegCode !== null) {
+            return MergeAttempt::conflict();
+        }
+
         if ($nationalIdCode->equals($this->nationalIdCode)) {
             return MergeAttempt::noChange();
         }
@@ -72,6 +78,29 @@ final class Identity extends BasicAggregateRoot
 
         return MergeAttempt::changed(
             new IdentityNationalIdCodeChanged($currentTime, $claimId, $this->id, $nationalIdCode)
+        );
+    }
+
+    private function mergeOrganisationRegCode(DateTimeImmutable $currentTime, ClaimId $claimId, ?OrganisationRegCode $organisationRegCode): MergeAttempt
+    {
+        if ($organisationRegCode === null) {
+            return MergeAttempt::noChange();
+        }
+
+        if ($this->nationalIdCode !== null) {
+            return MergeAttempt::conflict();
+        }
+
+        if ($organisationRegCode->equals($this->organisationRegCode)) {
+            return MergeAttempt::noChange();
+        }
+
+        if ($this->organisationRegCode !== null) {
+            return MergeAttempt::conflict();
+        }
+
+        return MergeAttempt::changed(
+            new IdentityOrganisationRegCodeChanged($currentTime, $claimId, $this->id, $organisationRegCode)
         );
     }
 
@@ -126,6 +155,7 @@ final class Identity extends BasicAggregateRoot
         ClaimId $claimId,
         ?PersonName $personName,
         ?NationalIdCode $nationalIdCode,
+        ?OrganisationRegCode $organisationRegCode,
         ?RawName $rawName,
         ?Email $email,
         ?Iban $iban,
@@ -133,6 +163,7 @@ final class Identity extends BasicAggregateRoot
         return [
             $this->mergePersonName($currentTime, $claimId, $personName),
             $this->mergeNationalIdCode($currentTime, $claimId, $nationalIdCode),
+            $this->mergeOrganisationRegCode($currentTime, $claimId, $organisationRegCode),
             $this->mergeRawName($currentTime, $claimId, $rawName),
             $this->mergeEmail($currentTime, $claimId, $email),
             $this->mergeIban($currentTime, $claimId, $iban),
@@ -171,11 +202,12 @@ final class Identity extends BasicAggregateRoot
         ClaimId $claimId,
         ?PersonName $personName,
         ?NationalIdCode $nationalIdCode,
+        ?OrganisationRegCode $organisationRegCode,
         ?RawName $rawName,
         ?Email $email,
         ?Iban $iban,
     ): MergeResult {
-        $attempts = $this->collectMergeAttempts($currentTime, $claimId, $personName, $nationalIdCode, $rawName, $email, $iban);
+        $attempts = $this->collectMergeAttempts($currentTime, $claimId, $personName, $nationalIdCode, $organisationRegCode, $rawName, $email, $iban);
 
         // Check for conflicts
         if ($this->hasConflicts($attempts)) {
@@ -231,6 +263,12 @@ final class Identity extends BasicAggregateRoot
     protected function applyIdentityNationalIdCodeChanged(IdentityNationalIdCodeChanged $event): void
     {
         $this->nationalIdCode = $event->nationalIdCode;
+    }
+
+    #[Apply]
+    protected function applyIdentityOrganisationRegCodeChanged(IdentityOrganisationRegCodeChanged $event): void
+    {
+        $this->organisationRegCode = $event->organisationRegCode;
     }
 
     #[Apply]

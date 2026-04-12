@@ -16,6 +16,11 @@ interface IdentityProjectionRepositoryInterface
     /**
      * @return list<Identity>
      */
+    public function findByOrganisationRegCode(string $organisationRegCode): array;
+
+    /**
+     * @return list<Identity>
+     */
     public function findByIban(string $iban): array;
 
     /**

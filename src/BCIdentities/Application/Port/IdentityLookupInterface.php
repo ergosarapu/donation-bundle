@@ -8,6 +8,7 @@ use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\OrganisationRegCode;
 
 interface IdentityLookupInterface
 {
@@ -18,5 +19,6 @@ interface IdentityLookupInterface
         ?Email $email = null,
         ?Iban $iban = null,
         ?NationalIdCode $nationalIdCode = null,
+        ?OrganisationRegCode $organisationRegCode = null,
     ): array;
 }

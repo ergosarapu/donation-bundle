@@ -36,6 +36,7 @@ final class ResolveClaimHandler implements CommandHandlerInterface
             email: $claim->email(),
             iban: $claim->iban(),
             nationalIdCode: $claim->nationalIdCode(),
+            organisationRegCode: $claim->organisationRegCode(),
         );
 
         if (count($identityIds) > 1) {
@@ -54,6 +55,7 @@ final class ResolveClaimHandler implements CommandHandlerInterface
             $claimId,
             $claim->personName(),
             $claim->nationalIdCode(),
+            $claim->organisationRegCode(),
             $claim->rawName(),
             $claim->email(),
             $claim->iban(),

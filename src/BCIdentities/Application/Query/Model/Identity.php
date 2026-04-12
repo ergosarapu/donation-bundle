@@ -10,6 +10,7 @@ class Identity
     private ?string $givenName = null;
     private ?string $familyName = null;
     private ?string $nationalIdCode = null;
+    private ?string $organisationRegCode = null;
     /** @var iterable<int, IdentityRawName> */
     private iterable $rawNames = [];
     /** @var iterable<int, IdentityEmail> */
@@ -106,6 +107,16 @@ class Identity
     public function setNationalIdCode(?string $nationalIdCode): void
     {
         $this->nationalIdCode = $nationalIdCode;
+    }
+
+    public function getOrganisationRegCode(): ?string
+    {
+        return $this->organisationRegCode;
+    }
+
+    public function setOrganisationRegCode(?string $organisationRegCode): void
+    {
+        $this->organisationRegCode = $organisationRegCode;
     }
 
     /**

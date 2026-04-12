@@ -12,6 +12,7 @@ use ErgoSarapu\DonationBundle\IntegrationContracts\Identities\ValueObject\ClaimP
 use ErgoSarapu\DonationBundle\IntegrationContracts\ValueObject\EntityId;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\EventBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\EventHandlerInterface;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\OrganisationRegCode;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\RawName;
 
 final class PaymentImportPendingHandler implements EventHandlerInterface
@@ -36,6 +37,10 @@ final class PaymentImportPendingHandler implements EventHandlerInterface
 
         if ($event->nationalIdCode !== null) {
             $presentations[] = ClaimPresentation::forValue($event->nationalIdCode, ClaimEvidenceLevel::Observed);
+        }
+
+        if ($event->organizationRegCode !== null) {
+            $presentations[] = ClaimPresentation::forValue(new OrganisationRegCode($event->organizationRegCode->value), ClaimEvidenceLevel::Observed);
         }
 
         if ($presentations !== []) {

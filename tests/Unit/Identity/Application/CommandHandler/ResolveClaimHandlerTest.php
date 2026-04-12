@@ -86,6 +86,7 @@ final class ResolveClaimHandlerTest extends TestCase
                 null,
                 new Iban('EE471000001020145685'),
                 null,
+                null,
             )
             ->willReturn([$identityIdA, $identityIdB]);
 
@@ -137,6 +138,7 @@ final class ResolveClaimHandlerTest extends TestCase
             ->method('lookup')
             ->with(
                 new Email('jane@example.com'),
+                null,
                 null,
                 null,
             )
@@ -192,7 +194,7 @@ final class ResolveClaimHandlerTest extends TestCase
 
         $this->identityLookup->expects($this->once())
             ->method('lookup')
-            ->with(null, $iban, null)
+            ->with(null, $iban, null, null)
             ->willReturn([$identityId]);
 
         $this->identityRepository->expects($this->once())
@@ -262,7 +264,7 @@ final class ResolveClaimHandlerTest extends TestCase
 
         $this->identityLookup->expects($this->once())
             ->method('lookup')
-            ->with(null, $iban, null)
+            ->with(null, $iban, null, null)
             ->willReturn([]);
 
         $this->identityRepository->expects($this->once())->method('has')->willReturn(false);

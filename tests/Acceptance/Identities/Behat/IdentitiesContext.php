@@ -28,6 +28,7 @@ use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\QueryBusInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\OrganisationRegCode;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\RawName;
 use Patchlevel\EventSourcing\Subscription\Engine\SubscriptionEngine;
@@ -123,6 +124,25 @@ class IdentitiesContext implements Context
     {
         $this->createPreExistingIdentity([
             ClaimPresentation::forValue(new Iban($iban), ClaimEvidenceLevel::VerifiedByUser),
+        ]);
+    }
+
+    #[Given('an Identity with email :email and org reg code :orgRegCode exists')]
+    public function anIdentityWithEmailAndOrgRegCodeExists(string $email, string $orgRegCode): void
+    {
+        $source = $this->createPreExistingIdentity([
+            ClaimPresentation::forValue(new Email($email), ClaimEvidenceLevel::VerifiedByUser),
+            ClaimPresentation::forValue(new OrganisationRegCode($orgRegCode), ClaimEvidenceLevel::VerifiedByUser),
+        ]);
+        $this->lastPreExistingIdentityId = $this->findResolvedIdentityId($source);
+    }
+
+    #[When('a Claim with email :email and org reg code :orgRegCode is presented with sufficient evidence')]
+    public function aClaimWithEmailAndOrgRegCodeIsPresentedWithSufficientEvidence(string $email, string $orgRegCode): void
+    {
+        $this->presentClaim([
+            ClaimPresentation::forValue(new Email($email), ClaimEvidenceLevel::VerifiedByUser),
+            ClaimPresentation::forValue(new OrganisationRegCode($orgRegCode), ClaimEvidenceLevel::VerifiedByUser),
         ]);
     }
 

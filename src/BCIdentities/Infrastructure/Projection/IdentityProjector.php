@@ -12,6 +12,7 @@ use ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Port\IdentityProjec
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityEmailAdded;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityIbanAdded;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityNationalIdCodeChanged;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityOrganisationRegCodeChanged;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityPersonNameChanged;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityRawNameAdded;
 use ErgoSarapu\DonationBundle\SharedInfrastructure\Patchlevel\ProjectorTrait;
@@ -30,6 +31,11 @@ final class IdentityProjector implements IdentityProjectionRepositoryInterface
     public function findByNationalIdCode(string $nationalIdCode): array
     {
         return $this->findBy('nationalIdCode', $nationalIdCode);
+    }
+
+    public function findByOrganisationRegCode(string $organisationRegCode): array
+    {
+        return $this->findBy('organisationRegCode', $organisationRegCode);
     }
 
     public function findByIban(string $iban): array
@@ -129,6 +135,16 @@ final class IdentityProjector implements IdentityProjectionRepositoryInterface
         $event = $this->getEvent($message, IdentityNationalIdCodeChanged::class);
         $identity = $this->loadOrCreateIdentity($event->identityId->toString());
         $identity->setNationalIdCode($event->nationalIdCode?->value);
+
+        $this->flush($message);
+    }
+
+    #[Subscribe(IdentityOrganisationRegCodeChanged::class)]
+    public function onIdentityOrganisationRegCodeChanged(Message $message): void
+    {
+        $event = $this->getEvent($message, IdentityOrganisationRegCodeChanged::class);
+        $identity = $this->loadOrCreateIdentity($event->identityId->toString());
+        $identity->setOrganisationRegCode($event->organisationRegCode?->value);
 
         $this->flush($message);
     }
