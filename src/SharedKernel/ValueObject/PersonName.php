@@ -14,7 +14,9 @@ final class PersonName
 
     public function __construct(string $givenName, string $familyName)
     {
+        /** @var string $givenName */
         $givenName = mb_trim($givenName);
+        /** @var string $familyName */
         $familyName = mb_trim($familyName);
         if ($givenName === '') {
             throw new \InvalidArgumentException('Given name cannot be empty.');

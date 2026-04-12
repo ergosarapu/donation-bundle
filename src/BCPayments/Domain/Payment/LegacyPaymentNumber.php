@@ -17,6 +17,7 @@ final class LegacyPaymentNumber
     public function __construct(string $value)
     {
         trigger_error(sprintf('Class %s is deprecated.', self::class), E_USER_DEPRECATED);
+        /** @var string $value */
         $value = mb_trim($value);
         if ($value === '') {
             throw new \InvalidArgumentException('Legacy payment number cannot be empty.');

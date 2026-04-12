@@ -13,7 +13,9 @@ final class Bic
 
     public function __construct(string $value)
     {
-        $normalized = mb_strtoupper(mb_trim($value));
+        /** @var string $trimmed */
+        $trimmed = mb_trim($value);
+        $normalized = mb_strtoupper($trimmed);
         if ($normalized === '') {
             throw new \InvalidArgumentException('BIC cannot be empty.');
         }

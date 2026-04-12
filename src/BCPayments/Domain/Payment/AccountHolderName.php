@@ -13,6 +13,7 @@ final class AccountHolderName
 
     public function __construct(string $value)
     {
+        /** @var string $value */
         $value = mb_trim($value);
         if ($value === '') {
             throw new \InvalidArgumentException('Account holder name cannot be empty.');

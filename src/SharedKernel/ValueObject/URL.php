@@ -13,6 +13,7 @@ final class URL
 
     public function __construct(string $value)
     {
+        /** @var string $value */
         $value = mb_trim($value);
         if (filter_var($value, FILTER_VALIDATE_URL) === false) {
             throw new \InvalidArgumentException(sprintf('"%s" is not a valid URL.', $value));

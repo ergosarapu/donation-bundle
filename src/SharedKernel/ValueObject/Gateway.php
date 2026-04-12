@@ -13,6 +13,7 @@ final class Gateway
 
     public function __construct(string $id)
     {
+        /** @var string $id */
         $id = mb_trim($id);
         if ($id === '') {
             throw new \InvalidArgumentException('Gateway ID cannot be empty.');

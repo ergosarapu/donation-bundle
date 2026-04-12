@@ -13,6 +13,7 @@ final class OrganisationRegCode
 
     public function __construct(string $value)
     {
+        /** @var string $value */
         $value = mb_trim($value);
         if ($value === '') {
             throw new \InvalidArgumentException('Organisation registration code cannot be empty.');

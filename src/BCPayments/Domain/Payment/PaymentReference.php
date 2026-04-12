@@ -13,6 +13,7 @@ final class PaymentReference
 
     public function __construct(string $value)
     {
+        /** @var string $value */
         $value = mb_trim($value);
         if ($value === '') {
             throw new \InvalidArgumentException('Payment reference cannot be empty.');

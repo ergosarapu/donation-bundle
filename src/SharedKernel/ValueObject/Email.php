@@ -13,6 +13,7 @@ final class Email
 
     public function __construct(string $value)
     {
+        /** @var string $trimmed */
         $trimmed = mb_trim($value);
         if ($trimmed === '') {
             throw new \InvalidArgumentException('Email cannot be empty.');

@@ -13,6 +13,7 @@ final class CampaignPublicTitle
 
     public function __construct(string $value)
     {
+        /** @var string $value */
         $value = mb_trim($value);
         if ($value === '') {
             throw new \InvalidArgumentException('Campaign public title cannot be empty.');
