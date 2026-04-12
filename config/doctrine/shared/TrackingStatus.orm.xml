@@ -12,5 +12,6 @@
         <field name="paymentId" type="string" column="payment_id" length="36" nullable="true"/>
         <field name="paymentMethodId" type="string" column="payment_method_id" length="36" nullable="true"/>
         <field name="donationId" type="string" column="donation_id" length="36" nullable="true"/>
+        <field name="claimId" type="string" column="claim_id" length="36" nullable="true"/>
     </entity>
 </doctrine-mapping>

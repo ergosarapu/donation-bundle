@@ -33,7 +33,7 @@ final class ClaimProjector implements ClaimProjectionRepositoryInterface
     use SubscriberUtil;
     use ProjectorTrait;
 
-    public function findOne(ClaimId $claimId): ?Claim
+    public function find(ClaimId $claimId): ?Claim
     {
         /** @var Claim|null $claim */
         $claim = $this->getEntityManager()->getRepository(Claim::class)->find($claimId->toString());
@@ -68,7 +68,7 @@ final class ClaimProjector implements ClaimProjectionRepositoryInterface
     {
         $event = $this->getEvent($message, ClaimCreated::class);
 
-        if ($this->findOne($event->claimId) !== null) {
+        if ($this->find($event->claimId) !== null) {
             return;
         }
 
@@ -82,6 +82,7 @@ final class ClaimProjector implements ClaimProjectionRepositoryInterface
         $claim->setCreatedAt($event->occuredOn);
         $claim->setUpdatedAt($event->occuredOn);
         $this->persist($claim);
+        $this->persistTrackingPayload($this->getTrackingId($message), claimId: $event->claimId->toString());
 
         $this->flush($message);
     }
@@ -160,7 +161,7 @@ final class ClaimProjector implements ClaimProjectionRepositoryInterface
 
     private function findOneOrThrow(ClaimId $claimId): Claim
     {
-        $claim = $this->findOne($claimId);
+        $claim = $this->find($claimId);
 
         if ($claim === null) {
             throw new \RuntimeException(sprintf('%s not found for claimId (%s)', Claim::class, $claimId->toString()));

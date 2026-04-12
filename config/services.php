@@ -391,6 +391,12 @@ return function (ContainerConfigurator $container) {
     $services->set('donation_bundle.application.identities.query_handler.get_claims_in_review_count', \ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Handler\GetClaimsInReviewCountHandler::class)
         ->autoconfigure(true)
         ->autowire(true);
+    $services->set('donation_bundle.application.identities.query_handler.get_claim', \ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Handler\GetClaimHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
+    $services->set('donation_bundle.application.identities.query_handler.get_claim_by_tracking_id', \ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Handler\GetClaimByTrackingIdHandler::class)
+        ->autoconfigure(true)
+        ->autowire(true);
 
     // Shared
     $services->set('donation_bundle.application.shared.query_handler.get_tracking_status', \ErgoSarapu\DonationBundle\SharedApplication\Query\Handler\GetTrackingStatusHandler::class)

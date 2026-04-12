@@ -16,6 +16,9 @@ return function (ContainerConfigurator $container) {
     $services->set(ErgoSarapu\DonationBundle\Tests\Acceptance\Donations\Behat\DonationsContext::class)
         ->class(ErgoSarapu\DonationBundle\Tests\Acceptance\Donations\Behat\DonationsContext::class)
         ->public(true)->autowire();
+    $services->set(ErgoSarapu\DonationBundle\Tests\Acceptance\Identities\Behat\IdentitiesContext::class)
+        ->class(ErgoSarapu\DonationBundle\Tests\Acceptance\Identities\Behat\IdentitiesContext::class)
+        ->public(true)->autowire();
 
     // For message metadata testing ...
 

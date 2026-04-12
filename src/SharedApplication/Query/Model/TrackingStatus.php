@@ -13,6 +13,7 @@ class TrackingStatus
     private ?string $paymentId = null;
     private ?string $paymentMethodId = null;
     private ?string $donationId = null;
+    private ?string $claimId = null;
 
     public function setTrackingId(string $trackingId): self
     {
@@ -66,6 +67,17 @@ class TrackingStatus
     public function setDonationId(?string $donationId): self
     {
         $this->donationId = $donationId;
+        return $this;
+    }
+
+    public function getClaimId(): ?string
+    {
+        return $this->claimId;
+    }
+
+    public function setClaimId(?string $claimId): self
+    {
+        $this->claimId = $claimId;
         return $this;
     }
 }

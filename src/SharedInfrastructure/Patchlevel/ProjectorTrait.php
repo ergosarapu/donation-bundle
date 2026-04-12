@@ -62,6 +62,7 @@ trait ProjectorTrait
         ?string $paymentId = null,
         ?string $paymentMethodId = null,
         ?string $donationId = null,
+        ?string $claimId = null,
     ): void {
         $status = $this->projectionEntityManager->getRepository(TrackingStatus::class)->find($trackingId);
         if ($status === null) {
@@ -79,6 +80,9 @@ trait ProjectorTrait
         }
         if ($donationId !== null) {
             $status->setDonationId($donationId);
+        }
+        if ($claimId !== null) {
+            $status->setClaimId($claimId);
         }
         $this->projectionEntityManager->flush();
     }

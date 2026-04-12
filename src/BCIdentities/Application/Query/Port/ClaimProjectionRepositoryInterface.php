@@ -9,7 +9,7 @@ use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimId;
 
 interface ClaimProjectionRepositoryInterface
 {
-    public function findOne(ClaimId $claimId): ?Claim;
+    public function find(ClaimId $claimId): ?Claim;
 
     /**
      * @return list<Claim>
