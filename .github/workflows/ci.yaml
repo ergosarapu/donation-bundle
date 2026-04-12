@@ -6,7 +6,6 @@ on:
       - master
       - 'feature/**'
       - ddd
-      - ddd-payment-id
   pull_request:
     branches:
       - master
