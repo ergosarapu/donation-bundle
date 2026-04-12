@@ -7,6 +7,7 @@ namespace ErgoSarapu\DonationBundle\BCIdentities\Infrastructure\Projection;
 use ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model\Claim;
 use ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Port\ClaimProjectionRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimCreated;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimId;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimInReview;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForEmail;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForIban;
@@ -15,7 +16,6 @@ use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForPersonN
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForRawName;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimResolved;
 use ErgoSarapu\DonationBundle\SharedInfrastructure\Patchlevel\ProjectorTrait;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ClaimId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
@@ -33,7 +33,7 @@ final class ClaimProjector implements ClaimProjectionRepositoryInterface
     use SubscriberUtil;
     use ProjectorTrait;
 
-    public function findOne(ClaimId $claimId): ?Claim
+    public function find(ClaimId $claimId): ?Claim
     {
         /** @var Claim|null $claim */
         $claim = $this->getEntityManager()->getRepository(Claim::class)->find($claimId->toString());
@@ -68,20 +68,21 @@ final class ClaimProjector implements ClaimProjectionRepositoryInterface
     {
         $event = $this->getEvent($message, ClaimCreated::class);
 
-        if ($this->findOne($event->claimId) !== null) {
+        if ($this->find($event->claimId) !== null) {
             return;
         }
 
         $claim = new Claim();
         $claim->setClaimId($event->claimId->toString());
-        $claim->setPaymentId($event->source->getPaymentId()?->toString());
-        $claim->setDonationId($event->source->getDonationId()?->toString());
+        $claim->setPaymentId($event->source->isPaymentContext() ? $event->source->getId() : null);
+        $claim->setDonationId($event->source->isDonationContext() ? $event->source->getId() : null);
         $claim->setInReview(false);
         $claim->setResolved(false);
         $claim->setReviewReason(null);
         $claim->setCreatedAt($event->occuredOn);
         $claim->setUpdatedAt($event->occuredOn);
         $this->persist($claim);
+        $this->persistTrackingPayload($this->getTrackingId($message), claimId: $event->claimId->toString());
 
         $this->flush($message);
     }
@@ -160,7 +161,7 @@ final class ClaimProjector implements ClaimProjectionRepositoryInterface
 
     private function findOneOrThrow(ClaimId $claimId): Claim
     {
-        $claim = $this->findOne($claimId);
+        $claim = $this->find($claimId);
 
         if ($claim === null) {
             throw new \RuntimeException(sprintf('%s not found for claimId (%s)', Claim::class, $claimId->toString()));

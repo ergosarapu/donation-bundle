@@ -5,13 +5,11 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim;
 
 use DateTimeImmutable;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ClaimId;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\IdentityId;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ClaimEvidenceLevel;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ClaimSource;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\OrganisationRegCode;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\RawName;
 use LogicException;
@@ -26,6 +24,11 @@ final class Claim extends BasicAggregateRoot
     /** @var array<class-string, array<string, int>> */
     private const SCORE_LOOKUP = [
         NationalIdCode::class => [
+            ClaimEvidenceLevel::Observed->value => 9,
+            ClaimEvidenceLevel::VerifiedByUser->value => 80,
+            ClaimEvidenceLevel::Verified->value => 100,
+        ],
+        OrganisationRegCode::class => [
             ClaimEvidenceLevel::Observed->value => 9,
             ClaimEvidenceLevel::VerifiedByUser->value => 80,
             ClaimEvidenceLevel::Verified->value => 100,
@@ -58,7 +61,7 @@ final class Claim extends BasicAggregateRoot
     private ClaimId $id;
     private ClaimSource $source;
     private bool $inReview = false;
-    /** @var array<class-string, ?object> */
+    /** @var array<class-string, Email|Iban|NationalIdCode|OrganisationRegCode|PersonName|RawName|null> */
     private array $presentedValues = [];
     /** @var array<class-string, ClaimEvidenceLevel> */
     private array $presentedEvidenceLevels = [];
@@ -135,6 +138,11 @@ final class Claim extends BasicAggregateRoot
         return $this->resolvableTypedValue(NationalIdCode::class);
     }
 
+    public function organisationRegCode(): ?OrganisationRegCode
+    {
+        return $this->resolvableTypedValue(OrganisationRegCode::class);
+    }
+
     #[Apply]
     protected function applyClaimCreated(ClaimCreated $event): void
     {
@@ -178,6 +186,13 @@ final class Claim extends BasicAggregateRoot
     }
 
     #[Apply]
+    protected function applyClaimPresentedForOrganisationRegCode(ClaimPresentedForOrganisationRegCode $event): void
+    {
+        $this->presentedValues[OrganisationRegCode::class] = $event->value;
+        $this->presentedEvidenceLevels[OrganisationRegCode::class] = $event->evidenceLevel;
+    }
+
+    #[Apply]
     protected function applyClaimResolved(ClaimResolved $event): void
     {
         $this->inReview = false;
@@ -190,13 +205,8 @@ final class Claim extends BasicAggregateRoot
         $this->inReview = true;
     }
 
-    /**
-     * @param Email|RawName|Iban|PersonName|NationalIdCode $value
-     * @param ClaimEvidenceLevel $evidenceLevel
-     * @return bool
-     */
     private function shouldPresent(
-        object $value,
+        Email|Iban|NationalIdCode|OrganisationRegCode|PersonName|RawName $value,
         ClaimEvidenceLevel $evidenceLevel,
     ): bool {
         $className = $value::class;
@@ -255,7 +265,7 @@ final class Claim extends BasicAggregateRoot
     }
 
     /**
-     * @param Email|Iban|NationalIdCode|PersonName|RawName|class-string $value
+     * @param PersonName|RawName|Email|Iban|NationalIdCode|OrganisationRegCode|class-string $value
      */
     public function present(DateTimeImmutable $currentTime, object|string $value, ClaimEvidenceLevel $evidenceLevel): void
     {
@@ -283,30 +293,36 @@ final class Claim extends BasicAggregateRoot
     }
 
 
-    /**
-     * @param Email|Iban|NationalIdCode|PersonName|RawName $value
-     */
-    private function presentValue(DateTimeImmutable $currentTime, object $value, ClaimEvidenceLevel $evidenceLevel): void
+    private function presentValue(DateTimeImmutable $currentTime, Email|Iban|NationalIdCode|OrganisationRegCode|PersonName|RawName $value, ClaimEvidenceLevel $evidenceLevel): void
     {
-        $className = $value::class;
-
         if (!$this->shouldPresent($value, $evidenceLevel)) {
             return;
         }
 
-        $event = match ($className) {
-            PersonName::class => new ClaimPresentedForPersonName($currentTime, $this->id, $value, $evidenceLevel),
-            RawName::class => new ClaimPresentedForRawName($currentTime, $this->id, $value, $evidenceLevel),
-            Email::class => new ClaimPresentedForEmail($currentTime, $this->id, $value, $evidenceLevel),
-            Iban::class => new ClaimPresentedForIban($currentTime, $this->id, $value, $evidenceLevel),
-            NationalIdCode::class => new ClaimPresentedForNationalIdCode($currentTime, $this->id, $value, $evidenceLevel),
-            default => throw new LogicException(sprintf('Unsupported claim value class "%s".', $className)),
-        };
+        if ($value instanceof PersonName) {
+            $event = new ClaimPresentedForPersonName($currentTime, $this->id, $value, $evidenceLevel);
+        } elseif ($value instanceof RawName) {
+            $event = new ClaimPresentedForRawName($currentTime, $this->id, $value, $evidenceLevel);
+        } elseif ($value instanceof Email) {
+            $event = new ClaimPresentedForEmail($currentTime, $this->id, $value, $evidenceLevel);
+        } elseif ($value instanceof Iban) {
+            $event = new ClaimPresentedForIban($currentTime, $this->id, $value, $evidenceLevel);
+        } elseif ($value instanceof OrganisationRegCode) {
+            if (array_key_exists(NationalIdCode::class, $this->presentedValues)) {
+                throw new LogicException('Cannot present OrganisationRegCode when NationalIdCode is already presented for the same claim.');
+            }
+            $event = new ClaimPresentedForOrganisationRegCode($currentTime, $this->id, $value, $evidenceLevel);
+        } else {
+            if (array_key_exists(OrganisationRegCode::class, $this->presentedValues)) {
+                throw new LogicException('Cannot present NationalIdCode when OrganisationRegCode is already presented for the same claim.');
+            }
+            $event = new ClaimPresentedForNationalIdCode($currentTime, $this->id, $value, $evidenceLevel);
+        }
 
         $this->recordThat($event);
     }
 
-    private function value(string $className): ?object
+    private function value(string $className): Email|Iban|NationalIdCode|OrganisationRegCode|PersonName|RawName|null
     {
         return $this->presentedValues[$className] ?? null;
     }

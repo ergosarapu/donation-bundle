@@ -7,9 +7,9 @@ namespace ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\CreatePendingPaymentImport;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\CommandHandlerInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use Psr\Clock\ClockInterface;
 
 class CreatePendingPaymentImportHandler implements CommandHandlerInterface

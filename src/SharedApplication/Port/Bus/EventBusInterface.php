@@ -6,5 +6,8 @@ namespace ErgoSarapu\DonationBundle\SharedApplication\Port\Bus;
 
 interface EventBusInterface
 {
-    public function dispatch(object $command): void;
+    /**
+     * @return string The event tracking ID
+     */
+    public function dispatch(object $event): string;
 }

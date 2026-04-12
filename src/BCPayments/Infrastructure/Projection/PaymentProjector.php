@@ -11,6 +11,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCanceled;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCaptured;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCreated;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentFailed;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportAccepted;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportInReview;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportPending;
@@ -22,7 +23,6 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRedirectUrlSetUp;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRefunded;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
 use ErgoSarapu\DonationBundle\SharedInfrastructure\Patchlevel\ProjectorTrait;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use Patchlevel\EventSourcing\Attribute\Projector;
 use Patchlevel\EventSourcing\Attribute\Subscribe;
 use Patchlevel\EventSourcing\Attribute\Teardown;
@@ -38,6 +38,11 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
     public function findOne(?PaymentId $id = null, ?PaymentStatus $status = null): ?Payment
     {
         return $this->findOneByCriteria($this->buildCriteria($id, $status));
+    }
+
+    public function findOneByCorrelationId(string $correlationId): ?Payment
+    {
+        return $this->findOneByCriteria(['initiatedCorrelationId' => $correlationId]);
     }
 
     public function countBy(?PaymentImportStatus $importStatus = null): int
@@ -104,7 +109,11 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         $payment->setCurrency($event->amount->currency()->code());
         $payment->setStatus($event->status);
         $payment->setGateway($event->gateway->id());
+        $payment->setAppliedTo($event->appliedTo);
+        $payment->setDescription($event->description->toString());
         $this->persist($payment);
+        $trackingId = $this->getTrackingId($message);
+        $this->persistTrackingPayload($trackingId, paymentId: $payment->getPaymentId());
         $this->flush($message);
     }
 

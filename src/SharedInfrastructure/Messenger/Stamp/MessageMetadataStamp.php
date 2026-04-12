@@ -11,21 +11,15 @@ use Symfony\Component\Messenger\Stamp\StampInterface;
 #[Header('metadata')]
 final readonly class MessageMetadataStamp implements StampInterface
 {
-    public readonly string $messageId;
-    public readonly string $causationId;
-    public readonly string $correlationId;
-
     public function __construct(
-        ?string $messageId = null,
-        ?string $causationId = null,
-        ?string $correlationId = null
+        public readonly string $messageId,
+        public readonly string $correlationId,
+        public readonly string $trackingId,
+        public readonly ?string $causationId = null,
     ) {
-        $this->messageId = $messageId ?? self::generateId();
-        $this->causationId = $causationId ?? self::generateId();
-        $this->correlationId = $correlationId ?? self::generateId();
     }
 
-    private static function generateId(): string
+    public static function generateId(): string
     {
         return Uuid::uuid7()->toString();
     }

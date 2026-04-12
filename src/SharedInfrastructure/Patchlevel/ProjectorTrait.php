@@ -6,7 +6,7 @@ namespace ErgoSarapu\DonationBundle\SharedInfrastructure\Patchlevel;
 
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
-use ErgoSarapu\DonationBundle\SharedApplication\Query\Model\CommandStatus;
+use ErgoSarapu\DonationBundle\SharedApplication\Query\Model\TrackingStatus;
 use ErgoSarapu\DonationBundle\SharedInfrastructure\Messenger\Stamp\MessageMetadataStamp;
 use InvalidArgumentException;
 use Patchlevel\EventSourcing\Message\Message;
@@ -44,27 +44,46 @@ trait ProjectorTrait
 
     private function flush(Message $message): void
     {
-        $this->persistMetadata($message);
+        $this->persistTrackingPayload($this->getTrackingId($message));
         $this->projectionEntityManager->flush();
     }
 
-    private function persistMetadata(Message $message): void
+    private function getTrackingId(Message $message): string
     {
         if (!$message->hasHeader(MessageMetadataStamp::class)) {
-            return;
+            throw new InvalidArgumentException('MessageMetadataStamp is missing from the message.');
         }
         $metadata = $message->header(MessageMetadataStamp::class);
+        return $metadata->trackingId;
+    }
 
-        $existing = $this->projectionEntityManager->getRepository(CommandStatus::class)->find($metadata->correlationId);
-        if ($existing === null) {
-            $commandStatus = new CommandStatus(
-                correlationId: $metadata->correlationId,
-                appliedAt: new DateTimeImmutable()
-            );
-
-            $this->persist($commandStatus);
+    private function persistTrackingPayload(
+        string $trackingId,
+        ?string $paymentId = null,
+        ?string $paymentMethodId = null,
+        ?string $donationId = null,
+        ?string $claimId = null,
+    ): void {
+        $status = $this->projectionEntityManager->getRepository(TrackingStatus::class)->find($trackingId);
+        if ($status === null) {
+            $status = new TrackingStatus();
+            $status->setTrackingId($trackingId);
+            $this->persist($status);
         }
 
+        $status->setUpdatedAt(new DateTimeImmutable());
+        if ($paymentId !== null) {
+            $status->setPaymentId($paymentId);
+        }
+        if ($paymentMethodId !== null) {
+            $status->setPaymentMethodId($paymentMethodId);
+        }
+        if ($donationId !== null) {
+            $status->setDonationId($donationId);
+        }
+        if ($claimId !== null) {
+            $status->setClaimId($claimId);
+        }
         $this->projectionEntityManager->flush();
     }
 }

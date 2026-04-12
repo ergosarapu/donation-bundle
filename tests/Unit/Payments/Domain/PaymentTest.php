@@ -19,6 +19,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCreated;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCredentialValue;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentDidNotSucceed;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentFailed;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportAccepted;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportInReview;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportPending;
@@ -27,6 +28,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportRejected;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportSourceIdentifier;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentInitiated;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodAction;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodResult;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodUnusableReason;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRedirectUrlSetUp;
@@ -37,9 +39,6 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRequest;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentReservedForGatewayCall;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentSucceeded;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
@@ -52,6 +51,7 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\URL;
 use LogicException;
 use Patchlevel\EventSourcing\PhpUnit\Test\AggregateRootTestCase;
+use Ramsey\Uuid\Uuid;
 
 class PaymentTest extends AggregateRootTestCase
 {
@@ -67,7 +67,7 @@ class PaymentTest extends AggregateRootTestCase
 
     private ShortDescription $description;
 
-    private ExternalEntityId $appliedTo;
+    private string $appliedTo;
 
     protected function aggregateClass(): string
     {
@@ -83,7 +83,7 @@ class PaymentTest extends AggregateRootTestCase
         $this->gateway = new Gateway('test');
         $this->email = new Email('example@example.com');
         $this->description = new ShortDescription('Test payment');
-        $this->appliedTo = ExternalEntityId::generate();
+        $this->appliedTo = Uuid::uuid7()->toString();
     }
 
     public function testCreate(): void
@@ -93,7 +93,7 @@ class PaymentTest extends AggregateRootTestCase
         $gatewayReference = new GatewayReference('gateway-ref-123');
         $bankReference = new BankReference('bank-ref-456');
         $paymentReference = new PaymentReference('payment-ref-789');
-        $legacyPaymentId = new LegacyPaymentNumber('legacy-789');
+        $legacyPaymentId = @new LegacyPaymentNumber('legacy-789');
         $iban = new Iban('EE382200221020145685');
         $gateway = new Gateway('test-gateway');
 
@@ -259,6 +259,7 @@ class PaymentTest extends AggregateRootTestCase
         $methodAction = PaymentMethodAction::forRequest(
             PaymentMethodId::generate(),
             $this->paymentId,
+            Uuid::uuid7()->toString(),
         );
         $paymentRequest = new PaymentRequest(
             $this->paymentId,
@@ -291,6 +292,7 @@ class PaymentTest extends AggregateRootTestCase
         $methodAction = PaymentMethodAction::forRequest(
             PaymentMethodId::generate(),
             PaymentId::generate(),
+            Uuid::uuid7()->toString(),
         );
         $paymentRequest = new PaymentRequest(
             $this->paymentId,
@@ -312,6 +314,7 @@ class PaymentTest extends AggregateRootTestCase
         $methodAction = PaymentMethodAction::forRequest(
             PaymentMethodId::generate(),
             $this->paymentId,
+            Uuid::uuid7()->toString(),
         );
         $methodResult = PaymentMethodResult::usable(new PaymentCredentialValue('token'));
         $this->given(new PaymentInitiated(
@@ -352,6 +355,7 @@ class PaymentTest extends AggregateRootTestCase
         $methodAction = PaymentMethodAction::forRequest(
             PaymentMethodId::generate(),
             $this->paymentId,
+            Uuid::uuid7()->toString(),
         );
         $methodResult = PaymentMethodResult::usable(new PaymentCredentialValue('token'));
         $this->given(new PaymentInitiated(
@@ -448,6 +452,7 @@ class PaymentTest extends AggregateRootTestCase
         $methodAction = PaymentMethodAction::forRequest(
             PaymentMethodId::generate(),
             $this->paymentId,
+            Uuid::uuid7()->toString(),
         );
         $methodResult = PaymentMethodResult::usable(new PaymentCredentialValue('token'));
         $this->given(new PaymentInitiated(
@@ -540,6 +545,7 @@ class PaymentTest extends AggregateRootTestCase
         $methodAction = PaymentMethodAction::forRequest(
             PaymentMethodId::generate(),
             $this->paymentId,
+            Uuid::uuid7()->toString(),
         );
         $methodResult = PaymentMethodResult::unusable(PaymentMethodUnusableReason::RequestFailed);
         $this->given(new PaymentInitiated(
@@ -660,6 +666,7 @@ class PaymentTest extends AggregateRootTestCase
         $methodAction = PaymentMethodAction::forRequest(
             PaymentMethodId::generate(),
             $this->paymentId,
+            Uuid::uuid7()->toString(),
         );
         $this->given(new PaymentInitiated(
             $this->now,
@@ -770,6 +777,7 @@ class PaymentTest extends AggregateRootTestCase
                 PaymentMethodAction::forRequest(
                     PaymentMethodId::generate(),
                     $this->paymentId,
+                    Uuid::uuid7()->toString(),
                 ),
             ),
             new PaymentCaptured(
@@ -1246,7 +1254,7 @@ class PaymentTest extends AggregateRootTestCase
         $gatewayReference = new GatewayReference('proc-ref-123');
         $bankReference = new BankReference('bank-ref-456');
         $paymentReference = new PaymentReference('payment-ref-789');
-        $legacyPaymentId = new LegacyPaymentNumber('legacy-789');
+        $legacyPaymentId = @new LegacyPaymentNumber('legacy-789');
         $iban = new Iban('EE382200221020145685');
 
         $existingPayment = Payment::create(
@@ -1306,7 +1314,7 @@ class PaymentTest extends AggregateRootTestCase
         $gatewayReference = new GatewayReference('proc-ref-123');
         $bankReference = new BankReference('bank-ref-456');
         $paymentReference = new PaymentReference('payment-ref-789');
-        $legacyPaymentId = new LegacyPaymentNumber('legacy-789');
+        $legacyPaymentId = @new LegacyPaymentNumber('legacy-789');
         $iban = new Iban('EE382200221020145685');
 
         $existingPayment = Payment::create(

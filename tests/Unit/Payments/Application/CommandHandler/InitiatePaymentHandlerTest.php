@@ -9,12 +9,11 @@ use ErgoSarapu\DonationBundle\BCPayments\Application\Command\InitiatePayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\InitiatePaymentHandler;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodAction;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRequest;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
@@ -23,6 +22,7 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
+use Ramsey\Uuid\Uuid;
 
 class InitiatePaymentHandlerTest extends TestCase
 {
@@ -50,11 +50,12 @@ class InitiatePaymentHandlerTest extends TestCase
         $amount = new Money(5000, new Currency('EUR'));
         $gateway = new Gateway('test-gateway');
         $description = new ShortDescription('Test donation');
-        $appliedTo = ExternalEntityId::generate();
+        $appliedTo = Uuid::uuid7()->toString();
         $email = new Email('donor@example.com');
         $methodAction = PaymentMethodAction::forRequest(
             PaymentMethodId::generate(),
-            $paymentId
+            $paymentId,
+            Uuid::uuid7()->toString(),
         );
 
         $paymentRequest = new PaymentRequest(

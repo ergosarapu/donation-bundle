@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCIdentities\Application\Port;
 
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\Identity;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\IdentityId;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityId;
 
 interface IdentityRepositoryInterface
 {

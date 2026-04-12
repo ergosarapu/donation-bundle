@@ -11,6 +11,7 @@ final class ActivateRecurringPlan implements CommandInterface
 {
     public function __construct(
         public readonly RecurringPlanId $recurringPlanId,
+        public readonly string $paymentMethodId,
     ) {
     }
 }

@@ -9,11 +9,12 @@ use ErgoSarapu\DonationBundle\BCIdentities\Application\Command\PresentClaimEvide
 use ErgoSarapu\DonationBundle\BCIdentities\Application\Command\ResolveClaim;
 use ErgoSarapu\DonationBundle\BCIdentities\Application\Port\ClaimRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\Claim;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimEvidenceLevel;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimId;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimSource;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Identities\ValueObject\ClaimPresentation;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\CommandHandlerInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ClaimId;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ClaimSource;
 use Psr\Clock\ClockInterface;
 
 final class PresentClaimEvidenceHandler implements CommandHandlerInterface
@@ -61,7 +62,7 @@ final class PresentClaimEvidenceHandler implements CommandHandlerInterface
         array_reduce(
             $command->presentations,
             static function (Claim $claim, ClaimPresentation $presentation) use ($currentTime): Claim {
-                $claim->present($currentTime, $presentation->value, $presentation->evidenceLevel);
+                $claim->present($currentTime, $presentation->value, ClaimEvidenceLevel::from($presentation->evidenceLevel->value));
                 return $claim;
             },
             $claim,

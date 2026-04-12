@@ -17,6 +17,6 @@ class GetDonationHandler implements QueryHandlerInterface
 
     public function __invoke(GetDonation $query): ?Donation
     {
-        return $this->repository->findOneBy($query->donationId);
+        return $this->repository->findOneBy(id: $query->donationId);
     }
 }

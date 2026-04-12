@@ -7,14 +7,14 @@ namespace ErgoSarapu\DonationBundle\BCDonations\Application\EventHandler\Domain;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationInitiated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanActionIntent;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Identities\Event\ClaimPresentedIntegrationEvent;
+use ErgoSarapu\DonationBundle\IntegrationContracts\Identities\ValueObject\ClaimerContext;
+use ErgoSarapu\DonationBundle\IntegrationContracts\Identities\ValueObject\ClaimEvidenceLevel;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Identities\ValueObject\ClaimPresentation;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Command\InitiatePaymentIntegrationCommand;
+use ErgoSarapu\DonationBundle\IntegrationContracts\ValueObject\EntityId;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\EventBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\EventHandlerInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ClaimEvidenceLevel;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ClaimSource;
 
 class DonationInitiatedHandler implements EventHandlerInterface
 {
@@ -27,17 +27,20 @@ class DonationInitiatedHandler implements EventHandlerInterface
     public function __invoke(DonationInitiated $event): void
     {
         $this->commandBus->dispatch(new InitiatePaymentIntegrationCommand(
-            $event->paymentId,
             $event->amount,
             $event->gateway,
             $event->description,
-            ExternalEntityId::fromString($event->donationId->toString()),
+            new EntityId($event->donationId->toString()),
             $event->donorDetails?->email,
-            $event->recurringPlanAction?->paymentMethodId,
-            $event->recurringPlanAction?->intent === RecurringPlanActionIntent::Renew ? true : false,
+            $event->recurringPlanAction?->intent === RecurringPlanActionIntent::Renew && $event->recurringPlanAction->paymentMethodId !== null
+                ? new EntityId($event->recurringPlanAction->paymentMethodId)
+                : null,
+            $event->recurringPlanAction?->intent === RecurringPlanActionIntent::Init && $event->recurringPlanId !== null
+                ? new EntityId($event->recurringPlanId->toString())
+                : null,
         ));
 
-        $source = ClaimSource::forDonation($event->donationId);
+        $claimerId = new EntityId($event->donationId->toString());
         $presentations = [];
 
         if ($event->donorDetails?->name !== null) {
@@ -53,7 +56,7 @@ class DonationInitiatedHandler implements EventHandlerInterface
         }
 
         if ($presentations !== []) {
-            $this->eventBus->dispatch(new ClaimPresentedIntegrationEvent($source, $presentations));
+            $this->eventBus->dispatch(new ClaimPresentedIntegrationEvent($claimerId, ClaimerContext::Donation, $presentations));
         }
     }
 }

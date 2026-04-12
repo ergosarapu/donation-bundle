@@ -6,8 +6,8 @@ namespace ErgoSarapu\DonationBundle\BCIdentities\Infrastructure\Adapter;
 
 use ErgoSarapu\DonationBundle\BCIdentities\Application\Port\ClaimRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\Claim;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimId;
 use ErgoSarapu\DonationBundle\SharedInfrastructure\Patchlevel\PatchlevelRepositoryWrapperTrait;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ClaimId;
 
 final class PatchlevelClaimRepository implements ClaimRepositoryInterface
 {

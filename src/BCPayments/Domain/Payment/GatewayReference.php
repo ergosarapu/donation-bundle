@@ -13,6 +13,7 @@ final class GatewayReference
 
     public function __construct(string $value)
     {
+        /** @var string $value */
         $value = mb_trim($value);
         if ($value === '') {
             throw new \InvalidArgumentException('Gateway reference cannot be empty.');

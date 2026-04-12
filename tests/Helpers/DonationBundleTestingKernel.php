@@ -90,7 +90,7 @@ class DonationBundleTestingKernel extends Kernel
                 'run_after_aggregate_save' => [
                     'enabled' => true,
                 ],
-            ]
+            ],
         ]);
 
         $builder->loadFromExtension('stof_doctrine_extensions', [

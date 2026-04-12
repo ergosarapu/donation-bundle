@@ -13,6 +13,7 @@ class PaymentCredentialValue
 
     public function __construct(string $value)
     {
+        /** @var string $value */
         $value = mb_trim($value);
         if ($value === '') {
             throw new \InvalidArgumentException('Payment credential value cannot be empty.');

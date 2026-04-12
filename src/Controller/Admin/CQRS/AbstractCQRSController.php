@@ -78,10 +78,10 @@ abstract class AbstractCQRSController extends AbstractCrudController
      */
     abstract public function dispatchCommandsForDelete(object $entity): void;
 
-    public function dispatchAndReturnCorrelationId(object $command): JsonResponse
+    public function dispatchAndReturnTrackingId(object $command): JsonResponse
     {
         $result = $this->commandBus->dispatch($command);
-        return new JsonResponse(['correlationId' => $result->correlationId]);
+        return new JsonResponse(['trackingId' => $result->trackingId]);
     }
 
     public function dispatch(object $command): CommandResult

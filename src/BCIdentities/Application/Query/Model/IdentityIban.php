@@ -6,7 +6,8 @@ namespace ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model;
 
 class IdentityIban
 {
-    private int $id;
+    use IdTrait;
+
     private Identity $identity;
     private string $iban;
 

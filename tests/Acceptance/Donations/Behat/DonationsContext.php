@@ -16,6 +16,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Application\Command\UpdateCampaignName
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\UpdateCampaignPublicTitle;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetCampaign;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetDonation;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetDonationByTrackingId;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetInitiatedDonation;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetRecurringPlan;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\Campaign;
@@ -26,37 +27,32 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignName;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignPublicTitle;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignStatus;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationRequest;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationStatus;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorDetails;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringInterval;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanStatus;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Donations\Command\InitiateDonationIntegrationCommand;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Donations\Command\ReActivateRecurringPlanIntegrationCommand;
-use ErgoSarapu\DonationBundle\IntegrationContracts\IntegrationCommandInterface;
-use ErgoSarapu\DonationBundle\IntegrationContracts\IntegrationEventInterface;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Command\InitiatePaymentIntegrationCommand;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\PaymentDidNotSucceedIntegrationEvent;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\PaymentMethodUnusableIntegrationEvent;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\PaymentSucceededIntegrationEvent;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\UnusablePaymentMethodCreatedIntegrationEvent;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Event\UsablePaymentMethodCreatedIntegrationEvent;
+use ErgoSarapu\DonationBundle\IntegrationContracts\ValueObject\EntityId;
+use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
+use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\EventBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\QueryBusInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Interval;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
-use ErgoSarapu\DonationBundle\Tests\Helpers\TestCommandBus;
-use ErgoSarapu\DonationBundle\Tests\Helpers\TestEventBus;
 use LogicException;
 use Patchlevel\EventSourcing\Clock\FrozenClock;
 use Patchlevel\EventSourcing\Subscription\Engine\SubscriptionEngine;
 use Psr\Clock\ClockInterface;
+use Ramsey\Uuid\Uuid;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Throwable;
 use Webmozart\Assert\Assert;
@@ -65,10 +61,9 @@ use Zenstruck\Messenger\Test\Transport\TestTransport;
 class DonationsContext implements Context
 {
     private DonationId $lastDonationId;
-    private PaymentId $lastPaymentId;
     private ?RecurringPlanId $lastRecurringPlanId;
-    private PaymentMethodId $lastPaymentMethodId;
-    private RecurringInterval $lastRecurringInterval;
+    private string $lastPaymentMethodId;
+    private Interval $lastRecurringInterval;
     private FrozenClock $clock;
     private CampaignId $lastCampaignId;
     private ?Throwable $lastException = null;
@@ -76,10 +71,14 @@ class DonationsContext implements Context
     public function __construct(
         #[Autowire(service: 'messenger.transport.delayed')]
         private readonly TestTransport $delayedTransport,
-        private readonly SubscriptionEngine $subscriptionEngine,
-        private readonly TestCommandBus $commandBus,
-        private readonly TestEventBus $eventBus,
+        #[Autowire(service: 'messenger.transport.integration_command')]
+        private readonly TestTransport $integrationCommandTransport,
+        #[Autowire(service: 'messenger.transport.integration_event')]
+        private readonly TestTransport $integrationEventTransport,
+        private readonly CommandBusInterface $commandBus,
+        private readonly EventBusInterface $eventBus,
         private readonly QueryBusInterface $queryBus,
+        private readonly SubscriptionEngine $subscriptionEngine,
         ClockInterface $clock,
     ) {
         Assert::isInstanceOf($clock, FrozenClock::class);
@@ -91,10 +90,8 @@ class DonationsContext implements Context
     #[BeforeScenario]
     public function resetTransports(): void
     {
-        $this->eventBus->reset();
-        $this->eventBus->intercept(IntegrationEventInterface::class);
-        $this->commandBus->reset();
-        $this->commandBus->intercept(IntegrationCommandInterface::class);
+        $this->integrationCommandTransport->reset();
+        $this->integrationEventTransport->reset();
         $this->delayedTransport->reset();
     }
 
@@ -106,36 +103,41 @@ class DonationsContext implements Context
     #[When('initiate one time donation')]
     public function initiateOneTimeDonation(): void
     {
-        $this->lastDonationId = DonationId::generate();
-        $donationRequest = new DonationRequest(
-            $this->lastDonationId,
-            CampaignId::generate(),
-            $this->getDefaultTestMoney(),
-            new Gateway('test'),
-            new DonorDetails(),
-            new ShortDescription('Test donation'),
+        $initiateDonation = new InitiateDonationIntegrationCommand(
+            campaignId: new EntityId(CampaignId::generate()->toString()),
+            amount: $this->getDefaultTestMoney(),
+            gateway: new Gateway('test'),
+            description: new ShortDescription('Test donation'),
         );
-        $initiateDonation = new InitiateDonationIntegrationCommand($donationRequest);
-        $this->commandBus->send($initiateDonation);
+        $trackingId = $this->commandBus->dispatch($initiateDonation)->trackingId;
+        $this->integrationCommandTransport->processOrFail(1);
+        $this->resolveDonationId($trackingId);
+    }
+
+    private function resolveDonationId(string $trackingId): void
+    {
+        $donation = $this->queryBus->ask(new GetDonationByTrackingId($trackingId));
+        Assert::isInstanceOf($donation, Donation::class, sprintf('Donation should be found for tracking id %s', $trackingId));
+        /** @var Donation $donation */
+        $donationId = $donation->getDonationId();
+        $this->lastDonationId = DonationId::fromString($donationId);
     }
 
     #[When('initiate recurring donation')]
     public function initiateRecurringDonation(): void
     {
-        $this->lastDonationId = DonationId::generate();
-        $donationRequest = new DonationRequest(
-            $this->lastDonationId,
-            CampaignId::generate(),
-            $this->getDefaultTestMoney(),
-            new Gateway('test'),
-            new DonorDetails(
-                new Email('example@example.com')
-            ),
-            new ShortDescription('Test donation'),
+        $this->lastRecurringInterval = new Interval(Interval::Monthly);
+        $initiateRecurringDonation = new InitiateDonationIntegrationCommand(
+            campaignId: new EntityId(CampaignId::generate()->toString()),
+            amount: $this->getDefaultTestMoney(),
+            gateway: new Gateway('test'),
+            description: new ShortDescription('Test donation'),
+            donorEmail: new Email('example@example.com'),
+            recurringInterval: $this->lastRecurringInterval,
         );
-        $this->lastRecurringInterval = new RecurringInterval(RecurringInterval::Monthly);
-        $initiateRecurringDonation = new InitiateDonationIntegrationCommand($donationRequest, $this->lastRecurringInterval);
-        $this->commandBus->send($initiateRecurringDonation);
+        $trackingId = $this->commandBus->dispatch($initiateRecurringDonation)->trackingId;
+        $this->integrationCommandTransport->processOrFail(1);
+        $this->resolveDonationId($trackingId);
     }
 
 
@@ -144,18 +146,14 @@ class DonationsContext implements Context
     {
         $donation = $this->queryBus->ask(new GetInitiatedDonation($this->lastDonationId));
         Assert::isInstanceOf($donation, Donation::class);
-        /** @var Donation $donation */
-        $this->lastPaymentId = PaymentId::fromString($donation->getPaymentId());
         $this->lastRecurringPlanId = null;
     }
 
-    #[Then('donation is initiated for the renewal')]
-    public function donationIsInitiatedForTheRenewal(): void
+    #[Then('donation is initiated for the recurring plan')]
+    public function donationIsInitiatedForTheRecurringPlan(): void
     {
         $donation = $this->queryBus->ask(new GetInitiatedDonation($this->lastDonationId));
         Assert::isInstanceOf($donation, Donation::class);
-        /** @var Donation $donation */
-        $this->lastPaymentId = PaymentId::fromString($donation->getPaymentId());
         Assert::notNull($recurringPlanId = $donation->getRecurringPlanId());
         $this->lastRecurringPlanId = RecurringPlanId::fromString($recurringPlanId);
     }
@@ -163,33 +161,30 @@ class DonationsContext implements Context
     #[Then('initiate payment integration command is sent')]
     public function paymentIntegrationCommandIsSent(): void
     {
-        $this->commandBus->assertDispatched(InitiatePaymentIntegrationCommand::class, 1);
+        $this->integrationCommandTransport->queue()->assertCount(1);
+        $this->integrationCommandTransport->queue()->assertContains(InitiatePaymentIntegrationCommand::class);
     }
 
     #[Then('initiate payment integration command is sent with request to store payment method')]
     public function initiatePaymentIntegrationCommandIsSentWithRequestToStorePaymentMethod(): void
     {
-        $this->commandBus->assertDispatched(InitiatePaymentIntegrationCommand::class, 1);
-        $messages = $this->commandBus->dispatchedMessages(InitiatePaymentIntegrationCommand::class);
-
+        $this->integrationCommandTransport->queue()->assertContains(InitiatePaymentIntegrationCommand::class, 1);
         /** @var InitiatePaymentIntegrationCommand $command */
-        $command = $messages[0];
-        Assert::notNull($command->paymentMethodId);
-        Assert::false($command->usePaymentMethodId);
-        $this->commandBus->resetDispatched();
+        $command = $this->integrationCommandTransport->queue()->first(InitiatePaymentIntegrationCommand::class)->getMessage();
+        $this->integrationCommandTransport->reset();
+        Assert::null($command->paymentMethodId);
+        Assert::notNull($command->requestPaymentMethodFor);
+        Assert::eq($command->requestPaymentMethodFor, $this->lastRecurringPlanId?->toString());
     }
 
     #[Then('initiate payment integration command is sent with request to use payment method')]
     public function initiatePaymentIntegrationCommandIsSentWithRequestToUsePaymentMethod(): void
     {
-        $this->commandBus->assertDispatched(InitiatePaymentIntegrationCommand::class, 1);
-        $messages = $this->commandBus->dispatchedMessages(InitiatePaymentIntegrationCommand::class);
-
+        $this->integrationCommandTransport->queue()->assertContains(InitiatePaymentIntegrationCommand::class, 1);
         /** @var InitiatePaymentIntegrationCommand $command */
-        $command = $messages[0];
+        $command = $this->integrationCommandTransport->queue()->first(InitiatePaymentIntegrationCommand::class)->getMessage();
+        $this->integrationCommandTransport->reset();
         Assert::notNull($command->paymentMethodId);
-        Assert::true($command->usePaymentMethodId);
-        $this->commandBus->resetDispatched();
     }
 
     #[Then('recurring plan is initiated with the donation as initial donation')]
@@ -199,8 +194,6 @@ class DonationsContext implements Context
         $recurringPlan = $this->queryBus->ask(new GetRecurringPlan($this->lastRecurringPlanId));
         Assert::isInstanceOf($recurringPlan, RecurringPlan::class);
         Assert::eq($recurringPlan->getInitialDonationId(), $this->lastDonationId->toString());
-        Assert::notNull($recurringPlan->getPaymentMethodId());
-        $this->lastPaymentMethodId = PaymentMethodId::fromString($recurringPlan->getPaymentMethodId());
     }
 
     #[Given('initiated donation exists')]
@@ -213,20 +206,24 @@ class DonationsContext implements Context
     #[When('payment succeeds')]
     public function paymentSucceeds(): void
     {
-        $this->eventBus->send(new PaymentSucceededIntegrationEvent(
-            $this->lastPaymentId,
+        $this->integrationEventTransport->reset();
+        $this->eventBus->dispatch(new PaymentSucceededIntegrationEvent(
+            new EntityId(Uuid::uuid7()->toString()),
             $this->getDefaultTestMoney(),
-            ExternalEntityId::fromString($this->lastDonationId->toString()),
+            new EntityId($this->lastDonationId->toString()),
         ));
+        $this->integrationEventTransport->processOrFail(1);
     }
 
     #[When('payment fails')]
     public function paymentFails(): void
     {
-        $this->eventBus->send(new PaymentDidNotSucceedIntegrationEvent(
-            $this->lastPaymentId,
-            ExternalEntityId::fromString($this->lastDonationId->toString()),
+        $this->integrationEventTransport->reset();
+        $this->eventBus->dispatch(new PaymentDidNotSucceedIntegrationEvent(
+            new EntityId(Uuid::uuid7()->toString()),
+            new EntityId($this->lastDonationId->toString()),
         ));
+        $this->integrationEventTransport->processOrFail(1);
     }
 
     #[Then('donation is marked as accepted')]
@@ -249,7 +246,7 @@ class DonationsContext implements Context
     public function initiatedRecurringPlanExists(): void
     {
         $this->initiateRecurringDonation();
-        $this->donationIsInitiatedForTheRenewal();
+        $this->donationIsInitiatedForTheRecurringPlan();
         $this->recurringPlanIsInitiatedWithTheDonationAsInitialDonation();
     }
 
@@ -265,26 +262,40 @@ class DonationsContext implements Context
     #[When('payment method gets unusable')]
     public function paymentMethodGetsUnusable(): void
     {
-        $this->eventBus->send(new PaymentMethodUnusableIntegrationEvent(
-            $this->lastPaymentMethodId,
+        Assert::notNull($this->lastRecurringPlanId);
+        $this->integrationEventTransport->reset();
+        $this->eventBus->dispatch(new PaymentMethodUnusableIntegrationEvent(
+            new EntityId($this->lastPaymentMethodId),
+            new EntityId($this->lastRecurringPlanId->toString()),
         ));
+        $this->integrationEventTransport->processOrFail(1);
     }
 
     #[When('usable payment method is created')]
     public function usablePaymentMethodIsCreated(): void
     {
-        $this->eventBus->send(new UsablePaymentMethodCreatedIntegrationEvent(
-            $this->lastPaymentMethodId,
+        $this->lastPaymentMethodId = Uuid::uuid7()->toString();
+        Assert::notNull($this->lastRecurringPlanId);
+        $this->integrationEventTransport->reset();
+        $this->eventBus->dispatch(new UsablePaymentMethodCreatedIntegrationEvent(
+            new EntityId($this->lastPaymentMethodId),
+            new EntityId($this->lastRecurringPlanId->toString()),
         ));
+        $this->integrationEventTransport->processOrFail(1);
     }
 
 
     #[When('unusable payment method is created')]
     public function unusablePaymentMethodIsCreated(): void
     {
-        $this->eventBus->send(new UnusablePaymentMethodCreatedIntegrationEvent(
-            $this->lastPaymentMethodId,
+        $this->lastPaymentMethodId = Uuid::uuid7()->toString();
+        Assert::notNull($this->lastRecurringPlanId);
+        $this->integrationEventTransport->reset();
+        $this->eventBus->dispatch(new UnusablePaymentMethodCreatedIntegrationEvent(
+            new EntityId($this->lastPaymentMethodId),
+            new EntityId($this->lastRecurringPlanId->toString()),
         ));
+        $this->integrationEventTransport->processOrFail(1);
     }
 
     #[Then('recurring plan is marked as activated')]
@@ -349,9 +360,11 @@ class DonationsContext implements Context
     public function recurringPlanIsActivated(): void
     {
         Assert::notNull($this->lastRecurringPlanId);
-        $this->commandBus->send(new ReActivateRecurringPlanIntegrationCommand(
-            $this->lastRecurringPlanId,
+        $this->integrationCommandTransport->reset();
+        $this->commandBus->dispatch(new ReActivateRecurringPlanIntegrationCommand(
+            new EntityId($this->lastRecurringPlanId->toString()),
         ));
+        $this->integrationCommandTransport->processOrFail(1);
     }
 
     // Campaign-related steps

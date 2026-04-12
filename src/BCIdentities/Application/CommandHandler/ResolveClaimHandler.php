@@ -11,9 +11,9 @@ use ErgoSarapu\DonationBundle\BCIdentities\Application\Port\IdentityLookupInterf
 use ErgoSarapu\DonationBundle\BCIdentities\Application\Port\IdentityRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimReviewReason;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\Identity;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityId;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\CommandHandlerInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\TransactionManagerInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\IdentityId;
 use Psr\Clock\ClockInterface;
 
 final class ResolveClaimHandler implements CommandHandlerInterface
@@ -36,6 +36,7 @@ final class ResolveClaimHandler implements CommandHandlerInterface
             email: $claim->email(),
             iban: $claim->iban(),
             nationalIdCode: $claim->nationalIdCode(),
+            organisationRegCode: $claim->organisationRegCode(),
         );
 
         if (count($identityIds) > 1) {
@@ -54,6 +55,7 @@ final class ResolveClaimHandler implements CommandHandlerInterface
             $claimId,
             $claim->personName(),
             $claim->nationalIdCode(),
+            $claim->organisationRegCode(),
             $claim->rawName(),
             $claim->email(),
             $claim->iban(),

@@ -6,8 +6,8 @@ namespace ErgoSarapu\DonationBundle\BCIdentities\Infrastructure\Adapter;
 
 use ErgoSarapu\DonationBundle\BCIdentities\Application\Port\IdentityRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\Identity;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityId;
 use ErgoSarapu\DonationBundle\SharedInfrastructure\Patchlevel\PatchlevelRepositoryWrapperTrait;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\IdentityId;
 
 final class PatchlevelIdentityRepository implements IdentityRepositoryInterface
 {

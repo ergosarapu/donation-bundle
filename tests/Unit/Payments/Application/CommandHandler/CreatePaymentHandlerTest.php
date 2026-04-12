@@ -12,11 +12,10 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\BankReference;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\GatewayReference;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\LegacyPaymentNumber;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentReference;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
@@ -28,6 +27,7 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
+use Ramsey\Uuid\Uuid;
 
 class CreatePaymentHandlerTest extends TestCase
 {
@@ -54,7 +54,7 @@ class CreatePaymentHandlerTest extends TestCase
         $paymentId = PaymentId::generate();
         $amount = new Money(5000, new Currency('EUR'));
         $description = new ShortDescription('Test payment');
-        $appliedTo = ExternalEntityId::generate();
+        $appliedTo = Uuid::uuid7()->toString();
         $email = new Email('donor@example.com');
         $name = new PersonName('John', 'Doe');
         $nationalIdCode = new NationalIdCode('12345678901');
@@ -63,7 +63,7 @@ class CreatePaymentHandlerTest extends TestCase
         $gatewayReference = new GatewayReference('gateway-tx-123');
         $bankReference = new BankReference('bank-ref-456');
         $paymentReference = new PaymentReference('1234567890');
-        $legacyPaymentIdentifier = new LegacyPaymentNumber('legacy-789');
+        $legacyPaymentIdentifier = @new LegacyPaymentNumber('legacy-789');
         $iban = new Iban('GB94BARC10201530093459');
         $gateway = new Gateway('test-gateway');
 

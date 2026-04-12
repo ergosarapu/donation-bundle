@@ -57,6 +57,7 @@ class DonorController extends AbstractCQRSController
             ArrayField::new('emails'),
             ArrayField::new('ibans')->setLabel('IBANs'),
             TextField::new('nationalIdCode')->setDisabled(),
+            TextField::new('organisationRegCode')->setDisabled(),
             ];
     }
 
@@ -67,6 +68,7 @@ class DonorController extends AbstractCQRSController
             'givenName',
             'familyName',
             'nationalIdCode',
+            'organisationRegCode',
             'rawNames.rawName',
             'emails.email',
             'ibans.iban'])

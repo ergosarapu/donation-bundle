@@ -5,15 +5,12 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCDonations\Domain\Donation;
 
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 
 final class DonationRequest
 {
-    public readonly PaymentId $paymentId;
-
     public function __construct(
         public readonly DonationId $donationId,
         public readonly CampaignId $campaignId,
@@ -22,6 +19,5 @@ final class DonationRequest
         public readonly DonorDetails $donorDetails,
         public readonly ShortDescription $description,
     ) {
-        $this->paymentId = PaymentId::generate();
     }
 }

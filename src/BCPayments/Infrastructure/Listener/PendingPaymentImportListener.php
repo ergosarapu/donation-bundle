@@ -8,9 +8,9 @@ use Doctrine\ORM\Event\PostLoadEventArgs;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentMatch;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetMatchingPayments;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model\Payment;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportStatus;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\QueryBusInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 
 class PendingPaymentImportListener
 {

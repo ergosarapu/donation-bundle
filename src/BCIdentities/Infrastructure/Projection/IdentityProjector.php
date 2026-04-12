@@ -12,6 +12,7 @@ use ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Port\IdentityProjec
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityEmailAdded;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityIbanAdded;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityNationalIdCodeChanged;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityOrganisationRegCodeChanged;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityPersonNameChanged;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityRawNameAdded;
 use ErgoSarapu\DonationBundle\SharedInfrastructure\Patchlevel\ProjectorTrait;
@@ -32,16 +33,21 @@ final class IdentityProjector implements IdentityProjectionRepositoryInterface
         return $this->findBy('nationalIdCode', $nationalIdCode);
     }
 
+    public function findByOrganisationRegCode(string $organisationRegCode): array
+    {
+        return $this->findBy('organisationRegCode', $organisationRegCode);
+    }
+
     public function findByIban(string $iban): array
     {
         /** @var list<IdentityIban> $identityIbans */
         $identityIbans = $this->getEntityManager()->getRepository(IdentityIban::class)
             ->findBy(['iban' => $iban]);
 
-        return array_values(array_map(
+        return array_map(
             static fn (IdentityIban $identityIban): Identity => $identityIban->getIdentity(),
             $identityIbans,
-        ));
+        );
     }
 
     public function findByEmail(string $email): array
@@ -50,10 +56,10 @@ final class IdentityProjector implements IdentityProjectionRepositoryInterface
         $identityEmails = $this->getEntityManager()->getRepository(IdentityEmail::class)
             ->findBy(['email' => $email]);
 
-        return array_values(array_map(
+        return array_map(
             static fn (IdentityEmail $identityEmail): Identity => $identityEmail->getIdentity(),
             $identityEmails,
-        ));
+        );
     }
 
     /**
@@ -77,6 +83,9 @@ final class IdentityProjector implements IdentityProjectionRepositoryInterface
     public function onIdentityNameChanged(Message $message): void
     {
         $event = $this->getEvent($message, IdentityRawNameAdded::class);
+        if ($event->rawName === null) {
+            return;
+        }
         $identity = $this->loadOrCreateIdentity($event->identityId->toString());
         $identity->addRawName($event->rawName->toString());
 
@@ -88,8 +97,8 @@ final class IdentityProjector implements IdentityProjectionRepositoryInterface
     {
         $event = $this->getEvent($message, IdentityPersonNameChanged::class);
         $identity = $this->loadOrCreateIdentity($event->identityId->toString());
-        $identity->setGivenName($event->personName->givenName);
-        $identity->setFamilyName($event->personName->familyName);
+        $identity->setGivenName($event->personName?->givenName);
+        $identity->setFamilyName($event->personName?->familyName);
 
         $this->flush($message);
     }
@@ -98,6 +107,9 @@ final class IdentityProjector implements IdentityProjectionRepositoryInterface
     public function onIdentityEmailAdded(Message $message): void
     {
         $event = $this->getEvent($message, IdentityEmailAdded::class);
+        if ($event->email === null) {
+            return;
+        }
         $identity = $this->loadOrCreateIdentity($event->identityId->toString());
         $identity->addEmail($event->email->toString());
 
@@ -108,6 +120,9 @@ final class IdentityProjector implements IdentityProjectionRepositoryInterface
     public function onIdentityIbanAdded(Message $message): void
     {
         $event = $this->getEvent($message, IdentityIbanAdded::class);
+        if ($event->iban === null) {
+            return;
+        }
         $identity = $this->loadOrCreateIdentity($event->identityId->toString());
         $identity->addIban($event->iban->value);
 
@@ -119,7 +134,17 @@ final class IdentityProjector implements IdentityProjectionRepositoryInterface
     {
         $event = $this->getEvent($message, IdentityNationalIdCodeChanged::class);
         $identity = $this->loadOrCreateIdentity($event->identityId->toString());
-        $identity->setNationalIdCode($event->nationalIdCode->value);
+        $identity->setNationalIdCode($event->nationalIdCode?->value);
+
+        $this->flush($message);
+    }
+
+    #[Subscribe(IdentityOrganisationRegCodeChanged::class)]
+    public function onIdentityOrganisationRegCodeChanged(Message $message): void
+    {
+        $event = $this->getEvent($message, IdentityOrganisationRegCodeChanged::class);
+        $identity = $this->loadOrCreateIdentity($event->identityId->toString());
+        $identity->setOrganisationRegCode($event->organisationRegCode?->value);
 
         $this->flush($message);
     }

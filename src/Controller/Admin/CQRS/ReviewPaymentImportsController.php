@@ -21,8 +21,8 @@ use ErgoSarapu\DonationBundle\BCPayments\Application\Command\AcceptPaymentImport
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\ReconcilePaymentImport;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\RejectPaymentImport;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model\Payment;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportStatus;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -133,7 +133,7 @@ class ReviewPaymentImportsController extends AbstractPaymentController
         /** @var Payment $payment */
         $payment = $context->getEntity()->getInstance();
         $command = new AcceptPaymentImport(PaymentId::fromString($payment->getPaymentId()));
-        return $this->dispatchAndReturnCorrelationId($command);
+        return $this->dispatchAndReturnTrackingId($command);
     }
 
     /**
@@ -146,7 +146,7 @@ class ReviewPaymentImportsController extends AbstractPaymentController
         /** @var Payment $payment */
         $payment = $context->getEntity()->getInstance();
         $command = new RejectPaymentImport(PaymentId::fromString($payment->getPaymentId()));
-        return $this->dispatchAndReturnCorrelationId($command);
+        return $this->dispatchAndReturnTrackingId($command);
     }
 
     /**
@@ -170,7 +170,7 @@ class ReviewPaymentImportsController extends AbstractPaymentController
             PaymentId::fromString($payment->getPaymentId()),
             PaymentId::fromString($reconcileWith)
         );
-        return $this->dispatchAndReturnCorrelationId($command);
+        return $this->dispatchAndReturnTrackingId($command);
     }
 
 }

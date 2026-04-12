@@ -7,10 +7,10 @@ namespace ErgoSarapu\DonationBundle\BCPayments\Application\EventHandler\Domain;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\MovePaymentImportToReview;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\ReconcilePaymentImport;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentsMatcherInterface;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportPending;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\EventHandlerInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 
 class TryReconcilePaymentImportHandler implements EventHandlerInterface
 {

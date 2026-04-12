@@ -18,7 +18,6 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanRene
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanRenewalInitiated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanStatus;
 use ErgoSarapu\DonationBundle\SharedInfrastructure\Patchlevel\ProjectorTrait;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use Patchlevel\EventSourcing\Attribute\Projector;
 use Patchlevel\EventSourcing\Attribute\Subscribe;
 use Patchlevel\EventSourcing\Attribute\Teardown;
@@ -31,9 +30,9 @@ class RecurringPlanProjector implements RecurringPlanProjectionRepositoryInterfa
     use SubscriberUtil;
     use ProjectorTrait;
 
-    public function findOne(?RecurringPlanId $id = null, ?RecurringPlanStatus $status = null, ?PaymentMethodId $paymentMethodId = null): ?RecurringPlan
+    public function findOne(?RecurringPlanId $id = null, ?RecurringPlanStatus $status = null): ?RecurringPlan
     {
-        return $this->findOneByCriteria($this->buildCriteria($id, $status, $paymentMethodId));
+        return $this->findOneByCriteria($this->buildCriteria($id, $status));
     }
 
     private function findOneOrThrow(?RecurringPlanId $id = null, ?RecurringPlanStatus $status = null): RecurringPlan
@@ -57,7 +56,7 @@ class RecurringPlanProjector implements RecurringPlanProjectionRepositoryInterfa
     /**
      * @return array<string, string>
      */
-    private function buildCriteria(?RecurringPlanId $id = null, ?RecurringPlanStatus $status = null, ?PaymentMethodId $paymentMethodId = null): array
+    private function buildCriteria(?RecurringPlanId $id = null, ?RecurringPlanStatus $status = null): array
     {
         $criteria = [];
         if ($id !== null) {
@@ -65,9 +64,6 @@ class RecurringPlanProjector implements RecurringPlanProjectionRepositoryInterfa
         }
         if ($status !== null) {
             $criteria['status'] = $status->value;
-        }
-        if ($paymentMethodId !== null) {
-            $criteria['paymentMethodId'] = $paymentMethodId->toString();
         }
         return $criteria;
     }
@@ -92,7 +88,6 @@ class RecurringPlanProjector implements RecurringPlanProjectionRepositoryInterfa
         $recurringPlan->setInterval($event->interval->toString());
         $recurringPlan->setStatus($event->status);
         $recurringPlan->setDonorEmail($event->donorDetails?->email?->toString());
-        $recurringPlan->setPaymentMethodId($event->paymentMethodId->toString());
         $this->persist($recurringPlan);
         $this->flush($message);
     }
@@ -117,7 +112,6 @@ class RecurringPlanProjector implements RecurringPlanProjectionRepositoryInterfa
         $recurringPlan->setInterval($event->interval->toString());
         $recurringPlan->setStatus($event->status);
         $recurringPlan->setDonorEmail($event->donorDetails?->email?->toString());
-        $recurringPlan->setPaymentMethodId($event->recurringPlanAction->paymentMethodId->toString());
         $this->persist($recurringPlan);
         $this->flush($message);
     }

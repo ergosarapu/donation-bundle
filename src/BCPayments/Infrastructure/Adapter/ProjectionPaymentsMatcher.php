@@ -9,8 +9,8 @@ use Doctrine\ORM\EntityManagerInterface;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentMatch;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentsMatcherInterface;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model\Payment;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportStatus;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 
 class ProjectionPaymentsMatcher implements PaymentsMatcherInterface
 {

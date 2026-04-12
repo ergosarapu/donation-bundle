@@ -31,15 +31,15 @@ class SymfonyMessengerCommandBus implements CommandBusInterface
             $envelope = $this->commandBus->dispatch($command);
         }
 
-        $result =  $envelope->last(HandledStamp::class)?->getResult();
-        $metadata = $envelope->last(MessageMetadataStamp::class);
-        if ($metadata === null) {
-            throw new RuntimeException('MessageMetadataStamp is missing from the envelope.');
+        $result = $envelope->last(HandledStamp::class)?->getResult();
+        $metadataStamp = $envelope->last(MessageMetadataStamp::class);
+        if ($metadataStamp === null) {
+            throw new RuntimeException('MessageMetadataStap is missing from the envelope.');
         }
 
         return new CommandResult(
             result: $result,
-            correlationId: $metadata->correlationId
+            trackingId: $metadataStamp->trackingId,
         );
     }
 }

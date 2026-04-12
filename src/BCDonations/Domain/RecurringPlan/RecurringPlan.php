@@ -16,8 +16,8 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\Recurri
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanReActivateNotAllowedException;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanRenewalNotAllowedException;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\Exception\RecurringPlanRenewalNotDueYetException;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Interval;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use InvalidArgumentException;
@@ -36,11 +36,11 @@ class RecurringPlan extends BasicAggregateRoot
     private CampaignId $campaignId;
     private Money $amount;
     private Gateway $gateway;
-    private RecurringInterval $interval;
+    private Interval $interval;
     private RecurringPlanStatus $status;
     private ?DateTimeImmutable $nextRenewalTime;
     private ?DonorDetails $donorDetails;
-    private PaymentMethodId $paymentMethodId;
+    private string $paymentMethodId;
     private ShortDescription $description;
 
     public static function initiate(
@@ -48,7 +48,7 @@ class RecurringPlan extends BasicAggregateRoot
         RecurringPlanId $recurringPlanId,
         RecurringPlanAction $recurringPlanAction,
         DonationRequest $initialDonationRequest,
-        RecurringInterval $interval,
+        Interval $interval,
     ): self {
         if ($initialDonationRequest->donorDetails->email === null) {
             throw new InvalidArgumentException('Recurring plan requires donor email');
@@ -74,10 +74,10 @@ class RecurringPlan extends BasicAggregateRoot
         DateTimeImmutable $currentTime,
         RecurringPlanId $recurringPlanId,
         RecurringPlanStatus $status,
-        RecurringInterval $interval,
+        Interval $interval,
         DonationId $initialDonationId,
         CampaignId $campaignId,
-        PaymentMethodId $paymentMethodId,
+        string $paymentMethodId,
         Money $amount,
         Gateway $gateway,
         DonorDetails $donorDetails,
@@ -135,7 +135,6 @@ class RecurringPlan extends BasicAggregateRoot
         $this->gateway = $event->gateway;
         $this->donorDetails = $event->donorDetails;
         $this->nextRenewalTime = null;
-        $this->paymentMethodId = $event->recurringPlanAction->paymentMethodId;
         $this->description = $event->description;
     }
 
@@ -147,6 +146,7 @@ class RecurringPlan extends BasicAggregateRoot
         $this->status = $event->status;
         $this->interval = $event->interval;
         $this->renwalDonationInProgress = null;
+        $this->paymentMethodId = $event->paymentMethodId;
     }
 
     #[Apply]
@@ -191,21 +191,23 @@ class RecurringPlan extends BasicAggregateRoot
             throw new LogicException('Missing donor details. Personal info may have been deleted.');
         }
 
-        $renewalAction = RecurringPlanAction::forRenew($this->paymentMethodId);
         match ($this->status) {
-            RecurringPlanStatus::Active, RecurringPlanStatus::Failing => $this->recordThat(new RecurringPlanRenewalInitiated(
-                $currentTime,
-                $this->id,
-                $renewalAction,
-                $renewalDonationId,
-                $this->campaignId,
-                $this->amount,
-                $this->gateway,
-                $this->donorDetails,
-                $this->description,
-            )),
-            default =>  throw new RecurringPlanRenewalNotAllowedException('Only active and failing recurring donations can be renewed.'),
+            RecurringPlanStatus::Active, RecurringPlanStatus::Failing => null,
+            default => throw new RecurringPlanRenewalNotAllowedException('Only active and failing recurring plans can be renewed.'),
         };
+
+        $renewalAction = RecurringPlanAction::forRenew($this->paymentMethodId);
+        $this->recordThat(new RecurringPlanRenewalInitiated(
+            $currentTime,
+            $this->id,
+            $renewalAction,
+            $renewalDonationId,
+            $this->campaignId,
+            $this->amount,
+            $this->gateway,
+            $this->donorDetails,
+            $this->description,
+        ));
     }
 
     #[Apply]
@@ -279,10 +281,10 @@ class RecurringPlan extends BasicAggregateRoot
         $this->recordThat(new RecurringPlanFailing($currentTime, $this->id));
     }
 
-    public function activate(DateTimeImmutable $currentTime): void
+    public function activate(DateTimeImmutable $currentTime, string $paymentMethodId): void
     {
         match ($this->status) {
-            RecurringPlanStatus::Initiated => $this->calculateNextRenewalTimeAndActivate($currentTime),
+            RecurringPlanStatus::Initiated => $this->calculateNextRenewalTimeAndActivate($currentTime, $paymentMethodId),
             default => throw new RecurringPlanActivateNotAllowedException('Activate not allowed from status: ' . $this->status->value),
         };
     }
@@ -290,12 +292,13 @@ class RecurringPlan extends BasicAggregateRoot
     public function reActivate(DateTimeImmutable $currentTime): void
     {
         match ($this->status) {
-            RecurringPlanStatus::Failing => $this->calculateNextRenewalTimeAndActivate($currentTime),
+            RecurringPlanStatus::Failing => null,
             default => throw new RecurringPlanReActivateNotAllowedException('Re-activate not allowed from status: ' . $this->status->value),
         };
+        $this->calculateNextRenewalTimeAndActivate($currentTime, $this->paymentMethodId);
     }
 
-    private function calculateNextRenewalTimeAndActivate(DateTimeImmutable $now): void
+    private function calculateNextRenewalTimeAndActivate(DateTimeImmutable $now, string $paymentMethodId): void
     {
         $this->recordThat(
             new RecurringPlanActivated(
@@ -303,6 +306,7 @@ class RecurringPlan extends BasicAggregateRoot
                 $this->id,
                 $this->calculateNextRenewalTime($now),
                 $this->interval,
+                $paymentMethodId,
             )
         );
     }

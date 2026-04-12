@@ -10,7 +10,6 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanActi
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\AbstractTimestampedEvent;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\DomainEventInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
@@ -29,7 +28,6 @@ final class DonationInitiated extends AbstractTimestampedEvent implements Domain
         public readonly DonationId $donationId,
         public readonly Money $amount,
         public readonly CampaignId $campaignId,
-        public readonly PaymentId $paymentId,
         public readonly Gateway $gateway,
         public readonly ShortDescription $description,
         public readonly ?RecurringPlanId $recurringPlanId,

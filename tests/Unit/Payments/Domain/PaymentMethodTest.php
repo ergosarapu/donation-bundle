@@ -6,8 +6,10 @@ namespace ErgoSarapu\DonationBundle\Tests\Unit\Payments\Domain;
 
 use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCredentialValue;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethod;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodAction;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodResult;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodUnusable;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodUnusableReason;
@@ -15,11 +17,10 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodUsePermitte
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodUseRejected;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\UnusablePaymentMethodCreated;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\UsablePaymentMethodCreated;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use InvalidArgumentException;
 use Patchlevel\EventSourcing\PhpUnit\Test\AggregateRootTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Ramsey\Uuid\Uuid;
 
 class PaymentMethodTest extends AggregateRootTestCase
 {
@@ -42,15 +43,19 @@ class PaymentMethodTest extends AggregateRootTestCase
         $paymentMethodId = PaymentMethodId::generate();
         $paymentMethodResult = PaymentMethodResult::usable(new PaymentCredentialValue('value'));
         $value = new PaymentCredentialValue('value');
+        $createFor = Uuid::uuid7()->toString();
+
         $this->when(fn () => PaymentMethod::create(
             $this->now,
             $paymentMethodId,
-            $paymentMethodResult
+            $paymentMethodResult,
+            $createFor,
         ))->then(
             new UsablePaymentMethodCreated(
                 $this->now,
                 $paymentMethodId,
                 $value,
+                $createFor,
             ),
         );
     }
@@ -60,15 +65,19 @@ class PaymentMethodTest extends AggregateRootTestCase
     {
         $paymentMethodId = PaymentMethodId::generate();
         $paymentMethodResult = PaymentMethodResult::unusable($reason);
+        $createFor = Uuid::uuid7()->toString();
+
         $this->when(fn () => PaymentMethod::create(
             $this->now,
             $paymentMethodId,
             $paymentMethodResult,
+            $createFor,
         ))->then(
             new UnusablePaymentMethodCreated(
                 $this->now,
                 $paymentMethodId,
                 $reason,
+                $createFor,
             ),
         );
     }
@@ -89,11 +98,13 @@ class PaymentMethodTest extends AggregateRootTestCase
         $paymentMethodId = PaymentMethodId::generate();
         $paymentMethodResult = PaymentMethodResult::usable(new PaymentCredentialValue('new value'));
         $value = new PaymentCredentialValue('value');
+        $createFor = Uuid::uuid7()->toString();
         $this->given(
             new UsablePaymentMethodCreated(
                 $this->now,
                 $paymentMethodId,
                 $value,
+                $createFor,
             ),
         )->when(function (PaymentMethod $credential) use ($paymentMethodId, $paymentMethodResult) {
             $credential->update(
@@ -107,12 +118,14 @@ class PaymentMethodTest extends AggregateRootTestCase
     public function testUpdateUsableToUnusable(): void
     {
         $paymentMethodId = PaymentMethodId::generate();
+        $createFor = Uuid::uuid7()->toString();
         $paymentMethodResult = PaymentMethodResult::unusable(PaymentMethodUnusableReason::Revoked);
         $this->given(
             new UsablePaymentMethodCreated(
                 $this->now,
                 $paymentMethodId,
                 new PaymentCredentialValue('value'),
+                $createFor,
             ),
         )->when(function (PaymentMethod $credential) use ($paymentMethodId, $paymentMethodResult) {
             $credential->update(
@@ -125,6 +138,7 @@ class PaymentMethodTest extends AggregateRootTestCase
                 $this->now,
                 $paymentMethodId,
                 PaymentMethodUnusableReason::Revoked,
+                $createFor,
             ),
         );
     }
@@ -134,11 +148,13 @@ class PaymentMethodTest extends AggregateRootTestCase
     {
         $paymentMethodId = PaymentMethodId::generate();
         $paymentMethodResult = PaymentMethodResult::unusable($reason);
+        $createFor = Uuid::uuid7()->toString();
         $this->given(
             new PaymentMethodUnusable(
                 $this->now,
                 $paymentMethodId,
                 $reason,
+                $createFor,
             ),
         )->when(function (PaymentMethod $credential) use ($paymentMethodId, $paymentMethodResult) {
             $credential->update(
@@ -153,12 +169,14 @@ class PaymentMethodTest extends AggregateRootTestCase
     {
         $paymentMethodId = PaymentMethodId::generate();
         $value = new PaymentCredentialValue('value');
+        $createFor = Uuid::uuid7()->toString();
 
         $this->given(
             new UsablePaymentMethodCreated(
                 $this->now,
                 $paymentMethodId,
                 $value,
+                $createFor
             ),
         )->when(function (PaymentMethod $credential) {
             $otherPaymentMethodId = PaymentMethodId::generate();
@@ -178,12 +196,14 @@ class PaymentMethodTest extends AggregateRootTestCase
             PaymentId::generate(),
         );
         $value = new PaymentCredentialValue('value');
+        $createFor = Uuid::uuid7()->toString();
 
         $this->given(
             new UsablePaymentMethodCreated(
                 $this->now,
                 $paymentMethodId,
                 $value,
+                $createFor,
             ),
         )->when(function (PaymentMethod $credential) use ($paymentMethodActionForUse) {
             $credential->use(
@@ -207,12 +227,13 @@ class PaymentMethodTest extends AggregateRootTestCase
             $paymentMethodId,
             PaymentId::generate(),
         );
-
+        $createFor = Uuid::uuid7()->toString();
         $this->given(
             new PaymentMethodUnusable(
                 $this->now,
                 $paymentMethodId,
                 $reason,
+                $createFor,
             ),
         )->when(function (PaymentMethod $credential) use ($paymentMethodActionForUse) {
             $credential->use(
@@ -235,12 +256,13 @@ class PaymentMethodTest extends AggregateRootTestCase
             PaymentId::generate(),
         );
         $value = new PaymentCredentialValue('value');
-
+        $createFor = Uuid::uuid7()->toString();
         $this->given(
             new UsablePaymentMethodCreated(
                 $this->now,
                 $paymentMethodId,
                 $value,
+                $createFor,
             ),
         )->when(function (PaymentMethod $credential) use ($paymentMethodActionForUse) {
             $credential->use(

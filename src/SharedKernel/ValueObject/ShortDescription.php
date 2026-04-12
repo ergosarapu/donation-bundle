@@ -13,6 +13,7 @@ final class ShortDescription
 
     public function __construct(string $value)
     {
+        /** @var string $value */
         $value = mb_trim($value);
         if ($value === '') {
             throw new \InvalidArgumentException('Short description cannot be empty.');

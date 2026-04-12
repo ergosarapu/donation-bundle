@@ -7,8 +7,6 @@ namespace ErgoSarapu\DonationBundle\BCPayments\Domain\Payment;
 use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\AbstractTimestampedEvent;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\DomainEventInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ExternalEntityId;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use Patchlevel\EventSourcing\Attribute\Event;
 use Patchlevel\Hydrator\Attribute\DataSubjectId;
@@ -24,7 +22,7 @@ class PaymentAuthorized extends AbstractTimestampedEvent implements DomainEventI
         #[DataSubjectId]
         public readonly PaymentId $paymentId,
         public readonly Money $authorizedAmount,
-        public readonly ?ExternalEntityId $appliedTo = null,
+        public readonly ?string $appliedTo = null,
         public readonly ?PaymentMethodAction $paymentMethodAction = null,
         #[PersonalData]
         public readonly ?PaymentMethodResult $paymentMethodResult = null,

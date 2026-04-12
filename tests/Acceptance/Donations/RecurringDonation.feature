@@ -5,7 +5,7 @@ Feature: Recurring Donation
 
   Scenario: Initiate recurring donation
     When initiate recurring donation
-    Then donation is initiated for the renewal
+    Then donation is initiated for the recurring plan
     And recurring plan is initiated with the donation as initial donation
     And initiate payment integration command is sent with request to store payment method
 
@@ -28,7 +28,7 @@ Feature: Recurring Donation
     Given activated recurring plan exists
     When recurring plan is due for renewal
     Then recurring plan renewal is initiated
-    And donation is initiated for the renewal
+    And donation is initiated for the recurring plan
     And initiate payment integration command is sent with request to use payment method
     When payment succeeds
     Then donation is marked as accepted
@@ -38,7 +38,7 @@ Feature: Recurring Donation
     Given activated recurring plan exists
     When recurring plan is due for renewal
     Then recurring plan renewal is initiated
-    And donation is initiated for the renewal
+    And donation is initiated for the recurring plan
     And initiate payment integration command is sent with request to use payment method
     When payment fails
     Then donation is marked as failed
@@ -47,7 +47,7 @@ Feature: Recurring Donation
     Then recurring plan is marked as activated
     When recurring plan is due for renewal
     Then recurring plan renewal is initiated
-    And donation is initiated for the renewal
+    And donation is initiated for the recurring plan
     And initiate payment integration command is sent with request to use payment method
     When payment succeeds
     Then donation is marked as accepted

@@ -157,7 +157,7 @@ class CampaignController extends AbstractCQRSController
         $command = new ActivateCampaign(
             CampaignId::fromString($campaign->getCampaignId())
         );
-        return $this->dispatchAndReturnCorrelationId($command);
+        return $this->dispatchAndReturnTrackingId($command);
     }
 
     /**
@@ -172,6 +172,6 @@ class CampaignController extends AbstractCQRSController
         $command = new ArchiveCampaign(
             CampaignId::fromString($campaign->getCampaignId())
         );
-        return $this->dispatchAndReturnCorrelationId($command);
+        return $this->dispatchAndReturnTrackingId($command);
     }
 }

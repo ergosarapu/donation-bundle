@@ -12,12 +12,13 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodActionInten
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodResult;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodUnusableReason;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Identities\Event\ClaimPresentedIntegrationEvent;
+use ErgoSarapu\DonationBundle\IntegrationContracts\Identities\ValueObject\ClaimerContext;
+use ErgoSarapu\DonationBundle\IntegrationContracts\Identities\ValueObject\ClaimEvidenceLevel;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Identities\ValueObject\ClaimPresentation;
+use ErgoSarapu\DonationBundle\IntegrationContracts\ValueObject\EntityId;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\EventBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\EventHandlerInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ClaimEvidenceLevel;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ClaimSource;
 
 class PaymentCapturedHandler implements EventHandlerInterface
 {
@@ -31,14 +32,15 @@ class PaymentCapturedHandler implements EventHandlerInterface
     {
         if ($event->paymentMethodAction !== null) {
             match ($event->paymentMethodAction->intent) {
-                PaymentMethodActionIntent::Request => $this->handleRequestIntent($event->paymentMethodAction, $event->paymentMethodResult),
+                PaymentMethodActionIntent::Request => $this->handleRequestIntent($event->paymentMethodAction, $event->paymentMethodResult, $event->paymentMethodAction->getCreateFor()),
                 PaymentMethodActionIntent::Use => $this->handleUseIntent($event->paymentMethodAction, $event->paymentMethodResult),
             };
         }
 
         if ($event->iban !== null) {
             $this->eventBus->dispatch(new ClaimPresentedIntegrationEvent(
-                ClaimSource::forPayment($event->paymentId),
+                new EntityId($event->paymentId->toString()),
+                ClaimerContext::Payment,
                 [ClaimPresentation::forValue($event->iban, ClaimEvidenceLevel::Verified)],
             ));
         }
@@ -46,7 +48,8 @@ class PaymentCapturedHandler implements EventHandlerInterface
 
     private function handleRequestIntent(
         PaymentMethodAction $action,
-        ?PaymentMethodResult $paymentMethodResult
+        ?PaymentMethodResult $paymentMethodResult,
+        string $createFor
     ): void {
         if ($paymentMethodResult === null) {
             $paymentMethodResult = PaymentMethodResult::unusable(PaymentMethodUnusableReason::RequestFailed);
@@ -54,6 +57,7 @@ class PaymentCapturedHandler implements EventHandlerInterface
         $this->commandBus->dispatch(new CreatePaymentMethod(
             $action->paymentMethodId,
             $paymentMethodResult,
+            $createFor,
         ));
     }
 

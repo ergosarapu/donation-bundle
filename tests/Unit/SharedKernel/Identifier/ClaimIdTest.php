@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\Tests\Unit\SharedKernel\Identifier;
 
-use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ClaimId;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ClaimSource;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimId;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimSource;
 use PHPUnit\Framework\TestCase;
 
 class ClaimIdTest extends TestCase
@@ -36,7 +34,7 @@ class ClaimIdTest extends TestCase
 
     public function testGenerateDeterministicProducesSameIdForSameSource(): void
     {
-        $source = ClaimSource::forPayment(PaymentId::fromString(self::PAYMENT_UUID));
+        $source = ClaimSource::forPayment(self::PAYMENT_UUID);
 
         $id1 = ClaimId::generateDeterministic($source);
         $id2 = ClaimId::generateDeterministic($source);
@@ -49,7 +47,7 @@ class ClaimIdTest extends TestCase
         // This test ensures the deterministic algorithm doesn't change unexpectedly.
         // If this test fails, it means the implementation has changed and existing claim IDs will be invalidated.
         // deterministicKey: "payment|018e1234-0000-7000-8000-000000000001"
-        $source = ClaimSource::forPayment(PaymentId::fromString(self::PAYMENT_UUID));
+        $source = ClaimSource::forPayment(self::PAYMENT_UUID);
 
         $this->assertSame('5040708b-c7af-7f09-a44f-681b0ca829f8', ClaimId::generateDeterministic($source)->toString());
     }
@@ -59,15 +57,15 @@ class ClaimIdTest extends TestCase
         // This test ensures the deterministic algorithm doesn't change unexpectedly.
         // If this test fails, it means the implementation has changed and existing claim IDs will be invalidated.
         // deterministicKey: "donation|018e1234-0000-7000-8000-000000000001"
-        $source = ClaimSource::forDonation(DonationId::fromString(self::DONATION_UUID));
+        $source = ClaimSource::forDonation(self::DONATION_UUID);
 
         $this->assertSame('ba746ee9-e0bb-788b-8980-f0f89e49ca97', ClaimId::generateDeterministic($source)->toString());
     }
 
     public function testGenerateDeterministicProducesDifferentIdsForDifferentPaymentSources(): void
     {
-        $source1 = ClaimSource::forPayment(PaymentId::fromString('018e1234-0000-7000-8000-000000000001'));
-        $source2 = ClaimSource::forPayment(PaymentId::fromString('018e1234-0000-7000-8000-000000000002'));
+        $source1 = ClaimSource::forPayment('018e1234-0000-7000-8000-000000000001');
+        $source2 = ClaimSource::forPayment('018e1234-0000-7000-8000-000000000002');
 
         $this->assertNotEquals(
             ClaimId::generateDeterministic($source1)->toString(),
@@ -78,8 +76,8 @@ class ClaimIdTest extends TestCase
     public function testGenerateDeterministicProducesDifferentIdsForPaymentAndDonationContextWithSameUuid(): void
     {
         $uuid = '018e1234-0000-7000-8000-000000000001';
-        $paymentSource = ClaimSource::forPayment(PaymentId::fromString($uuid));
-        $donationSource = ClaimSource::forDonation(DonationId::fromString($uuid));
+        $paymentSource = ClaimSource::forPayment($uuid);
+        $donationSource = ClaimSource::forDonation($uuid);
 
         $this->assertNotEquals(
             ClaimId::generateDeterministic($paymentSource)->toString(),
@@ -89,7 +87,7 @@ class ClaimIdTest extends TestCase
 
     public function testGenerateDeterministicProducesValidUuidV7(): void
     {
-        $source = ClaimSource::forPayment(PaymentId::fromString(self::PAYMENT_UUID));
+        $source = ClaimSource::forPayment(self::PAYMENT_UUID);
         $id = ClaimId::generateDeterministic($source);
         $parts = explode('-', $id->toString());
 

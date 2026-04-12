@@ -27,16 +27,17 @@ class PaymentFailedHandler implements EventHandlerInterface
         }
 
         match ($event->paymentMethodAction->intent) {
-            PaymentMethodActionIntent::Request => $this->handleRequestIntent($event->paymentMethodAction),
+            PaymentMethodActionIntent::Request => $this->handleRequestIntent($event->paymentMethodAction, $event->paymentMethodAction->getCreateFor()),
             PaymentMethodActionIntent::Use => $this->handleUseIntent($event->paymentMethodAction, $event->paymentMethodResult),
         };
     }
 
-    private function handleRequestIntent(PaymentMethodAction $action): void
+    private function handleRequestIntent(PaymentMethodAction $action, string $createFor): void
     {
         $this->commandBus->dispatch(new CreatePaymentMethod(
             $action->paymentMethodId,
             PaymentMethodResult::unusable(PaymentMethodUnusableReason::RequestFailed),
+            $createFor,
         ));
     }
 

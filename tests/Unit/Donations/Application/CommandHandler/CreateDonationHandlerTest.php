@@ -14,7 +14,6 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorDetails;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
@@ -22,6 +21,7 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
+use Ramsey\Uuid\Uuid;
 
 class CreateDonationHandlerTest extends TestCase
 {
@@ -47,7 +47,7 @@ class CreateDonationHandlerTest extends TestCase
 
         $donationId = DonationId::generate();
         $campaignId = CampaignId::generate();
-        $paymentId = PaymentId::generate();
+        $paymentId = Uuid::uuid7()->toString();
         $recurringPlanId = RecurringPlanId::generate();
         $amount = new Money(5000, new Currency('EUR'));
         $description = new ShortDescription('Test donation');

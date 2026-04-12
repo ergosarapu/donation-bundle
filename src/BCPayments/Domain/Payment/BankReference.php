@@ -13,6 +13,7 @@ final class BankReference
 
     public function __construct(string $value)
     {
+        /** @var string $value */
         $value = mb_trim($value);
         if ($value === '') {
             throw new \InvalidArgumentException('Bank reference cannot be empty.');

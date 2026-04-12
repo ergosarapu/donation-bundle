@@ -8,10 +8,10 @@ use ErgoSarapu\DonationBundle\BCPayments\Application\Command\ImportPaymentsFromF
 use ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\ImportPaymentsFromFileHandler;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentFileImportResult;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentImportDecoderInterface;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandResult;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 

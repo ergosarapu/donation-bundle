@@ -7,7 +7,6 @@ namespace ErgoSarapu\DonationBundle\BCPayments\Domain\Payment;
 use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\AbstractTimestampedEvent;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\DomainEventInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\URL;
 use Patchlevel\EventSourcing\Attribute\Event;
 

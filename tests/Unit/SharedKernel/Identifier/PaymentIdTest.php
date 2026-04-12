@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\Tests\Unit\SharedKernel\Identifier;
 
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentId;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
 use PHPUnit\Framework\TestCase;
 
 class PaymentIdTest extends TestCase

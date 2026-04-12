@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\Integration;
 
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\InitiatePayment;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodAction;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRequest;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Payments\Command\InitiatePaymentIntegrationCommand;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
@@ -20,23 +22,30 @@ class InitiatePaymentHandler implements CommandHandlerInterface
 
     public function __invoke(InitiatePaymentIntegrationCommand $command): void
     {
-        $paymentMethodAction = null;
-        if ($command->paymentMethodId !== null) {
-            if ($command->usePaymentMethodId) {
-                $paymentMethodAction = PaymentMethodAction::forUse($command->paymentMethodId, $command->paymentId);
-            } else {
-                $paymentMethodAction = PaymentMethodAction::forRequest($command->paymentMethodId, $command->paymentId);
-            }
-        }
+        $paymentId = PaymentId::generate();
+        $paymentMethodAction = $this->resolvePaymentMethodAction($command, $paymentId);
         $paymentRequest = new PaymentRequest(
-            $command->paymentId,
+            $paymentId,
             $command->amount,
             $command->gateway,
             $command->description,
-            $command->appliedTo,
+            $command->appliedTo->toString(),
             $command->email,
-            $paymentMethodAction
+            $paymentMethodAction,
         );
         $this->commandBus->dispatch(new InitiatePayment($paymentRequest));
+    }
+
+    private function resolvePaymentMethodAction(InitiatePaymentIntegrationCommand $command, PaymentId $paymentId): ?PaymentMethodAction
+    {
+        if ($command->paymentMethodId !== null) {
+            return PaymentMethodAction::forUse(PaymentMethodId::fromString($command->paymentMethodId->toString()), $paymentId);
+        }
+
+        if ($command->requestPaymentMethodFor === null) {
+            return null;
+        }
+
+        return PaymentMethodAction::forRequest(PaymentMethodId::generate(), $paymentId, $command->requestPaymentMethodFor->toString());
     }
 }

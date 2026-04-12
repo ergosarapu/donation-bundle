@@ -29,6 +29,7 @@
   </extensions>
   <source>
     <include>
+      <directory>./src/SharedKernel</directory>
       <directory>./src/BCDonations/Domain</directory>
       <directory>./src/BCDonations/Application/CommandHandler</directory>
       <directory>./src/BCPayments/Domain</directory>

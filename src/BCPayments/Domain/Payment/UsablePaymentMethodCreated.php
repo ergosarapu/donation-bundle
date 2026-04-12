@@ -7,7 +7,6 @@ namespace ErgoSarapu\DonationBundle\BCPayments\Domain\Payment;
 use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\AbstractTimestampedEvent;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\DomainEventInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use Patchlevel\EventSourcing\Attribute\Event;
 
 #[Event(name: 'payment_method.created_usable')]
@@ -17,6 +16,7 @@ class UsablePaymentMethodCreated extends AbstractTimestampedEvent implements Dom
         DateTimeImmutable $occuredOn,
         public readonly PaymentMethodId $paymentMethodId,
         public readonly PaymentCredentialValue $credentialValue,
+        public readonly string $createdFor,
     ) {
         parent::__construct($occuredOn);
     }

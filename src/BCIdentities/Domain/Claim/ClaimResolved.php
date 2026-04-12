@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim;
 
 use DateTimeImmutable;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimSource;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityId;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\AbstractTimestampedEvent;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\DomainEventInterface;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\ClaimId;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\IdentityId;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ClaimSource;
 use Patchlevel\EventSourcing\Attribute\Event;
 use Patchlevel\Hydrator\Attribute\DataSubjectId;
 

@@ -11,20 +11,20 @@ use ErgoSarapu\DonationBundle\BCDonations\Application\Port\RecurringPlanReposito
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonorDetails;
-use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringInterval;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlan;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanStatus;
 use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
-use ErgoSarapu\DonationBundle\SharedKernel\Identifier\PaymentMethodId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Interval;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
+use Ramsey\Uuid\Uuid;
 
 class CreateRecurringPlanHandlerTest extends TestCase
 {
@@ -51,8 +51,8 @@ class CreateRecurringPlanHandlerTest extends TestCase
         $recurringPlanId = RecurringPlanId::generate();
         $initialDonationId = DonationId::generate();
         $campaignId = CampaignId::generate();
-        $paymentMethodId = PaymentMethodId::generate();
-        $interval = new RecurringInterval(RecurringInterval::Monthly);
+        $paymentMethodId = Uuid::uuid7()->toString();
+        $interval = new Interval(Interval::Monthly);
         $amount = new Money(5000, new Currency('EUR'));
         $gateway = new Gateway('test-gateway');
         $description = new ShortDescription('Test recurring plan');

@@ -8,7 +8,7 @@
         <id name="donationId" type="string" column="donation_id">
             <generator strategy="NONE"/>
         </id>
-        <field name="paymentId" type="string" column="payment_id" nullable="false"/>
+        <field name="paymentId" type="string" column="payment_id" nullable="true"/>
         <field name="amount" type="integer" column="amount" nullable="false"/>
         <field name="currency" type="string" column="currency" nullable="false"/>
         <field name="status" type="string" column="status" length="16" nullable="false" enum-type="ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationStatus"/>
