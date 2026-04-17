@@ -17,6 +17,7 @@ class Claim
     private ?string $email = null;
     private ?string $iban = null;
     private ?string $nationalIdCode = null;
+    private ?string $organisationRegCode = null;
     private bool $inReview = false;
     private bool $resolved = false;
     private ?string $reviewReason = null;
@@ -112,6 +113,16 @@ class Claim
     public function setNationalIdCode(?string $nationalIdCode): void
     {
         $this->nationalIdCode = $nationalIdCode;
+    }
+
+    public function getOrganisationRegCode(): ?string
+    {
+        return $this->organisationRegCode;
+    }
+
+    public function setOrganisationRegCode(?string $organisationRegCode): void
+    {
+        $this->organisationRegCode = $organisationRegCode;
     }
 
     public function isInReview(): bool

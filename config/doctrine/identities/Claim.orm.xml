@@ -14,7 +14,8 @@
         <field name="rawName" type="string" column="raw_name" length="255" nullable="true"/>
         <field name="email" type="string" column="email" length="255" nullable="true"/>
         <field name="iban" type="string" column="iban" length="50" nullable="true"/>
-        <field name="nationalIdCode" type="string" column="national_id_code" length="50" nullable="true"/>
+        <field name="nationalIdCode" type="string" column="national_id_code" length="20" nullable="true"/>
+        <field name="organisationRegCode" type="string" column="organisation_reg_code" length="20" nullable="true"/>
         <field name="inReview" type="boolean" column="in_review" nullable="false"/>
         <field name="resolved" type="boolean" column="resolved" nullable="false"/>
         <field name="reviewReason" type="string" column="review_reason" length="100" nullable="true"/>
