@@ -20,7 +20,6 @@ use Patchlevel\EventSourcing\Attribute\Aggregate;
 use Patchlevel\EventSourcing\Attribute\Apply;
 use Patchlevel\EventSourcing\Attribute\Id;
 
-/** @package ErgoSarapu\DonationBundle\BCPayments\Domain\Payment */
 #[Aggregate(name: 'payment')]
 class Payment extends BasicAggregateRoot
 {

@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\BCPayments\Infrastructure\Projection;
 
+use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model\Payment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\Port\PaymentProjectionRepositoryInterface;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\BankReference;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentAuthorized;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCanceled;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentCaptured;
@@ -17,6 +19,7 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportInReview;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportPending;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportReconciled;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportRejected;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportSourceIdentifier;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportStatus;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentInitiated;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRedirectUrlSetUp;
@@ -35,9 +38,17 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
     use SubscriberUtil;
     use ProjectorTrait;
 
-    public function findOne(?PaymentId $id = null, ?PaymentStatus $status = null): ?Payment
+    public function findOne(?PaymentId $id = null, ?PaymentStatus $status = null, ?DateTimeImmutable $bookingDate = null, ?PaymentImportSourceIdentifier $sourceIdentifier = null, ?BankReference $bankReference = null): ?Payment
     {
-        return $this->findOneByCriteria($this->buildCriteria($id, $status));
+        return $this->findOneByCriteria(
+            $this->buildCriteria(
+                $id,
+                $status,
+                $bookingDate,
+                $sourceIdentifier,
+                $bankReference,
+            )
+        );
     }
 
     public function findOneByCorrelationId(string $correlationId): ?Payment
@@ -70,7 +81,7 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
     }
 
     /**
-     * @param array<string, string> $criteria
+     * @param array<string, mixed> $criteria
      */
     private function findOneByCriteria(array $criteria): ?Payment
     {
@@ -78,9 +89,9 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
     }
 
     /**
-     * @return array<string, string>
+     * @return array<string, mixed>
      */
-    private function buildCriteria(?PaymentId $id = null, ?PaymentStatus $status = null): array
+    private function buildCriteria(?PaymentId $id = null, ?PaymentStatus $status = null, ?DateTimeImmutable $bookingDate = null, ?PaymentImportSourceIdentifier $sourceIdentifier = null, ?BankReference $bankReference = null): array
     {
         $criteria = [];
         if ($id !== null) {
@@ -88,6 +99,15 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         }
         if ($status !== null) {
             $criteria['status'] = $status->value;
+        }
+        if ($bookingDate !== null) {
+            $criteria['bookingDate'] = $bookingDate;
+        }
+        if ($sourceIdentifier !== null) {
+            $criteria['sourceIdentifier'] = $sourceIdentifier->value;
+        }
+        if ($bankReference !== null) {
+            $criteria['bankReference'] = $bankReference->value;
         }
         return $criteria;
     }

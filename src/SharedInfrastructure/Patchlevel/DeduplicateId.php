@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim;
+namespace ErgoSarapu\DonationBundle\SharedInfrastructure\Patchlevel;
 
 use Patchlevel\EventSourcing\Aggregate\AggregateRootId;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
-final class ClaimId implements AggregateRootId
+final class DeduplicateId implements AggregateRootId
 {
-    private const CLAIM_NAMESPACE = '6e8f9a2b-4c1d-47e9-b3f8-9d2e1f5c3a7b';
+    private const NAMESPACE = '55df5f3c-7d5f-4f73-84a2-8d6f0fcd22d5';
 
-    private function __construct(
+    public function __construct(
         private readonly UuidInterface $id,
     ) {
     }
@@ -27,8 +27,9 @@ final class ClaimId implements AggregateRootId
         return $this->id->toString();
     }
 
-    public static function generate(ClaimSource $source): self
+    public static function generate(string $deduplicateKey): self
     {
-        return self::fromString(Uuid::uuid5(self::CLAIM_NAMESPACE, $source->deterministicKey())->toString());
+        return new self(Uuid::uuid5(self::NAMESPACE, $deduplicateKey));
     }
+
 }

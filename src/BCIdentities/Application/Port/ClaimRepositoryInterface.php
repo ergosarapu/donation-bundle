@@ -6,12 +6,11 @@ namespace ErgoSarapu\DonationBundle\BCIdentities\Application\Port;
 
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\Claim;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimId;
+use ErgoSarapu\DonationBundle\SharedApplication\Port\RepositoryInterface;
 
-interface ClaimRepositoryInterface
+/**
+ * @extends RepositoryInterface<Claim, ClaimId>
+ */
+interface ClaimRepositoryInterface extends RepositoryInterface
 {
-    public function save(Claim $claim): void;
-
-    public function load(ClaimId $claimId): Claim;
-
-    public function has(ClaimId $claimId): bool;
 }

@@ -49,7 +49,7 @@ final class IdentityTest extends AggregateRootTestCase
         $this->now = new DateTimeImmutable('2026-01-01 10:00:00');
         $this->identityId = IdentityId::generate();
         $claimSource = ClaimSource::forPayment('018e1234-0000-7000-8000-000000000001');
-        $this->claimId = ClaimId::generateDeterministic($claimSource);
+        $this->claimId = ClaimId::generate($claimSource);
         $this->personName = new PersonName('Jane', 'Doe');
         $this->nationalIdCode = new NationalIdCode('60001019906');
         $this->organisationRegCode = new OrganisationRegCode('12345678');

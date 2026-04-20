@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\UpdateCampaignPublicTitle;
 use ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\UpdateCampaignPublicTitleHandler;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Port\CampaignRepositoryInterface;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\Campaign;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignPublicTitle;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -43,12 +44,19 @@ class UpdateCampaignPublicTitleHandlerTest extends TestCase
 
     public function testUpdatesCampaignPublicTitle(): void
     {
-        $this->campaignRepository->expects($this->once())
-            ->method('load')
-            ->with($this->command->campaignId);
+        $campaign = $this->createMock(Campaign::class);
+        $campaign->expects($this->once())
+            ->method('updatePublicTitle')
+            ->with($this->now, $this->command->publicTitle);
 
         $this->campaignRepository->expects($this->once())
-            ->method('save');
+            ->method('load')
+            ->with($this->command->campaignId)
+            ->willReturn($campaign);
+
+        $this->campaignRepository->expects($this->once())
+            ->method('save')
+            ->with($campaign);
 
         ($this->handler)($this->command);
     }

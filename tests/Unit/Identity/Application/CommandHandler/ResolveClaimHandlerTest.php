@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\Tests\Unit\Identity\Application\CommandHandler;
 
 use DateTimeImmutable;
+use DateTimeZone;
 use ErgoSarapu\DonationBundle\BCIdentities\Application\Command\ResolveClaim;
 use ErgoSarapu\DonationBundle\BCIdentities\Application\CommandHandler\ResolveClaimHandler;
 use ErgoSarapu\DonationBundle\BCIdentities\Application\Port\ClaimRepositoryInterface;
@@ -52,7 +53,7 @@ final class ResolveClaimHandlerTest extends TestCase
         $this->identityLookup = $this->createMock(IdentityLookupInterface::class);
         $this->identityRepository = $this->createMock(IdentityRepositoryInterface::class);
         $this->transactionManager = $this->createMock(TransactionManagerInterface::class);
-        $this->now = new DateTimeImmutable('2026-01-01 10:00:00');
+        $this->now = new DateTimeImmutable('2026-01-01 01:00:00', new DateTimeZone('+02:00'));
 
         $clock = $this->createMock(ClockInterface::class);
         $clock->method('now')->willReturn($this->now);
@@ -69,7 +70,7 @@ final class ResolveClaimHandlerTest extends TestCase
     public function testMarksClaimInReviewWhenMultipleIdentityMatchesFound(): void
     {
         $source = ClaimSource::forPayment('018e1234-0000-7000-8000-000000000011');
-        $claimId = ClaimId::generateDeterministic($source);
+        $claimId = ClaimId::generate($source);
         $claim = $this->claimWithIban($source, $claimId, new Iban('EE471000001020145685'));
         $command = new ResolveClaim($claimId);
         $identityIdA = IdentityId::generate();
@@ -116,7 +117,7 @@ final class ResolveClaimHandlerTest extends TestCase
     public function testMarksClaimInReviewWhenIdentityMergeConflicts(): void
     {
         $source = ClaimSource::forPayment('018e1234-0000-7000-8000-000000000012');
-        $claimId = ClaimId::generateDeterministic($source);
+        $claimId = ClaimId::generate($source);
         $identityId = IdentityId::generate();
         $claim = Claim::createFromEvents([
             new ClaimCreated($this->now, $claimId, $source),
@@ -178,7 +179,7 @@ final class ResolveClaimHandlerTest extends TestCase
     public function testLoadsIdentityAndResolvesClaimTransactionally(): void
     {
         $source = ClaimSource::forPayment('018e1234-0000-7000-8000-000000000013');
-        $claimId = ClaimId::generateDeterministic($source);
+        $claimId = ClaimId::generate($source);
         $identityId = IdentityId::generate();
         $iban = new Iban('EE471000001020145685');
         $claim = $this->claimWithIban($source, $claimId, $iban);
@@ -252,7 +253,7 @@ final class ResolveClaimHandlerTest extends TestCase
     public function testCreatesIdentityAndResolvesClaimTransactionallyWhenLookupHasNoMatches(): void
     {
         $source = ClaimSource::forPayment('018e1234-0000-7000-8000-000000000014');
-        $claimId = ClaimId::generateDeterministic($source);
+        $claimId = ClaimId::generate($source);
         $iban = new Iban('GB29NWBK60161331926819');
         $claim = $this->claimWithIban($source, $claimId, $iban);
         $command = new ResolveClaim($claimId);

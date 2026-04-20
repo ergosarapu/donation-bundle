@@ -7,26 +7,38 @@ namespace ErgoSarapu\DonationBundle\BCIdentities\Infrastructure\Adapter;
 use ErgoSarapu\DonationBundle\BCIdentities\Application\Port\ClaimRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\Claim;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimId;
-use ErgoSarapu\DonationBundle\SharedInfrastructure\Patchlevel\PatchlevelRepositoryWrapperTrait;
+use ErgoSarapu\DonationBundle\SharedInfrastructure\Adapter\PatchlevelRepository;
 
 final class PatchlevelClaimRepository implements ClaimRepositoryInterface
 {
-    use PatchlevelRepositoryWrapperTrait;
-
-    public function save(Claim $claim): void
-    {
-        $this->saveAggregate($claim);
+    public function __construct(
+        private readonly PatchlevelRepository $repository,
+    ) {
     }
 
-    public function load(ClaimId $claimId): Claim
+    public function save(mixed $aggregate, ?string $deduplicateKey = null): void
     {
-        /** @var Claim $entityClaim */
-        $entityClaim = $this->loadAggregate($claimId);
-        return $entityClaim;
+        $this->repository->save($aggregate, $deduplicateKey);
     }
 
-    public function has(ClaimId $claimId): bool
+    public function load(mixed $aggregateId): mixed
     {
-        return $this->hasAggregate($claimId);
+        /** @var Claim $aggregate */
+        $aggregate = $this->repository->load($aggregateId);
+
+        return $aggregate;
+    }
+
+    public function has(mixed $aggregateId): bool
+    {
+        return $this->repository->has($aggregateId);
+    }
+
+    public function getIdByDeduplicateKey(string $deduplicateKey): mixed
+    {
+        /** @var ?ClaimId $aggregateId */
+        $aggregateId = $this->repository->getIdByDeduplicateKey($deduplicateKey);
+
+        return $aggregateId;
     }
 }

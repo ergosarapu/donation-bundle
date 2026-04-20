@@ -445,11 +445,13 @@ class DonationBundle extends AbstractBundle
                 __DIR__ . '/BCDonations/Domain',
                 __DIR__ . '/BCPayments/Domain',
                 __DIR__ . '/BCIdentities/Domain',
+                __DIR__ . '/SharedInfrastructure/Patchlevel',
             ],
             'events' => [
                 __DIR__ . '/BCDonations/Domain',
                 __DIR__ . '/BCPayments/Domain',
                 __DIR__ . '/BCIdentities/Domain',
+                __DIR__ . '/SharedInfrastructure/Patchlevel',
             ],
             'headers' => [
                 __DIR__ . '/SharedInfrastructure/Messenger/Stamp',

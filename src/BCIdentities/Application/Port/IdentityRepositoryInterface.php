@@ -6,12 +6,11 @@ namespace ErgoSarapu\DonationBundle\BCIdentities\Application\Port;
 
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\Identity;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityId;
+use ErgoSarapu\DonationBundle\SharedApplication\Port\RepositoryInterface;
 
-interface IdentityRepositoryInterface
+/**
+ * @extends RepositoryInterface<Identity, IdentityId>
+ */
+interface IdentityRepositoryInterface extends RepositoryInterface
 {
-    public function save(Identity $identity): void;
-
-    public function load(IdentityId $identityId): Identity;
-
-    public function has(IdentityId $identityId): bool;
 }

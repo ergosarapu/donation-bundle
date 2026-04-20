@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\Tests\Unit\Payments\Application\CommandHandler;
 
 use DateTimeImmutable;
+use DateTimeZone;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\CreatePendingPaymentImport;
 use ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\CreatePendingPaymentImportHandler;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentRepositoryInterface;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model\Payment as PaymentView;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Query\Port\PaymentProjectionRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\AccountHolderName;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\BankReference;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Bic;
@@ -16,7 +19,6 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportSourceIdentifier;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentReference;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
-use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
@@ -31,6 +33,7 @@ class CreatePendingPaymentImportHandlerTest extends TestCase
 {
     private CreatePendingPaymentImportHandler $handler;
     private PaymentRepositoryInterface&MockObject $paymentRepository;
+    private PaymentProjectionRepositoryInterface&MockObject $paymentProjectionRepository;
     private DateTimeImmutable $now;
     private CreatePendingPaymentImport $command;
 
@@ -39,13 +42,15 @@ class CreatePendingPaymentImportHandlerTest extends TestCase
         parent::setUp();
 
         $this->paymentRepository = $this->createMock(PaymentRepositoryInterface::class);
-        $this->now = new DateTimeImmutable('2024-02-01 12:00:00');
+        $this->paymentProjectionRepository = $this->createMock(PaymentProjectionRepositoryInterface::class);
+        $this->now = new DateTimeImmutable('2024-02-01 12:00:00', new DateTimeZone('UTC'));
 
         $clock = $this->createMock(ClockInterface::class);
         $clock->method('now')->willReturn($this->now);
 
         $this->handler = new CreatePendingPaymentImportHandler(
             $this->paymentRepository,
+            $this->paymentProjectionRepository,
             $clock
         );
 
@@ -53,7 +58,7 @@ class CreatePendingPaymentImportHandlerTest extends TestCase
         $bankReference = new BankReference('ref-456');
         $amount = new Money(5000, new Currency('EUR'));
         $description = new ShortDescription('Test payment import');
-        $bookingDate = new DateTimeImmutable('2024-02-02 12:01:15');
+        $bookingDate = new DateTimeImmutable('2024-02-02 12:01:15', new DateTimeZone('UTC'));
         $accountHolderName = new AccountHolderName('John Doe');
         $nationalIdCode = new NationalIdCode('12345678901');
         $organizationRegCode = new OrganisationRegCode('12345678');
@@ -79,14 +84,28 @@ class CreatePendingPaymentImportHandlerTest extends TestCase
 
     public function testCreatesPaymentImport(): void
     {
+        $this->paymentProjectionRepository->expects($this->once())
+            ->method('findOne')
+            ->with(
+                null,
+                null,
+                new DateTimeImmutable('2024-02-02 12:01:15', new DateTimeZone('UTC')),
+                new PaymentImportSourceIdentifier('source-123'),
+                new BankReference('ref-456'),
+            )
+            ->willReturn(null);
+
         $this->paymentRepository->expects($this->once())
-            ->method('has')
-            ->with($this->isInstanceOf(PaymentId::class))
-            ->willReturn(false);
+            ->method('getIdByDeduplicateKey')
+            ->with('2024-02-02|source-123|ref-456')
+            ->willReturn(null);
 
         $this->paymentRepository->expects($this->once())
             ->method('save')
-            ->with($this->isInstanceOf(Payment::class));
+            ->with(
+                $this->isInstanceOf(Payment::class),
+                '2024-02-02|source-123|ref-456',
+            );
 
         $result = ($this->handler)($this->command);
 
@@ -95,10 +114,14 @@ class CreatePendingPaymentImportHandlerTest extends TestCase
 
     public function testIgnoresCommandWhenPaymentAlreadyExists(): void
     {
-        $this->paymentRepository->expects($this->once())
-            ->method('has')
-            ->with($this->isInstanceOf(PaymentId::class))
-            ->willReturn(true);
+        $existingPayment = new PaymentView();
+
+        $this->paymentProjectionRepository->expects($this->once())
+            ->method('findOne')
+            ->willReturn($existingPayment);
+
+        $this->paymentRepository->expects($this->never())
+            ->method('getIdByDeduplicateKey');
 
         $this->paymentRepository->expects($this->never())
             ->method('save');
@@ -108,41 +131,33 @@ class CreatePendingPaymentImportHandlerTest extends TestCase
         $this->assertNull($result);
     }
 
-    public function testHandlesAggregateAlreadyExistsException(): void
+    public function testIgnoresCommandWhenPaymentAlreadyExistsByDeduplicateKey(): void
     {
-        $this->paymentRepository->expects($this->once())
-            ->method('has')
-            ->willReturn(false);
+        $this->paymentProjectionRepository->expects($this->once())
+            ->method('findOne')
+            ->willReturn(null);
 
         $this->paymentRepository->expects($this->once())
-            ->method('save')
-            ->willThrowException(new AggregateAlreadyExistsException('Payment already exists'));
+            ->method('getIdByDeduplicateKey')
+            ->with('2024-02-02|source-123|ref-456')
+            ->willReturn(PaymentId::generate());
 
-        // Should not throw exception - idempotency handling
+        $this->paymentRepository->expects($this->never())
+            ->method('save');
+
         $result = ($this->handler)($this->command);
-
         $this->assertNull($result);
     }
 
-    public function testGeneratesDeterministicPaymentIdFromSourceIdentifierBankReferenceAndBookingDate(): void
+    public function testUsesUtcBookingDateForDuplicateLookupAndDeduplicateKey(): void
     {
-        // This test locks down the exact arguments passed to PaymentId::generateDeterministic.
-        // If the key composition or timestamp derivation changes in the handler, this test breaks.
-        $expectedId = PaymentId::generateDeterministic(
-            'source-123|ref-456',                                                       // sourceIdentifier|bankReference
-            (new DateTimeImmutable('2024-02-02'))->setTime(0, 0, 0, 0)->getTimestamp() * 1000
-        );
-
-        $this->paymentRepository->method('has')->willReturn(false);
-        $this->paymentRepository->method('save');
-
         $command = new CreatePendingPaymentImport(
             new PaymentImportSourceIdentifier('source-123'),
             new BankReference('ref-456'),
             PaymentStatus::Initiated,
             new Money(5000, new Currency('EUR')),
             new ShortDescription('Test deterministic ID'),
-            new DateTimeImmutable('2024-02-02 15:30:45'), // Booking date with time component
+            new DateTimeImmutable('2024-02-02 01:30:45', new DateTimeZone('+02:00')), // Previous UTC day
             new AccountHolderName('John Doe'),
             new NationalIdCode('12345678901'),
             new OrganisationRegCode('12345678'),
@@ -150,10 +165,33 @@ class CreatePendingPaymentImportHandlerTest extends TestCase
             new Iban('EE382200221020145685'),
             new Bic('HABAEE2X'),
         );
+
+        $this->paymentProjectionRepository->expects($this->once())
+            ->method('findOne')
+            ->with(
+                null,
+                null,
+                new DateTimeImmutable('2024-02-01 23:30:45', new DateTimeZone('UTC')),
+                new PaymentImportSourceIdentifier('source-123'),
+                new BankReference('ref-456'),
+            )
+            ->willReturn(null);
+
+        $this->paymentRepository->expects($this->once())
+            ->method('getIdByDeduplicateKey')
+            ->with('2024-02-01|source-123|ref-456')
+            ->willReturn(null);
+
+        $this->paymentRepository->expects($this->once())
+            ->method('save')
+            ->with(
+                $this->isInstanceOf(Payment::class),
+                '2024-02-01|source-123|ref-456',
+            );
+
         $result = ($this->handler)($command);
 
-        $this->assertNotNull($result);
-        $this->assertSame($expectedId->toString(), $result->toString());
+        $this->assertInstanceOf(PaymentId::class, $result);
     }
 
     public function testCreatesPaymentImportWithNullableFields(): void
@@ -164,7 +202,7 @@ class CreatePendingPaymentImportHandlerTest extends TestCase
             PaymentStatus::Initiated,
             new Money(1000, new Currency('USD')),
             null,
-            new DateTimeImmutable('2024-02-03'),
+            new DateTimeImmutable('2024-02-03 00:00:00', new DateTimeZone('UTC')),
             null,
             null,
             null,
@@ -173,14 +211,28 @@ class CreatePendingPaymentImportHandlerTest extends TestCase
             null,
         );
 
+        $this->paymentProjectionRepository->expects($this->once())
+            ->method('findOne')
+            ->with(
+                null,
+                null,
+                new DateTimeImmutable('2024-02-03 00:00:00', new DateTimeZone('UTC')),
+                new PaymentImportSourceIdentifier('source-789'),
+                new BankReference('ref-789'),
+            )
+            ->willReturn(null);
+
         $this->paymentRepository->expects($this->once())
-            ->method('has')
-            ->with($this->isInstanceOf(PaymentId::class))
-            ->willReturn(false);
+            ->method('getIdByDeduplicateKey')
+            ->with('2024-02-03|source-789|ref-789')
+            ->willReturn(null);
 
         $this->paymentRepository->expects($this->once())
             ->method('save')
-            ->with($this->isInstanceOf(Payment::class));
+            ->with(
+                $this->isInstanceOf(Payment::class),
+                '2024-02-03|source-789|ref-789',
+            );
 
         $result = ($this->handler)($commandWithNulls);
 

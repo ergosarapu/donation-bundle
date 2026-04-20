@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler;
 
+use DateTimeZone;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\CreatePendingPaymentImport;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentRepositoryInterface;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Query\Port\PaymentProjectionRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
-use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\CommandHandlerInterface;
 use Psr\Clock\ClockInterface;
 
@@ -16,23 +17,37 @@ class CreatePendingPaymentImportHandler implements CommandHandlerInterface
 {
     public function __construct(
         private readonly PaymentRepositoryInterface $paymentRepository,
+        private readonly PaymentProjectionRepositoryInterface $paymentProjectionRepository,
         private readonly ClockInterface $clock,
     ) {
     }
 
     public function __invoke(CreatePendingPaymentImport $command): ?PaymentId
     {
-        $paymentId = PaymentId::generateDeterministic(
-            $command->sourceIdentifier->value . '|' . $command->bankReference->value,
-            $command->bookingDate->setTime(0, 0, 0, 0)->getTimestamp() * 1000
-        );
 
-        // Idempotency: Check if payment already exists
-        if ($this->paymentRepository->has($paymentId)) {
+        // Lookup duplicate payment from projection
+        $payment = $this->paymentProjectionRepository->findOne(
+            bookingDate: $command->bookingDate->setTimezone(new DateTimeZone('UTC')), // Is UTC needed?
+            sourceIdentifier: $command->sourceIdentifier,
+            bankReference: $command->bankReference
+        );
+        if ($payment !== null) {
             return null;
         }
 
-        // Import payment aggregate
+        // Duplicate payment not found from projection. In case it is due to projection not being up to date yet
+        // we can abort the import based on deduplicate key check.
+        $deduplicateKey =
+            $command->bookingDate->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d') . '|' .
+            $command->sourceIdentifier->value . '|' .
+            $command->bankReference->value;
+
+        // If the repository already has Payment with given deduplicate key, don't create new one
+        if ($this->paymentRepository->getIdByDeduplicateKey($deduplicateKey) !== null) {
+            return null;
+        }
+
+        $paymentId = PaymentId::generate();
         $payment = Payment::createPendingImport(
             $this->clock->now(),
             $paymentId,
@@ -50,11 +65,7 @@ class CreatePendingPaymentImportHandler implements CommandHandlerInterface
             $command->bic,
         );
 
-        try {
-            $this->paymentRepository->save($payment);
-        } catch (AggregateAlreadyExistsException $e) {
-            return null;
-        }
+        $this->paymentRepository->save($payment, $deduplicateKey);
         return $paymentId;
     }
 }

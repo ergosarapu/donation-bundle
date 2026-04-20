@@ -47,7 +47,7 @@ final class PresentClaimEvidenceHandlerTest extends TestCase
     public function testCreatesClaimAndDispatchesResolve(): void
     {
         $source = ClaimSource::forPayment('018e1234-0000-7000-8000-000000000001');
-        $claimId = ClaimId::generateDeterministic($source);
+        $claimId = ClaimId::generate($source);
         $command = new PresentClaimEvidence(
             source: $source,
             presentations: [ClaimPresentation::forValue(new Iban('EE471000001020145685'), ClaimEvidenceLevel::Verified)],
@@ -80,7 +80,7 @@ final class PresentClaimEvidenceHandlerTest extends TestCase
     public function testLoadsClaimAndDispatchesResolve(): void
     {
         $source = ClaimSource::forPayment('018e1234-0000-7000-8000-000000000002');
-        $claimId = ClaimId::generateDeterministic($source);
+        $claimId = ClaimId::generate($source);
         $claim = Claim::create($this->now, $claimId, $source);
         $claim->releaseEvents();
         $command = new PresentClaimEvidence(
@@ -121,7 +121,7 @@ final class PresentClaimEvidenceHandlerTest extends TestCase
     public function testClaimAggregateNotSavedWhenEvidenceDoesNotChangeState(): void
     {
         $source = ClaimSource::forPayment('018e1234-0000-7000-8000-000000000003');
-        $claimId = ClaimId::generateDeterministic($source);
+        $claimId = ClaimId::generate($source);
         $claim = Claim::create($this->now, $claimId, $source);
         $claim->present($this->now, new Iban('EE471000001020145685'), DomainClaimEvidenceLevel::Verified);
         $claim->releaseEvents();
@@ -149,7 +149,7 @@ final class PresentClaimEvidenceHandlerTest extends TestCase
     public function testResolveClaimNotDispatchedWhenClaimIsNotResolvable(): void
     {
         $source = ClaimSource::forPayment('018e1234-0000-7000-8000-000000000004');
-        $claimId = ClaimId::generateDeterministic($source);
+        $claimId = ClaimId::generate($source);
         $command = new PresentClaimEvidence(
             source: $source,
             presentations: [

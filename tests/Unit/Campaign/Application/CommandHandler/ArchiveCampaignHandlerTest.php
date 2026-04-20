@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Command\ArchiveCampaign;
 use ErgoSarapu\DonationBundle\BCDonations\Application\CommandHandler\ArchiveCampaignHandler;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Port\CampaignRepositoryInterface;
+use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\Campaign;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -41,12 +42,19 @@ class ArchiveCampaignHandlerTest extends TestCase
 
     public function testArchivesCampaign(): void
     {
-        $this->campaignRepository->expects($this->once())
-            ->method('load')
-            ->with($this->command->campaignId);
+        $campaign = $this->createMock(Campaign::class);
+        $campaign->expects($this->once())
+            ->method('archive')
+            ->with($this->now);
 
         $this->campaignRepository->expects($this->once())
-            ->method('save');
+            ->method('load')
+            ->with($this->command->campaignId)
+            ->willReturn($campaign);
+
+        $this->campaignRepository->expects($this->once())
+            ->method('save')
+            ->with($campaign);
 
         ($this->handler)($this->command);
     }

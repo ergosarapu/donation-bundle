@@ -127,46 +127,70 @@ return function (ContainerConfigurator $container) {
     // *** Aggregate Repository Adapters ***
     // *************************************
 
-    $services->set('donation_bundle.infrastructure.payment.patchlevel_payment_repository', \ErgoSarapu\DonationBundle\BCPayments\Infrastructure\Adapter\PatchlevelPaymentRepository::class)
+    $services->set('donation_bundle.infrastructure.payment.patchlevel_payment_repository.inner', \ErgoSarapu\DonationBundle\SharedInfrastructure\Adapter\PatchlevelRepository::class)
         ->arg(0, (new Definition(\Patchlevel\EventSourcing\Repository\Repository::class))
             ->setFactory([new Reference(\Patchlevel\EventSourcing\Repository\RepositoryManager::class), 'get'])
-            ->addArgument(\ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment::class));
+            ->addArgument(\ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment::class))
+        ->arg(1, new Reference(\Patchlevel\EventSourcing\Store\Store::class))
+        ->arg(2, (new Definition(\Patchlevel\EventSourcing\Repository\Repository::class))
+            ->setFactory([new Reference(\Patchlevel\EventSourcing\Repository\RepositoryManager::class), 'get'])
+            ->addArgument(\ErgoSarapu\DonationBundle\SharedInfrastructure\Patchlevel\DeduplicateAggregate::class));
+    $services->set('donation_bundle.infrastructure.payment.patchlevel_payment_repository', \ErgoSarapu\DonationBundle\BCPayments\Infrastructure\Adapter\PatchlevelPaymentRepository::class)
+        ->arg('$repository', new Reference('donation_bundle.infrastructure.payment.patchlevel_payment_repository.inner'));
     $services->alias(\ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentRepositoryInterface::class, 'donation_bundle.infrastructure.payment.patchlevel_payment_repository');
 
-    $services->set('donation_bundle.infrastructure.payment.patchlevel_payment_method_repository', \ErgoSarapu\DonationBundle\BCPayments\Infrastructure\Adapter\PatchlevelPaymentMethodRepository::class)
+    $services->set('donation_bundle.infrastructure.payment.patchlevel_payment_method_repository.inner', \ErgoSarapu\DonationBundle\SharedInfrastructure\Adapter\PatchlevelRepository::class)
         ->arg(0, (new Definition(\Patchlevel\EventSourcing\Repository\Repository::class))
             ->setFactory([new Reference(\Patchlevel\EventSourcing\Repository\RepositoryManager::class), 'get'])
             ->addArgument(\ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethod::class));
+    $services->set('donation_bundle.infrastructure.payment.patchlevel_payment_method_repository', \ErgoSarapu\DonationBundle\BCPayments\Infrastructure\Adapter\PatchlevelPaymentMethodRepository::class)
+        ->arg('$repository', new Reference('donation_bundle.infrastructure.payment.patchlevel_payment_method_repository.inner'));
     $services->alias(\ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentMethodRepositoryInterface::class, 'donation_bundle.infrastructure.payment.patchlevel_payment_method_repository');
 
-    $services->set('donation_bundle.infrastructure.donations.repository.adapter.patchlevel_donation_repository', \ErgoSarapu\DonationBundle\BCDonations\Infrastructure\Adapter\PatchlevelDonationRepository::class)
+    $services->set('donation_bundle.infrastructure.donations.repository.adapter.patchlevel_donation_repository.inner', \ErgoSarapu\DonationBundle\SharedInfrastructure\Adapter\PatchlevelRepository::class)
         ->arg(0, (new Definition(\Patchlevel\EventSourcing\Repository\Repository::class))
             ->setFactory([new Reference(\Patchlevel\EventSourcing\Repository\RepositoryManager::class), 'get'])
             ->addArgument(\ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Donation::class));
+    $services->set('donation_bundle.infrastructure.donations.repository.adapter.patchlevel_donation_repository', \ErgoSarapu\DonationBundle\BCDonations\Infrastructure\Adapter\PatchlevelDonationRepository::class)
+        ->arg('$repository', new Reference('donation_bundle.infrastructure.donations.repository.adapter.patchlevel_donation_repository.inner'));
     $services->alias(\ErgoSarapu\DonationBundle\BCDonations\Application\Port\DonationRepositoryInterface::class, 'donation_bundle.infrastructure.donations.repository.adapter.patchlevel_donation_repository');
 
-    $services->set('donation_bundle.infrastructure.donations.repository.adapter.patchlevel_recurring_plan_repository', \ErgoSarapu\DonationBundle\BCDonations\Infrastructure\Adapter\PatchlevelRecurringPlanRepository::class)
+    $services->set('donation_bundle.infrastructure.donations.repository.adapter.patchlevel_recurring_plan_repository.inner', \ErgoSarapu\DonationBundle\SharedInfrastructure\Adapter\PatchlevelRepository::class)
         ->arg(0, (new Definition(\Patchlevel\EventSourcing\Repository\Repository::class))
             ->setFactory([new Reference(\Patchlevel\EventSourcing\Repository\RepositoryManager::class), 'get'])
             ->addArgument(\ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlan::class));
+    $services->set('donation_bundle.infrastructure.donations.repository.adapter.patchlevel_recurring_plan_repository', \ErgoSarapu\DonationBundle\BCDonations\Infrastructure\Adapter\PatchlevelRecurringPlanRepository::class)
+        ->arg('$repository', new Reference('donation_bundle.infrastructure.donations.repository.adapter.patchlevel_recurring_plan_repository.inner'));
     $services->alias(\ErgoSarapu\DonationBundle\BCDonations\Application\Port\RecurringPlanRepositoryInterface::class, 'donation_bundle.infrastructure.donations.repository.adapter.patchlevel_recurring_plan_repository');
 
-    $services->set('donation_bundle.infrastructure.donations.repository.adapter.patchlevel_campaign_repository', \ErgoSarapu\DonationBundle\BCDonations\Infrastructure\Adapter\PatchlevelCampaignRepository::class)
+    $services->set('donation_bundle.infrastructure.donations.repository.adapter.patchlevel_campaign_repository.inner', \ErgoSarapu\DonationBundle\SharedInfrastructure\Adapter\PatchlevelRepository::class)
         ->arg(0, (new Definition(\Patchlevel\EventSourcing\Repository\Repository::class))
             ->setFactory([new Reference(\Patchlevel\EventSourcing\Repository\RepositoryManager::class), 'get'])
             ->addArgument(\ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\Campaign::class));
+    $services->set('donation_bundle.infrastructure.donations.repository.adapter.patchlevel_campaign_repository', \ErgoSarapu\DonationBundle\BCDonations\Infrastructure\Adapter\PatchlevelCampaignRepository::class)
+        ->arg('$repository', new Reference('donation_bundle.infrastructure.donations.repository.adapter.patchlevel_campaign_repository.inner'));
     $services->alias(\ErgoSarapu\DonationBundle\BCDonations\Application\Port\CampaignRepositoryInterface::class, 'donation_bundle.infrastructure.donations.repository.adapter.patchlevel_campaign_repository');
 
-    $services->set('donation_bundle.infrastructure.identity.repository.adapter.patchlevel_identity_repository', \ErgoSarapu\DonationBundle\BCIdentities\Infrastructure\Adapter\PatchlevelIdentityRepository::class)
+    $services->set('donation_bundle.infrastructure.identities.repository.adapter.patchlevel_identity_repository.inner', \ErgoSarapu\DonationBundle\SharedInfrastructure\Adapter\PatchlevelRepository::class)
         ->arg(0, (new Definition(\Patchlevel\EventSourcing\Repository\Repository::class))
             ->setFactory([new Reference(\Patchlevel\EventSourcing\Repository\RepositoryManager::class), 'get'])
-            ->addArgument(\ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\Identity::class));
+            ->addArgument(\ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\Identity::class))
+        ->arg(1, new Reference(\Patchlevel\EventSourcing\Store\Store::class))
+        ->arg(2, (new Definition(\Patchlevel\EventSourcing\Repository\Repository::class))
+            ->setFactory([new Reference(\Patchlevel\EventSourcing\Repository\RepositoryManager::class), 'get'])
+            ->addArgument(\ErgoSarapu\DonationBundle\SharedInfrastructure\Patchlevel\DeduplicateAggregate::class));
+    $services->set('donation_bundle.infrastructure.identity.repository.adapter.patchlevel_identity_repository', \ErgoSarapu\DonationBundle\BCIdentities\Infrastructure\Adapter\PatchlevelIdentityRepository::class)
+        ->arg('$repository', new Reference('donation_bundle.infrastructure.identities.repository.adapter.patchlevel_identity_repository.inner'));
     $services->alias(\ErgoSarapu\DonationBundle\BCIdentities\Application\Port\IdentityRepositoryInterface::class, 'donation_bundle.infrastructure.identity.repository.adapter.patchlevel_identity_repository');
-    $services->set('donation_bundle.infrastructure.identities.repository.adapter.patchlevel_claim_repository', \ErgoSarapu\DonationBundle\BCIdentities\Infrastructure\Adapter\PatchlevelClaimRepository::class)
+
+    $services->set('donation_bundle.infrastructure.identities.repository.adapter.patchlevel_claim_repository.inner', \ErgoSarapu\DonationBundle\SharedInfrastructure\Adapter\PatchlevelRepository::class)
         ->arg(0, (new Definition(\Patchlevel\EventSourcing\Repository\Repository::class))
             ->setFactory([new Reference(\Patchlevel\EventSourcing\Repository\RepositoryManager::class), 'get'])
             ->addArgument(\ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\Claim::class));
+    $services->set('donation_bundle.infrastructure.identities.repository.adapter.patchlevel_claim_repository', \ErgoSarapu\DonationBundle\BCIdentities\Infrastructure\Adapter\PatchlevelClaimRepository::class)
+        ->arg('$repository', new Reference('donation_bundle.infrastructure.identities.repository.adapter.patchlevel_claim_repository.inner'));
     $services->alias(\ErgoSarapu\DonationBundle\BCIdentities\Application\Port\ClaimRepositoryInterface::class, 'donation_bundle.infrastructure.identities.repository.adapter.patchlevel_claim_repository');
+
     $services->set('donation_bundle.shared_infrastructure.patchlevel_transaction_manager', \ErgoSarapu\DonationBundle\SharedInfrastructure\Adapter\PatchlevelTransactionManager::class)
         ->autowire(true);
     $services->alias(\ErgoSarapu\DonationBundle\SharedApplication\Port\TransactionManagerInterface::class, 'donation_bundle.shared_infrastructure.patchlevel_transaction_manager');

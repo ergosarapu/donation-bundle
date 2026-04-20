@@ -6,12 +6,11 @@ namespace ErgoSarapu\DonationBundle\BCDonations\Application\Port;
 
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlan;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
+use ErgoSarapu\DonationBundle\SharedApplication\Port\RepositoryInterface;
 
-interface RecurringPlanRepositoryInterface
+/**
+ * @extends RepositoryInterface<RecurringPlan, RecurringPlanId>
+ */
+interface RecurringPlanRepositoryInterface extends RepositoryInterface
 {
-    public function save(RecurringPlan $recurringPlan): void;
-
-    public function load(RecurringPlanId $recurringPlanId): RecurringPlan;
-
-    public function has(RecurringPlanId $recurringPlanId): bool;
 }

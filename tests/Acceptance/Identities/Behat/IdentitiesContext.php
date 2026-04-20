@@ -285,7 +285,7 @@ class IdentitiesContext implements Context
 
     private function findResolvedIdentityId(ClaimSource $source): string
     {
-        $claimId = ClaimId::generateDeterministic($source);
+        $claimId = ClaimId::generate($source);
         $claim = $this->queryBus->ask(new GetClaim($claimId));
         Assert::isInstanceOf($claim, Claim::class, 'Pre-existing Claim projection not found');
         Assert::notNull($claim->getIdentityId(), 'Pre-existing Claim should be resolved to an Identity');

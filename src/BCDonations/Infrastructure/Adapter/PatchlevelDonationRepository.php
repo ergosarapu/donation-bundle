@@ -7,26 +7,38 @@ namespace ErgoSarapu\DonationBundle\BCDonations\Infrastructure\Adapter;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Port\DonationRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Donation;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
-use ErgoSarapu\DonationBundle\SharedInfrastructure\Patchlevel\PatchlevelRepositoryWrapperTrait;
+use ErgoSarapu\DonationBundle\SharedInfrastructure\Adapter\PatchlevelRepository;
 
 final class PatchlevelDonationRepository implements DonationRepositoryInterface
 {
-    use PatchlevelRepositoryWrapperTrait;
-
-    public function save(Donation $donation): void
-    {
-        $this->saveAggregate($donation);
+    public function __construct(
+        private readonly PatchlevelRepository $repository,
+    ) {
     }
 
-    public function load(DonationId $donationId): Donation
+    public function save(mixed $aggregate, ?string $deduplicateKey = null): void
     {
-        /** @var Donation $donation */
-        $donation = $this->loadAggregate($donationId);
-        return $donation;
+        $this->repository->save($aggregate, $deduplicateKey);
     }
 
-    public function has(DonationId $donationId): bool
+    public function load(mixed $aggregateId): mixed
     {
-        return $this->hasAggregate($donationId);
+        /** @var Donation $aggregate */
+        $aggregate = $this->repository->load($aggregateId);
+
+        return $aggregate;
+    }
+
+    public function has(mixed $aggregateId): bool
+    {
+        return $this->repository->has($aggregateId);
+    }
+
+    public function getIdByDeduplicateKey(string $deduplicateKey): mixed
+    {
+        /** @var ?DonationId $aggregateId */
+        $aggregateId = $this->repository->getIdByDeduplicateKey($deduplicateKey);
+
+        return $aggregateId;
     }
 }

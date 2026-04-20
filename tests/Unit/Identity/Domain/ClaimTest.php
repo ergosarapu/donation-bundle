@@ -61,7 +61,7 @@ final class ClaimTest extends AggregateRootTestCase
 
     public function testCreate(): void
     {
-        $claimId = ClaimId::generateDeterministic($this->source);
+        $claimId = ClaimId::generate($this->source);
 
         $this->when(fn () => Claim::create($this->now, $claimId, $this->source))
             ->then(new ClaimCreated($this->now, $claimId, $this->source));
@@ -70,7 +70,7 @@ final class ClaimTest extends AggregateRootTestCase
     public function testResolve(): void
     {
         $identityId = IdentityId::generate();
-        $claimId = ClaimId::generateDeterministic($this->source);
+        $claimId = ClaimId::generate($this->source);
 
         $this->given(new ClaimCreated($this->now, $claimId, $this->source))
             ->when(fn (Claim $claim) => $claim->resolve($this->now, $identityId))
@@ -80,7 +80,7 @@ final class ClaimTest extends AggregateRootTestCase
     public function testResolveIsIdempotent(): void
     {
         $identityId = IdentityId::generate();
-        $claimId = ClaimId::generateDeterministic($this->source);
+        $claimId = ClaimId::generate($this->source);
 
         $this->given(
             new ClaimCreated($this->now, $claimId, $this->source),
@@ -94,7 +94,7 @@ final class ClaimTest extends AggregateRootTestCase
     {
         $identityId = IdentityId::generate();
         $anotherIdentityId = IdentityId::generate();
-        $claimId = ClaimId::generateDeterministic($this->source);
+        $claimId = ClaimId::generate($this->source);
 
         $this->given(
             new ClaimCreated($this->now, $claimId, $this->source),
@@ -108,7 +108,7 @@ final class ClaimTest extends AggregateRootTestCase
     public function testResolveNotResolvableClaimThrows(): void
     {
         $identityId = IdentityId::generate();
-        $claimId = ClaimId::generateDeterministic($this->source);
+        $claimId = ClaimId::generate($this->source);
 
         $this->given(
             new ClaimCreated($this->now, $claimId, $this->source),
@@ -121,7 +121,7 @@ final class ClaimTest extends AggregateRootTestCase
 
     public function testMarkInReview(): void
     {
-        $claimId = ClaimId::generateDeterministic($this->source);
+        $claimId = ClaimId::generate($this->source);
 
         $this->given(new ClaimCreated($this->now, $claimId, $this->source))
             ->when(fn (Claim $claim) => $claim->markInReview($this->now, ClaimReviewReason::MultipleIdentityMatches))
@@ -130,7 +130,7 @@ final class ClaimTest extends AggregateRootTestCase
 
     public function testMarkInReviewIsIdempotent(): void
     {
-        $claimId = ClaimId::generateDeterministic($this->source);
+        $claimId = ClaimId::generate($this->source);
 
         $this->given(
             new ClaimCreated($this->now, $claimId, $this->source),
@@ -143,7 +143,7 @@ final class ClaimTest extends AggregateRootTestCase
     public function testMarkInReviewWhenResolvedThrows(): void
     {
         $identityId = IdentityId::generate();
-        $claimId = ClaimId::generateDeterministic($this->source);
+        $claimId = ClaimId::generate($this->source);
 
         $this->given(
             new ClaimCreated($this->now, $claimId, $this->source),
@@ -156,7 +156,7 @@ final class ClaimTest extends AggregateRootTestCase
 
     public function testPresentPersonName(): void
     {
-        $claimId = ClaimId::generateDeterministic($this->source);
+        $claimId = ClaimId::generate($this->source);
 
         $this->given(new ClaimCreated($this->now, $claimId, $this->source))
             ->when(fn (Claim $claim) => $claim->present($this->now, $this->personName, ClaimEvidenceLevel::Observed))
@@ -165,7 +165,7 @@ final class ClaimTest extends AggregateRootTestCase
 
     public function testPresentEmail(): void
     {
-        $claimId = ClaimId::generateDeterministic($this->source);
+        $claimId = ClaimId::generate($this->source);
 
         $this->given(new ClaimCreated($this->now, $claimId, $this->source))
             ->when(fn (Claim $claim) => $claim->present($this->now, $this->email, ClaimEvidenceLevel::Observed))
@@ -174,7 +174,7 @@ final class ClaimTest extends AggregateRootTestCase
 
     public function testPresentRawName(): void
     {
-        $claimId = ClaimId::generateDeterministic($this->source);
+        $claimId = ClaimId::generate($this->source);
 
         $this->given(new ClaimCreated($this->now, $claimId, $this->source))
             ->when(fn (Claim $claim) => $claim->present($this->now, $this->rawName, ClaimEvidenceLevel::Observed))
@@ -183,7 +183,7 @@ final class ClaimTest extends AggregateRootTestCase
 
     public function testPresentIban(): void
     {
-        $claimId = ClaimId::generateDeterministic($this->source);
+        $claimId = ClaimId::generate($this->source);
 
         $this->given(new ClaimCreated($this->now, $claimId, $this->source))
             ->when(fn (Claim $claim) => $claim->present($this->now, $this->iban, ClaimEvidenceLevel::Observed))
@@ -192,7 +192,7 @@ final class ClaimTest extends AggregateRootTestCase
 
     public function testPresentNationalIdCode(): void
     {
-        $claimId = ClaimId::generateDeterministic($this->source);
+        $claimId = ClaimId::generate($this->source);
 
         $this->given(new ClaimCreated($this->now, $claimId, $this->source))
             ->when(fn (Claim $claim) => $claim->present($this->now, $this->nationalIdCode, ClaimEvidenceLevel::Observed))
@@ -201,7 +201,7 @@ final class ClaimTest extends AggregateRootTestCase
 
     public function testPresentUpgradesEvidenceLevel(): void
     {
-        $claimId = ClaimId::generateDeterministic($this->source);
+        $claimId = ClaimId::generate($this->source);
 
         $this->given(
             new ClaimCreated($this->now, $claimId, $this->source),
@@ -213,7 +213,7 @@ final class ClaimTest extends AggregateRootTestCase
 
     public function testPresentUnknownTypeThrows(): void
     {
-        $claimId = ClaimId::generateDeterministic($this->source);
+        $claimId = ClaimId::generate($this->source);
 
         $this->given(new ClaimCreated($this->now, $claimId, $this->source))
             /** @phpstan-ignore-next-line */
@@ -223,7 +223,7 @@ final class ClaimTest extends AggregateRootTestCase
 
     public function testPresentDoesNotDowngradeEvidenceLevel(): void
     {
-        $claimId = ClaimId::generateDeterministic($this->source);
+        $claimId = ClaimId::generate($this->source);
 
         $this->given(
             new ClaimCreated($this->now, $claimId, $this->source),
@@ -236,7 +236,7 @@ final class ClaimTest extends AggregateRootTestCase
 
     public function testPresentDifferentValueOverridesEvidenceLevel(): void
     {
-        $claimId = ClaimId::generateDeterministic($this->source);
+        $claimId = ClaimId::generate($this->source);
         $anotherPersonName = new PersonName('John', 'Smith');
 
         $this->given(
@@ -249,7 +249,7 @@ final class ClaimTest extends AggregateRootTestCase
 
     public function testPresentRegisteredTypeUpgradesExistingEvidenceLevel(): void
     {
-        $claimId = ClaimId::generateDeterministic($this->source);
+        $claimId = ClaimId::generate($this->source);
 
         $this->given(
             new ClaimCreated($this->now, $claimId, $this->source),
@@ -262,7 +262,7 @@ final class ClaimTest extends AggregateRootTestCase
 
     public function testPresentingUnknownRegisteredTypeDoesNothing(): void
     {
-        $claimId = ClaimId::generateDeterministic($this->source);
+        $claimId = ClaimId::generate($this->source);
 
         $this->given(new ClaimCreated($this->now, $claimId, $this->source))
             ->when(fn (Claim $claim) => $claim->present($this->now, PersonName::class, ClaimEvidenceLevel::VerifiedByUser))
@@ -271,7 +271,7 @@ final class ClaimTest extends AggregateRootTestCase
 
     public function testPersonNameValueOverThresholdReturnsValue(): void
     {
-        $claimId = ClaimId::generateDeterministic($this->source);
+        $claimId = ClaimId::generate($this->source);
 
         $this->given(
             new ClaimCreated($this->now, $claimId, $this->source),
@@ -282,7 +282,7 @@ final class ClaimTest extends AggregateRootTestCase
 
     public function testPersonNameValueUnderThresholdReturnsNull(): void
     {
-        $claimId = ClaimId::generateDeterministic($this->source);
+        $claimId = ClaimId::generate($this->source);
 
         $this->given(
             new ClaimCreated($this->now, $claimId, $this->source),
@@ -293,7 +293,7 @@ final class ClaimTest extends AggregateRootTestCase
 
     public function testEmailValueOverThresholdReturnsValue(): void
     {
-        $claimId = ClaimId::generateDeterministic($this->source);
+        $claimId = ClaimId::generate($this->source);
 
         $this->given(
             new ClaimCreated($this->now, $claimId, $this->source),
@@ -304,7 +304,7 @@ final class ClaimTest extends AggregateRootTestCase
 
     public function testEmailValueUnderThresholdReturnsNull(): void
     {
-        $claimId = ClaimId::generateDeterministic($this->source);
+        $claimId = ClaimId::generate($this->source);
 
         $this->given(
             new ClaimCreated($this->now, $claimId, $this->source),
@@ -315,7 +315,7 @@ final class ClaimTest extends AggregateRootTestCase
 
     public function testRawNameValueOverThresholdReturnsValue(): void
     {
-        $claimId = ClaimId::generateDeterministic($this->source);
+        $claimId = ClaimId::generate($this->source);
 
         $this->given(
             new ClaimCreated($this->now, $claimId, $this->source),
@@ -326,7 +326,7 @@ final class ClaimTest extends AggregateRootTestCase
 
     public function testRawNameValueUnderThresholdReturnsNull(): void
     {
-        $claimId = ClaimId::generateDeterministic($this->source);
+        $claimId = ClaimId::generate($this->source);
 
         $this->given(
             new ClaimCreated($this->now, $claimId, $this->source),
@@ -337,7 +337,7 @@ final class ClaimTest extends AggregateRootTestCase
 
     public function testIbanValueOverThresholdReturnsValue(): void
     {
-        $claimId = ClaimId::generateDeterministic($this->source);
+        $claimId = ClaimId::generate($this->source);
 
         $this->given(
             new ClaimCreated($this->now, $claimId, $this->source),
@@ -348,7 +348,7 @@ final class ClaimTest extends AggregateRootTestCase
 
     public function testIbanValueUnderThresholdReturnsNull(): void
     {
-        $claimId = ClaimId::generateDeterministic($this->source);
+        $claimId = ClaimId::generate($this->source);
 
         $this->given(
             new ClaimCreated($this->now, $claimId, $this->source),
@@ -359,7 +359,7 @@ final class ClaimTest extends AggregateRootTestCase
 
     public function testNationalIdCodeValueOverThresholdReturnsValue(): void
     {
-        $claimId = ClaimId::generateDeterministic($this->source);
+        $claimId = ClaimId::generate($this->source);
 
         $this->given(
             new ClaimCreated($this->now, $claimId, $this->source),
@@ -370,7 +370,7 @@ final class ClaimTest extends AggregateRootTestCase
 
     public function testNationalIdCodeValueUnderThresholdReturnsNull(): void
     {
-        $claimId = ClaimId::generateDeterministic($this->source);
+        $claimId = ClaimId::generate($this->source);
 
         $this->given(
             new ClaimCreated($this->now, $claimId, $this->source),
@@ -381,7 +381,7 @@ final class ClaimTest extends AggregateRootTestCase
 
     public function testPresentOrganisationRegCode(): void
     {
-        $claimId = ClaimId::generateDeterministic($this->source);
+        $claimId = ClaimId::generate($this->source);
 
         $this->given(new ClaimCreated($this->now, $claimId, $this->source))
             ->when(fn (Claim $claim) => $claim->present($this->now, $this->organisationRegCode, ClaimEvidenceLevel::Observed))
@@ -390,7 +390,7 @@ final class ClaimTest extends AggregateRootTestCase
 
     public function testOrganisationRegCodeValueOverThresholdReturnsValue(): void
     {
-        $claimId = ClaimId::generateDeterministic($this->source);
+        $claimId = ClaimId::generate($this->source);
 
         $this->given(
             new ClaimCreated($this->now, $claimId, $this->source),
@@ -401,7 +401,7 @@ final class ClaimTest extends AggregateRootTestCase
 
     public function testOrganisationRegCodeValueUnderThresholdReturnsNull(): void
     {
-        $claimId = ClaimId::generateDeterministic($this->source);
+        $claimId = ClaimId::generate($this->source);
 
         $this->given(
             new ClaimCreated($this->now, $claimId, $this->source),
@@ -412,7 +412,7 @@ final class ClaimTest extends AggregateRootTestCase
 
     public function testPresentNationalIdCodeWhenOrganisationRegCodeExistsThrowsLogicException(): void
     {
-        $claimId = ClaimId::generateDeterministic($this->source);
+        $claimId = ClaimId::generate($this->source);
 
         $this->given(
             new ClaimCreated($this->now, $claimId, $this->source),
@@ -424,7 +424,7 @@ final class ClaimTest extends AggregateRootTestCase
 
     public function testPresentOrganisationRegCodeWhenNationalIdCodeExistsThrowsLogicException(): void
     {
-        $claimId = ClaimId::generateDeterministic($this->source);
+        $claimId = ClaimId::generate($this->source);
 
         $this->given(
             new ClaimCreated($this->now, $claimId, $this->source),
@@ -436,7 +436,7 @@ final class ClaimTest extends AggregateRootTestCase
 
     public function testEmailPersonalDataDeleted(): void
     {
-        $claimId = ClaimId::generateDeterministic($this->source);
+        $claimId = ClaimId::generate($this->source);
 
         $email = null;
 

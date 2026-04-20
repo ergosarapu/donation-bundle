@@ -7,26 +7,38 @@ namespace ErgoSarapu\DonationBundle\BCDonations\Infrastructure\Adapter;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Port\CampaignRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\Campaign;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
-use ErgoSarapu\DonationBundle\SharedInfrastructure\Patchlevel\PatchlevelRepositoryWrapperTrait;
+use ErgoSarapu\DonationBundle\SharedInfrastructure\Adapter\PatchlevelRepository;
 
 final class PatchlevelCampaignRepository implements CampaignRepositoryInterface
 {
-    use PatchlevelRepositoryWrapperTrait;
-
-    public function save(Campaign $campaign): void
-    {
-        $this->saveAggregate($campaign);
+    public function __construct(
+        private readonly PatchlevelRepository $repository,
+    ) {
     }
 
-    public function load(CampaignId $campaignId): Campaign
+    public function save(mixed $aggregate, ?string $deduplicateKey = null): void
     {
-        /** @var Campaign $campaign */
-        $campaign = $this->loadAggregate($campaignId);
-        return $campaign;
+        $this->repository->save($aggregate, $deduplicateKey);
     }
 
-    public function has(CampaignId $campaignId): bool
+    public function load(mixed $aggregateId): mixed
     {
-        return $this->hasAggregate($campaignId);
+        /** @var Campaign $aggregate */
+        $aggregate = $this->repository->load($aggregateId);
+
+        return $aggregate;
+    }
+
+    public function has(mixed $aggregateId): bool
+    {
+        return $this->repository->has($aggregateId);
+    }
+
+    public function getIdByDeduplicateKey(string $deduplicateKey): mixed
+    {
+        /** @var ?CampaignId $aggregateId */
+        $aggregateId = $this->repository->getIdByDeduplicateKey($deduplicateKey);
+
+        return $aggregateId;
     }
 }

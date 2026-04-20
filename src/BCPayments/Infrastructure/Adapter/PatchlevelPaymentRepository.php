@@ -7,26 +7,38 @@ namespace ErgoSarapu\DonationBundle\BCPayments\Infrastructure\Adapter;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
-use ErgoSarapu\DonationBundle\SharedInfrastructure\Patchlevel\PatchlevelRepositoryWrapperTrait;
+use ErgoSarapu\DonationBundle\SharedInfrastructure\Adapter\PatchlevelRepository;
 
 final class PatchlevelPaymentRepository implements PaymentRepositoryInterface
 {
-    use PatchlevelRepositoryWrapperTrait;
-
-    public function save(Payment $payment): void
-    {
-        $this->saveAggregate($payment);
+    public function __construct(
+        private readonly PatchlevelRepository $repository,
+    ) {
     }
 
-    public function load(PaymentId $paymentId): Payment
+    public function save(mixed $aggregate, ?string $deduplicateKey = null): void
     {
-        /** @var Payment $payment */
-        $payment = $this->loadAggregate($paymentId);
-        return $payment;
+        $this->repository->save($aggregate, $deduplicateKey);
     }
 
-    public function has(PaymentId $paymentId): bool
+    public function load(mixed $aggregateId): mixed
     {
-        return $this->hasAggregate($paymentId);
+        /** @var Payment $aggregate */
+        $aggregate = $this->repository->load($aggregateId);
+
+        return $aggregate;
+    }
+
+    public function has(mixed $aggregateId): bool
+    {
+        return $this->repository->has($aggregateId);
+    }
+
+    public function getIdByDeduplicateKey(string $deduplicateKey): mixed
+    {
+        /** @var ?PaymentId $aggregateId */
+        $aggregateId = $this->repository->getIdByDeduplicateKey($deduplicateKey);
+
+        return $aggregateId;
     }
 }

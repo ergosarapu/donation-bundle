@@ -7,26 +7,38 @@ namespace ErgoSarapu\DonationBundle\BCIdentities\Infrastructure\Adapter;
 use ErgoSarapu\DonationBundle\BCIdentities\Application\Port\IdentityRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\Identity;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityId;
-use ErgoSarapu\DonationBundle\SharedInfrastructure\Patchlevel\PatchlevelRepositoryWrapperTrait;
+use ErgoSarapu\DonationBundle\SharedInfrastructure\Adapter\PatchlevelRepository;
 
 final class PatchlevelIdentityRepository implements IdentityRepositoryInterface
 {
-    use PatchlevelRepositoryWrapperTrait;
-
-    public function save(Identity $identity): void
-    {
-        $this->saveAggregate($identity);
+    public function __construct(
+        private readonly PatchlevelRepository $repository,
+    ) {
     }
 
-    public function load(IdentityId $identityId): Identity
+    public function save(mixed $aggregate, ?string $deduplicateKey = null): void
     {
-        /** @var Identity $identity */
-        $identity = $this->loadAggregate($identityId);
-        return $identity;
+        $this->repository->save($aggregate, $deduplicateKey);
     }
 
-    public function has(IdentityId $identityId): bool
+    public function load(mixed $aggregateId): mixed
     {
-        return $this->hasAggregate($identityId);
+        /** @var Identity $aggregate */
+        $aggregate = $this->repository->load($aggregateId);
+
+        return $aggregate;
+    }
+
+    public function has(mixed $aggregateId): bool
+    {
+        return $this->repository->has($aggregateId);
+    }
+
+    public function getIdByDeduplicateKey(string $deduplicateKey): mixed
+    {
+        /** @var ?IdentityId $aggregateId */
+        $aggregateId = $this->repository->getIdByDeduplicateKey($deduplicateKey);
+
+        return $aggregateId;
     }
 }

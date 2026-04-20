@@ -29,7 +29,7 @@ final class PresentClaimEvidenceHandler implements CommandHandlerInterface
     public function __invoke(PresentClaimEvidence $command): void
     {
         $currentTime = $this->clock->now();
-        $claimId = ClaimId::generateDeterministic($command->source);
+        $claimId = ClaimId::generate($command->source);
         $claim = $this->loadOrCreateClaim($claimId, $command->source, $currentTime);
         $playhead = $claim->playhead();
 

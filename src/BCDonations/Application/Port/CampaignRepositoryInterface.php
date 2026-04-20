@@ -6,12 +6,11 @@ namespace ErgoSarapu\DonationBundle\BCDonations\Application\Port;
 
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\Campaign;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignId;
+use ErgoSarapu\DonationBundle\SharedApplication\Port\RepositoryInterface;
 
-interface CampaignRepositoryInterface
+/**
+ * @extends RepositoryInterface<Campaign, CampaignId>
+ */
+interface CampaignRepositoryInterface extends RepositoryInterface
 {
-    public function save(Campaign $campaign): void;
-
-    public function load(CampaignId $campaignId): Campaign;
-
-    public function has(CampaignId $campaignId): bool;
 }

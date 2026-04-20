@@ -7,26 +7,38 @@ namespace ErgoSarapu\DonationBundle\BCDonations\Infrastructure\Adapter;
 use ErgoSarapu\DonationBundle\BCDonations\Application\Port\RecurringPlanRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlan;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanId;
-use ErgoSarapu\DonationBundle\SharedInfrastructure\Patchlevel\PatchlevelRepositoryWrapperTrait;
+use ErgoSarapu\DonationBundle\SharedInfrastructure\Adapter\PatchlevelRepository;
 
 final class PatchlevelRecurringPlanRepository implements RecurringPlanRepositoryInterface
 {
-    use PatchlevelRepositoryWrapperTrait;
-
-    public function save(RecurringPlan $recurringPlan): void
-    {
-        $this->saveAggregate($recurringPlan);
+    public function __construct(
+        private readonly PatchlevelRepository $repository,
+    ) {
     }
 
-    public function load(RecurringPlanId $recurringPlanId): RecurringPlan
+    public function save(mixed $aggregate, ?string $deduplicateKey = null): void
     {
-        /** @var RecurringPlan $recurringPlan */
-        $recurringPlan = $this->loadAggregate($recurringPlanId);
-        return $recurringPlan;
+        $this->repository->save($aggregate, $deduplicateKey);
     }
 
-    public function has(RecurringPlanId $recurringPlanId): bool
+    public function load(mixed $aggregateId): mixed
     {
-        return $this->hasAggregate($recurringPlanId);
+        /** @var RecurringPlan $aggregate */
+        $aggregate = $this->repository->load($aggregateId);
+
+        return $aggregate;
+    }
+
+    public function has(mixed $aggregateId): bool
+    {
+        return $this->repository->has($aggregateId);
+    }
+
+    public function getIdByDeduplicateKey(string $deduplicateKey): mixed
+    {
+        /** @var ?RecurringPlanId $aggregateId */
+        $aggregateId = $this->repository->getIdByDeduplicateKey($deduplicateKey);
+
+        return $aggregateId;
     }
 }

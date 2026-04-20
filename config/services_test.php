@@ -23,11 +23,13 @@ return function (ContainerConfigurator $container) {
     // For message metadata testing ...
 
     // First Command Handler
-    $services->set('donation_bundle.test.infrastructure.first_command_handler', ErgoSarapu\DonationBundle\Tests\Integration\Messenger\Helpers\FirstCommandHandler::class)
-        ->autoconfigure(true)
+    $services->set('donation_bundle.test.infrastructure.patchlevel_repository', \ErgoSarapu\DonationBundle\SharedInfrastructure\Adapter\PatchlevelRepository::class)
         ->arg(0, (new Definition(\Patchlevel\EventSourcing\Repository\Repository::class))
             ->setFactory([new Reference(\Patchlevel\EventSourcing\Repository\RepositoryManager::class), 'get'])
-            ->addArgument(ErgoSarapu\DonationBundle\Tests\Integration\Messenger\Helpers\TestAggregate::class))
+            ->addArgument(ErgoSarapu\DonationBundle\Tests\Integration\Messenger\Helpers\TestAggregate::class));
+    $services->set('donation_bundle.test.infrastructure.first_command_handler', ErgoSarapu\DonationBundle\Tests\Integration\Messenger\Helpers\FirstCommandHandler::class)
+        ->autoconfigure(true)
+        ->arg('$repository', new Reference('donation_bundle.test.infrastructure.patchlevel_repository'))
         ->tag('messenger.message_handler', ['bus' => 'command.bus']);
 
     // First Event Handler

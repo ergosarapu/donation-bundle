@@ -6,12 +6,11 @@ namespace ErgoSarapu\DonationBundle\BCDonations\Application\Port;
 
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\Donation;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
+use ErgoSarapu\DonationBundle\SharedApplication\Port\RepositoryInterface;
 
-interface DonationRepositoryInterface
+/**
+ * @extends RepositoryInterface<Donation, DonationId>
+ */
+interface DonationRepositoryInterface extends RepositoryInterface
 {
-    public function save(Donation $donation): void;
-
-    public function load(DonationId $donationId): Donation;
-
-    public function has(DonationId $donationId): bool;
 }
