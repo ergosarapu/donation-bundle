@@ -21,6 +21,7 @@ use Patchlevel\Hydrator\Attribute\DataSubjectId;
 use Patchlevel\Hydrator\Attribute\PersonalData;
 use Patchlevel\Hydrator\Normalizer\ObjectNormalizer;
 use Ramsey\Uuid\Uuid;
+use Ramsey\Uuid\UuidInterface;
 
 return static function (Config $config): void {
     $classSet = ClassSet::fromDir(__DIR__.'/src');
@@ -39,6 +40,7 @@ return static function (Config $config): void {
         Event::class,
         AggregateRootId::class,
         Uuid::class,
+        UuidInterface::class,
         'ErgoSarapu\DonationBundle\SharedKernel'
     ];
 
