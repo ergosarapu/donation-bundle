@@ -36,9 +36,11 @@ final class PatchlevelCampaignRepository implements CampaignRepositoryInterface
 
     public function getIdByDeduplicateKey(string $deduplicateKey): mixed
     {
-        /** @var ?CampaignId $aggregateId */
         $aggregateId = $this->repository->getIdByDeduplicateKey($deduplicateKey);
+        if ($aggregateId === null) {
+            return null;
+        }
+        return CampaignId::fromString($aggregateId->toString());
 
-        return $aggregateId;
     }
 }

@@ -36,9 +36,10 @@ final class PatchlevelIdentityRepository implements IdentityRepositoryInterface
 
     public function getIdByDeduplicateKey(string $deduplicateKey): mixed
     {
-        /** @var ?IdentityId $aggregateId */
         $aggregateId = $this->repository->getIdByDeduplicateKey($deduplicateKey);
-
-        return $aggregateId;
+        if ($aggregateId === null) {
+            return null;
+        }
+        return IdentityId::fromString($aggregateId->toString());
     }
 }

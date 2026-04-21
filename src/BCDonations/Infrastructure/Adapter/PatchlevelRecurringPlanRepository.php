@@ -36,9 +36,11 @@ final class PatchlevelRecurringPlanRepository implements RecurringPlanRepository
 
     public function getIdByDeduplicateKey(string $deduplicateKey): mixed
     {
-        /** @var ?RecurringPlanId $aggregateId */
         $aggregateId = $this->repository->getIdByDeduplicateKey($deduplicateKey);
+        if ($aggregateId === null) {
+            return null;
+        }
+        return RecurringPlanId::fromString($aggregateId->toString());
 
-        return $aggregateId;
     }
 }

@@ -25,6 +25,7 @@ use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimSource;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\ClaimMerged;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\Identity;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityCreated;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityEmailAdded;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityIbanAdded;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityId;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityPersonNameChanged;
@@ -315,11 +316,97 @@ final class ResolveClaimHandlerTest extends TestCase
         );
     }
 
+    public function testReusesIdentityByDeduplicateKeyWhenProjectionLookupHasNoMatches(): void
+    {
+        $source = ClaimSource::forPayment('018e1234-0000-7000-8000-000000000015');
+        $claimId = ClaimId::generate($source);
+        $email = new Email('donor@example.com');
+        $deduplicateKey = '{"email":"donor@example.com","iban":null,"nationalIdCode":null,"organisationRegCode":null}';
+        $identityId = IdentityId::generate();
+        $claim = $this->claimWithEmail($source, $claimId, $email);
+        $identity = Identity::createFromEvents([
+            new IdentityCreated($this->now, $identityId),
+            new IdentityEmailAdded($this->now, $claimId, $identityId, $email),
+        ]);
+        $command = new ResolveClaim($claimId);
+
+        $this->claimRepository->expects($this->once())
+            ->method('load')
+            ->with($claimId)
+            ->willReturn($claim);
+
+        $this->identityLookup->expects($this->once())
+            ->method('lookup')
+            ->with($email, null, null, null)
+            ->willReturn([]);
+
+        $this->identityRepository->expects($this->once())
+            ->method('getIdByDeduplicateKey')
+            ->with($deduplicateKey)
+            ->willReturn($identityId);
+
+        $this->identityRepository->expects($this->once())
+            ->method('has')
+            ->with($identityId)
+            ->willReturn(true);
+
+        $this->identityRepository->expects($this->once())
+            ->method('load')
+            ->with($identityId)
+            ->willReturn($identity);
+
+        /** @var ?Identity $savedIdentity */
+        $savedIdentity = null;
+        $this->identityRepository->expects($this->once())
+            ->method('save')
+            ->with($this->isInstanceOf(Identity::class), $deduplicateKey)
+            ->willReturnCallback(static function (Identity $identity) use (&$savedIdentity): void {
+                $savedIdentity = $identity;
+            });
+
+        /** @var ?Claim $savedClaim */
+        $savedClaim = null;
+        $this->claimRepository->expects($this->once())
+            ->method('save')
+            ->with($claim)
+            ->willReturnCallback(static function (Claim $claim) use (&$savedClaim): void {
+                $savedClaim = $claim;
+            });
+
+        $this->transactionManager->expects($this->once())
+            ->method('transactional')
+            ->willReturnCallback(static function (callable $callback): void {
+                $callback();
+            });
+
+        ($this->handler)($command);
+
+        self::assertInstanceOf(Identity::class, $savedIdentity);
+        self::assertEquals(
+            [new ClaimMerged($this->now, $claimId, $identityId)],
+            $savedIdentity->releaseEvents(),
+        );
+
+        self::assertInstanceOf(Claim::class, $savedClaim);
+        self::assertEquals(
+            [new ClaimResolved($this->now, $claimId, $source, $identityId)],
+            $savedClaim->releaseEvents(),
+        );
+    }
+
     private function claimWithIban(ClaimSource $source, ClaimId $claimId, Iban $iban): Claim
     {
         return Claim::createFromEvents([
             new ClaimCreated($this->now, $claimId, $source),
             new ClaimPresentedForIban($this->now, $claimId, $iban, ClaimEvidenceLevel::Verified),
+        ]);
+    }
+
+    private function claimWithEmail(ClaimSource $source, ClaimId $claimId, Email $email): Claim
+    {
+        return Claim::createFromEvents([
+            new ClaimCreated($this->now, $claimId, $source),
+            new ClaimPresentedForEmail($this->now, $claimId, $email, ClaimEvidenceLevel::Verified),
         ]);
     }
 }

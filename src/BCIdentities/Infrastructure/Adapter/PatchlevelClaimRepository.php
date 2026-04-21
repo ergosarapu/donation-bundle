@@ -36,9 +36,10 @@ final class PatchlevelClaimRepository implements ClaimRepositoryInterface
 
     public function getIdByDeduplicateKey(string $deduplicateKey): mixed
     {
-        /** @var ?ClaimId $aggregateId */
         $aggregateId = $this->repository->getIdByDeduplicateKey($deduplicateKey);
-
-        return $aggregateId;
+        if ($aggregateId === null) {
+            return null;
+        }
+        return ClaimId::fromString($aggregateId->toString());
     }
 }

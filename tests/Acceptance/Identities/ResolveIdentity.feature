@@ -15,6 +15,16 @@ Feature: Resolve Identities based on presented Claims
     Then Claim is resolved
     And Claim is merged into existing Identity
 
+  Scenario: Presenting Claim with same data results in single Identity
+    Given no Identity exists
+    And identity projection is not updating
+    When a Claim with email "donor@example.com" is presented with sufficient evidence
+    Then Claim is resolved
+    And a new Identity is created
+    When a Claim with email "donor@example.com" is presented with sufficient evidence
+    Then Claim is resolved
+    And Claim is merged into existing Identity
+
   Scenario Outline: Claim presented with single matching Identity results merge conflict and is marked for review
     Given an Identity with email "donor@example.com" and <attribute> <existing_value> exists
     When a Claim with email "donor@example.com" and <attribute> <conflicting_value> is presented with sufficient evidence

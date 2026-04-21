@@ -36,9 +36,10 @@ final class PatchlevelDonationRepository implements DonationRepositoryInterface
 
     public function getIdByDeduplicateKey(string $deduplicateKey): mixed
     {
-        /** @var ?DonationId $aggregateId */
         $aggregateId = $this->repository->getIdByDeduplicateKey($deduplicateKey);
-
-        return $aggregateId;
+        if ($aggregateId === null) {
+            return null;
+        }
+        return DonationId::fromString($aggregateId->toString());
     }
 }

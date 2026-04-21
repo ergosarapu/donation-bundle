@@ -32,6 +32,7 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\OrganisationRegCode;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\RawName;
 use Patchlevel\EventSourcing\Subscription\Engine\SubscriptionEngine;
+use Patchlevel\EventSourcing\Subscription\Engine\SubscriptionEngineCriteria;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Webmozart\Assert\Assert;
@@ -137,6 +138,12 @@ class IdentitiesContext implements Context
         $this->lastPreExistingIdentityId = $this->findResolvedIdentityId($source);
     }
 
+    #[Given('identity projection is not updating')]
+    public function identityProjectionIsNotUpdating(): void
+    {
+        $this->subscriptionEngine->remove(new SubscriptionEngineCriteria(ids: ['identity']));
+    }
+
     #[When('a Claim with email :email and org reg code :orgRegCode is presented with sufficient evidence')]
     public function aClaimWithEmailAndOrgRegCodeIsPresentedWithSufficientEvidence(string $email, string $orgRegCode): void
     {
@@ -218,6 +225,7 @@ class IdentitiesContext implements Context
         Assert::isInstanceOf($claim, Claim::class, 'Claim projection not found');
         Assert::notNull($claim->getIdentityId(), 'Claim should be resolved to a new Identity');
         Assert::notEq($claim->getIdentityId(), $this->lastPreExistingIdentityId, 'Claim should be resolved to a new Identity, not an existing one');
+        $this->lastPreExistingIdentityId = $claim->getIdentityId();
     }
 
     #[Then('Claim is merged into existing Identity')]

@@ -36,9 +36,10 @@ final class PatchlevelPaymentMethodRepository implements PaymentMethodRepository
 
     public function getIdByDeduplicateKey(string $deduplicateKey): mixed
     {
-        /** @var ?PaymentMethodId $aggregateId */
         $aggregateId = $this->repository->getIdByDeduplicateKey($deduplicateKey);
-
-        return $aggregateId;
+        if ($aggregateId === null) {
+            return null;
+        }
+        return PaymentMethodId::fromString($aggregateId->toString());
     }
 }
