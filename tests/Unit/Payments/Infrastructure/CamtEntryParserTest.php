@@ -25,7 +25,7 @@ class CamtEntryParserTest extends TestCase
     {
         $parser = $this->getEntryParserForFile(__DIR__.'/Fixtures/single_entry_org_debtor.camt.xml');
         $this->assertEquals('GB94BARC10201530093459', $parser->getIban()?->value);
-        $this->assertEquals('11111111', $parser->getOrganisationRegCode()?->value);
+        $this->assertEquals('11111116', $parser->getOrganisationRegCode()?->value);
         $this->assertEquals('Test Company OÜ', $parser->getAccountHolderName()?->value);
         $this->assertEquals('ANONREF1-111111111', $parser->getBankReference()->value);
         $this->assertEquals(10000, $parser->getAmount()->amount());
@@ -51,7 +51,7 @@ class CamtEntryParserTest extends TestCase
         $this->assertEquals(new DateTimeImmutable('2025-11-24'), $parser->getBookingDate());
         $this->assertEquals('Donation', $parser->getDescription()?->toString());
         $this->assertEquals('GB94BARC10201530093459', $parser->getIban()?->value);
-        $this->assertEquals('39876543210', $parser->getNationalIdCode()?->value);
+        $this->assertEquals('60109234794', $parser->getNationalIdCode()?->value);
         $this->assertEquals('11223344556677', $parser->getPaymentReference()?->value);
     }
 }

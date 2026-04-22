@@ -35,7 +35,7 @@ Feature: Resolve Identities based on presented Claims
       | attribute        | existing_value | conflicting_value |
       | national id code | "38001085718"  | "49002010976"     |
       | person name      | "John" "Doe"   | "Jane" "Smith"    |
-      | org reg code     | "12345678"     | "87654321"        |
+      | org reg code     | "12345678"     | "87654322"        |
 
   Scenario Outline: Claim with conflicting identity code type presented to existing Identity results merge conflict
     Given an Identity with email "donor@example.com" and <existing_attribute> <existing_value> exists

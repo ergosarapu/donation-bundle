@@ -15,6 +15,7 @@ use ErgoSarapu\DonationBundle\IntegrationContracts\Donations\Command\InitiateDon
 use ErgoSarapu\DonationBundle\IntegrationContracts\ValueObject\EntityId;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\QueryBusInterface;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Country;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
@@ -75,7 +76,7 @@ class IndexController extends AbstractController
                     donorName: $donation->getGivenName() !== null && $donation->getFamilyName() !== null
                         ? new PersonName($donation->getGivenName(), $donation->getFamilyName())
                         : null,
-                    donorNationalIdCode: $donation->getNationalIdCode() !== null ? new NationalIdCode($donation->getNationalIdCode()) : null,
+                    donorNationalIdCode: $donation->getNationalIdCode() !== null ? new NationalIdCode($donation->getNationalIdCode(), new Country('EE')) : null,
                     recurringInterval: $donation->getFrequency() !== null ? new Interval($donation->getFrequency()) : null,
                 );
                 $commandResult = $this->commandBus->dispatch($command);

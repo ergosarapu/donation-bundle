@@ -18,6 +18,7 @@ use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityOrganisationR
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityPersonNameChanged;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityRawNameAdded;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\MergeResult;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Country;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
@@ -51,8 +52,8 @@ final class IdentityTest extends AggregateRootTestCase
         $claimSource = ClaimSource::forPayment('018e1234-0000-7000-8000-000000000001');
         $this->claimId = ClaimId::generate($claimSource);
         $this->personName = new PersonName('Jane', 'Doe');
-        $this->nationalIdCode = new NationalIdCode('60001019906');
-        $this->organisationRegCode = new OrganisationRegCode('12345678');
+        $this->nationalIdCode = new NationalIdCode('60001019906', new Country('EE'));
+        $this->organisationRegCode = new OrganisationRegCode('12345678', new Country('EE'));
         $this->rawName = new RawName('Jane Doe');
         $this->email = new Email('jane@example.com');
         $this->iban = new Iban('EE471000001020145685');
@@ -193,11 +194,105 @@ final class IdentityTest extends AggregateRootTestCase
                     $this->now,
                     $this->claimId,
                     null,
-                    new NationalIdCode('60001019917'),
+                    new NationalIdCode('60001019917', new Country('EE')),
                     null,
                     $this->rawName,
                     $this->email,
                     $this->iban,
+                );
+            })
+            ->then(function () use (&$result): void {
+                self::assertNotNull($result);
+                self::assertFalse($result->isSuccess());
+                self::assertTrue($result->isConflict());
+            });
+    }
+
+    public function testMergeClaimDataUpgradesNationalIdCodeWhenIncomingAddsCountry(): void
+    {
+        /** @var ?MergeResult $result */
+        $result = null;
+        $countrylessNationalIdCode = new NationalIdCode($this->nationalIdCode->value);
+
+        $this->given(
+            new IdentityCreated($this->now, $this->identityId),
+            new IdentityNationalIdCodeChanged($this->now, $this->claimId, $this->identityId, $countrylessNationalIdCode),
+        )
+            ->when(function (Identity $identity) use (&$result): void {
+                $result = $identity->mergeClaimData(
+                    $this->now,
+                    $this->claimId,
+                    null,
+                    $this->nationalIdCode,
+                    null,
+                    null,
+                    null,
+                    null,
+                );
+            })
+            ->then(
+                new IdentityNationalIdCodeChanged($this->now, $this->claimId, $this->identityId, $this->nationalIdCode),
+                new ClaimMerged($this->now, $this->claimId, $this->identityId),
+                function () use (&$result): void {
+                    self::assertNotNull($result);
+                    self::assertTrue($result->isSuccess());
+                    self::assertFalse($result->isConflict());
+                },
+            );
+    }
+
+    public function testMergeClaimDataIgnoresCountrylessNationalIdCodeWhenExistingHasCountry(): void
+    {
+        /** @var ?MergeResult $result */
+        $result = null;
+        $countrylessNationalIdCode = new NationalIdCode($this->nationalIdCode->value);
+
+        $this->given(
+            new IdentityCreated($this->now, $this->identityId),
+            new IdentityNationalIdCodeChanged($this->now, $this->claimId, $this->identityId, $this->nationalIdCode),
+        )
+            ->when(function (Identity $identity) use (&$result, $countrylessNationalIdCode): void {
+                $result = $identity->mergeClaimData(
+                    $this->now,
+                    $this->claimId,
+                    null,
+                    $countrylessNationalIdCode,
+                    null,
+                    null,
+                    null,
+                    null,
+                );
+            })
+            ->then(
+                new ClaimMerged($this->now, $this->claimId, $this->identityId),
+                function () use (&$result): void {
+                    self::assertNotNull($result);
+                    self::assertTrue($result->isSuccess());
+                    self::assertFalse($result->isConflict());
+                },
+            );
+    }
+
+    public function testMergeClaimDataReturnsConflictForSameNationalIdCodeValueWithDifferentCountries(): void
+    {
+        /** @var ?MergeResult $result */
+        $result = null;
+        $differentCountryNationalIdCode = new NationalIdCode($this->nationalIdCode->value, new Country('LV'));
+
+        $this->given(
+            new IdentityCreated($this->now, $this->identityId),
+            new IdentityNationalIdCodeChanged($this->now, $this->claimId, $this->identityId, $this->nationalIdCode),
+        )
+            ->when(function (Identity $identity) use (&$result, $differentCountryNationalIdCode): void {
+                $result = $identity->mergeClaimData(
+                    $this->now,
+                    $this->claimId,
+                    null,
+                    $differentCountryNationalIdCode,
+                    null,
+                    null,
+                    null,
+                    null,
                 );
             })
             ->then(function () use (&$result): void {
@@ -318,7 +413,7 @@ final class IdentityTest extends AggregateRootTestCase
                     $this->claimId,
                     null,
                     null,
-                    new OrganisationRegCode("87654321"),
+                    new OrganisationRegCode("87654322", new Country('EE')),
                     null,
                     null,
                     null,
@@ -326,6 +421,100 @@ final class IdentityTest extends AggregateRootTestCase
             })
             ->then(function () use (&$result): void {
                 self::assertNotNull($result);
+                self::assertTrue($result->isConflict());
+            });
+    }
+
+    public function testMergeClaimDataUpgradesOrganisationRegCodeWhenIncomingAddsCountry(): void
+    {
+        /** @var ?MergeResult $result */
+        $result = null;
+        $countrylessOrganisationRegCode = new OrganisationRegCode($this->organisationRegCode->value);
+
+        $this->given(
+            new IdentityCreated($this->now, $this->identityId),
+            new IdentityOrganisationRegCodeChanged($this->now, $this->claimId, $this->identityId, $countrylessOrganisationRegCode),
+        )
+            ->when(function (Identity $identity) use (&$result): void {
+                $result = $identity->mergeClaimData(
+                    $this->now,
+                    $this->claimId,
+                    null,
+                    null,
+                    $this->organisationRegCode,
+                    null,
+                    null,
+                    null,
+                );
+            })
+            ->then(
+                new IdentityOrganisationRegCodeChanged($this->now, $this->claimId, $this->identityId, $this->organisationRegCode),
+                new ClaimMerged($this->now, $this->claimId, $this->identityId),
+                function () use (&$result): void {
+                    self::assertNotNull($result);
+                    self::assertTrue($result->isSuccess());
+                    self::assertFalse($result->isConflict());
+                },
+            );
+    }
+
+    public function testMergeClaimDataIgnoresCountrylessOrganisationRegCodeWhenExistingHasCountry(): void
+    {
+        /** @var ?MergeResult $result */
+        $result = null;
+        $countrylessOrganisationRegCode = new OrganisationRegCode($this->organisationRegCode->value);
+
+        $this->given(
+            new IdentityCreated($this->now, $this->identityId),
+            new IdentityOrganisationRegCodeChanged($this->now, $this->claimId, $this->identityId, $this->organisationRegCode),
+        )
+            ->when(function (Identity $identity) use (&$result, $countrylessOrganisationRegCode): void {
+                $result = $identity->mergeClaimData(
+                    $this->now,
+                    $this->claimId,
+                    null,
+                    null,
+                    $countrylessOrganisationRegCode,
+                    null,
+                    null,
+                    null,
+                );
+            })
+            ->then(
+                new ClaimMerged($this->now, $this->claimId, $this->identityId),
+                function () use (&$result): void {
+                    self::assertNotNull($result);
+                    self::assertTrue($result->isSuccess());
+                    self::assertFalse($result->isConflict());
+                },
+            );
+    }
+
+    public function testMergeClaimDataReturnsConflictForSameOrganisationRegCodeValueWithDifferentCountries(): void
+    {
+        /** @var ?MergeResult $result */
+        $result = null;
+        $differentCountryOrganisationRegCode = new OrganisationRegCode($this->organisationRegCode->value, new Country('LV'));
+
+        $this->given(
+            new IdentityCreated($this->now, $this->identityId),
+            new IdentityOrganisationRegCodeChanged($this->now, $this->claimId, $this->identityId, $this->organisationRegCode),
+        )
+            ->when(function (Identity $identity) use (&$result, $differentCountryOrganisationRegCode): void {
+                $result = $identity->mergeClaimData(
+                    $this->now,
+                    $this->claimId,
+                    null,
+                    null,
+                    $differentCountryOrganisationRegCode,
+                    null,
+                    null,
+                    null,
+                );
+            })
+            ->then(function () use (&$result): void {
+                self::assertNotNull($result);
+                self::assertFalse($result->isSuccess());
                 self::assertTrue($result->isConflict());
             });
     }

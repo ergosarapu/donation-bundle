@@ -68,17 +68,31 @@ final class Identity extends BasicAggregateRoot
             return MergeAttempt::conflict();
         }
 
+        return $this->updateNationalIdCode($currentTime, $claimId, $nationalIdCode);
+    }
+
+    private function updateNationalIdCode(DateTimeImmutable $currentTime, ClaimId $claimId, NationalIdCode $nationalIdCode): MergeAttempt
+    {
         if ($nationalIdCode->equals($this->nationalIdCode)) {
             return MergeAttempt::noChange();
         }
-
-        if ($this->nationalIdCode !== null) {
+        if ($this->nationalIdCode === null) {
+            return MergeAttempt::changed(
+                new IdentityNationalIdCodeChanged($currentTime, $claimId, $this->id, $nationalIdCode)
+            );
+        }
+        if (!$nationalIdCode->hasSameValueAs($this->nationalIdCode)) {
             return MergeAttempt::conflict();
         }
-
-        return MergeAttempt::changed(
-            new IdentityNationalIdCodeChanged($currentTime, $claimId, $this->id, $nationalIdCode)
-        );
+        if ($nationalIdCode->country === null) {
+            return MergeAttempt::noChange();
+        }
+        if ($this->nationalIdCode->country === null) {
+            return MergeAttempt::changed(
+                new IdentityNationalIdCodeChanged($currentTime, $claimId, $this->id, $nationalIdCode)
+            );
+        }
+        return MergeAttempt::conflict();
     }
 
     private function mergeOrganisationRegCode(DateTimeImmutable $currentTime, ClaimId $claimId, ?OrganisationRegCode $organisationRegCode): MergeAttempt
@@ -91,17 +105,31 @@ final class Identity extends BasicAggregateRoot
             return MergeAttempt::conflict();
         }
 
+        return $this->updateOrganisationRegCode($currentTime, $claimId, $organisationRegCode);
+    }
+
+    private function updateOrganisationRegCode(DateTimeImmutable $currentTime, ClaimId $claimId, OrganisationRegCode $organisationRegCode): MergeAttempt
+    {
         if ($organisationRegCode->equals($this->organisationRegCode)) {
             return MergeAttempt::noChange();
         }
-
-        if ($this->organisationRegCode !== null) {
+        if ($this->organisationRegCode === null) {
+            return MergeAttempt::changed(
+                new IdentityOrganisationRegCodeChanged($currentTime, $claimId, $this->id, $organisationRegCode)
+            );
+        }
+        if (!$organisationRegCode->hasSameValueAs($this->organisationRegCode)) {
             return MergeAttempt::conflict();
         }
-
-        return MergeAttempt::changed(
-            new IdentityOrganisationRegCodeChanged($currentTime, $claimId, $this->id, $organisationRegCode)
-        );
+        if ($organisationRegCode->country === null) {
+            return MergeAttempt::noChange();
+        }
+        if ($this->organisationRegCode->country === null) {
+            return MergeAttempt::changed(
+                new IdentityOrganisationRegCodeChanged($currentTime, $claimId, $this->id, $organisationRegCode)
+            );
+        }
+        return MergeAttempt::conflict();
     }
 
     private function mergeRawName(DateTimeImmutable $currentTime, ClaimId $claimId, ?RawName $rawName): MergeAttempt
