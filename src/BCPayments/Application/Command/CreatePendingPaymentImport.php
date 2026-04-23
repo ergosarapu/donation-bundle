@@ -13,9 +13,8 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentReference;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\LegalIdentifier;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\OrganisationRegCode;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 
 final class CreatePendingPaymentImport implements CommandInterface
@@ -28,8 +27,7 @@ final class CreatePendingPaymentImport implements CommandInterface
         public readonly ?ShortDescription $description,
         public readonly DateTimeImmutable $bookingDate,
         public readonly ?AccountHolderName $accountHolderName,
-        public readonly ?NationalIdCode $nationalIdCode,
-        public readonly ?OrganisationRegCode $organizationRegCode,
+        public readonly ?LegalIdentifier $legalIdentifier,
         public readonly ?PaymentReference $reference,
         public readonly ?Iban $iban,
         public readonly ?Bic $bic,

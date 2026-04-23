@@ -6,15 +6,14 @@ namespace ErgoSarapu\DonationBundle\IntegrationContracts\Identities\ValueObject;
 
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\OrganisationRegCode;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\LegalIdentifier;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\RawName;
 
 final class ClaimPresentation
 {
     /**
-     * @param PersonName|RawName|Email|Iban|NationalIdCode|OrganisationRegCode|class-string<PersonName>|class-string<RawName>|class-string<Email>|class-string<Iban>|class-string<NationalIdCode>|class-string<OrganisationRegCode> $value
+     * @param PersonName|RawName|Email|Iban|LegalIdentifier|string $value
      */
     public function __construct(
         public readonly mixed $value,
@@ -23,7 +22,7 @@ final class ClaimPresentation
     }
 
     /**
-     * @param PersonName|RawName|Email|Iban|NationalIdCode|OrganisationRegCode $value
+     * @param PersonName|RawName|Email|Iban|LegalIdentifier $value
      */
     public static function forValue(object $value, ClaimEvidenceLevel $evidenceLevel): self
     {
@@ -31,7 +30,7 @@ final class ClaimPresentation
     }
 
     /**
-     * @param class-string<PersonName>|class-string<RawName>|class-string<Email>|class-string<Iban>|class-string<NationalIdCode>|class-string<OrganisationRegCode> $className
+     * @param string $className
      */
     public static function forType(string $className, ClaimEvidenceLevel $evidenceLevel): self
     {

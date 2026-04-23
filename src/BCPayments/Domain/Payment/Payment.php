@@ -8,9 +8,8 @@ use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\LegalIdentifier;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\OrganisationRegCode;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\URL;
@@ -68,7 +67,7 @@ class Payment extends BasicAggregateRoot
         ?string $appliedTo,
         ?Email $email,
         ?PersonName $name,
-        ?NationalIdCode $nationalIdCode,
+        ?LegalIdentifier $legalIdentifier,
         DateTimeImmutable $initiatedAt,
         ?DateTimeImmutable $capturedAt,
         ?GatewayReference $gatewayReference,
@@ -90,7 +89,7 @@ class Payment extends BasicAggregateRoot
             $appliedTo,
             $email,
             $name,
-            $nationalIdCode,
+            $legalIdentifier,
             $gatewayReference,
             $bankReference,
             $paymentReference,
@@ -110,8 +109,7 @@ class Payment extends BasicAggregateRoot
         ?ShortDescription $description,
         DateTimeImmutable $bookingDate,
         ?AccountHolderName $accountHolderName,
-        ?NationalIdCode $nationalIdCode,
-        ?OrganisationRegCode $organizationRegCode,
+        ?LegalIdentifier $legalIdentifier,
         ?PaymentReference $reference,
         ?Iban $iban,
         ?Bic $bic,
@@ -127,8 +125,7 @@ class Payment extends BasicAggregateRoot
             $description,
             $bookingDate,
             $accountHolderName,
-            $nationalIdCode,
-            $organizationRegCode,
+            $legalIdentifier,
             $reference,
             $iban,
             $bic,

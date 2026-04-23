@@ -9,8 +9,7 @@ class Identity
     private string $identityId;
     private ?string $givenName = null;
     private ?string $familyName = null;
-    private ?string $nationalIdCode = null;
-    private ?string $organisationRegCode = null;
+    private ?string $legalIdentifier = null;
     /** @var iterable<int, IdentityRawName> */
     private iterable $rawNames = [];
     /** @var iterable<int, IdentityEmail> */
@@ -99,24 +98,14 @@ class Identity
         $this->appendToCollection($this->ibans, new IdentityIban($this, $iban));
     }
 
-    public function getNationalIdCode(): ?string
+    public function getLegalIdentifier(): ?string
     {
-        return $this->nationalIdCode;
+        return $this->legalIdentifier;
     }
 
-    public function setNationalIdCode(?string $nationalIdCode): void
+    public function setLegalIdentifier(?string $legalIdentifier): void
     {
-        $this->nationalIdCode = $nationalIdCode;
-    }
-
-    public function getOrganisationRegCode(): ?string
-    {
-        return $this->organisationRegCode;
-    }
-
-    public function setOrganisationRegCode(?string $organisationRegCode): void
-    {
-        $this->organisationRegCode = $organisationRegCode;
+        $this->legalIdentifier = $legalIdentifier;
     }
 
     /**

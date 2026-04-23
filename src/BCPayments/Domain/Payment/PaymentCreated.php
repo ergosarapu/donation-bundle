@@ -10,8 +10,8 @@ use ErgoSarapu\DonationBundle\SharedKernel\Event\DomainEventInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\LegalIdentifier;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use Patchlevel\EventSourcing\Attribute\Event;
@@ -38,7 +38,7 @@ class PaymentCreated extends AbstractTimestampedEvent implements DomainEventInte
         #[PersonalData]
         public readonly ?PersonName $name,
         #[PersonalData]
-        public readonly ?NationalIdCode $nationalIdCode,
+        public readonly ?LegalIdentifier $legalIdentifier,
         public readonly ?GatewayReference $gatewayReference,
         public readonly ?BankReference $bankReference,
         public readonly ?PaymentReference $paymentReference,

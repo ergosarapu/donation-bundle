@@ -23,9 +23,8 @@ use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandResult;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\LegalIdentifier;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\OrganisationRegCode;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -61,8 +60,7 @@ class TryReconcilePaymentImportHandlerTest extends TestCase
             new ShortDescription('Test import'),
             new DateTimeImmutable('2024-02-01'),
             new AccountHolderName('John Doe'),
-            new NationalIdCode('12345678901'),
-            new OrganisationRegCode('12345678'),
+            LegalIdentifier::nationalIdNumber('12345678901'),
             new PaymentReference('1234567890'),
             new Iban('EE382200221020145685'),
             new Bic('HABAEE2X'),

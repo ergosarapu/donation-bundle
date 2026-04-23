@@ -8,8 +8,7 @@ use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\OrganisationRegCode;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\LegalIdentifier;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\RawName;
 use LogicException;
@@ -21,14 +20,9 @@ use Patchlevel\EventSourcing\Attribute\Id;
 #[Aggregate(name: 'claim')]
 final class Claim extends BasicAggregateRoot
 {
-    /** @var array<class-string, array<string, int>> */
+    /** @var array<string, array<string, int>> */
     private const SCORE_LOOKUP = [
-        NationalIdCode::class => [
-            ClaimEvidenceLevel::Observed->value => 9,
-            ClaimEvidenceLevel::VerifiedByUser->value => 80,
-            ClaimEvidenceLevel::Verified->value => 100,
-        ],
-        OrganisationRegCode::class => [
+        LegalIdentifier::class => [
             ClaimEvidenceLevel::Observed->value => 9,
             ClaimEvidenceLevel::VerifiedByUser->value => 80,
             ClaimEvidenceLevel::Verified->value => 100,
@@ -61,9 +55,9 @@ final class Claim extends BasicAggregateRoot
     private ClaimId $id;
     private ClaimSource $source;
     private bool $inReview = false;
-    /** @var array<class-string, Email|Iban|NationalIdCode|OrganisationRegCode|PersonName|RawName|null> */
+    /** @var array<string, Email|Iban|LegalIdentifier|PersonName|RawName|null> */
     private array $presentedValues = [];
-    /** @var array<class-string, ClaimEvidenceLevel> */
+    /** @var array<string, ClaimEvidenceLevel> */
     private array $presentedEvidenceLevels = [];
     private ?IdentityId $identityId = null;
 
@@ -115,32 +109,37 @@ final class Claim extends BasicAggregateRoot
 
     public function personName(): ?PersonName
     {
-        return $this->resolvableTypedValue(PersonName::class);
+        $value = $this->resolvableValue(PersonName::class);
+
+        return $value instanceof PersonName ? $value : null;
     }
 
     public function rawName(): ?RawName
     {
-        return $this->resolvableTypedValue(RawName::class);
+        $value = $this->resolvableValue(RawName::class);
+
+        return $value instanceof RawName ? $value : null;
     }
 
     public function email(): ?Email
     {
-        return $this->resolvableTypedValue(Email::class);
+        $value = $this->resolvableValue(Email::class);
+
+        return $value instanceof Email ? $value : null;
     }
 
     public function iban(): ?Iban
     {
-        return $this->resolvableTypedValue(Iban::class);
+        $value = $this->resolvableValue(Iban::class);
+
+        return $value instanceof Iban ? $value : null;
     }
 
-    public function nationalIdCode(): ?NationalIdCode
+    public function legalIdentifier(): ?LegalIdentifier
     {
-        return $this->resolvableTypedValue(NationalIdCode::class);
-    }
+        $value = $this->resolvableValue(LegalIdentifier::class);
 
-    public function organisationRegCode(): ?OrganisationRegCode
-    {
-        return $this->resolvableTypedValue(OrganisationRegCode::class);
+        return $value instanceof LegalIdentifier ? $value : null;
     }
 
     #[Apply]
@@ -179,17 +178,10 @@ final class Claim extends BasicAggregateRoot
     }
 
     #[Apply]
-    protected function applyClaimPresentedForNationalIdCode(ClaimPresentedForNationalIdCode $event): void
+    protected function applyClaimPresentedForLegalIdentifier(ClaimPresentedForLegalIdentifier $event): void
     {
-        $this->presentedValues[NationalIdCode::class] = $event->value;
-        $this->presentedEvidenceLevels[NationalIdCode::class] = $event->evidenceLevel;
-    }
-
-    #[Apply]
-    protected function applyClaimPresentedForOrganisationRegCode(ClaimPresentedForOrganisationRegCode $event): void
-    {
-        $this->presentedValues[OrganisationRegCode::class] = $event->value;
-        $this->presentedEvidenceLevels[OrganisationRegCode::class] = $event->evidenceLevel;
+        $this->presentedValues[LegalIdentifier::class] = $event->value;
+        $this->presentedEvidenceLevels[LegalIdentifier::class] = $event->evidenceLevel;
     }
 
     #[Apply]
@@ -206,22 +198,21 @@ final class Claim extends BasicAggregateRoot
     }
 
     private function shouldPresent(
-        Email|Iban|NationalIdCode|OrganisationRegCode|PersonName|RawName $value,
+        Email|Iban|LegalIdentifier|PersonName|RawName $value,
         ClaimEvidenceLevel $evidenceLevel,
     ): bool {
-        $className = $value::class;
-        $currentValue = $this->value($className);
+        $currentValue = $this->value($value::class);
         if ($currentValue === null) {
             return true;
         }
-        $currentEvidenceLevel = $this->presentedEvidenceLevels[$className];
         if (!$currentValue->equals($value)) {
             return true;
         }
-        if ($evidenceLevel->rank() <= $currentEvidenceLevel->rank()) {
-            return false;
+        $currentEvidenceLevel = $this->presentedEvidenceLevels[$value::class];
+        if ($evidenceLevel->rank() > $currentEvidenceLevel->rank()) {
+            return true;
         }
-        return true;
+        return false;
     }
 
     private function scoreFor(string $className, ClaimEvidenceLevel $level): int
@@ -247,25 +238,22 @@ final class Claim extends BasicAggregateRoot
     }
 
     /**
-     * @template TValue of object
-     * @param class-string<TValue> $className
-     * @return TValue|null
+     * @return LegalIdentifier|PersonName|RawName|Email|Iban|null
      */
-    private function resolvableTypedValue(string $className): ?object
+    private function resolvableValue(string $key): ?object
     {
-        $value = $this->value($className);
-
-        if (!$value instanceof $className) {
+        $value = $this->value($key);
+        if ($value === null) {
             return null;
         }
-        if ($this->meetsThreshold($className, self::RESOLUTION_THRESHOLD)) {
-            return $value;
+        if (!$this->meetsThreshold($key, self::RESOLUTION_THRESHOLD)) {
+            return null;
         }
-        return null;
+        return $value;
     }
 
     /**
-     * @param PersonName|RawName|Email|Iban|NationalIdCode|OrganisationRegCode|class-string $value
+     * @param PersonName|RawName|Email|Iban|LegalIdentifier|string $value
      */
     public function present(DateTimeImmutable $currentTime, object|string $value, ClaimEvidenceLevel $evidenceLevel): void
     {
@@ -279,7 +267,7 @@ final class Claim extends BasicAggregateRoot
     }
 
     /**
-     * @param class-string $className
+     * @param string $className
      */
     private function upgradePresentedType(DateTimeImmutable $currentTime, string $className, ClaimEvidenceLevel $evidenceLevel): void
     {
@@ -293,7 +281,7 @@ final class Claim extends BasicAggregateRoot
     }
 
 
-    private function presentValue(DateTimeImmutable $currentTime, Email|Iban|NationalIdCode|OrganisationRegCode|PersonName|RawName $value, ClaimEvidenceLevel $evidenceLevel): void
+    private function presentValue(DateTimeImmutable $currentTime, Email|Iban|LegalIdentifier|PersonName|RawName $value, ClaimEvidenceLevel $evidenceLevel): void
     {
         if (!$this->shouldPresent($value, $evidenceLevel)) {
             return;
@@ -307,22 +295,14 @@ final class Claim extends BasicAggregateRoot
             $event = new ClaimPresentedForEmail($currentTime, $this->id, $value, $evidenceLevel);
         } elseif ($value instanceof Iban) {
             $event = new ClaimPresentedForIban($currentTime, $this->id, $value, $evidenceLevel);
-        } elseif ($value instanceof OrganisationRegCode) {
-            if (array_key_exists(NationalIdCode::class, $this->presentedValues)) {
-                throw new LogicException('Cannot present OrganisationRegCode when NationalIdCode is already presented for the same claim.');
-            }
-            $event = new ClaimPresentedForOrganisationRegCode($currentTime, $this->id, $value, $evidenceLevel);
         } else {
-            if (array_key_exists(OrganisationRegCode::class, $this->presentedValues)) {
-                throw new LogicException('Cannot present NationalIdCode when OrganisationRegCode is already presented for the same claim.');
-            }
-            $event = new ClaimPresentedForNationalIdCode($currentTime, $this->id, $value, $evidenceLevel);
+            $event = new ClaimPresentedForLegalIdentifier($currentTime, $this->id, $value, $evidenceLevel);
         }
 
         $this->recordThat($event);
     }
 
-    private function value(string $className): Email|Iban|NationalIdCode|OrganisationRegCode|PersonName|RawName|null
+    private function value(string $className): Email|Iban|LegalIdentifier|PersonName|RawName|null
     {
         return $this->presentedValues[$className] ?? null;
     }
@@ -331,4 +311,5 @@ final class Claim extends BasicAggregateRoot
     {
         return $this->presentedEvidenceLevels[$className];
     }
+
 }

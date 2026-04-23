@@ -8,9 +8,8 @@ use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\AbstractTimestampedEvent;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\DomainEventInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\LegalIdentifier;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\OrganisationRegCode;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use Patchlevel\EventSourcing\Attribute\Event;
 use Patchlevel\Hydrator\Attribute\DataSubjectId;
@@ -35,9 +34,7 @@ class PaymentImportPending extends AbstractTimestampedEvent implements DomainEve
         #[PersonalData]
         public readonly ?AccountHolderName $accountHolderName,
         #[PersonalData]
-        public readonly ?NationalIdCode $nationalIdCode,
-        #[PersonalData]
-        public readonly ?OrganisationRegCode $organizationRegCode,
+        public readonly ?LegalIdentifier $legalIdentifier,
         public readonly ?PaymentReference $reference,
         #[PersonalData]
         public readonly ?Iban $iban,

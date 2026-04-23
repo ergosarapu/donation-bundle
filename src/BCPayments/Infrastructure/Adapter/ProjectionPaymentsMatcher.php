@@ -285,8 +285,8 @@ final class EffectiveIdCodeMatchRule implements PaymentMatchRule
 
     public function score(Payment $root, Payment $candidate): float
     {
-        $rootIdCode = $this->normalize($root->getEffectiveIdCode());
-        $candidateIdCode = $this->normalize($candidate->getEffectiveIdCode());
+        $rootIdCode = $this->normalize($root->getLegalIdentifier());
+        $candidateIdCode = $this->normalize($candidate->getLegalIdentifier());
 
         if ($rootIdCode === null || $candidateIdCode === null) {
             return 0.0;
@@ -297,7 +297,7 @@ final class EffectiveIdCodeMatchRule implements PaymentMatchRule
 
     public function weightFor(Payment $root, Payment $candidate): float
     {
-        if ($this->normalize($root->getEffectiveIdCode()) === null || $this->normalize($candidate->getEffectiveIdCode()) === null) {
+        if ($this->normalize($root->getLegalIdentifier()) === null || $this->normalize($candidate->getLegalIdentifier()) === null) {
             return 0.0;
         }
         return 8.0;

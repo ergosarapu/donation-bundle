@@ -158,7 +158,7 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         $payment->setDescription($event->description?->toString());
         $payment->setGivenName($event->name?->givenName);
         $payment->setFamilyName($event->name?->familyName);
-        $payment->setNationalIdCode($event->nationalIdCode?->value);
+        $payment->setLegalIdentifier($event->legalIdentifier?->value);
         $payment->setGatewayReference($event->gatewayReference?->value);
         $payment->setBankReference($event->bankReference?->value);
         $payment->setReference($event->paymentReference?->value);
@@ -187,8 +187,7 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         $payment->setImportStatus($event->importStatus);
         $payment->setDescription($event->description?->toString());
         $payment->setAccountHolderName($event->accountHolderName?->value);
-        $payment->setNationalIdCode($event->nationalIdCode?->value);
-        $payment->setOrganizationRegCode($event->organizationRegCode?->value);
+        $payment->setLegalIdentifier($event->legalIdentifier?->value);
         $payment->setReference($event->reference?->value);
         $payment->setIban($event->iban?->value);
         $payment->setBic($event->bic?->value);

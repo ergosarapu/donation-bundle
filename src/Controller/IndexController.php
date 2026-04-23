@@ -20,8 +20,8 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Interval;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\LegalIdentifier;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use InvalidArgumentException;
@@ -74,9 +74,9 @@ class IndexController extends AbstractController
                     description: new ShortDescription($campaign->getDonationDescription()),
                     donorEmail: $donation->getEmail() !== null ? new Email($donation->getEmail()) : null,
                     donorName: $donation->getGivenName() !== null && $donation->getFamilyName() !== null
-                        ? new PersonName($donation->getGivenName(), $donation->getFamilyName())
-                        : null,
-                    donorNationalIdCode: $donation->getNationalIdCode() !== null ? new NationalIdCode($donation->getNationalIdCode(), new Country('EE')) : null,
+                         ? new PersonName($donation->getGivenName(), $donation->getFamilyName())
+                         : null,
+                    donorLegalIdentifier: $donation->getNationalIdCode() !== null ? LegalIdentifier::nationalIdNumber($donation->getNationalIdCode(), new Country('EE')) : null,
                     recurringInterval: $donation->getFrequency() !== null ? new Interval($donation->getFrequency()) : null,
                 );
                 $commandResult = $this->commandBus->dispatch($command);

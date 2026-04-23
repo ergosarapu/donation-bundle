@@ -27,8 +27,7 @@ use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\EventBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\QueryBusInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\OrganisationRegCode;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\LegalIdentifier;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\RawName;
 use Patchlevel\EventSourcing\Subscription\Engine\SubscriptionEngine;
@@ -89,12 +88,12 @@ class IdentitiesContext implements Context
         $this->lastPreExistingIdentityId = $this->findResolvedIdentityId($source);
     }
 
-    #[Given('an Identity with email :email and national id code :nationalIdCode exists')]
-    public function anIdentityWithEmailAndNationalIdCodeExists(string $email, string $nationalIdCode): void
+    #[Given('an Identity with email :email and legal identifier :legalIdentifier exists')]
+    public function anIdentityWithEmailAndLegalIdentifierExists(string $email, string $legalIdentifier): void
     {
         $source = $this->createPreExistingIdentity([
             ClaimPresentation::forValue(new Email($email), ClaimEvidenceLevel::VerifiedByUser),
-            ClaimPresentation::forValue(new NationalIdCode($nationalIdCode), ClaimEvidenceLevel::VerifiedByUser),
+            ClaimPresentation::forValue($this->legalIdentifier($legalIdentifier), ClaimEvidenceLevel::VerifiedByUser),
         ]);
         $this->lastPreExistingIdentityId = $this->findResolvedIdentityId($source);
     }
@@ -109,12 +108,12 @@ class IdentitiesContext implements Context
         $this->lastPreExistingIdentityId = $this->findResolvedIdentityId($source);
     }
 
-    #[Given('an Identity with email :email, national id code :nationalIdCode and person name :givenName :familyName exists')]
-    public function anIdentityWithEmailNationalIdCodeAndPersonNameExists(string $email, string $nationalIdCode, string $givenName, string $familyName): void
+    #[Given('an Identity with email :email, legal identifier :legalIdentifier and person name :givenName :familyName exists')]
+    public function anIdentityWithEmailLegalIdentifierAndPersonNameExists(string $email, string $legalIdentifier, string $givenName, string $familyName): void
     {
         $source = $this->createPreExistingIdentity([
             ClaimPresentation::forValue(new Email($email), ClaimEvidenceLevel::VerifiedByUser),
-            ClaimPresentation::forValue(new NationalIdCode($nationalIdCode), ClaimEvidenceLevel::VerifiedByUser),
+            ClaimPresentation::forValue($this->legalIdentifier($legalIdentifier), ClaimEvidenceLevel::VerifiedByUser),
             ClaimPresentation::forValue(new PersonName($givenName, $familyName), ClaimEvidenceLevel::VerifiedByUser),
         ]);
         $this->lastPreExistingIdentityId = $this->findResolvedIdentityId($source);
@@ -128,29 +127,10 @@ class IdentitiesContext implements Context
         ]);
     }
 
-    #[Given('an Identity with email :email and org reg code :orgRegCode exists')]
-    public function anIdentityWithEmailAndOrgRegCodeExists(string $email, string $orgRegCode): void
-    {
-        $source = $this->createPreExistingIdentity([
-            ClaimPresentation::forValue(new Email($email), ClaimEvidenceLevel::VerifiedByUser),
-            ClaimPresentation::forValue(new OrganisationRegCode($orgRegCode), ClaimEvidenceLevel::VerifiedByUser),
-        ]);
-        $this->lastPreExistingIdentityId = $this->findResolvedIdentityId($source);
-    }
-
     #[Given('identity projection is not updating')]
     public function identityProjectionIsNotUpdating(): void
     {
         $this->subscriptionEngine->remove(new SubscriptionEngineCriteria(ids: ['identity']));
-    }
-
-    #[When('a Claim with email :email and org reg code :orgRegCode is presented with sufficient evidence')]
-    public function aClaimWithEmailAndOrgRegCodeIsPresentedWithSufficientEvidence(string $email, string $orgRegCode): void
-    {
-        $this->presentClaim([
-            ClaimPresentation::forValue(new Email($email), ClaimEvidenceLevel::VerifiedByUser),
-            ClaimPresentation::forValue(new OrganisationRegCode($orgRegCode), ClaimEvidenceLevel::VerifiedByUser),
-        ]);
     }
 
     #[When('a Claim with email :email is presented with sufficient evidence')]
@@ -161,12 +141,12 @@ class IdentitiesContext implements Context
         ]);
     }
 
-    #[When('a Claim with email :email and national id code :nationalIdCode is presented with sufficient evidence')]
-    public function aClaimWithEmailAndNationalIdCodeIsPresentedWithSufficientEvidence(string $email, string $nationalIdCode): void
+    #[When('a Claim with email :email and legal identifier :legalIdentifier is presented with sufficient evidence')]
+    public function aClaimWithEmailAndLegalIdentifierIsPresentedWithSufficientEvidence(string $email, string $legalIdentifier): void
     {
         $this->presentClaim([
             ClaimPresentation::forValue(new Email($email), ClaimEvidenceLevel::VerifiedByUser),
-            ClaimPresentation::forValue(new NationalIdCode($nationalIdCode), ClaimEvidenceLevel::VerifiedByUser),
+            ClaimPresentation::forValue($this->legalIdentifier($legalIdentifier), ClaimEvidenceLevel::VerifiedByUser),
         ]);
     }
 
@@ -179,24 +159,24 @@ class IdentitiesContext implements Context
         ]);
     }
 
-    #[When('a Claim with email :email, iban :iban, national id code :nationalIdCode, person name :givenName :familyName and raw name :rawName is presented with sufficient evidence')]
-    public function aClaimWithAllFieldsIsPresentedWithSufficientEvidence(string $email, string $iban, string $nationalIdCode, string $givenName, string $familyName, string $rawName): void
+    #[When('a Claim with email :email, iban :iban, legal identifier :legalIdentifier, person name :givenName :familyName and raw name :rawName is presented with sufficient evidence')]
+    public function aClaimWithAllFieldsIsPresentedWithSufficientEvidence(string $email, string $iban, string $legalIdentifier, string $givenName, string $familyName, string $rawName): void
     {
         $this->presentClaim([
             ClaimPresentation::forValue(new Email($email), ClaimEvidenceLevel::VerifiedByUser),
             ClaimPresentation::forValue(new Iban($iban), ClaimEvidenceLevel::VerifiedByUser),
-            ClaimPresentation::forValue(new NationalIdCode($nationalIdCode), ClaimEvidenceLevel::VerifiedByUser),
+            ClaimPresentation::forValue($this->legalIdentifier($legalIdentifier), ClaimEvidenceLevel::VerifiedByUser),
             ClaimPresentation::forValue(new PersonName($givenName, $familyName), ClaimEvidenceLevel::VerifiedByUser),
             ClaimPresentation::forValue(new RawName($rawName), ClaimEvidenceLevel::VerifiedByUser),
         ]);
     }
 
-    #[When('a Claim with email :email, national id code :nationalIdCode and person name :givenName :familyName is presented with sufficient evidence')]
-    public function aClaimWithEmailNationalIdCodeAndPersonNameIsPresentedWithSufficientEvidence(string $email, string $nationalIdCode, string $givenName, string $familyName): void
+    #[When('a Claim with email :email, legal identifier :legalIdentifier and person name :givenName :familyName is presented with sufficient evidence')]
+    public function aClaimWithEmailLegalIdentifierAndPersonNameIsPresentedWithSufficientEvidence(string $email, string $legalIdentifier, string $givenName, string $familyName): void
     {
         $this->presentClaim([
             ClaimPresentation::forValue(new Email($email), ClaimEvidenceLevel::VerifiedByUser),
-            ClaimPresentation::forValue(new NationalIdCode($nationalIdCode), ClaimEvidenceLevel::VerifiedByUser),
+            ClaimPresentation::forValue($this->legalIdentifier($legalIdentifier), ClaimEvidenceLevel::VerifiedByUser),
             ClaimPresentation::forValue(new PersonName($givenName, $familyName), ClaimEvidenceLevel::VerifiedByUser),
         ]);
     }
@@ -298,5 +278,14 @@ class IdentitiesContext implements Context
         Assert::isInstanceOf($claim, Claim::class, 'Pre-existing Claim projection not found');
         Assert::notNull($claim->getIdentityId(), 'Pre-existing Claim should be resolved to an Identity');
         return $claim->getIdentityId();
+    }
+
+    private function legalIdentifier(string $value): LegalIdentifier
+    {
+        return match (true) {
+            preg_match('/^[0-9]{11}$/', $value) === 1 => LegalIdentifier::nationalIdNumber($value),
+            preg_match('/^[0-9]{8}$/', $value) === 1 => LegalIdentifier::organisationRegNumber($value),
+            default => throw new \InvalidArgumentException(sprintf('Unsupported legal identifier test value "%s".', $value)),
+        };
     }
 }

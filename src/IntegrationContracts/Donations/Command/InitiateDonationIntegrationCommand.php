@@ -9,8 +9,8 @@ use ErgoSarapu\DonationBundle\IntegrationContracts\ValueObject\EntityId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Interval;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\LegalIdentifier;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 
@@ -23,7 +23,7 @@ final class InitiateDonationIntegrationCommand implements IntegrationCommandInte
         public readonly ShortDescription $description,
         public readonly ?Email $donorEmail = null,
         public readonly ?PersonName $donorName = null,
-        public readonly ?NationalIdCode $donorNationalIdCode = null,
+        public readonly ?LegalIdentifier $donorLegalIdentifier = null,
         public readonly ?Interval $recurringInterval = null,
     ) {
     }

@@ -11,9 +11,8 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Bic;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentReference;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\LegalIdentifier;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\OrganisationRegCode;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use Genkgo\Camt\DTO\Creditor;
 use Genkgo\Camt\DTO\CreditorAgent;
@@ -161,7 +160,7 @@ class CamtEntryParser
         return null;
     }
 
-    public function getNationalIdCode(): ?NationalIdCode
+    public function getLegalIdentifier(): ?LegalIdentifier
     {
         $parties = $this->txDetail->getRelatedParties();
 
@@ -170,34 +169,20 @@ class CamtEntryParser
             if (is_a($type, $this->counterPartyType)) {
                 $identification = $type->getIdentification();
                 if ($identification instanceof PrivateIdentification) {
-                    if ('NIDN' == $identification->getOtherSchemeName()) {
+                    if ('NIDN' === $identification->getOtherSchemeName()) {
                         $idCode = $identification->getOtherId();
                         if (null === $idCode) {
                             continue;
                         }
-                        return new NationalIdCode($idCode);
+                        return LegalIdentifier::nationalIdNumber($idCode);
                     }
                 }
-            }
-        }
-
-        return null;
-    }
-
-    public function getOrganisationRegCode(): ?OrganisationRegCode
-    {
-        $parties = $this->txDetail->getRelatedParties();
-
-        foreach ($parties as $party) {
-            $type = $party->getRelatedPartyType();
-            if (is_a($type, $this->counterPartyType)) {
-                $identification = $type->getIdentification();
                 if ($identification instanceof OrganisationIdentification) {
                     $regCode = $identification->getOtherId();
                     if (null === $regCode) {
                         continue;
                     }
-                    return new OrganisationRegCode($regCode);
+                    return LegalIdentifier::organisationRegNumber($regCode);
                 }
             }
         }

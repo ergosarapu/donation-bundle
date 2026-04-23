@@ -43,9 +43,8 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\LegalIdentifier;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\OrganisationRegCode;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\URL;
@@ -89,7 +88,7 @@ class PaymentTest extends AggregateRootTestCase
     public function testCreate(): void
     {
         $name = new PersonName('John', 'Doe');
-        $nationalIdCode = new NationalIdCode('12345678901');
+        $legalIdentifier = LegalIdentifier::nationalIdNumber('12345678901');
         $gatewayReference = new GatewayReference('gateway-ref-123');
         $bankReference = new BankReference('bank-ref-456');
         $paymentReference = new PaymentReference('payment-ref-789');
@@ -107,7 +106,7 @@ class PaymentTest extends AggregateRootTestCase
             $this->appliedTo,
             $this->email,
             $name,
-            $nationalIdCode,
+            $legalIdentifier,
             $this->now->sub(new DateInterval('P1D')),
             $this->now->add(new DateInterval('P1D')),
             $gatewayReference,
@@ -128,7 +127,7 @@ class PaymentTest extends AggregateRootTestCase
                 $this->appliedTo,
                 $this->email,
                 $name,
-                $nationalIdCode,
+                $legalIdentifier,
                 $gatewayReference,
                 $bankReference,
                 $paymentReference,
@@ -144,8 +143,7 @@ class PaymentTest extends AggregateRootTestCase
         $bankReference = new BankReference('ref-456');
         $bookingDate = $this->now->sub(new DateInterval('P1D'));
         $accountHolderName = new AccountHolderName('John Doe');
-        $nationalIdCode = new NationalIdCode('12345678901');
-        $organizationRegCode = new OrganisationRegCode('12345678');
+        $legalIdentifier = LegalIdentifier::nationalIdNumber('12345678901');
         $reference = new PaymentReference('1234567890');
         $iban = new Iban('EE382200221020145685');
         $bic = new Bic('HABAEE2X');
@@ -160,8 +158,7 @@ class PaymentTest extends AggregateRootTestCase
             $this->description,
             $bookingDate,
             $accountHolderName,
-            $nationalIdCode,
-            $organizationRegCode,
+            $legalIdentifier,
             $reference,
             $iban,
             $bic,
@@ -176,8 +173,7 @@ class PaymentTest extends AggregateRootTestCase
                 $this->description,
                 $bookingDate,
                 $accountHolderName,
-                $nationalIdCode,
-                $organizationRegCode,
+                $legalIdentifier,
                 $reference,
                 $iban,
                 $bic,
@@ -205,7 +201,6 @@ class PaymentTest extends AggregateRootTestCase
             null,
             null,
             null,
-            null,
         ))->then(
             new PaymentImportPending(
                 $this->now,
@@ -216,7 +211,6 @@ class PaymentTest extends AggregateRootTestCase
                 $this->amount,
                 null,
                 $bookingDate,
-                null,
                 null,
                 null,
                 null,
@@ -1086,7 +1080,6 @@ class PaymentTest extends AggregateRootTestCase
             null,
             null,
             null,
-            null,
         ))
         ->when(fn (Payment $payment) => $payment->acceptImport($this->now))
         ->expectsException(LogicException::class)
@@ -1158,7 +1151,6 @@ class PaymentTest extends AggregateRootTestCase
             null,
             null,
             null,
-            null,
         ))
         ->when(fn (Payment $payment) => $payment->rejectImport($this->now))
         ->expectsException(LogicException::class)
@@ -1200,7 +1192,6 @@ class PaymentTest extends AggregateRootTestCase
             $this->amount,
             $this->description,
             $this->now,
-            null,
             null,
             null,
             null,
@@ -1250,7 +1241,7 @@ class PaymentTest extends AggregateRootTestCase
         $sourceIdentifier = new PaymentImportSourceIdentifier('source-123');
 
         $name = new PersonName('Jane', 'Doe');
-        $nationalIdCode = new NationalIdCode('12345678901');
+        $legalIdentifier = LegalIdentifier::nationalIdNumber('12345678901');
         $gatewayReference = new GatewayReference('proc-ref-123');
         $bankReference = new BankReference('bank-ref-456');
         $paymentReference = new PaymentReference('payment-ref-789');
@@ -1267,7 +1258,7 @@ class PaymentTest extends AggregateRootTestCase
             $this->appliedTo,
             $this->email,
             $name,
-            $nationalIdCode,
+            $legalIdentifier,
             $this->now->sub(new DateInterval('P1D')),
             $this->now->add(new DateInterval('P1D')),
             $gatewayReference,
@@ -1291,7 +1282,6 @@ class PaymentTest extends AggregateRootTestCase
             null,
             null,
             null,
-            null,
         ))
         ->when(fn (Payment $payment) => $payment->reconcileImport($this->now, $existingPayment))
         ->then(
@@ -1310,7 +1300,7 @@ class PaymentTest extends AggregateRootTestCase
         $sourceIdentifier = new PaymentImportSourceIdentifier('source-123');
 
         $name = new PersonName('Jane', 'Doe');
-        $nationalIdCode = new NationalIdCode('12345678901');
+        $legalIdentifier = LegalIdentifier::nationalIdNumber('12345678901');
         $gatewayReference = new GatewayReference('proc-ref-123');
         $bankReference = new BankReference('bank-ref-456');
         $paymentReference = new PaymentReference('payment-ref-789');
@@ -1327,7 +1317,7 @@ class PaymentTest extends AggregateRootTestCase
             $this->appliedTo,
             $this->email,
             $name,
-            $nationalIdCode,
+            $legalIdentifier,
             $this->now->sub(new DateInterval('P1D')),
             $this->now->add(new DateInterval('P1D')),
             $gatewayReference,
@@ -1347,7 +1337,6 @@ class PaymentTest extends AggregateRootTestCase
                 $this->amount,
                 $this->description,
                 $this->now,
-                null,
                 null,
                 null,
                 null,
@@ -1387,7 +1376,6 @@ class PaymentTest extends AggregateRootTestCase
             null,
             null,
             null,
-            null,
         );
 
         $this->given(new PaymentImportPending(
@@ -1399,7 +1387,6 @@ class PaymentTest extends AggregateRootTestCase
             $this->amount,
             $this->description,
             $this->now,
-            null,
             null,
             null,
             null,
@@ -1451,7 +1438,6 @@ class PaymentTest extends AggregateRootTestCase
             null,
             null,
             null,
-            null,
         ))
         ->when(fn (Payment $payment) => $payment->reconcileImport($this->now, $existingPayment))
         ->expectsException(LogicException::class)
@@ -1491,7 +1477,6 @@ class PaymentTest extends AggregateRootTestCase
                 $this->amount,
                 $this->description,
                 $this->now,
-                null,
                 null,
                 null,
                 null,
@@ -1541,7 +1526,6 @@ class PaymentTest extends AggregateRootTestCase
                 $this->amount,
                 $this->description,
                 $this->now,
-                null,
                 null,
                 null,
                 null,

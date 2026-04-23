@@ -7,8 +7,7 @@ namespace ErgoSarapu\DonationBundle\BCIdentities\Application\Port;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\OrganisationRegCode;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\LegalIdentifier;
 
 interface IdentityLookupInterface
 {
@@ -18,7 +17,6 @@ interface IdentityLookupInterface
     public function lookup(
         ?Email $email = null,
         ?Iban $iban = null,
-        ?NationalIdCode $nationalIdCode = null,
-        ?OrganisationRegCode $organisationRegCode = null,
+        ?LegalIdentifier $legalIdentifier = null,
     ): array;
 }

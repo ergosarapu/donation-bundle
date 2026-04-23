@@ -21,9 +21,8 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentReference;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\LegalIdentifier;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\OrganisationRegCode;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -60,8 +59,7 @@ class CreatePendingPaymentImportHandlerTest extends TestCase
         $description = new ShortDescription('Test payment import');
         $bookingDate = new DateTimeImmutable('2024-02-02 12:01:15', new DateTimeZone('UTC'));
         $accountHolderName = new AccountHolderName('John Doe');
-        $nationalIdCode = new NationalIdCode('12345678901');
-        $organizationRegCode = new OrganisationRegCode('12345678');
+        $nationalIdNumber = LegalIdentifier::nationalIdNumber('12345678901');
         $referenceNumber = new PaymentReference('1234567890');
         $iban = new Iban('EE382200221020145685');
         $bic = new Bic('HABAEE2X');
@@ -74,8 +72,7 @@ class CreatePendingPaymentImportHandlerTest extends TestCase
             $description,
             $bookingDate,
             $accountHolderName,
-            $nationalIdCode,
-            $organizationRegCode,
+            $nationalIdNumber,
             $referenceNumber,
             $iban,
             $bic,
@@ -159,8 +156,7 @@ class CreatePendingPaymentImportHandlerTest extends TestCase
             new ShortDescription('Test deterministic ID'),
             new DateTimeImmutable('2024-02-02 01:30:45', new DateTimeZone('+02:00')), // Previous UTC day
             new AccountHolderName('John Doe'),
-            new NationalIdCode('12345678901'),
-            new OrganisationRegCode('12345678'),
+            LegalIdentifier::nationalIdNumber('12345678901'),
             new PaymentReference('1234567890'),
             new Iban('EE382200221020145685'),
             new Bic('HABAEE2X'),
@@ -203,7 +199,6 @@ class CreatePendingPaymentImportHandlerTest extends TestCase
             new Money(1000, new Currency('USD')),
             null,
             new DateTimeImmutable('2024-02-03 00:00:00', new DateTimeZone('UTC')),
-            null,
             null,
             null,
             null,

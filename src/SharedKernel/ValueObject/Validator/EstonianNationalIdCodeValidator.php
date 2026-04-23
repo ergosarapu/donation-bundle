@@ -4,20 +4,20 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Validator;
 
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Country;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\IdentifierType;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\LegalIdentifier;
 
-final class EstonianNationalIdCodeValidator implements CountryBasedValidatorInterface
+final class EstonianNationalIdCodeValidator implements LegalIdentifierValidatorInterface
 {
-    private const PERSONAL_CODE_REGEX = '/^[1-8][0-9]{10}$/';
-
-    public function supports(Country $country): bool
+    public function supports(LegalIdentifier $legalIdentifier): bool
     {
-        return $country->value === 'EE';
+        return $legalIdentifier->country?->value === 'EE'
+            && $legalIdentifier->identifierType === IdentifierType::NationalIdNumber;
     }
 
     public function isSatisfiedBy(string $value): bool
     {
-        if (!preg_match(self::PERSONAL_CODE_REGEX, $value)) {
+        if (!$this->hasValidFormat($value)) {
             return false;
         }
 
@@ -25,11 +25,30 @@ final class EstonianNationalIdCodeValidator implements CountryBasedValidatorInte
             && $this->hasValidControlNumber($value);
     }
 
+    private function hasValidFormat(string $value): bool
+    {
+        if (strlen($value) !== 11) {
+            return false;
+        }
+
+        $hasValidPrefix = array_reduce(
+            ['1', '2', '3', '4', '5', '6', '7', '8'],
+            static fn (bool $hasValidPrefix, string $prefix): bool => $hasValidPrefix || $prefix === $value[0],
+            false,
+        );
+
+        if (!$hasValidPrefix) {
+            return false;
+        }
+
+        return strspn($value, '0123456789') === 11;
+    }
+
     private function hasValidBirthDate(string $value): bool
     {
-        $year = $this->birthCentury($value) + (int) substr($value, 1, 2);
-        $month = (int) substr($value, 3, 2);
-        $day = (int) substr($value, 5, 2);
+        $year = $this->birthCentury($value) + (int) mb_substr($value, 1, 2);
+        $month = (int) mb_substr($value, 3, 2);
+        $day = (int) mb_substr($value, 5, 2);
 
         return checkdate($month, $day, $year);
     }

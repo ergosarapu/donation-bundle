@@ -32,7 +32,7 @@ class InitiateDonationHandler implements CommandHandlerInterface
             donorDetails: new DonorDetails(
                 email: $command->donorEmail,
                 name: $command->donorName,
-                nationalIdCode: $command->donorNationalIdCode,
+                legalIdentifier: $command->donorLegalIdentifier,
             ),
             description: $command->description,
         );

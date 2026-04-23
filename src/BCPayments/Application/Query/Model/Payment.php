@@ -27,9 +27,7 @@ class Payment
     private ?string $accountHolderName = null;
     private ?string $effectiveName = null;
 
-    private ?string $nationalIdCode = null;
-    private ?string $organizationRegCode = null;
-    private ?string $effectiveIdCode = null;
+    private ?string $legalIdentifier = null;
 
     private ?string $reference = null;
     private ?string $iban = null;
@@ -205,26 +203,14 @@ class Payment
         $this->setEffectiveName();
     }
 
-    public function getNationalIdCode(): ?string
+    public function getLegalIdentifier(): ?string
     {
-        return $this->nationalIdCode;
+        return $this->legalIdentifier;
     }
 
-    public function setNationalIdCode(?string $nationalIdCode): void
+    public function setLegalIdentifier(?string $legalIdentifier): void
     {
-        $this->nationalIdCode = $nationalIdCode;
-        $this->setEffectiveIdCode();
-    }
-
-    public function getOrganizationRegCode(): ?string
-    {
-        return $this->organizationRegCode;
-    }
-
-    public function setOrganizationRegCode(?string $organizationRegCode): void
-    {
-        $this->organizationRegCode = $organizationRegCode;
-        $this->setEffectiveIdCode();
+        $this->legalIdentifier = $legalIdentifier;
     }
 
     public function getReference(): ?string
@@ -381,13 +367,4 @@ class Payment
         }
     }
 
-    public function getEffectiveIdCode(): ?string
-    {
-        return $this->effectiveIdCode;
-    }
-
-    private function setEffectiveIdCode(): void
-    {
-        $this->effectiveIdCode = $this->nationalIdCode ?? $this->organizationRegCode;
-    }
 }

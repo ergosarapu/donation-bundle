@@ -28,6 +28,14 @@ final class CountryTest extends TestCase
         new Country('EST');
     }
 
+    public function testRejectsInvalidCountryCodeAfterNormalization(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('"E1" is not a valid ISO 3166-1 alpha-2 country code.');
+
+        new Country(' e1 ');
+    }
+
     public function testEqualsWhenSame(): void
     {
         $a = new Country('EE');

@@ -15,7 +15,7 @@ use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\EventBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\EventHandlerInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\LegalIdentifier;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
 
 class DonationAcceptedHandler implements EventHandlerInterface
@@ -42,7 +42,7 @@ class DonationAcceptedHandler implements EventHandlerInterface
             [
                 ClaimPresentation::forType(PersonName::class, ClaimEvidenceLevel::VerifiedByUser),
                 ClaimPresentation::forType(Email::class, ClaimEvidenceLevel::VerifiedByUser),
-                ClaimPresentation::forType(NationalIdCode::class, ClaimEvidenceLevel::VerifiedByUser),
+                ClaimPresentation::forType(LegalIdentifier::class, ClaimEvidenceLevel::VerifiedByUser),
             ],
         ));
     }

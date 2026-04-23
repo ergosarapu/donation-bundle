@@ -45,8 +45,8 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\LegalIdentifier;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\URL;
@@ -451,7 +451,7 @@ class PaymentsContext implements Context
             gateway: null,
             email: null,
             name: new PersonName('Mati', 'Karu'),
-            nationalIdCode: new NationalIdCode('60109234794'),
+            legalIdentifier: LegalIdentifier::nationalIdNumber('60109234794'),
             paymentAppliedToId: null,
             initiatedAt: new \DateTimeImmutable('2025-11-24'),
             capturedAt: new \DateTimeImmutable('2025-11-24'),
@@ -484,7 +484,7 @@ class PaymentsContext implements Context
             gateway: null,
             email: null,
             name: new PersonName('Jane', 'Smith'), // Different name
-            nationalIdCode: new NationalIdCode('98765432100'), // Different ID
+            legalIdentifier: LegalIdentifier::nationalIdNumber('98765432100'), // Different ID
             paymentAppliedToId: null,
             initiatedAt: new \DateTimeImmutable('2025-11-20'),
             capturedAt: new \DateTimeImmutable('2025-11-20'),

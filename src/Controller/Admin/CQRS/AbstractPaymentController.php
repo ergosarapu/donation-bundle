@@ -80,7 +80,7 @@ abstract class AbstractPaymentController extends AbstractCQRSController
             TextField::new('effectiveName')->setDisabled()->setLabel('Name'),
             TextField::new('reconciledWith')->setDisabled()->setLabel('Reconciled With')->hideOnIndex(),
             TextField::new('description')->setDisabled(),
-            TextField::new('effectiveIdCode')->setDisabled()->setLabel('ID Code'),
+            TextField::new('legalIdentifier')->setDisabled()->setLabel('Legal ID'),
             TextField::new('iban')->setDisabled(),
             TextField::new('reference')->setDisabled(),
             DateTimeField::new('updatedAt')->setDisabled()->hideOnIndex(),

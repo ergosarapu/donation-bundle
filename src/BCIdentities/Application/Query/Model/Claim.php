@@ -16,8 +16,7 @@ class Claim
     private ?string $rawName = null;
     private ?string $email = null;
     private ?string $iban = null;
-    private ?string $nationalIdCode = null;
-    private ?string $organisationRegCode = null;
+    private ?string $legalIdentifier = null;
     private bool $inReview = false;
     private bool $resolved = false;
     private ?string $reviewReason = null;
@@ -105,24 +104,14 @@ class Claim
         $this->iban = $iban;
     }
 
-    public function getNationalIdCode(): ?string
+    public function getLegalIdentifier(): ?string
     {
-        return $this->nationalIdCode;
+        return $this->legalIdentifier;
     }
 
-    public function setNationalIdCode(?string $nationalIdCode): void
+    public function setLegalIdentifier(?string $legalIdentifier): void
     {
-        $this->nationalIdCode = $nationalIdCode;
-    }
-
-    public function getOrganisationRegCode(): ?string
-    {
-        return $this->organisationRegCode;
-    }
-
-    public function setOrganisationRegCode(?string $organisationRegCode): void
-    {
-        $this->organisationRegCode = $organisationRegCode;
+        $this->legalIdentifier = $legalIdentifier;
     }
 
     public function isInReview(): bool

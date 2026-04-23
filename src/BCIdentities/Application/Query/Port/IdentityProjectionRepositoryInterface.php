@@ -5,18 +5,14 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Port;
 
 use ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model\Identity;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\LegalIdentifier;
 
 interface IdentityProjectionRepositoryInterface
 {
     /**
      * @return list<Identity>
      */
-    public function findByNationalIdCode(string $nationalIdCode): array;
-
-    /**
-     * @return list<Identity>
-     */
-    public function findByOrganisationRegCode(string $organisationRegCode): array;
+    public function findByLegalIdentifier(LegalIdentifier $legalIdentifier): array;
 
     /**
      * @return list<Identity>

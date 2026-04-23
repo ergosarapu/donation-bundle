@@ -17,7 +17,7 @@
         <field name="email" type="string" column="email" length="100" nullable="true"/>
         <field name="givenName" type="string" column="given_name" length="100" nullable="true"/>
         <field name="familyName" type="string" column="family_name" length="100" nullable="true"/>
-        <field name="nationalIdCode" type="string" column="national_id_code" length="50" nullable="true"/>
+        <field name="legalIdentifier" type="string" column="legal_identifier" length="20" nullable="true"/>
 
         <field name="initiatedAt" type="datetime_immutable" column="initiated_at" nullable="true"/>
         <field name="acceptedAt" type="datetime_immutable" column="accepted_at" nullable="true"/>

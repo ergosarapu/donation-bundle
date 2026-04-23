@@ -42,7 +42,7 @@ PATH_COUNTS=$(echo "$OUTPUT" | grep -oP 'Paths:.*?\(\K\d+/\d+')
 
 # Display report
 echo "═══════════════════════════════════════════════════════"
-echo "          PATH COVERAGE REPORT                         "
+echo "               COVERAGE REPORT                         "
 echo "═══════════════════════════════════════════════════════"
 echo ""
 

@@ -38,8 +38,7 @@ final class ResolveClaimHandler implements CommandHandlerInterface
         $matchingIdentityIds = $this->identityLookup->lookup(
             email: $claim->email(),
             iban: $claim->iban(),
-            nationalIdCode: $claim->nationalIdCode(),
-            organisationRegCode: $claim->organisationRegCode(),
+            legalIdentifier: $claim->legalIdentifier(),
         );
 
         // More than 1 matching identities, send to review
@@ -64,8 +63,7 @@ final class ResolveClaimHandler implements CommandHandlerInterface
             $currentTime,
             $claimId,
             $claim->personName(),
-            $claim->nationalIdCode(),
-            $claim->organisationRegCode(),
+            $claim->legalIdentifier(),
             $claim->rawName(),
             $claim->email(),
             $claim->iban(),
@@ -100,8 +98,7 @@ final class ResolveClaimHandler implements CommandHandlerInterface
         return json_encode([
             'email' => $claim->email()?->toString(),
             'iban' => $claim->iban()?->value,
-            'nationalIdCode' => $claim->nationalIdCode()?->value,
-            'organisationRegCode' => $claim->organisationRegCode()?->value,
+            'legalIdentifier' => $claim->legalIdentifier()?->value,
         ], JSON_THROW_ON_ERROR);
     }
 

@@ -13,8 +13,7 @@ use ErgoSarapu\DonationBundle\IntegrationContracts\ValueObject\EntityId;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\EventBusInterface;
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Handler\EventHandlerInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\OrganisationRegCode;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\LegalIdentifier;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\RawName;
 
 final class PaymentImportAcceptedHandler implements EventHandlerInterface
@@ -32,8 +31,7 @@ final class PaymentImportAcceptedHandler implements EventHandlerInterface
             [
                 ClaimPresentation::forType(RawName::class, ClaimEvidenceLevel::Verified),
                 ClaimPresentation::forType(Iban::class, ClaimEvidenceLevel::Verified),
-                ClaimPresentation::forType(NationalIdCode::class, ClaimEvidenceLevel::Verified),
-                ClaimPresentation::forType(OrganisationRegCode::class, ClaimEvidenceLevel::Verified),
+                ClaimPresentation::forType(LegalIdentifier::class, ClaimEvidenceLevel::Verified),
             ],
         ));
     }

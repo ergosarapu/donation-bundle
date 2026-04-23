@@ -19,7 +19,7 @@ class Donation
     private ?string $email = null;
     private ?string $givenName = null;
     private ?string $familyName = null;
-    private ?string $nationalIdCode = null;
+    private ?string $legalIdentifier = null;
     private ?DateTimeImmutable $initiatedAt = null;
     private ?DateTimeImmutable $acceptedAt = null;
     private DateTimeImmutable $effectiveDate;
@@ -147,14 +147,14 @@ class Donation
         $this->familyName = $familyName;
     }
 
-    public function getNationalIdCode(): ?string
+    public function getLegalIdentifier(): ?string
     {
-        return $this->nationalIdCode;
+        return $this->legalIdentifier;
     }
 
-    public function setNationalIdCode(?string $nationalIdCode): void
+    public function setLegalIdentifier(?string $legalIdentifier): void
     {
-        $this->nationalIdCode = $nationalIdCode;
+        $this->legalIdentifier = $legalIdentifier;
     }
 
     public function getInitiatedAt(): ?DateTimeImmutable

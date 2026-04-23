@@ -20,8 +20,8 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\LegalIdentifier;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -57,7 +57,7 @@ class CreatePaymentHandlerTest extends TestCase
         $appliedTo = Uuid::uuid7()->toString();
         $email = new Email('donor@example.com');
         $name = new PersonName('John', 'Doe');
-        $nationalIdCode = new NationalIdCode('12345678901');
+        $nationalIdNumber = LegalIdentifier::nationalIdNumber('12345678901');
         $initiatedAt = new DateTimeImmutable('2024-02-01');
         $capturedAt = new DateTimeImmutable('2024-02-02');
         $gatewayReference = new GatewayReference('gateway-tx-123');
@@ -75,7 +75,7 @@ class CreatePaymentHandlerTest extends TestCase
             $gateway,
             $email,
             $name,
-            $nationalIdCode,
+            $nationalIdNumber,
             $appliedTo,
             $initiatedAt,
             $capturedAt,

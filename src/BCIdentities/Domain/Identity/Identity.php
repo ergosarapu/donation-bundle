@@ -8,8 +8,8 @@ use DateTimeImmutable;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\OrganisationRegCode;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\LegalIdentifier;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\IdentifierType;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\RawName;
 use Patchlevel\EventSourcing\Aggregate\BasicAggregateRoot;
@@ -25,8 +25,7 @@ final class Identity extends BasicAggregateRoot
     /** @var array<string, RawName> */
     private array $rawNames = [];
     private ?PersonName $personName = null;
-    private ?NationalIdCode $nationalIdCode = null;
-    private ?OrganisationRegCode $organisationRegCode = null;
+    private ?LegalIdentifier $legalIdentifier = null;
     /** @var array<string, Email> */
     private array $emails = [];
     /** @var array<string, Iban> */
@@ -58,76 +57,26 @@ final class Identity extends BasicAggregateRoot
         );
     }
 
-    private function mergeNationalIdCode(DateTimeImmutable $currentTime, ClaimId $claimId, ?NationalIdCode $nationalIdCode): MergeAttempt
+    private function mergeLegalIdentifier(DateTimeImmutable $currentTime, ClaimId $claimId, ?LegalIdentifier $legalIdentifier): MergeAttempt
     {
-        if ($nationalIdCode === null) {
+        if ($legalIdentifier === null) {
             return MergeAttempt::noChange();
         }
 
-        if ($this->organisationRegCode !== null) {
+        if ($legalIdentifier->equals($this->legalIdentifier)) {
+            return MergeAttempt::noChange();
+        }
+        if ($this->legalIdentifier === null) {
+            return MergeAttempt::changed($this->legalIdentifierChangedEvent($currentTime, $claimId, $legalIdentifier));
+        }
+        if (!$legalIdentifier->hasSameValueAs($this->legalIdentifier)) {
             return MergeAttempt::conflict();
         }
-
-        return $this->updateNationalIdCode($currentTime, $claimId, $nationalIdCode);
-    }
-
-    private function updateNationalIdCode(DateTimeImmutable $currentTime, ClaimId $claimId, NationalIdCode $nationalIdCode): MergeAttempt
-    {
-        if ($nationalIdCode->equals($this->nationalIdCode)) {
+        if ($legalIdentifier->country === null) {
             return MergeAttempt::noChange();
         }
-        if ($this->nationalIdCode === null) {
-            return MergeAttempt::changed(
-                new IdentityNationalIdCodeChanged($currentTime, $claimId, $this->id, $nationalIdCode)
-            );
-        }
-        if (!$nationalIdCode->hasSameValueAs($this->nationalIdCode)) {
-            return MergeAttempt::conflict();
-        }
-        if ($nationalIdCode->country === null) {
-            return MergeAttempt::noChange();
-        }
-        if ($this->nationalIdCode->country === null) {
-            return MergeAttempt::changed(
-                new IdentityNationalIdCodeChanged($currentTime, $claimId, $this->id, $nationalIdCode)
-            );
-        }
-        return MergeAttempt::conflict();
-    }
-
-    private function mergeOrganisationRegCode(DateTimeImmutable $currentTime, ClaimId $claimId, ?OrganisationRegCode $organisationRegCode): MergeAttempt
-    {
-        if ($organisationRegCode === null) {
-            return MergeAttempt::noChange();
-        }
-
-        if ($this->nationalIdCode !== null) {
-            return MergeAttempt::conflict();
-        }
-
-        return $this->updateOrganisationRegCode($currentTime, $claimId, $organisationRegCode);
-    }
-
-    private function updateOrganisationRegCode(DateTimeImmutable $currentTime, ClaimId $claimId, OrganisationRegCode $organisationRegCode): MergeAttempt
-    {
-        if ($organisationRegCode->equals($this->organisationRegCode)) {
-            return MergeAttempt::noChange();
-        }
-        if ($this->organisationRegCode === null) {
-            return MergeAttempt::changed(
-                new IdentityOrganisationRegCodeChanged($currentTime, $claimId, $this->id, $organisationRegCode)
-            );
-        }
-        if (!$organisationRegCode->hasSameValueAs($this->organisationRegCode)) {
-            return MergeAttempt::conflict();
-        }
-        if ($organisationRegCode->country === null) {
-            return MergeAttempt::noChange();
-        }
-        if ($this->organisationRegCode->country === null) {
-            return MergeAttempt::changed(
-                new IdentityOrganisationRegCodeChanged($currentTime, $claimId, $this->id, $organisationRegCode)
-            );
+        if ($this->legalIdentifier->country === null) {
+            return MergeAttempt::changed($this->legalIdentifierChangedEvent($currentTime, $claimId, $legalIdentifier));
         }
         return MergeAttempt::conflict();
     }
@@ -182,16 +131,14 @@ final class Identity extends BasicAggregateRoot
         DateTimeImmutable $currentTime,
         ClaimId $claimId,
         ?PersonName $personName,
-        ?NationalIdCode $nationalIdCode,
-        ?OrganisationRegCode $organisationRegCode,
+        ?LegalIdentifier $legalIdentifier,
         ?RawName $rawName,
         ?Email $email,
         ?Iban $iban,
     ): array {
         return [
             $this->mergePersonName($currentTime, $claimId, $personName),
-            $this->mergeNationalIdCode($currentTime, $claimId, $nationalIdCode),
-            $this->mergeOrganisationRegCode($currentTime, $claimId, $organisationRegCode),
+            $this->mergeLegalIdentifier($currentTime, $claimId, $legalIdentifier),
             $this->mergeRawName($currentTime, $claimId, $rawName),
             $this->mergeEmail($currentTime, $claimId, $email),
             $this->mergeIban($currentTime, $claimId, $iban),
@@ -229,13 +176,12 @@ final class Identity extends BasicAggregateRoot
         DateTimeImmutable $currentTime,
         ClaimId $claimId,
         ?PersonName $personName,
-        ?NationalIdCode $nationalIdCode,
-        ?OrganisationRegCode $organisationRegCode,
+        ?LegalIdentifier $legalIdentifier,
         ?RawName $rawName,
         ?Email $email,
         ?Iban $iban,
     ): MergeResult {
-        $attempts = $this->collectMergeAttempts($currentTime, $claimId, $personName, $nationalIdCode, $organisationRegCode, $rawName, $email, $iban);
+        $attempts = $this->collectMergeAttempts($currentTime, $claimId, $personName, $legalIdentifier, $rawName, $email, $iban);
 
         // Check for conflicts
         if ($this->hasConflicts($attempts)) {
@@ -288,19 +234,18 @@ final class Identity extends BasicAggregateRoot
     }
 
     #[Apply]
-    protected function applyIdentityNationalIdCodeChanged(IdentityNationalIdCodeChanged $event): void
+    protected function applyIdentityLegalIdentifierChanged(IdentityLegalIdentifierChanged $event): void
     {
-        $this->nationalIdCode = $event->nationalIdCode;
-    }
-
-    #[Apply]
-    protected function applyIdentityOrganisationRegCodeChanged(IdentityOrganisationRegCodeChanged $event): void
-    {
-        $this->organisationRegCode = $event->organisationRegCode;
+        $this->legalIdentifier = $event->legalIdentifier;
     }
 
     #[Apply]
     protected function applyClaimMerged(ClaimMerged $event): void
     {
+    }
+
+    private function legalIdentifierChangedEvent(DateTimeImmutable $currentTime, ClaimId $claimId, LegalIdentifier $legalIdentifier): object
+    {
+        return new IdentityLegalIdentifierChanged($currentTime, $claimId, $this->id, $legalIdentifier);
     }
 }

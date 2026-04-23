@@ -22,10 +22,7 @@
         <field name="accountHolderName" type="string" column="account_holder_name" length="255" nullable="true"/>
         <field name="effectiveName" type="string" column="effective_name" length="255" nullable="true"/>
 
-        <field name="nationalIdCode" type="string" column="national_id_code" length="20" nullable="true"/>
-        <field name="organizationRegCode" type="string" column="organization_reg_code" length="20" nullable="true"/>
-        <field name="effectiveIdCode" type="string" column="effective_id_code" length="20" nullable="true"/>
-
+        <field name="legalIdentifier" type="string" column="legal_identifier" length="20" nullable="true"/>
         <field name="reference" type="string" column="reference" length="100" nullable="true"/>
         <field name="iban" type="string" column="iban" length="50" nullable="true"/>
         <field name="bic" type="string" column="bic" length="20" nullable="true"/>

@@ -38,4 +38,9 @@
       <directory>./src/BCIdentities/Application/CommandHandler</directory>
     </include>
   </source>
+  <coverage>
+    <report>
+      <html outputDirectory=".coverage" highLowerBound="100" lowUpperBound="99"/>
+    </report>
+  </coverage>
 </phpunit>

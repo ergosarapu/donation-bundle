@@ -88,7 +88,6 @@ final class ResolveClaimHandlerTest extends TestCase
                 null,
                 new Iban('EE471000001020145685'),
                 null,
-                null,
             )
             ->willReturn([$identityIdA, $identityIdB]);
 
@@ -140,7 +139,6 @@ final class ResolveClaimHandlerTest extends TestCase
             ->method('lookup')
             ->with(
                 new Email('jane@example.com'),
-                null,
                 null,
                 null,
             )
@@ -196,7 +194,7 @@ final class ResolveClaimHandlerTest extends TestCase
 
         $this->identityLookup->expects($this->once())
             ->method('lookup')
-            ->with(null, $iban, null, null)
+            ->with(null, $iban, null)
             ->willReturn([$identityId]);
 
         $this->identityRepository->expects($this->once())
@@ -266,7 +264,7 @@ final class ResolveClaimHandlerTest extends TestCase
 
         $this->identityLookup->expects($this->once())
             ->method('lookup')
-            ->with(null, $iban, null, null)
+            ->with(null, $iban, null)
             ->willReturn([]);
 
         $this->identityRepository->expects($this->once())->method('has')->willReturn(false);
@@ -321,7 +319,7 @@ final class ResolveClaimHandlerTest extends TestCase
         $source = ClaimSource::forPayment('018e1234-0000-7000-8000-000000000015');
         $claimId = ClaimId::generate($source);
         $email = new Email('donor@example.com');
-        $deduplicateKey = '{"email":"donor@example.com","iban":null,"nationalIdCode":null,"organisationRegCode":null}';
+        $deduplicateKey = '{"email":"donor@example.com","iban":null,"legalIdentifier":null}';
         $identityId = IdentityId::generate();
         $claim = $this->claimWithEmail($source, $claimId, $email);
         $identity = Identity::createFromEvents([
@@ -337,7 +335,7 @@ final class ResolveClaimHandlerTest extends TestCase
 
         $this->identityLookup->expects($this->once())
             ->method('lookup')
-            ->with($email, null, null, null)
+            ->with($email, null, null)
             ->willReturn([]);
 
         $this->identityRepository->expects($this->once())

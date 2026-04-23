@@ -104,7 +104,7 @@ class DonationProjector implements DonationProjectionRepositoryInterface
         $donation->setEmail($event->donorDetails?->email?->toString());
         $donation->setGivenName($event->donorDetails?->name?->givenName);
         $donation->setFamilyName($event->donorDetails?->name?->familyName);
-        $donation->setNationalIdCode($event->donorDetails?->nationalIdCode?->value);
+        $donation->setLegalIdentifier($event->donorDetails?->legalIdentifier?->value);
         $this->persist($donation);
         $this->persistTrackingPayload($this->getTrackingId($message), donationId: $event->donationId->toString());
         $this->flush($message);
@@ -133,7 +133,7 @@ class DonationProjector implements DonationProjectionRepositoryInterface
         $donation->setEmail($event->donorDetails?->email?->toString());
         $donation->setGivenName($event->donorDetails?->name?->givenName);
         $donation->setFamilyName($event->donorDetails?->name?->familyName);
-        $donation->setNationalIdCode($event->donorDetails?->nationalIdCode?->value);
+        $donation->setLegalIdentifier($event->donorDetails?->legalIdentifier?->value);
         $this->persist($donation);
         $this->flush($message);
     }

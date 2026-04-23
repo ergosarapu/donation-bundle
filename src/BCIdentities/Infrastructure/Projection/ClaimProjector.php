@@ -11,16 +11,14 @@ use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimId;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimInReview;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForEmail;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForIban;
-use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForNationalIdCode;
-use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForOrganisationRegCode;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForLegalIdentifier;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForPersonName;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForRawName;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimResolved;
 use ErgoSarapu\DonationBundle\SharedInfrastructure\Patchlevel\ProjectorTrait;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\OrganisationRegCode;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\LegalIdentifier;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\RawName;
 use Patchlevel\EventSourcing\Attribute\Projector;
@@ -121,18 +119,10 @@ final class ClaimProjector implements ClaimProjectionRepositoryInterface
         $this->updateClaimValue($message, $event->claimId, $event->occuredOn, $event->value);
     }
 
-    #[Subscribe(ClaimPresentedForNationalIdCode::class)]
-    public function onClaimPresentedForNationalIdCode(Message $message): void
+    #[Subscribe(ClaimPresentedForLegalIdentifier::class)]
+    public function onClaimPresentedForLegalIdentifier(Message $message): void
     {
-        $event = $this->getEvent($message, ClaimPresentedForNationalIdCode::class);
-
-        $this->updateClaimValue($message, $event->claimId, $event->occuredOn, $event->value);
-    }
-
-    #[Subscribe(ClaimPresentedForOrganisationRegCode::class)]
-    public function onClaimPresentedForOrganisationRegCode(Message $message): void
-    {
-        $event = $this->getEvent($message, ClaimPresentedForOrganisationRegCode::class);
+        $event = $this->getEvent($message, ClaimPresentedForLegalIdentifier::class);
 
         $this->updateClaimValue($message, $event->claimId, $event->occuredOn, $event->value);
     }
@@ -184,7 +174,7 @@ final class ClaimProjector implements ClaimProjectionRepositoryInterface
         Message $message,
         ClaimId $claimId,
         \DateTimeImmutable $occuredOn,
-        PersonName|RawName|Email|Iban|NationalIdCode|OrganisationRegCode|null $value,
+        PersonName|RawName|Email|Iban|LegalIdentifier|null $value,
     ): void {
         $claim = $this->findOneOrThrow($claimId);
         $claim->setUpdatedAt($occuredOn);
@@ -202,11 +192,8 @@ final class ClaimProjector implements ClaimProjectionRepositoryInterface
         if ($value instanceof Iban) {
             $claim->setIban($value->value);
         }
-        if ($value instanceof NationalIdCode) {
-            $claim->setNationalIdCode($value->value);
-        }
-        if ($value instanceof OrganisationRegCode) {
-            $claim->setOrganisationRegCode($value->value);
+        if ($value instanceof LegalIdentifier) {
+            $claim->setLegalIdentifier($value->value);
         }
 
         $this->flush($message);

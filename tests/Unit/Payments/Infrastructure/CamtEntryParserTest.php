@@ -25,7 +25,7 @@ class CamtEntryParserTest extends TestCase
     {
         $parser = $this->getEntryParserForFile(__DIR__.'/Fixtures/single_entry_org_debtor.camt.xml');
         $this->assertEquals('GB94BARC10201530093459', $parser->getIban()?->value);
-        $this->assertEquals('11111116', $parser->getOrganisationRegCode()?->value);
+        $this->assertEquals('11111116', $parser->getLegalIdentifier()?->value);
         $this->assertEquals('Test Company OÜ', $parser->getAccountHolderName()?->value);
         $this->assertEquals('ANONREF1-111111111', $parser->getBankReference()->value);
         $this->assertEquals(10000, $parser->getAmount()->amount());
@@ -34,7 +34,6 @@ class CamtEntryParserTest extends TestCase
         $this->assertEquals(new DateTimeImmutable('2025-11-24'), $parser->getBookingDate());
         $this->assertEquals('Donation', $parser->getDescription()?->toString());
         $this->assertEquals('GB94BARC10201530093459', $parser->getIban()?->value);
-        $this->assertNull($parser->getNationalIdCode());
         $this->assertEquals('11223344556677', $parser->getPaymentReference()?->value);
     }
 
@@ -42,7 +41,7 @@ class CamtEntryParserTest extends TestCase
     {
         $parser = $this->getEntryParserForFile(__DIR__.'/Fixtures/single_entry_private_debtor.camt.xml');
         $this->assertEquals('GB94BARC10201530093459', $parser->getIban()?->value);
-        $this->assertNull($parser->getOrganisationRegCode());
+        $this->assertEquals('60109234794', $parser->getLegalIdentifier()?->value);
         $this->assertEquals('Mati Karu', $parser->getAccountHolderName()?->value);
         $this->assertEquals('ANONREF1-111111112', $parser->getBankReference()->value);
         $this->assertEquals(10000, $parser->getAmount()->amount());
@@ -51,7 +50,6 @@ class CamtEntryParserTest extends TestCase
         $this->assertEquals(new DateTimeImmutable('2025-11-24'), $parser->getBookingDate());
         $this->assertEquals('Donation', $parser->getDescription()?->toString());
         $this->assertEquals('GB94BARC10201530093459', $parser->getIban()?->value);
-        $this->assertEquals('60109234794', $parser->getNationalIdCode()?->value);
         $this->assertEquals('11223344556677', $parser->getPaymentReference()?->value);
     }
 }

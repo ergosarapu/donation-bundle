@@ -13,10 +13,13 @@ final class Country
 
     public function __construct(string $value)
     {
-        /** @var string $value */
-        $value = mb_trim($value);
-        $normalized = mb_strtoupper($value);
-        if (!preg_match('/^[A-Z]{2}$/', $normalized)) {
+        /** @var string $trimmed */
+        $trimmed = mb_trim($value);
+        $normalized = mb_strtoupper($trimmed);
+        if (mb_strlen($normalized) !== 2) {
+            throw new \InvalidArgumentException(sprintf('"%s" is not a valid ISO 3166-1 alpha-2 country code.', $normalized));
+        }
+        if (strspn($normalized, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') !== 2) {
             throw new \InvalidArgumentException(sprintf('"%s" is not a valid ISO 3166-1 alpha-2 country code.', $normalized));
         }
         $this->value = $normalized;

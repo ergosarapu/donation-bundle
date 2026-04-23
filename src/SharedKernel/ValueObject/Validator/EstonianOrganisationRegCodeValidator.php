@@ -4,21 +4,43 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Validator;
 
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Country;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\IdentifierType;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\LegalIdentifier;
 
-final class EstonianOrganisationRegCodeValidator implements CountryBasedValidatorInterface
+final class EstonianOrganisationRegCodeValidator implements LegalIdentifierValidatorInterface
 {
-    private const REGISTRATION_CODE_REGEX = '/^[1789][0-9]{7}$/';
-
-    public function supports(Country $country): bool
+    public function supports(LegalIdentifier $legalIdentifier): bool
     {
-        return $country->value === 'EE';
+        return $legalIdentifier->country?->value === 'EE'
+            && $legalIdentifier->identifierType === IdentifierType::OrganisationRegNumber;
     }
 
     public function isSatisfiedBy(string $value): bool
     {
-        return preg_match(self::REGISTRATION_CODE_REGEX, $value) === 1
-            && $this->hasValidControlNumber($value);
+        if (!$this->hasValidFormat($value)) {
+            return false;
+        }
+
+        return $this->hasValidControlNumber($value);
+    }
+
+    private function hasValidFormat(string $value): bool
+    {
+        if (strlen($value) !== 8) {
+            return false;
+        }
+
+        $hasValidPrefix = array_reduce(
+            ['1', '7', '8', '9'],
+            static fn (bool $hasValidPrefix, string $prefix): bool => $hasValidPrefix || $prefix === $value[0],
+            false,
+        );
+
+        if (!$hasValidPrefix) {
+            return false;
+        }
+
+        return strspn($value, '0123456789') === 8;
     }
 
     private function hasValidControlNumber(string $value): bool

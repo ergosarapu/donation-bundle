@@ -32,8 +32,8 @@ final class DonationCreatedHandler implements EventHandlerInterface
             $presentations[] = ClaimPresentation::forValue($event->donorDetails->email, ClaimEvidenceLevel::Observed);
         }
 
-        if ($event->donorDetails?->nationalIdCode !== null) {
-            $presentations[] = ClaimPresentation::forValue($event->donorDetails->nationalIdCode, ClaimEvidenceLevel::Observed);
+        if ($event->donorDetails?->legalIdentifier !== null) {
+            $presentations[] = ClaimPresentation::forValue($event->donorDetails->legalIdentifier, ClaimEvidenceLevel::Observed);
         }
 
         if ($presentations !== []) {

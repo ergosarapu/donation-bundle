@@ -9,8 +9,7 @@ use ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Port\IdentityProjec
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityId;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\NationalIdCode;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\OrganisationRegCode;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\LegalIdentifier;
 
 final class ProjectorIdentityLookup implements IdentityLookupInterface
 {
@@ -25,18 +24,13 @@ final class ProjectorIdentityLookup implements IdentityLookupInterface
     public function lookup(
         ?Email $email = null,
         ?Iban $iban = null,
-        ?NationalIdCode $nationalIdCode = null,
-        ?OrganisationRegCode $organisationRegCode = null,
+        ?LegalIdentifier $legalIdentifier = null,
     ): array {
         /** @var array<string, IdentityId> $matches */
         $matches = [];
 
-        if ($nationalIdCode !== null) {
-            $this->addMatches($matches, $this->identityProjectionRepository->findByNationalIdCode($nationalIdCode->value));
-        }
-
-        if ($organisationRegCode !== null) {
-            $this->addMatches($matches, $this->identityProjectionRepository->findByOrganisationRegCode($organisationRegCode->value));
+        if ($legalIdentifier !== null) {
+            $this->addMatches($matches, $this->identityProjectionRepository->findByLegalIdentifier($legalIdentifier));
         }
 
         if ($iban !== null) {
