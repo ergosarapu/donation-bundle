@@ -5,12 +5,13 @@ on:
     branches: 
       - master
       - 'feature/**'
+      - ddd
   pull_request:
     branches:
       - master
 
 jobs:
-  phpunit:
+  build:
     runs-on: ubuntu-latest
 
     env:
@@ -27,27 +28,27 @@ jobs:
           - php: 8.4
             symfony: 6.4.*
           - php: 8.2
-            symfony: 7.2.*
+            symfony: 7.3.*
           - php: 8.3
-            symfony: 7.2.*
+            symfony: 7.3.*
           - php: 8.4
-            symfony: 7.2.*
+            symfony: 7.3.*
           - php: 8.2
-            symfony: 7.3.*
+            symfony: 7.4.*
           - php: 8.3
-            symfony: 7.3.*
+            symfony: 7.4.*
           - php: 8.4
-            symfony: 7.3.*
+            symfony: 7.4.*
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
             php-version: ${{ matrix.php }}
-            extensions: pdo_sqlite
+            extensions: pdo_mysql
 
       - name: Configure Symfony version ${{ matrix.symfony }}
         run: |
@@ -56,24 +57,34 @@ jobs:
             composer config extra.symfony.require "${{ matrix.symfony }}"
 
       - name: Install dependencies
-        run: composer update
+        run: make install
 
-      - name: Run Unit Tests
-        run: vendor/bin/phpunit --testdox --testsuite Unit
+      - name: Run PHPStan
+        run: make phpstan
+
+      - name: Check Code Style
+        run: make cs-check
+
+      - name: Check Architecture
+        run: make phparkitect
+
+      - name: Run Unit Tests with coverage
+        run: make phpunit-unit-coverage
       
-      - name: Migrate database
-        run: |
-          mkdir migrations
-          ./vendor/bin/doctrine-migrations migrations:diff --no-interaction
-          ./vendor/bin/doctrine-migrations migrations:migrate --no-interaction
+      - name: Migrate Database
+        run: make migrate
 
-      - name: Run Functional Tests
-        run: |
-          ./vendor/bin/phpunit --testdox --testsuite Functional
+      - name: Run Acceptance Tests (legacy)
+        run: make phpunit-acceptance
+
+      - name: Run Acceptance Tests
+        run: make behat
 
       - name: Run Integration Tests
-        run: |
-          ./vendor/bin/phpunit --testdox --testsuite Integration
+        run: make phpunit-integration
+
+      - name: Run Functional Tests
+        run: make phpunit-functional
 
     services:
       mariadb:

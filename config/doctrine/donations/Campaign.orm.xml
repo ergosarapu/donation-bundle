@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                          https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\Campaign"
+            table="projection_campaign">
+        <id name="campaignId" type="string" column="campaign_id">
+            <generator strategy="NONE"/>
+        </id>
+        <field name="name" type="string" column="name" length="255" nullable="false"/>
+        <field name="publicTitle" type="string" column="public_title" length="255" nullable="false"/>
+        <field name="donationDescription" type="string" column="donation_description" length="255" nullable="false"/>
+        <field name="status" type="string" column="status" length="16" nullable="false"
+               enum-type="ErgoSarapu\DonationBundle\BCDonations\Domain\Campaign\CampaignStatus"/>
+        <field name="createdAt" type="datetime_immutable" column="created_at" nullable="false"/>
+        <field name="updatedAt" type="datetime_immutable" column="updated_at" nullable="false"/>
+        <unique-constraints>
+            <unique-constraint name="UNIQ_campaign_id" columns="campaign_id"/>
+        </unique-constraints>
+    </entity>
+
+</doctrine-mapping>

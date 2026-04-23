@@ -1,20 +1,30 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\Controller;
 
-use Doctrine\ORM\EntityManagerInterface;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Query\GetActiveCampaigns;
+use ErgoSarapu\DonationBundle\BCDonations\Application\Query\Model\Campaign;
 use ErgoSarapu\DonationBundle\Dto\DonationDto;
-use ErgoSarapu\DonationBundle\Entity\Campaign;
-use ErgoSarapu\DonationBundle\Entity\Payment;
-use ErgoSarapu\DonationBundle\Entity\Payment\Status as PaymentStatus;
 use ErgoSarapu\DonationBundle\Form\DonationFormStep1Type;
 use ErgoSarapu\DonationBundle\Form\DonationFormStep2Type;
 use ErgoSarapu\DonationBundle\Form\DonationFormStep3Type;
 use ErgoSarapu\DonationBundle\Form\FormOptionsProvider;
-use ErgoSarapu\DonationBundle\Repository\CampaignRepository;
-use ErgoSarapu\DonationBundle\Subscription\SubscriptionManager;
+use ErgoSarapu\DonationBundle\IntegrationContracts\Donations\Command\InitiateDonationIntegrationCommand;
+use ErgoSarapu\DonationBundle\IntegrationContracts\ValueObject\EntityId;
+use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
+use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\QueryBusInterface;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Country;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Interval;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\LegalIdentifier;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use InvalidArgumentException;
-use Payum\Core\Payum;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,23 +32,20 @@ use Symfony\Component\HttpFoundation\Response;
 
 class IndexController extends AbstractController
 {
-
     public function __construct(
         private FormOptionsProvider $formOptions,
-        private readonly CampaignRepository $campaignRepository,
-        private ?Payum $payum,
-        private readonly EntityManagerInterface $entityManager,
-        private readonly SubscriptionManager $subscriptionManager)
-    {
+        private readonly QueryBusInterface $queryBus,
+        private readonly CommandBusInterface $commandBus
+    ) {
     }
 
     public function __invoke(
         Request $request,
-        string $campaign,
+        string $campaignSlug,
         string $template,
-        int $step = 1): Response
-    {
-        $campaign = $this->getDefaultCampaign();
+        int $step = 1
+    ): Response {
+        $campaign = $this->getSingleActiveCampaign();
         $donation = $this->getDonationData($request);
 
         $form = $this->getDonationFormStep($step, $donation, $request);
@@ -47,45 +54,34 @@ class IndexController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             /** @var DonationDto $donation */
             $donation = $form->getData();
-            
+
             if ($step === 3) {
                 /** @var DonationDto $donation */
                 $donation = $form->getData();
-
-                $gatewayName = $donation->getGateway();
-                
-                $payment = $this->payum->getStorage(Payment::class)->create();
-                $payment->setStatus(PaymentStatus::Created);
-                $payment->setNumber(uniqid(true));
-                $payment->setCurrencyCode($donation->getCurrencyCode());
-                $payment->setTotalAmount($donation->getAmount());
-                $payment->setDescription(sprintf('%s;%s', $payment->getNumber(), $campaign->getPublicId()));
-                $payment->setClientId(null);
-                $payment->setClientEmail($donation->getEmail());
-                $payment->setGivenName($donation->getGivenName());
-                $payment->setFamilyName($donation->getFamilyName());
-                $payment->setNationalIdCode($donation->getNationalIdCode());
-                $payment->setCampaign($campaign);
-                $payment->setGateway($gatewayName);
-                
-                $this->payum->getStorage(Payment::class)->update($payment);
-                
-                $targetUrl = $this->payum->getTokenFactory()->createCaptureToken(
-                    $gatewayName, 
-                    $payment,
-                    'donation_payment_done' // the route to redirect after capture
-                )->getTargetUrl();
-                
-                // If frequency is set then create subscription
-                if ($donation->getFrequency() !== null) {
-                    $subscription = $this->subscriptionManager->createSubscription($payment, $donation->getFrequency());
-                    $this->entityManager->persist($subscription);
-                    $this->entityManager->flush();
+                if ($donation->getGateway() === null) {
+                    throw new InvalidArgumentException('Gateway must be set at this point');
                 }
-
+                if ($donation->getAmount() === null) {
+                    throw new InvalidArgumentException('Amount must be set at this point');
+                }
+                if ($donation->getCurrencyCode() === null) {
+                    throw new InvalidArgumentException('Currency code must be set at this point');
+                }
+                $command = new InitiateDonationIntegrationCommand(
+                    campaignId: new EntityId($campaign->getCampaignId()),
+                    amount: new Money($donation->getAmount(), new Currency($donation->getCurrencyCode())),
+                    gateway: new Gateway($donation->getGateway()),
+                    description: new ShortDescription($campaign->getDonationDescription()),
+                    donorEmail: $donation->getEmail() !== null ? new Email($donation->getEmail()) : null,
+                    donorName: $donation->getGivenName() !== null && $donation->getFamilyName() !== null
+                         ? new PersonName($donation->getGivenName(), $donation->getFamilyName())
+                         : null,
+                    donorLegalIdentifier: $donation->getNationalIdCode() !== null ? LegalIdentifier::nationalIdNumber($donation->getNationalIdCode(), new Country('EE')) : null,
+                    recurringInterval: $donation->getFrequency() !== null ? new Interval($donation->getFrequency()) : null,
+                );
+                $commandResult = $this->commandBus->dispatch($command);
                 $request->getSession()->remove('donation');
-                
-                return $this->redirectToRoute('donation_payment_redirect', ['targetUrl' => $targetUrl]);
+                return $this->redirectToRoute('donation_redirect', ['trackingId' => $commandResult->trackingId]);
             }
 
             $request->getSession()->set('donation', $donation);
@@ -103,12 +99,14 @@ class IndexController extends AbstractController
         ]);
     }
 
-    private function getFormUrl(string $template, int $step): string {
+    private function getFormUrl(string $template, int $step): string
+    {
         return $this->generateUrl('donation_' . $template, ['template' => $template, 'step' => $step]);
     }
 
-    private function getDonationFormStep(int $step, DonationDto $donation, Request $request): FormInterface {
-        if ($step === 1){
+    private function getDonationFormStep(int $step, DonationDto $donation, Request $request): FormInterface
+    {
+        if ($step === 1) {
             return $this->createForm(
                 DonationFormStep1Type::class,
                 $donation,
@@ -116,23 +114,26 @@ class IndexController extends AbstractController
                     'currencies' => $this->formOptions->getCurrencies(),
                     'locale' => $request->getLocale(),
                     'frequencies' => $this->formOptions->getFrequencies(),
-                ]);
-        } else if ($step === 2){
+                ]
+            );
+        } elseif ($step === 2) {
             return $this->createForm(DonationFormStep2Type::class, $donation);
-        } else if ($step === 3){
+        } elseif ($step === 3) {
             $frequency = $donation->getFrequency();
             return $this->createForm(
                 DonationFormStep3Type::class,
-                $donation, 
+                $donation,
                 [
                     'frequency' => $frequency,
                     'gateways' => $this->formOptions->getGateways($frequency),
-                ]);
+                ]
+            );
         }
         throw new InvalidArgumentException('Unsupported form step ' . $step);
     }
 
-    private function getDonationData(Request $request): DonationDto {
+    private function getDonationData(Request $request): DonationDto
+    {
         $session = $request->getSession();
         $donation = $session->get('donation');
         if ($donation === null) {
@@ -150,13 +151,16 @@ class IndexController extends AbstractController
         return $donation;
     }
 
-    private function getDefaultCampaign(): Campaign {
-        $campaigns = $this->campaignRepository->findBy(['default' => true]);
+    private function getSingleActiveCampaign(): Campaign
+    {
+        /** @var array<Campaign> $campaigns */
+        $campaigns = $this->queryBus->ask(new GetActiveCampaigns());
+
         if (count($campaigns) === 0) {
-            throw new InvalidArgumentException('No default campaign found');
+            throw new InvalidArgumentException('No active campaign found');
         }
         if (count($campaigns) > 1) {
-            throw new InvalidArgumentException('Multiple default campaigns found');
+            throw new InvalidArgumentException('Multiple active campaigns found');
         }
         return $campaigns[0];
     }

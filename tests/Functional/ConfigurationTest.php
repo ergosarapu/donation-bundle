@@ -1,117 +1,89 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\Tests\Functional;
 
-use ErgoSarapu\DonationBundle\DonationBundle;
 use ErgoSarapu\DonationBundle\Form\FormOptionsProvider;
-use InvalidArgumentException;
-use PHPUnit\Framework\TestCase;
+use ErgoSarapu\DonationBundle\Tests\Helpers\DonationBundleKernelTestCase;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
-use Symfony\Component\Config\Loader\LoaderInterface;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\HttpKernel\Kernel;
 
-class ConfigurationTest extends TestCase
+class ConfigurationTest extends DonationBundleKernelTestCase
 {
-    public function testEmptyConfiguration(): void{
-        $kernel = new DonationBundleTestingKernel();
-        $kernel->boot();
+    public function testEmptyConfiguration(): void
+    {
+        self::bootkernelWithConfig(null);
 
         /** @var FormOptionsProvider $optionsProvider */
-        $optionsProvider = $kernel->getContainer()->get('donation_bundle.form.form_options_provider');
-        
+        $optionsProvider = self::getContainer()->get('donation_bundle.form.form_options_provider');
+
         $this->assertEmpty($optionsProvider->getGateways());
         $this->assertEmpty($optionsProvider->getCurrencies());
     }
 
-    public function testGatewaysConfigEmpty(): void{
-        $kernel = new DonationBundleTestingKernel(['gateways' => []]);
+    public function testGatewaysConfigEmpty(): void
+    {
         $this->expectException(InvalidConfigurationException::class);
-        $kernel->boot();
+        self::bootkernelWithConfig(['gateways' => []]);
     }
 
-    public function testFormConfigEmpty(): void{
-        $kernel = new DonationBundleTestingKernel(['form' => []]);
+    public function testFormConfigEmpty(): void
+    {
         $this->expectException(InvalidConfigurationException::class);
-        $kernel->boot();
+        self::bootkernelWithConfig(['form' => []]);
+
     }
 
-    public function testGatewayConfigInvalidBankCountry(): void{
-        $kernel = new DonationBundleTestingKernel('gateway_invalid_country_code');
+    public function testGatewayConfigInvalidBankCountry(): void
+    {
         $this->expectException(InvalidConfigurationException::class);
         $this->expectExceptionMessageMatches('/.*(Not a valid alpha-2 country code)/');
-        $kernel->boot();
+        self::bootkernelWithConfig(__DIR__.'/Fixtures/config/gateway_invalid_country_code.yaml');
+
     }
 
-    public function testFormConfigInvalidCurrency(): void{
-        $kernel = new DonationBundleTestingKernel('form_invalid_currency_code');
+    public function testFormConfigInvalidCurrency(): void
+    {
         $this->expectException(InvalidConfigurationException::class);
         $this->expectExceptionMessageMatches('/.*(Not a valid currency code.)/');
-        $kernel->boot();
+        self::bootkernelWithConfig(__DIR__.'/Fixtures/config/form_invalid_currency_code.yaml');
+
     }
 
-    public function testGatewayConfigInvalidFrequencyDateInterval(): void{
-        $kernel = new DonationBundleTestingKernel('gateway_invalid_frequency_date_interval');
+    public function testGatewayConfigInvalidFrequencyDateInterval(): void
+    {
         $this->expectException(InvalidConfigurationException::class);
         $this->expectExceptionMessageMatches('/.*(Invalid frequency date interval format)/');
-        $kernel->boot();
+        self::bootkernelWithConfig(__DIR__.'/Fixtures/config/gateway_invalid_frequency_date_interval.yaml');
     }
 
-    public function testGatewayConfigMissingFrequency(): void{
-        $kernel = new DonationBundleTestingKernel('gateway_missing_frequency_date_interval');
-        $kernel->boot();
+    public function testGatewayConfigMissingFrequency(): void
+    {
+        self::bootkernelWithConfig(__DIR__.'/Fixtures/config/gateway_missing_frequency_date_interval.yaml');
 
         /** @var FormOptionsProvider $optionsProvider */
-        $optionsProvider = $kernel->getContainer()->get('donation_bundle.form.form_options_provider');
-
+        $optionsProvider = self::getContainer()->get('donation_bundle.form.form_options_provider');
         $this->assertNotEmpty($optionsProvider->getGateways());
     }
 
-    public function testFullConfig(): void{
-        $kernel = new DonationBundleTestingKernel('full');
-        $kernel->boot();
+    public function testFullConfig(): void
+    {
+        self::bootkernelWithConfig(__DIR__.'/Fixtures/config/full.yaml');
 
         /** @var FormOptionsProvider $optionsProvider */
-        $optionsProvider = $kernel->getContainer()->get('donation_bundle.form.form_options_provider');
+        $optionsProvider = self::getContainer()->get('donation_bundle.form.form_options_provider');
 
         $this->assertNotEmpty($optionsProvider->getGateways());
         $this->assertNotEmpty($optionsProvider->getCurrencies());
     }
-}
 
-class DonationBundleTestingKernel extends Kernel
-{
-    public function __construct(private array|string|null $config = null)
+    /**
+     * @param array<string,mixed>|string|null $bundleConfig
+     */
+    private static function bootKernelWithConfig(array|string|null $bundleConfig = null): void
     {
-        parent::__construct($_ENV['APP_ENV'], $_ENV['APP_DEBUG']);
-    }
-
-    public function registerBundles(): iterable {
-        return [
-            new DonationBundle(),
-        ];
-    }
-
-    public function registerContainerConfiguration(LoaderInterface $loader): void {
-        if ($this->config === null) {
-            return;
-        }
-        if (is_string($this->config)) {
-            $loader->load(__DIR__.'/Fixtures/config/'.$this->config.'.yaml', 'yaml');
-            return;
-        }
-        if (is_array($this->config)) {
-            $loader->load(function(ContainerBuilder $container){
-                $container->loadFromExtension('donation', $this->config);
-            });
-            return;
-        }
-        throw new InvalidArgumentException('Unsupported config type');
-    }
-    
-    public function getCacheDir(): string
-    {
-        // Ensure each kernel instance generates its own cache allowing different test cases do not reuse the cache
-        return parent::getCacheDir().'/'.spl_object_hash($this);
+        self::bootKernel([
+            'bundle_config' => $bundleConfig
+        ]);
     }
 }

@@ -44,22 +44,6 @@ php bin/console donation:add-user [email] [givenname] [familyname] --admin
 
 If you run your app in localhost, then the admin panel can be accessed at http://localhost/admin.
 
-## Register Payum gateway factories
-
-The bundle uses Payum for payment gateway abstraction. In order to use a gateway, register Payum gateway factory, e.g:
-
-```yaml
-// config/services.yaml
-
-app.montonio_gateway_factory:
-    class: Payum\Core\Bridge\Symfony\Builder\GatewayFactoryBuilder
-    arguments: [ErgoSarapu\PayumMontonio\MontonioGatewayFactory]
-    tags:
-        - { name: payum.gateway_factory_builder, factory: montonio }
-```
-
-Then configure [PayumBundle](https://github.com/Payum/PayumBundle) and gateways.
-
 ## Configuration
 
 The following configuration options are available for the Donation Bundle:
@@ -104,38 +88,6 @@ donation:
             # Marks gateway as country specific so user can quickly filter gateways with same country. Must be valid alpha-2 country code.
             country:              ~
 ```
-## Process Subscription payments
-
-To create new payments for subscriptions (renew) run following command periodically. This dispatches created payments to messenger transport for capturing:
-```sh
-bin/console donation:subscription:process
-```
-
-To handle subscription payment capture asynchronously, you may create following Messenger configuration. Adjust according to your needs:
-
-```yaml
-# config/packages/messenger.yaml
-
-framework:
-    messenger:
-        transports:
-            async: 'doctrine://default'
-
-            subscription:
-                dsn: 'doctrine://default?queue_name=subscription'
-                failure_transport: subscription_failed
-                retry_strategy:
-                    max_retries: 0 // Do not retry subscription capture automatically, it will land in failure transport for manual processing
-
-            subscription_failed:
-                dsn: 'doctrine://default?queue_name=subscription_failed'
-                retry_strategy:
-                    max_retries: 10
-                    delay: 0
-
-        routing:
-            'ErgoSarapu\DonationBundle\Message\CapturePayment': subscription
-```
 
 ## Reset password feature
 The password reset feature uses [SymfonyCastsResetPasswordBundle](https://github.com/symfonycasts/reset-password-bundle), check its configuration to modify its behavior.
@@ -166,14 +118,39 @@ To restrict packages install to specific Symfony version, install symfony/flex g
 ```console
 composer global config --no-plugins allow-plugins.symfony/flex true
 composer global require --no-interaction --no-progress symfony/flex:^2.4
-composer config extra.symfony.require "7.1"
+composer config extra.symfony.require "7.3"
 composer update
 ```
 
 ## Testing
-Use following script to run database migrations and tests:
+Run unit tests:
 ```sh
-./run_tests.sh
+make phpunit-unit
+```
+Run unit tests with coverage. Domain and Application layers must be unit tested with 100% coverage. Make sure the XDebug is enabled, e.g. when using DDEV, run 'ddev xdebug on' outside the container.
+```sh
+make phpunit-unit-coverage
+```
+
+Following commands require DATABASE_URL to be set
+```sh
+export DATABASE_URL=pdo-mysql://db:db@db/db
+```
+Run database migrations
+```sh
+make migrate
+```
+Run acceptance tests
+```sh
+make behat
+```
+Run integration tests (TODO: legacy, remove?)
+```sh
+make phpunit-integration
+```
+Run functional tests (TODO: legacy, remove?)
+```sh
+make phpunit-functional
 ```
 
 ## Set up app integrated dev environment

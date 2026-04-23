@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                  https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model\Payment" table="projection_payment">
+        <id name="paymentId" type="string" column="payment_id" length="36">
+            <generator strategy="NONE"/>
+        </id>
+        <field name="amount" type="integer" column="amount" nullable="false"/>
+        <field name="currency" type="string" column="currency" length="3" nullable="false"/>
+        <field name="status" type="string" column="status" length="50" nullable="false" enum-type="ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentStatus"/>
+        <field name="gateway" type="string" column="gateway" length="50" nullable="true"/>
+        <field name="importStatus" type="string" column="import_status" length="50" nullable="true" enum-type="ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportStatus"/>
+        <field name="reconciledWith" type="string" column="reconciled_with" length="36" nullable="true"/>
+        <field name="appliedTo" type="string" column="applied_to" length="36" nullable="true"/>
+        <field name="description" type="string" column="description" length="255" nullable="true"/>
+
+        <field name="givenName" type="string" column="given_name" length="100" nullable="true"/>
+        <field name="familyName" type="string" column="family_name" length="100" nullable="true"/>
+        <field name="accountHolderName" type="string" column="account_holder_name" length="255" nullable="true"/>
+        <field name="effectiveName" type="string" column="effective_name" length="255" nullable="true"/>
+
+        <field name="legalIdentifier" type="string" column="legal_identifier" length="20" nullable="true"/>
+        <field name="reference" type="string" column="reference" length="100" nullable="true"/>
+        <field name="iban" type="string" column="iban" length="50" nullable="true"/>
+        <field name="bic" type="string" column="bic" length="20" nullable="true"/>
+        <field name="sourceIdentifier" type="string" column="source_identifier" length="100" nullable="true"/>
+        <field name="bankReference" type="string" column="bank_reference" length="100" nullable="true"/>
+        <field name="gatewayReference" type="string" column="gateway_reference" length="100" nullable="true"/>
+        <field name="legacyPaymentNumber" type="string" column="legacy_payment_id" length="255" nullable="true"/>
+        <field name="redirectUrl" type="string" column="redirect_url" nullable="true"/>
+
+        <field name="bookingDate" type="datetime_immutable" column="booking_date" nullable="true"/>
+        <field name="initiatedAt" type="datetime_immutable" column="initiated_at" nullable="true"/>
+        <field name="capturedAt" type="datetime_immutable" column="captured_at" nullable="true"/>
+        <field name="authorizedAt" type="datetime_immutable" column="authorized_at" nullable="true"/>
+        <field name="createdAt" type="datetime_immutable" column="created_at" nullable="false"/>
+        <field name="effectiveDate" type="datetime_immutable" column="effective_date" nullable="false"/>
+
+        <field name="updatedAt" type="datetime_immutable" column="updated_at" nullable="false"/>
+    </entity>
+</doctrine-mapping>

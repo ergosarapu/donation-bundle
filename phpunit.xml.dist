@@ -8,10 +8,14 @@
     <env name="APP_ENV" value="test"/>
     <env name="APP_DEBUG" value="1"/>
     <env name="DATABASE_URL" value="pdo-mysql://db:db@db/db"/>
+    <env name="SHELL_VERBOSITY" value="2"/>
   </php>
   <testsuites>
     <testsuite name="Unit">
       <directory suffix="Test.php">./tests/Unit</directory>
+    </testsuite>
+    <testsuite name="Acceptance">
+      <directory suffix="Test.php">./tests/Acceptance</directory>
     </testsuite>
     <testsuite name="Functional">
       <directory suffix="Test.php">./tests/Functional</directory>
@@ -25,7 +29,18 @@
   </extensions>
   <source>
     <include>
-      <directory>./src</directory>
+      <directory>./src/SharedKernel</directory>
+      <directory>./src/BCDonations/Domain</directory>
+      <directory>./src/BCDonations/Application/CommandHandler</directory>
+      <directory>./src/BCPayments/Domain</directory>
+      <directory>./src/BCPayments/Application/CommandHandler</directory>
+      <directory>./src/BCIdentities/Domain</directory>
+      <directory>./src/BCIdentities/Application/CommandHandler</directory>
     </include>
   </source>
+  <coverage>
+    <report>
+      <html outputDirectory=".coverage" highLowerBound="100" lowUpperBound="99"/>
+    </report>
+  </coverage>
 </phpunit>

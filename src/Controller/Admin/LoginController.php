@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\Controller\Admin;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -8,7 +10,6 @@ use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 
 class LoginController extends AbstractController
 {
-
     public function __invoke(AuthenticationUtils $authenticationUtils): Response
     {
         // get the login error if there is one
@@ -21,7 +22,7 @@ class LoginController extends AbstractController
             'error' => $error,
             'last_username' => $lastUsername,
             'csrf_token_intention' => 'authenticate',
-            'target_path' => $this->generateUrl('donation_dashboard'),
+            'target_path' => $this->generateUrl('admin'),
             'username_label' => 'Your username',
             'password_label' => 'Your password',
             'sign_in_label' => 'Log in',

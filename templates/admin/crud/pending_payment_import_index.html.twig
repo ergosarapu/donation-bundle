@@ -1,0 +1,195 @@
+{% extends '@EasyAdmin/crud/index.html.twig' %}
+
+{% block configured_head_contents %}
+    {{ parent() }}
+    <style>
+        .rule-scores-row {
+            display: none;
+        }
+        .matching-payment-row:has(.match-score-badge:hover) + .rule-scores-row,
+        .rule-scores-row:hover {
+            display: table-row;
+        }
+        /* Remove border between main row and matching rows using box-shadow */
+        .matching-payment-row td {
+            box-shadow: inset 0 0px 0 #f8f9fa !important;
+            padding-top: 0.25em;
+            padding-bottom: 0.25em;
+            background-color: #e8f0fe !important;
+        }
+    </style>
+{% endblock %}
+
+{% block main %}
+    {# sort can be multiple; let's consider the sorting field the first one #}
+    {% set sort_params = app.request.query.all['sort']|default({}) %}
+    {% set sort_field_name = sort_params|keys|first %}
+    {% set sort_order = sort_params|first %}
+    {% set some_results_are_hidden = entities|reduce((some_results_are_hidden, entity) => some_results_are_hidden or not entity.isAccessible, false) %}
+    {% set has_footer = entities|length != 0 %}
+    {% set has_search = ea.crud.isSearchEnabled %}
+    {% set has_filters = filters|length > 0 %}
+    {% set num_results = entities|length %}
+
+    <table class="table datagrid {{ entities is empty ? 'datagrid-empty' }}" data-default-action-trigger="{{ ea.crud.defaultRowActionTrigger }}">
+        {% if num_results > 0 %}
+            <thead>
+            {% block table_head %}
+                {{ parent() }}
+            {% endblock table_head %}
+            </thead>
+        {% endif %}
+
+        {% block table_body %}
+            {% for entity in entities %}
+                {% block table_body_row %}
+                <tbody data-controller="reconcile">
+                {% if entity.isAccessible %}
+                    <tr data-id="{{ entity.primaryKeyValueAsString }}" {% if entity.defaultActionUrl %}data-default-action-url="{{ entity.defaultActionUrl }}" class="ea-clickable-row" role="link" tabindex="0"{% endif %} {% block entity_row_attributes %}{% endblock %}>
+                        {% if has_batch_actions %}
+                            <td class="batch-actions-selector">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input form-batch-checkbox" id="form-batch-checkbox-{{ loop.index0 }}" value="{{ entity.primaryKeyValue }}">
+                                </div>
+                            </td>
+                        {% endif %}
+
+                        {% for field in entity.fields %}
+                            {% set is_searchable = null == ea.crud.searchFields or field.property in ea.crud.searchFields %}
+
+                            <td data-column="{{ field.property }}" data-label="{{ field.label|trans|e('html') }}" class="{{ is_searchable ? 'searchable' }} {{ field.property == sort_field_name ? 'sorted' }} text-{{ field.textAlign }} {{ field.cssClass }}" dir="{{ ea.i18n.textDirection }}" {% for name, value in field.htmlAttributes %}{{ name }}="{{ value|e('html_attr') }}" {% endfor %}>
+                                {{ include(field.templatePath, {field: field, entity: entity}, with_context: false) }}
+                            </td>
+                        {% endfor %}
+
+                        {% block entity_actions %}
+                            {{ parent() }}
+                        {% endblock entity_actions %}
+                    </tr>
+
+                {% endif %}
+
+                {# Matching payments rows - aligned with entity columns #}
+                {% if entity.instance.matchingPayments is not empty %}
+                    {% set sort_field_name = app.request.query.all['sort']|default({})|keys|first %}
+                    {% set status_colors = {
+                        'Initiated': 'warning', 'Authorized': 'info', 'Captured': 'success',
+                        'Settled': 'success', 'Failed': 'danger', 'Canceled': 'secondary', 'Refunded': 'secondary'
+                    } %}
+
+                    {% for match in entity.instance.matchingPayments %}
+                        {% set match_entity = entity.newWithInstance(match.payment) %}
+
+                        <tr class="matching-payment-row bg-light">
+                            {% if has_batch_actions %}<td class="batch-actions-selector"></td>{% endif %}
+
+                            {% for field in entity.fields %}
+                                {% set is_searchable = null == ea.crud.searchFields or field.property in ea.crud.searchFields %}
+                                {% set match_value = attribute(match.payment, field.property, [], 'any') %}
+                                
+                                <td data-column="{{ field.property }}" class="{{ is_searchable ? 'searchable' }} {{ field.property == sort_field_name ? 'sorted' }} text-{{ field.textAlign }} {{ field.cssClass }}" dir="{{ ea.i18n.textDirection }}">
+                                    {% apply spaceless %}
+                                        {% if match_value is null %}
+                                            {# Empty cell for null values #}
+                                        {% elseif match_value.timestamp is defined %}
+                                            {# DateTimeInterface objects have timestamp property #}
+                                            {{ match_value|date('Y-m-d H:i') }}
+                                        {% elseif match_value.name is defined and match_value.value is defined %}
+                                            {# UnitEnum objects have name and value properties #}
+                                            <span class="badge badge-{{ status_colors[match_value.name] ?? 'secondary' }}">{{ match_value.name }}</span>
+                                        {% elseif field.templateName == 'crud/field/money' %}
+                                            <span class="text-{{ field.textAlign }} d-block">{{ (match_value / 100)|number_format(2, '.', ',') }}&nbsp;{{ match.payment.currency }}</span>
+                                        {% elseif match_value is iterable and match_value is not same as(match_value|default) %}
+                                            {{ match_value|length }} items
+                                        {% else %}
+                                            {{ match_value }}
+                                        {% endif %}
+                                    {% endapply %}
+                                </td>
+                            {% endfor %}
+
+                            <td class="actions">
+                                {% set score_percent = (match.score * 100)|round %}
+                                {% set badge_class = score_percent >= 90 ? 'success' : (score_percent >= 60 ? 'warning' : 'danger') %}
+                                <span class="badge bg-{{ badge_class }} text-white me-2 match-score-badge" title="Match score (hover for details)" style="font-size: 0.75em; cursor: help;">{{ score_percent }}%</span>
+                                <div class="form-check d-inline-block align-middle ms-2">
+                                    <input class="form-check-input reconcile-select-checkbox"
+                                        type="checkbox"
+                                        name="reconcile_selection[]"
+                                        value="{{ match.payment.paymentId }}"
+                                        id="reconcile-checkbox-{{ entity.instance.paymentId }}-{{ match.payment.paymentId }}"
+                                        aria-label="Select payment to reconcile"
+                                        data-reconcile-target="reconcileWith"
+                                        data-action="reconcile#select"
+                                        {% if entity.instance.matchingPayments|length == 1 and score_percent >= 90 %}checked{% endif %}>
+                                    <label class="form-check-label visually-hidden" for="reconcile-checkbox-{{ entity.instance.paymentId }}-{{ match.payment.paymentId }}">
+                                        Select payment to reconcile
+                                    </label>
+                                </div>
+                            </td>
+                        </tr>
+                        
+                        {# Rule scores row #}
+                        {% if match.ruleScores is not empty %}
+                            <tr class="rule-scores-row bg-light">
+                                <td colspan="{{ entity.fields|length + (has_batch_actions ? 2 : 1) }}" class="py-1 ps-5" style="font-size: 0.85em;">
+                                    <span class="text-muted me-2"><strong>Rules:</strong></span>
+                                    {% for rule_name, rule_score in match.ruleScores %}
+                                        {% set rule_percent = (rule_score * 100)|round %}
+                                        {% set rule_badge = rule_percent >= 80 ? 'success' : (rule_percent >= 60 ? 'warning' : (rule_percent > 0 ? 'info' : 'secondary')) %}
+                                        <span class="badge bg-{{ rule_badge }} text-white me-1" title="{{ rule_name }}" style="font-size: 0.7em;">
+                                            {{ rule_name }}: {{ rule_percent }}%
+                                        </span>
+                                    {% endfor %}
+                                </td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+                </tbody>
+                {% endblock table_body_row %}
+            {% else %}
+                <tbody>
+                {% block table_body_empty %}
+                    {{ parent() }}
+                {% endblock table_body_empty %}
+                </tbody>
+            {% endfor %}
+
+            {% if some_results_are_hidden %}
+                <tbody>
+                <tr class="datagrid-row-empty">
+                    <td class="text-center" colspan="100">
+                        <span class="datagrid-row-empty-message"><twig:ea:Icon name="internal:lock" class="mr-1" /> {{ 'datagrid.hidden_results'|trans({}, 'EasyAdminBundle') }}</span>
+                    </td>
+                </tr>
+                </tbody>
+            {% endif %}
+        {% endblock table_body %}
+
+        <tfoot>
+        {% block table_footer %}
+        {% endblock table_footer %}
+        </tfoot>
+    </table>
+
+    {% if entities|length > 0 %}
+        <div class="content-panel-footer without-padding without-border">
+            {% block paginator %}
+                {{ parent() }}
+            {% endblock paginator %}
+        </div>
+    {% endif %}
+
+    {% block delete_form %}
+        {{ parent() }}
+    {% endblock delete_form %}
+
+    {% if has_filters %}
+        {{ include('@EasyAdmin/crud/includes/_filters_modal.html.twig') }}
+    {% endif %}
+
+    {% if has_batch_actions %}
+        {{ include('@EasyAdmin/crud/includes/_batch_action_modal.html.twig', {}, with_context: false) }}
+    {% endif %}
+{% endblock main %}

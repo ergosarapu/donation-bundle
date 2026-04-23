@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                  https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="ErgoSarapu\DonationBundle\BCPayments\Application\Query\Model\PaymentMethod" table="projection_payment_method">
+        <id name="paymentMethodId" type="string" column="payment_method_id" length="36">
+            <generator strategy="NONE"/>
+        </id>
+        <field name="createdFor" type="string" column="created_for" length="36" nullable="false"/>
+        <field name="unusableReason" type="string" column="unusable_reason" length="50" nullable="true" enum-type="ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodUnusableReason"/>
+        <field name="updatedAt" type="datetime_immutable" column="updated_at" nullable="false"/>
+    </entity>
+</doctrine-mapping>

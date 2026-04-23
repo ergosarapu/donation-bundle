@@ -1,0 +1,4 @@
+:root {
+    /* make the backend contents as wide as the browser window */
+    --body-max-width: 100%;
+}

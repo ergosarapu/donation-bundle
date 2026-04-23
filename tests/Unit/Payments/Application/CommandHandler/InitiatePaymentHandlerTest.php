@@ -1,0 +1,116 @@
+<?php
+
+declare(strict_types=1);
+
+namespace ErgoSarapu\DonationBundle\Tests\Unit\Payments\Application\CommandHandler;
+
+use DateTimeImmutable;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Command\InitiatePayment;
+use ErgoSarapu\DonationBundle\BCPayments\Application\CommandHandler\InitiatePaymentHandler;
+use ErgoSarapu\DonationBundle\BCPayments\Application\Port\PaymentRepositoryInterface;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\Payment;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentId;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodAction;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentMethodId;
+use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentRequest;
+use ErgoSarapu\DonationBundle\SharedApplication\Exception\AggregateAlreadyExistsException;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Currency;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Gateway;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
+use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
+use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
+use Psr\Clock\ClockInterface;
+use Ramsey\Uuid\Uuid;
+
+class InitiatePaymentHandlerTest extends TestCase
+{
+    private InitiatePaymentHandler $handler;
+    private PaymentRepositoryInterface&MockObject $paymentRepository;
+    private DateTimeImmutable $now;
+    private InitiatePayment $command;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->paymentRepository = $this->createMock(PaymentRepositoryInterface::class);
+        $this->now = new DateTimeImmutable('2024-02-01 12:00:00');
+
+        $clock = $this->createMock(ClockInterface::class);
+        $clock->method('now')->willReturn($this->now);
+
+        $this->handler = new InitiatePaymentHandler(
+            $this->paymentRepository,
+            $clock
+        );
+
+        $paymentId = PaymentId::generate();
+        $amount = new Money(5000, new Currency('EUR'));
+        $gateway = new Gateway('test-gateway');
+        $description = new ShortDescription('Test donation');
+        $appliedTo = Uuid::uuid7()->toString();
+        $email = new Email('donor@example.com');
+        $methodAction = PaymentMethodAction::forRequest(
+            PaymentMethodId::generate(),
+            $paymentId,
+            Uuid::uuid7()->toString(),
+        );
+
+        $paymentRequest = new PaymentRequest(
+            $paymentId,
+            $amount,
+            $gateway,
+            $description,
+            $appliedTo,
+            $email,
+            $methodAction
+        );
+
+        $this->command = new InitiatePayment(
+            $paymentRequest
+        );
+    }
+
+    public function testInitiatesPayment(): void
+    {
+        $this->paymentRepository->expects($this->once())
+            ->method('has')
+            ->with($this->command->paymentRequest->paymentId)
+            ->willReturn(false);
+        $this->paymentRepository->expects($this->once())
+            ->method('save')
+            ->with($this->callback(function ($payment) {
+                return $payment instanceof Payment;
+            }));
+
+        ($this->handler)($this->command);
+    }
+
+    public function testIgnoresCommandWhenPaymentAlreadyExists(): void
+    {
+        $this->paymentRepository->expects($this->once())
+            ->method('has')
+            ->with($this->command->paymentRequest->paymentId)
+            ->willReturn(true);
+        $this->paymentRepository->expects($this->never())
+            ->method('save');
+
+        ($this->handler)($this->command);
+    }
+
+    public function testHandlesAggregateAlreadyExistsException(): void
+    {
+        $this->paymentRepository->expects($this->once())
+            ->method('has')
+            ->with($this->command->paymentRequest->paymentId)
+            ->willReturn(false);
+        $this->paymentRepository->expects($this->once())
+            ->method('save')
+            ->willThrowException(new AggregateAlreadyExistsException('Payment already exists'));
+
+        // Should not throw exception - idempotency handling
+        ($this->handler)($this->command);
+    }
+}

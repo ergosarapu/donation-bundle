@@ -13,6 +13,18 @@
                 "name": "auto-click",
                 "fetch": "eager",
                 "enabled": true
+            },
+            "action-interceptor": {
+                "main": "dist/action-interceptor_controller.js",
+                "name": "action-interceptor",
+                "fetch": "eager",
+                "enabled": true
+            },
+            "reconcile": {
+                "main": "dist/reconcile_controller.js",
+                "name": "reconcile",
+                "fetch": "eager",
+                "enabled": true
             }
         },
         "importmap": {

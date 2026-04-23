@@ -1,36 +1,34 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * Doctrine CLI Configuration for ORM Migrations
+ *
+ * This configuration uses IntegrationTestingKernel to load all required bundles and extensions,
+ * including Patchlevel EventSourcing with 'merge_orm_schema' => true configuration.
+ * This ensures that the EventStore schema is merged with the ORM schema for migrations.
+ */
 require 'vendor/autoload.php';
 
-use Doctrine\DBAL\DriverManager;
-use Doctrine\DBAL\Tools\DsnParser;
-use Doctrine\ORM\EntityManager;
 use Doctrine\Migrations\Configuration\EntityManager\ExistingEntityManager;
 use Doctrine\Migrations\Configuration\Migration\PhpFile;
 use Doctrine\Migrations\DependencyFactory;
-use Doctrine\ORM\Configuration;
-use Doctrine\ORM\Mapping\Driver\AttributeDriver;
-use Doctrine\ORM\Mapping\Driver\SimplifiedXmlDriver;
-use Doctrine\ORM\Mapping\UnderscoreNamingStrategy;
-use Doctrine\Persistence\Mapping\Driver\MappingDriverChain;
-
-$driver = new MappingDriverChain();
-$driver->addDriver(new SimplifiedXmlDriver([__DIR__.'/vendor/payum/core/Payum/Core/Bridge/Doctrine/Resources/mapping' => 'Payum\Core\Model']), 'Payum\Core\Model');
-$driver->addDriver(new AttributeDriver([__DIR__.'/src/Entity']), 'ErgoSarapu\DonationBundle\Entity');
-
-$ORMConfig = new Configuration();
-$ORMConfig->setProxyDir(sys_get_temp_dir());
-$ORMConfig->setProxyNamespace('Proxies');
-$ORMConfig->setMetadataDriverImpl($driver);
-$ORMConfig->setNamingStrategy(new UnderscoreNamingStrategy());
+use ErgoSarapu\DonationBundle\Tests\Helpers\DonationBundleTestingKernel;
 
 if (!getenv('DATABASE_URL')) {
     throw new InvalidArgumentException('DATABASE_URL not available as environment variable');
 }
-$dsnParser = new DsnParser();
-$connectionParams = $dsnParser->parse(getenv('DATABASE_URL'));
-$connection = DriverManager::getConnection($connectionParams, $ORMConfig);
 
-$entityManager = new EntityManager($connection, $ORMConfig);
+// Boot the IntegrationTestingKernel to load all bundles and configuration
+$kernel = new DonationBundleTestingKernel('dev', true);
+$kernel->boot();
 
-return DependencyFactory::fromEntityManager(new PhpFile('migrations.php'), new ExistingEntityManager($entityManager));
+// Get the EntityManager from the kernel container
+$entityManager = $kernel->getContainer()->get('doctrine.orm.entity_manager');
+
+// Create and return the DependencyFactory for Doctrine Migrations
+return DependencyFactory::fromEntityManager(
+    new PhpFile('migrations.php'),
+    new ExistingEntityManager($entityManager)
+);
