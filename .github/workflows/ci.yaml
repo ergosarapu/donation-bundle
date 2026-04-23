@@ -5,7 +5,6 @@ on:
     branches: 
       - master
       - 'feature/**'
-      - ddd
   pull_request:
     branches:
       - master
