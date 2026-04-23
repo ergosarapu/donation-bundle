@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ErgoSarapu\DonationBundle\Twig\Components;
 
 use ErgoSarapu\DonationBundle\Dto\Query\PaymentSummaryEntryDto;
@@ -30,17 +32,19 @@ final class PaymentSummaryChartForm extends AbstractController
     public ?SummaryFilterDto $filter = null;
 
     private MoneyFormatter $formatter;
-    
-    public function __construct(private ?ChartBuilderInterface $chartBuilder, private PaymentSummaryQueryInterface $query)
+
+    public function __construct(private ?ChartBuilderInterface $chartBuilder, private ?PaymentSummaryQueryInterface $query)
     {
         $this->formatter = new DecimalMoneyFormatter(new ISOCurrencies());
     }
-    
-    protected function instantiateForm(): FormInterface {
+
+    protected function instantiateForm(): FormInterface
+    {
         return $this->createForm(PaymentSummaryChartType::class, $this->filter);
     }
 
-    public function getChart(): Chart {
+    public function getChart(): Chart
+    {
         $result = $this->query->query($this->filter->getStartDate(), $this->filter->getEndDate(), $this->filter->getGroupByPeriod()->value);
         $chart = $this->chartBuilder->createChart(Chart::TYPE_LINE);
 
@@ -66,8 +70,9 @@ final class PaymentSummaryChartForm extends AbstractController
      * @param array<PaymentSummaryEntryDto> $seriesData
      * @return array<string>
      */
-    private function getTimeSeriesPeriods(array $seriesData): array {
-        $periods = array_unique(array_map(function($e){
+    private function getTimeSeriesPeriods(array $seriesData): array
+    {
+        $periods = array_unique(array_map(function ($e) {
             return $e->periodKey;
         }, $seriesData));
         return $periods;
@@ -77,11 +82,12 @@ final class PaymentSummaryChartForm extends AbstractController
      * @param array<PaymentSummaryEntryDto> $seriesData
      * @return array<array<string, mixed>>
      */
-    private function getTimeSeriesDatasets(array $seriesData): array {
+    private function getTimeSeriesDatasets(array $seriesData): array
+    {
         $datasets = [];
-        foreach($seriesData as $item) {
+        foreach ($seriesData as $item) {
             $dataset = end($datasets);
-            if ($dataset === false || $dataset['campaign_id'] !== $item->campaignId){
+            if ($dataset === false || $dataset['campaign_id'] !== $item->campaignId) {
                 // Create new dataset
                 $dataset = [
                     'campaign_id' => $item->campaignId,

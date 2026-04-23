@@ -100,7 +100,6 @@ use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentReservedForGatewa
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentSucceeded;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\UnusablePaymentMethodCreated;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\UsablePaymentMethodCreated;
-use ErgoSarapu\DonationBundle\DependencyInjection\Compiler\RegisterQueryCompilerPass;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Donations\Command\InitiateDonationIntegrationCommand;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Donations\Command\ReActivateRecurringPlanIntegrationCommand;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Identities\Event\ClaimPresentedIntegrationEvent;
@@ -598,11 +597,5 @@ class DonationBundle extends AbstractBundle
                 UsablePaymentMethodCreated::class,
             ], 'event'),
         ];
-    }
-
-    public function build(ContainerBuilder $builder): void
-    {
-        parent::build($builder);
-        $builder->addCompilerPass(new RegisterQueryCompilerPass());
     }
 }
