@@ -31,7 +31,6 @@ class CreateDonationHandler implements CommandHandlerInterface
             $command->donationId,
             $command->amount,
             $command->campaignId,
-            $command->paymentId,
             $command->description,
             $command->donorDetails,
             $command->recurringPlanId,

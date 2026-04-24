@@ -26,6 +26,7 @@ class PaymentSucceededHandler implements EventHandlerInterface
         $this->commandBus->dispatch(new AcceptDonation(
             DonationId::fromString($event->appliedTo->toString()),
             $event->amount,
+            paymentId: $event->paymentId->toString(),
         ));
     }
 }

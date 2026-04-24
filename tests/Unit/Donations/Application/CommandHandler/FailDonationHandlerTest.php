@@ -13,6 +13,7 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\Donation\DonationId;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
+use Ramsey\Uuid\Uuid;
 
 class FailDonationHandlerTest extends TestCase
 {
@@ -21,6 +22,7 @@ class FailDonationHandlerTest extends TestCase
     private DonationRepositoryInterface&MockObject $donationRepository;
     private DateTimeImmutable $now;
     private FailDonation $command;
+    private string $paymentId;
 
     protected function setUp(): void
     {
@@ -39,7 +41,8 @@ class FailDonationHandlerTest extends TestCase
         );
 
         $donationId = DonationId::generate();
-        $this->command = new FailDonation($donationId);
+        $this->paymentId = Uuid::uuid7()->toString();
+        $this->command = new FailDonation($donationId, $this->paymentId);
     }
 
     public function testFailsDonation(): void
@@ -50,7 +53,7 @@ class FailDonationHandlerTest extends TestCase
             ->willReturn($this->donation);
         $this->donation->expects($this->once())
             ->method('fail')
-            ->with($this->now);
+            ->with($this->now, $this->paymentId);
         $this->donationRepository->expects($this->once())
             ->method('save')
             ->with($this->donation);

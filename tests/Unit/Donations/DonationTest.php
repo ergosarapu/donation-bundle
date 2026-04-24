@@ -68,14 +68,11 @@ class DonationTest extends AggregateRootTestCase
 
     public function testCreate(): void
     {
-        $paymentId = Uuid::uuid7()->toString();
-
         $this->when(fn () => Donation::create(
             $this->now,
             $this->donationId,
             $this->amount,
             $this->campaignId,
-            $paymentId,
             $this->description,
             $this->donorDetails,
             $this->recurringPlanId,
@@ -86,7 +83,6 @@ class DonationTest extends AggregateRootTestCase
                 $this->donationId,
                 $this->amount,
                 $this->campaignId,
-                $paymentId,
                 $this->description,
                 $this->donorDetails,
                 $this->recurringPlanId,
@@ -128,6 +124,8 @@ class DonationTest extends AggregateRootTestCase
 
     public function testAcceptInitiated(): void
     {
+        $paymentId = Uuid::uuid7()->toString();
+
         $this->given(
             new DonationInitiated(
                 $this->now,
@@ -144,6 +142,7 @@ class DonationTest extends AggregateRootTestCase
         ->when(fn (Donation $donation) => $donation->accept(
             $this->now,
             $this->amount,
+            $paymentId,
             null,
         ))
         ->then(
@@ -152,6 +151,7 @@ class DonationTest extends AggregateRootTestCase
                 $this->now,
                 $this->donationId,
                 $this->amount,
+                $paymentId,
                 $this->recurringPlanId,
             )
         );
@@ -159,13 +159,14 @@ class DonationTest extends AggregateRootTestCase
 
     public function testAcceptCreated(): void
     {
+        $paymentId = Uuid::uuid7()->toString();
+
         $this->given(
             new DonationCreated(
                 $this->now,
                 $this->donationId,
                 $this->amount,
                 $this->campaignId,
-                Uuid::uuid7()->toString(),
                 new ShortDescription('Description'),
                 $this->donorDetails,
                 $this->recurringPlanId,
@@ -175,6 +176,7 @@ class DonationTest extends AggregateRootTestCase
         ->when(fn (Donation $donation) => $donation->accept(
             $this->now,
             $this->amount,
+            $paymentId,
             null,
         ))
         ->then(
@@ -183,6 +185,7 @@ class DonationTest extends AggregateRootTestCase
                 $this->now,
                 $this->donationId,
                 $this->amount,
+                $paymentId,
                 $this->recurringPlanId,
             )
         );
@@ -190,18 +193,22 @@ class DonationTest extends AggregateRootTestCase
 
     public function testAcceptIsIdempotent(): void
     {
+        $paymentId = Uuid::uuid7()->toString();
+
         $this->given(
             new DonationAccepted(
                 $this->now,
                 $this->now,
                 $this->donationId,
                 $this->amount,
+                $paymentId,
                 null,
             )
         )
         ->when(fn (Donation $donation) => $donation->accept(
             $this->now,
             $this->amount,
+            $paymentId,
             null,
         ))
         ->then(); // No event should be recorded
@@ -209,16 +216,20 @@ class DonationTest extends AggregateRootTestCase
 
     public function testAcceptFailedThrows(): void
     {
+        $paymentId = Uuid::uuid7()->toString();
+
         $this->given(
             new DonationFailed(
                 $this->now,
                 $this->donationId,
+                $paymentId,
                 null,
             )
         )
         ->when(fn (Donation $donation) => $donation->accept(
             $this->now,
             $this->amount,
+            $paymentId,
             null,
         ))
         ->expectsException(LogicException::class)
@@ -227,6 +238,8 @@ class DonationTest extends AggregateRootTestCase
 
     public function testFailInitiated(): void
     {
+        $paymentId = Uuid::uuid7()->toString();
+
         $this->given(
             new DonationInitiated(
                 $this->now,
@@ -240,11 +253,12 @@ class DonationTest extends AggregateRootTestCase
                 new DonorDetails($this->email),
             )
         )
-        ->when(fn (Donation $donation) => $donation->fail($this->now))
+        ->when(fn (Donation $donation) => $donation->fail($this->now, $paymentId))
         ->then(
             new DonationFailed(
                 $this->now,
                 $this->donationId,
+                $paymentId,
                 $this->recurringPlanId,
             )
         );
@@ -252,24 +266,26 @@ class DonationTest extends AggregateRootTestCase
 
     public function testFailCreated(): void
     {
+        $paymentId = Uuid::uuid7()->toString();
+
         $this->given(
             new DonationCreated(
                 $this->now,
                 $this->donationId,
                 $this->amount,
                 $this->campaignId,
-                Uuid::uuid7()->toString(),
                 new ShortDescription('Description'),
                 $this->donorDetails,
                 $this->recurringPlanId,
                 $this->now,
             )
         )
-        ->when(fn (Donation $donation) => $donation->fail($this->now))
+        ->when(fn (Donation $donation) => $donation->fail($this->now, $paymentId))
         ->then(
             new DonationFailed(
                 $this->now,
                 $this->donationId,
+                $paymentId,
                 $this->recurringPlanId,
             )
         );
@@ -277,6 +293,8 @@ class DonationTest extends AggregateRootTestCase
 
     public function testFailIsIdempotent(): void
     {
+        $paymentId = Uuid::uuid7()->toString();
+
         $this->given(
             new DonationInitiated(
                 $this->now,
@@ -292,25 +310,29 @@ class DonationTest extends AggregateRootTestCase
             new DonationFailed(
                 $this->now,
                 $this->donationId,
+                $paymentId,
                 null,
             )
         )
-        ->when(fn (Donation $donation) => $donation->fail($this->now))
+        ->when(fn (Donation $donation) => $donation->fail($this->now, $paymentId))
         ->then(); // No event should be recorded
     }
 
     public function testFailAcceptedThrows(): void
     {
+        $paymentId = Uuid::uuid7()->toString();
+
         $this->given(
             new DonationAccepted(
                 $this->now,
                 $this->now,
                 $this->donationId,
                 $this->amount,
+                $paymentId,
                 null,
             )
         )
-        ->when(fn (Donation $donation) => $donation->fail($this->now))
+        ->when(fn (Donation $donation) => $donation->fail($this->now, $paymentId))
         ->expectsException(LogicException::class)
         ->expectsExceptionMessage('Cannot transition from accepted to failed');
     }

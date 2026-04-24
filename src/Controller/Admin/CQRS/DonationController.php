@@ -54,6 +54,7 @@ class DonationController extends AbstractCQRSController
     {
         return [
             IdField::new('donationId')->setDisabled()->hideOnIndex(),
+            TextField::new('paymentId')->setDisabled()->hideOnIndex(),
             DateTimeField::new('effectiveDate')->setDisabled()->setLabel('Date')->setFormat('yyyy-MM-dd HH:mm'),
             MoneyField::new('amount')->setCurrencyPropertyPath('currency')->setDisabled(),
             ChoiceField::new('status')

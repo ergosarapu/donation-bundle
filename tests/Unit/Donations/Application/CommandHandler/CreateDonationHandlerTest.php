@@ -21,7 +21,6 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\ShortDescription;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
-use Ramsey\Uuid\Uuid;
 
 class CreateDonationHandlerTest extends TestCase
 {
@@ -47,7 +46,6 @@ class CreateDonationHandlerTest extends TestCase
 
         $donationId = DonationId::generate();
         $campaignId = CampaignId::generate();
-        $paymentId = Uuid::uuid7()->toString();
         $recurringPlanId = RecurringPlanId::generate();
         $amount = new Money(5000, new Currency('EUR'));
         $description = new ShortDescription('Test donation');
@@ -56,7 +54,6 @@ class CreateDonationHandlerTest extends TestCase
         $this->command = new CreateDonation(
             $donationId,
             $campaignId,
-            $paymentId,
             $recurringPlanId,
             $amount,
             $description,

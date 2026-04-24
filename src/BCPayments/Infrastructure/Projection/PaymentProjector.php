@@ -155,6 +155,7 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         $payment->setCurrency($event->amount->currency()->code());
         $payment->setStatus($event->status);
         $payment->setGateway($event->gateway?->id());
+        $payment->setAppliedTo($event->appliedTo);
         $payment->setDescription($event->description?->toString());
         $payment->setGivenName($event->name?->givenName);
         $payment->setFamilyName($event->name?->familyName);

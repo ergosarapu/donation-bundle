@@ -26,7 +26,6 @@ final class DonationCreated extends AbstractTimestampedEvent implements DomainEv
         public readonly DonationId $donationId,
         public readonly Money $amount,
         public readonly CampaignId $campaignId,
-        public readonly string $paymentId,
         #[PersonalData]
         public readonly ?ShortDescription $description,
         #[PersonalData]

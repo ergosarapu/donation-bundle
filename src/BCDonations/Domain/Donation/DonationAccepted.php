@@ -21,6 +21,7 @@ final class DonationAccepted extends AbstractTimestampedEvent implements DomainE
         public readonly DateTimeImmutable $acceptedAt,
         public readonly DonationId $donationId,
         public readonly Money $acceptedAmount,
+        public readonly string $paymentId,
         public readonly ?RecurringPlanId $recurringPlanId = null,
     ) {
         parent::__construct($occuredOn);

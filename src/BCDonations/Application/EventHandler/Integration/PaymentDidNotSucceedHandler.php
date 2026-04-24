@@ -25,7 +25,8 @@ class PaymentDidNotSucceedHandler implements EventHandlerInterface
 
         $this->commandBus->dispatch(
             new FailDonation(
-                DonationId::fromString($event->appliedTo->toString())
+                DonationId::fromString($event->appliedTo->toString()),
+                $event->paymentId->toString(),
             )
         );
     }

@@ -11,6 +11,7 @@ final class FailDonation implements CommandInterface
 {
     public function __construct(
         public readonly DonationId $donationId,
+        public readonly string $paymentId,
     ) {
     }
 }

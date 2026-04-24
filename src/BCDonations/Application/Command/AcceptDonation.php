@@ -14,6 +14,7 @@ final class AcceptDonation implements CommandInterface
     public function __construct(
         public readonly DonationId $donationId,
         public readonly Money $amount,
+        public readonly string $paymentId,
         public readonly ?DateTimeImmutable $acceptedAt = null,
     ) {
     }

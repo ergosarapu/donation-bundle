@@ -51,7 +51,6 @@ class Donation extends BasicAggregateRoot
         DonationId $donationId,
         Money $amount,
         CampaignId $campaignId,
-        string $paymentId,
         ShortDescription $description,
         DonorDetails $donorDetails,
         ?RecurringPlanId $recurringPlanId,
@@ -63,7 +62,6 @@ class Donation extends BasicAggregateRoot
             $donationId,
             $amount,
             $campaignId,
-            $paymentId,
             $description,
             $donorDetails,
             $recurringPlanId,
@@ -100,14 +98,26 @@ class Donation extends BasicAggregateRoot
         $this->status = $event->status;
     }
 
-    public function accept(DateTimeImmutable $currentTime, Money $acceptedAmount, ?DateTimeImmutable $acceptedAt): void
+    public function accept(
+        DateTimeImmutable $currentTime,
+        Money $acceptedAmount,
+        string $paymentId,
+        ?DateTimeImmutable $acceptedAt,
+    ): void
     {
         if ($this->status === DonationStatus::Accepted) {
             return;
         }
 
         $this->validateTransitionToAccepted();
-        $this->recordThat(new DonationAccepted($currentTime, $acceptedAt ?? $currentTime, $this->id, $acceptedAmount, $this->recurringPlanId));
+        $this->recordThat(new DonationAccepted(
+            $currentTime,
+            $acceptedAt ?? $currentTime,
+            $this->id,
+            $acceptedAmount,
+            $paymentId,
+            $this->recurringPlanId,
+        ));
     }
 
     public function validateTransitionToAccepted(): void
@@ -126,14 +136,14 @@ class Donation extends BasicAggregateRoot
         throw new LogicException('Cannot transition from ' . $from->value . ' to ' . $to->value . '.');
     }
 
-    public function fail(DateTimeImmutable $currentTime): void
+    public function fail(DateTimeImmutable $currentTime, string $paymentId): void
     {
         if ($this->status === DonationStatus::Failed) {
             return;
         }
 
         $this->validateTransitionToFailed();
-        $this->recordThat(new DonationFailed($currentTime, $this->id, $this->recurringPlanId));
+        $this->recordThat(new DonationFailed($currentTime, $this->id, $paymentId, $this->recurringPlanId));
     }
 
     public function validateTransitionToFailed(): void

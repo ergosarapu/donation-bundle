@@ -18,7 +18,6 @@ final class CreateDonation implements CommandInterface
     public function __construct(
         public readonly DonationId $donationId,
         public readonly CampaignId $campaignId,
-        public readonly string $paymentId,
         public readonly ?RecurringPlanId $recurringPlanId,
         public readonly Money $amount,
         public readonly ShortDescription $description,

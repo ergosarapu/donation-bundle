@@ -18,6 +18,7 @@ final class DonationFailed extends AbstractTimestampedEvent implements DomainEve
     public function __construct(
         DateTimeImmutable $occuredOn,
         public readonly DonationId $donationId,
+        public readonly string $paymentId,
         public readonly ?RecurringPlanId $recurringPlanId = null,
     ) {
         parent::__construct($occuredOn);

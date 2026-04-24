@@ -78,6 +78,7 @@ abstract class AbstractPaymentController extends AbstractCQRSController
                     return sprintf('<span class="badge badge-%s">%s</span>', $color, ucfirst($value->name));
                 }),
             TextField::new('effectiveName')->setDisabled()->setLabel('Name'),
+            TextField::new('appliedTo')->setDisabled()->hideOnIndex(),
             TextField::new('reconciledWith')->setDisabled()->setLabel('Reconciled With')->hideOnIndex(),
             TextField::new('description')->setDisabled(),
             TextField::new('legalIdentifier')->setDisabled()->setLabel('Legal ID'),

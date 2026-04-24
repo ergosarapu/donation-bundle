@@ -15,6 +15,7 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Money;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
+use Ramsey\Uuid\Uuid;
 
 class AcceptDonationHandlerTest extends TestCase
 {
@@ -23,6 +24,7 @@ class AcceptDonationHandlerTest extends TestCase
     private DonationRepositoryInterface&MockObject $donationRepository;
     private DateTimeImmutable $now;
     private AcceptDonation $command;
+    private string $paymentId;
 
     protected function setUp(): void
     {
@@ -42,7 +44,8 @@ class AcceptDonationHandlerTest extends TestCase
 
         $donationId = DonationId::generate();
         $amount = new Money(5000, new Currency('EUR'));
-        $this->command = new AcceptDonation($donationId, $amount);
+        $this->paymentId = Uuid::uuid7()->toString();
+        $this->command = new AcceptDonation($donationId, $amount, $this->paymentId);
     }
 
     public function testAcceptsDonation(): void
@@ -53,7 +56,7 @@ class AcceptDonationHandlerTest extends TestCase
             ->willReturn($this->donation);
         $this->donation->expects($this->once())
             ->method('accept')
-            ->with($this->now, $this->command->amount);
+            ->with($this->now, $this->command->amount, $this->paymentId, null);
         $this->donationRepository->expects($this->once())
             ->method('save')
             ->with($this->donation);
