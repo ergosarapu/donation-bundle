@@ -11,7 +11,7 @@ class PaymentDidNotSucceedIntegrationEvent implements IntegrationEventInterface
 {
     public function __construct(
         public readonly EntityId $paymentId,
-        public readonly ?EntityId $appliedTo,
+        public readonly ?EntityId $donationId,
     ) {
     }
 }

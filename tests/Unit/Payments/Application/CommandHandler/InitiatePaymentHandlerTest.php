@@ -50,7 +50,7 @@ class InitiatePaymentHandlerTest extends TestCase
         $amount = new Money(5000, new Currency('EUR'));
         $gateway = new Gateway('test-gateway');
         $description = new ShortDescription('Test donation');
-        $appliedTo = Uuid::uuid7()->toString();
+        $donationId = Uuid::uuid7()->toString();
         $email = new Email('donor@example.com');
         $methodAction = PaymentMethodAction::forRequest(
             PaymentMethodId::generate(),
@@ -63,7 +63,7 @@ class InitiatePaymentHandlerTest extends TestCase
             $amount,
             $gateway,
             $description,
-            $appliedTo,
+            $donationId,
             $email,
             $methodAction
         );

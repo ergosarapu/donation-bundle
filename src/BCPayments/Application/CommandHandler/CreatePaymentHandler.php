@@ -36,7 +36,7 @@ class CreatePaymentHandler implements CommandHandlerInterface
             $command->amount,
             $command->description,
             $command->gateway,
-            $command->paymentAppliedToId,
+            $command->donationId,
             $command->email,
             $command->name,
             $command->legalIdentifier,

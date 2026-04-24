@@ -137,7 +137,7 @@ class PaymentsContext implements Context
             amount: $this->getDefaultTestMoney(),
             gateway: new Gateway('test-gateway'),
             description: new ShortDescription('Test Payment'),
-            appliedTo: new EntityId(Uuid::uuid7()->toString()),
+            donationId: new EntityId(Uuid::uuid7()->toString()),
             email: new Email('test@example.com'),
             paymentMethodId: $paymentMethodId !== null ? new EntityId($paymentMethodId->toString()) : null,
             requestPaymentMethodFor: $requestPaymentMethodFor,
@@ -452,7 +452,7 @@ class PaymentsContext implements Context
             email: null,
             name: new PersonName('Mati', 'Karu'),
             legalIdentifier: LegalIdentifier::nationalIdNumber('60109234794'),
-            paymentAppliedToId: null,
+            donationId: null,
             initiatedAt: new \DateTimeImmutable('2025-11-24'),
             capturedAt: new \DateTimeImmutable('2025-11-24'),
             gatewayReference: null,
@@ -485,7 +485,7 @@ class PaymentsContext implements Context
             email: null,
             name: new PersonName('Jane', 'Smith'), // Different name
             legalIdentifier: LegalIdentifier::nationalIdNumber('98765432100'), // Different ID
-            paymentAppliedToId: null,
+            donationId: null,
             initiatedAt: new \DateTimeImmutable('2025-11-20'),
             capturedAt: new \DateTimeImmutable('2025-11-20'),
             gatewayReference: null,

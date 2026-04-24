@@ -21,7 +21,7 @@ class PaymentSucceededHandler implements EventHandlerInterface
         $this->eventBus->dispatch(new PaymentSucceededIntegrationEvent(
             new EntityId($event->paymentId->toString()),
             $event->amount,
-            $event->appliedTo !== null ? new EntityId($event->appliedTo) : null,
+            $event->donationId !== null ? new EntityId($event->donationId) : null,
         ));
     }
 }

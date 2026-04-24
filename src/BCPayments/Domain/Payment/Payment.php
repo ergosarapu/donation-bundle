@@ -29,7 +29,7 @@ class Payment extends BasicAggregateRoot
     private ShortDescription $description;
     private ?Email $email;
     private PaymentStatus $status;
-    private ?string $appliedTo = null;
+    private ?string $donationId = null;
     private bool $succeedRecorded = false;
     private bool $gatewayCallReserved = false;
     private ?PaymentMethodAction $paymentMethodAction;
@@ -50,7 +50,7 @@ class Payment extends BasicAggregateRoot
             $paymentRequest->amount,
             $paymentRequest->gateway,
             $paymentRequest->description,
-            $paymentRequest->appliedTo,
+            $paymentRequest->donationId,
             $paymentRequest->email,
             $paymentRequest->paymentMethodAction,
         ));
@@ -64,7 +64,7 @@ class Payment extends BasicAggregateRoot
         Money $amount,
         ShortDescription $description,
         ?Gateway $gateway,
-        ?string $appliedTo,
+        ?string $donationId,
         ?Email $email,
         ?PersonName $name,
         ?LegalIdentifier $legalIdentifier,
@@ -86,7 +86,7 @@ class Payment extends BasicAggregateRoot
             $amount,
             $description,
             $gateway,
-            $appliedTo,
+            $donationId,
             $email,
             $name,
             $legalIdentifier,
@@ -146,7 +146,7 @@ class Payment extends BasicAggregateRoot
         $this->id = $event->paymentId;
         $this->amount = $event->amount;
         $this->status = $event->status;
-        $this->appliedTo = $event->appliedTo;
+        $this->donationId = $event->donationId;
         $this->gateway = $event->gateway;
         $this->description = $event->description;
         $this->email = $event->email;
@@ -263,7 +263,7 @@ class Payment extends BasicAggregateRoot
             return;
         }
         $this->validateTransitionToAuthorized();
-        $this->recordThat(new PaymentAuthorized($currentTime, $this->id, $authorizedAmount, $this->appliedTo, $this->paymentMethodAction, $paymentMethodResult));
+        $this->recordThat(new PaymentAuthorized($currentTime, $this->id, $authorizedAmount, $this->donationId, $this->paymentMethodAction, $paymentMethodResult));
         $this->recordSucceeded($currentTime);
     }
 
@@ -273,7 +273,7 @@ class Payment extends BasicAggregateRoot
             // "Succeed" can mean authorized, captured or settled - therefore we want to record it only once
             return;
         }
-        $this->recordThat(new PaymentSucceeded($currentTime, $this->id, $this->amount, $this->appliedTo));
+        $this->recordThat(new PaymentSucceeded($currentTime, $this->id, $this->amount, $this->donationId));
     }
 
     public function validateTransitionToAuthorized(): void
@@ -299,7 +299,7 @@ class Payment extends BasicAggregateRoot
             $currentTime,
             $this->id,
             $capturedAmount,
-            $this->appliedTo,
+            $this->donationId,
             $this->paymentMethodAction,
             $paymentMethodResult,
             $iban,
@@ -326,7 +326,7 @@ class Payment extends BasicAggregateRoot
         }
         $this->validateTransitionToCanceled();
         $this->recordThat(new PaymentCanceled($currentTime, $this->id));
-        $this->recordThat(new PaymentDidNotSucceed($currentTime, $this->id, $this->appliedTo));
+        $this->recordThat(new PaymentDidNotSucceed($currentTime, $this->id, $this->donationId));
     }
 
     public function validateTransitionToCanceled(): void
@@ -344,8 +344,8 @@ class Payment extends BasicAggregateRoot
             return;
         }
         $this->validateTransitionToFailed();
-        $this->recordThat(new PaymentFailed($currentTime, $this->id, $this->appliedTo, $this->paymentMethodAction, $paymentMethodResult));
-        $this->recordThat(new PaymentDidNotSucceed($currentTime, $this->id, $this->appliedTo));
+        $this->recordThat(new PaymentFailed($currentTime, $this->id, $this->donationId, $this->paymentMethodAction, $paymentMethodResult));
+        $this->recordThat(new PaymentDidNotSucceed($currentTime, $this->id, $this->donationId));
     }
 
     public function validateTransitionToFailed(): void

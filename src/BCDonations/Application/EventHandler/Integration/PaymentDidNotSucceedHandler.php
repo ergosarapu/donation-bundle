@@ -18,14 +18,14 @@ class PaymentDidNotSucceedHandler implements EventHandlerInterface
 
     public function __invoke(PaymentDidNotSucceedIntegrationEvent $event): void
     {
-        if ($event->appliedTo === null) {
+        if ($event->donationId === null) {
             // This event is not for us
             return;
         }
 
         $this->commandBus->dispatch(
             new FailDonation(
-                DonationId::fromString($event->appliedTo->toString()),
+                DonationId::fromString($event->donationId->toString()),
                 $event->paymentId->toString(),
             )
         );

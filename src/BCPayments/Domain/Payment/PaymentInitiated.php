@@ -27,7 +27,7 @@ class PaymentInitiated extends AbstractTimestampedEvent implements DomainEventIn
         public readonly Money $amount,
         public readonly Gateway $gateway,
         public readonly ShortDescription $description,
-        public readonly string $appliedTo,
+        public readonly string $donationId,
         #[PersonalData]
         public readonly ?Email $email,
         public readonly ?PaymentMethodAction $paymentMethodAction = null,

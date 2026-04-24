@@ -54,7 +54,7 @@ class CreatePaymentHandlerTest extends TestCase
         $paymentId = PaymentId::generate();
         $amount = new Money(5000, new Currency('EUR'));
         $description = new ShortDescription('Test payment');
-        $appliedTo = Uuid::uuid7()->toString();
+        $donationId = Uuid::uuid7()->toString();
         $email = new Email('donor@example.com');
         $name = new PersonName('John', 'Doe');
         $nationalIdNumber = LegalIdentifier::nationalIdNumber('12345678901');
@@ -73,10 +73,10 @@ class CreatePaymentHandlerTest extends TestCase
             $amount,
             $description,
             $gateway,
+            $donationId,
             $email,
             $name,
             $nationalIdNumber,
-            $appliedTo,
             $initiatedAt,
             $capturedAt,
             $gatewayReference,

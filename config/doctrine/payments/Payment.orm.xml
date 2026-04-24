@@ -14,7 +14,7 @@
         <field name="gateway" type="string" column="gateway" length="50" nullable="true"/>
         <field name="importStatus" type="string" column="import_status" length="50" nullable="true" enum-type="ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportStatus"/>
         <field name="reconciledWith" type="string" column="reconciled_with" length="36" nullable="true"/>
-        <field name="appliedTo" type="string" column="applied_to" length="36" nullable="true"/>
+        <field name="donationId" type="string" column="donation_id" length="36" nullable="true"/>
         <field name="description" type="string" column="description" length="255" nullable="true"/>
 
         <field name="givenName" type="string" column="given_name" length="100" nullable="true"/>

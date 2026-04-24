@@ -17,7 +17,7 @@ class PaymentSucceeded extends AbstractTimestampedEvent implements DomainEventIn
         DateTimeImmutable $occuredOn,
         public readonly PaymentId $paymentId,
         public readonly Money $amount,
-        public readonly ?string $appliedTo = null,
+        public readonly ?string $donationId = null,
     ) {
         parent::__construct($occuredOn);
     }

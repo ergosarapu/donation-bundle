@@ -23,7 +23,7 @@ class PaymentCaptured extends AbstractTimestampedEvent implements DomainEventInt
         #[DataSubjectId]
         public readonly PaymentId $paymentId,
         public readonly Money $capturedAmount,
-        public readonly ?string $appliedTo = null,
+        public readonly ?string $donationId = null,
         public readonly ?PaymentMethodAction $paymentMethodAction = null,
         #[PersonalData]
         public readonly ?PaymentMethodResult $paymentMethodResult = null,

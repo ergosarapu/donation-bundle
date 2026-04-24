@@ -16,7 +16,7 @@ final class PaymentRequest
         public readonly Money $amount,
         public readonly Gateway $gateway,
         public readonly ShortDescription $description,
-        public readonly string $appliedTo,
+        public readonly string $donationId,
         public readonly ?Email $email = null,
         public readonly ?PaymentMethodAction $paymentMethodAction = null,
     ) {

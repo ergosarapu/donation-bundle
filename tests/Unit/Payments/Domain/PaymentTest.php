@@ -66,7 +66,7 @@ class PaymentTest extends AggregateRootTestCase
 
     private ShortDescription $description;
 
-    private string $appliedTo;
+    private string $donationId;
 
     protected function aggregateClass(): string
     {
@@ -82,7 +82,7 @@ class PaymentTest extends AggregateRootTestCase
         $this->gateway = new Gateway('test');
         $this->email = new Email('example@example.com');
         $this->description = new ShortDescription('Test payment');
-        $this->appliedTo = Uuid::uuid7()->toString();
+        $this->donationId = Uuid::uuid7()->toString();
     }
 
     public function testCreate(): void
@@ -103,7 +103,7 @@ class PaymentTest extends AggregateRootTestCase
             $this->amount,
             $this->description,
             $gateway,
-            $this->appliedTo,
+            $this->donationId,
             $this->email,
             $name,
             $legalIdentifier,
@@ -124,7 +124,7 @@ class PaymentTest extends AggregateRootTestCase
                 $this->amount,
                 $this->description,
                 $gateway,
-                $this->appliedTo,
+                $this->donationId,
                 $this->email,
                 $name,
                 $legalIdentifier,
@@ -227,7 +227,7 @@ class PaymentTest extends AggregateRootTestCase
             $this->amount,
             $this->gateway,
             $this->description,
-            $this->appliedTo,
+            $this->donationId,
             $this->email,
             null,
         );
@@ -241,7 +241,7 @@ class PaymentTest extends AggregateRootTestCase
                 $this->amount,
                 $this->gateway,
                 $this->description,
-                $this->appliedTo,
+                $this->donationId,
                 $this->email,
                 null,
             )
@@ -260,7 +260,7 @@ class PaymentTest extends AggregateRootTestCase
             $this->amount,
             $this->gateway,
             $this->description,
-            $this->appliedTo,
+            $this->donationId,
             $this->email,
             $methodAction,
         );
@@ -274,7 +274,7 @@ class PaymentTest extends AggregateRootTestCase
                 $this->amount,
                 $this->gateway,
                 $this->description,
-                $this->appliedTo,
+                $this->donationId,
                 $this->email,
                 $methodAction,
             )
@@ -293,7 +293,7 @@ class PaymentTest extends AggregateRootTestCase
             $this->amount,
             $this->gateway,
             $this->description,
-            $this->appliedTo,
+            $this->donationId,
             $this->email,
             $methodAction,
         );
@@ -317,7 +317,7 @@ class PaymentTest extends AggregateRootTestCase
             $this->amount,
             $this->gateway,
             $this->description,
-            $this->appliedTo,
+            $this->donationId,
             $this->email,
             $methodAction,
         ))
@@ -331,7 +331,7 @@ class PaymentTest extends AggregateRootTestCase
                 $this->now,
                 $this->paymentId,
                 $this->amount,
-                $this->appliedTo,
+                $this->donationId,
                 $methodAction,
                 $methodResult,
             ),
@@ -339,7 +339,7 @@ class PaymentTest extends AggregateRootTestCase
                 $this->now,
                 $this->paymentId,
                 $this->amount,
-                $this->appliedTo,
+                $this->donationId,
             )
         );
     }
@@ -358,21 +358,21 @@ class PaymentTest extends AggregateRootTestCase
             $this->amount,
             $this->gateway,
             $this->description,
-            $this->appliedTo,
+            $this->donationId,
             $this->email,
             $methodAction,
         ), new PaymentAuthorized(
             $this->now,
             $this->paymentId,
             $this->amount,
-            $this->appliedTo,
+            $this->donationId,
             $methodAction,
             $methodResult,
         ), new PaymentSucceeded(
             $this->now,
             $this->paymentId,
             $this->amount,
-            $this->appliedTo,
+            $this->donationId,
         ))
         ->when(fn (Payment $payment) => $payment->markCaptured(
             $this->now,
@@ -384,7 +384,7 @@ class PaymentTest extends AggregateRootTestCase
                 $this->now,
                 $this->paymentId,
                 $this->amount,
-                $this->appliedTo,
+                $this->donationId,
                 $methodAction,
                 $methodResult,
             )
@@ -396,7 +396,7 @@ class PaymentTest extends AggregateRootTestCase
             $this->now,
             $this->paymentId,
             $this->amount,
-            $this->appliedTo,
+            $this->donationId,
         ))->when(fn (Payment $payment) => $payment->markCaptured(
             $this->now,
             $this->amount,
@@ -455,7 +455,7 @@ class PaymentTest extends AggregateRootTestCase
             $this->amount,
             $this->gateway,
             $this->description,
-            $this->appliedTo,
+            $this->donationId,
             $this->email,
             $methodAction,
         ))
@@ -469,7 +469,7 @@ class PaymentTest extends AggregateRootTestCase
                 $this->now,
                 $this->paymentId,
                 $this->amount,
-                $this->appliedTo,
+                $this->donationId,
                 $methodAction,
                 $methodResult,
             ),
@@ -477,7 +477,7 @@ class PaymentTest extends AggregateRootTestCase
                 $this->now,
                 $this->paymentId,
                 $this->amount,
-                $this->appliedTo,
+                $this->donationId,
             )
         );
     }
@@ -513,7 +513,7 @@ class PaymentTest extends AggregateRootTestCase
             $this->now,
             $this->paymentId,
             $this->amount,
-            $this->appliedTo,
+            $this->donationId,
         ))->when(fn (Payment $payment) => $payment->markAuthorized(
             $this->now,
             $this->amount,
@@ -548,7 +548,7 @@ class PaymentTest extends AggregateRootTestCase
             $this->amount,
             $this->gateway,
             $this->description,
-            $this->appliedTo,
+            $this->donationId,
             $this->email,
             $methodAction,
         ))
@@ -560,14 +560,14 @@ class PaymentTest extends AggregateRootTestCase
             new PaymentFailed(
                 $this->now,
                 $this->paymentId,
-                $this->appliedTo,
+                $this->donationId,
                 $methodAction,
                 $methodResult,
             ),
             new PaymentDidNotSucceed(
                 $this->now,
                 $this->paymentId,
-                $this->appliedTo,
+                $this->donationId,
             )
         );
     }
@@ -580,14 +580,14 @@ class PaymentTest extends AggregateRootTestCase
             $this->amount,
             $this->gateway,
             $this->description,
-            $this->appliedTo,
+            $this->donationId,
             $this->email,
             null,
         ), new PaymentAuthorized(
             $this->now,
             $this->paymentId,
             $this->amount,
-            $this->appliedTo,
+            $this->donationId,
         ))->when(fn (Payment $payment) => $payment->markFailed(
             $this->now,
             null,
@@ -595,14 +595,14 @@ class PaymentTest extends AggregateRootTestCase
             new PaymentFailed(
                 $this->now,
                 $this->paymentId,
-                $this->appliedTo,
+                $this->donationId,
                 null,
                 null,
             ),
             new PaymentDidNotSucceed(
                 $this->now,
                 $this->paymentId,
-                $this->appliedTo,
+                $this->donationId,
             )
         );
     }
@@ -612,7 +612,7 @@ class PaymentTest extends AggregateRootTestCase
         $this->given(new PaymentFailed(
             $this->now,
             $this->paymentId,
-            $this->appliedTo,
+            $this->donationId,
         ))->when(fn (Payment $payment) => $payment->markFailed(
             $this->now,
             null,
@@ -636,7 +636,7 @@ class PaymentTest extends AggregateRootTestCase
             $this->now,
             $this->paymentId,
             $this->amount,
-            $this->appliedTo,
+            $this->donationId,
         ))->when(fn (Payment $payment) => $payment->markFailed(
             $this->now,
             null,
@@ -668,7 +668,7 @@ class PaymentTest extends AggregateRootTestCase
             $this->amount,
             $this->gateway,
             $this->description,
-            $this->appliedTo,
+            $this->donationId,
             $this->email,
             $methodAction,
         ))
@@ -683,7 +683,7 @@ class PaymentTest extends AggregateRootTestCase
             new PaymentDidNotSucceed(
                 $this->now,
                 $this->paymentId,
-                $this->appliedTo,
+                $this->donationId,
             )
         );
     }
@@ -716,14 +716,14 @@ class PaymentTest extends AggregateRootTestCase
                 $this->amount,
                 $this->gateway,
                 $this->description,
-                $this->appliedTo,
+                $this->donationId,
                 $this->email,
             ),
             new PaymentAuthorized(
                 $this->now,
                 $this->paymentId,
                 $this->amount,
-                $this->appliedTo,
+                $this->donationId,
             )
         )->when(fn (Payment $payment) => $payment->markCanceled(
             $this->now,
@@ -737,7 +737,7 @@ class PaymentTest extends AggregateRootTestCase
                 $this->now,
                 $this->paymentId,
                 $this->amount,
-                $this->appliedTo,
+                $this->donationId,
             )
         )->when(fn (Payment $payment) => $payment->markCanceled(
             $this->now,
@@ -766,7 +766,7 @@ class PaymentTest extends AggregateRootTestCase
                 $this->amount,
                 $this->gateway,
                 $this->description,
-                $this->appliedTo,
+                $this->donationId,
                 $this->email,
                 PaymentMethodAction::forRequest(
                     PaymentMethodId::generate(),
@@ -778,7 +778,7 @@ class PaymentTest extends AggregateRootTestCase
                 $this->now,
                 $this->paymentId,
                 $this->amount,
-                $this->appliedTo,
+                $this->donationId,
             )
         )
         ->when(fn (Payment $payment) => $payment->markRefunded(
@@ -815,7 +815,7 @@ class PaymentTest extends AggregateRootTestCase
                 $this->amount,
                 $this->gateway,
                 $this->description,
-                $this->appliedTo,
+                $this->donationId,
                 $this->email,
             )
         )->when(fn (Payment $payment) => $payment->markRefunded(
@@ -857,7 +857,7 @@ class PaymentTest extends AggregateRootTestCase
                 $this->now,
                 $this->paymentId,
                 $this->amount,
-                $this->appliedTo,
+                $this->donationId,
             )
         )->when(fn (Payment $payment) => $payment->markRefunded(
             $this->now,
@@ -874,7 +874,7 @@ class PaymentTest extends AggregateRootTestCase
                 $this->amount,
                 $this->gateway,
                 $this->description,
-                $this->appliedTo,
+                $this->donationId,
                 $this->email,
                 null,
             ),
@@ -882,7 +882,7 @@ class PaymentTest extends AggregateRootTestCase
                 $this->now,
                 $this->paymentId,
                 $this->amount,
-                $this->appliedTo,
+                $this->donationId,
                 null,
                 null,
             ),
@@ -890,7 +890,7 @@ class PaymentTest extends AggregateRootTestCase
                 $this->now,
                 $this->paymentId,
                 $this->amount,
-                $this->appliedTo,
+                $this->donationId,
             )
         )
         ->when(fn (Payment $payment) => $payment->markCaptured(
@@ -903,7 +903,7 @@ class PaymentTest extends AggregateRootTestCase
                 $this->now,
                 $this->paymentId,
                 $this->amount,
-                $this->appliedTo,
+                $this->donationId,
                 null,
                 null,
             )
@@ -918,7 +918,7 @@ class PaymentTest extends AggregateRootTestCase
             $this->amount,
             $this->gateway,
             $this->description,
-            $this->appliedTo,
+            $this->donationId,
             $this->email,
             null,
         ))
@@ -963,7 +963,7 @@ class PaymentTest extends AggregateRootTestCase
             $this->now,
             $this->paymentId,
             $this->amount,
-            $this->appliedTo,
+            $this->donationId,
         ))
         ->when(fn (Payment $payment) => $payment->reserveGatewayCall(
             $this->now,
@@ -979,7 +979,7 @@ class PaymentTest extends AggregateRootTestCase
             $this->amount,
             $this->gateway,
             $this->description,
-            $this->appliedTo,
+            $this->donationId,
             $this->email,
             null,
         ), new PaymentReservedForGatewayCall(
@@ -1021,7 +1021,7 @@ class PaymentTest extends AggregateRootTestCase
             $this->amount,
             $this->gateway,
             $this->description,
-            $this->appliedTo,
+            $this->donationId,
             $this->email,
             null,
         ))
@@ -1225,7 +1225,7 @@ class PaymentTest extends AggregateRootTestCase
             $this->amount,
             $this->gateway,
             $this->description,
-            $this->appliedTo,
+            $this->donationId,
             $this->email,
             null,
         ))
@@ -1255,7 +1255,7 @@ class PaymentTest extends AggregateRootTestCase
             $this->amount,
             $this->description,
             $this->gateway,
-            $this->appliedTo,
+            $this->donationId,
             $this->email,
             $name,
             $legalIdentifier,
@@ -1314,7 +1314,7 @@ class PaymentTest extends AggregateRootTestCase
             $this->amount,
             $this->description,
             $this->gateway,
-            $this->appliedTo,
+            $this->donationId,
             $this->email,
             $name,
             $legalIdentifier,
@@ -1411,7 +1411,7 @@ class PaymentTest extends AggregateRootTestCase
             $differentAmount,
             $this->description,
             $this->gateway,
-            $this->appliedTo,
+            $this->donationId,
             $this->email,
             null,
             null,
@@ -1454,7 +1454,7 @@ class PaymentTest extends AggregateRootTestCase
             $this->amount,
             $this->description,
             $this->gateway,
-            $this->appliedTo,
+            $this->donationId,
             $this->email,
             null,
             null,
@@ -1503,7 +1503,7 @@ class PaymentTest extends AggregateRootTestCase
             $this->amount,
             $this->description,
             $this->gateway,
-            $this->appliedTo,
+            $this->donationId,
             $this->email,
             null,
             null,
@@ -1552,7 +1552,7 @@ class PaymentTest extends AggregateRootTestCase
             $this->amount,
             $this->description,
             $this->gateway,
-            $this->appliedTo,
+            $this->donationId,
             $this->email,
             null,
             null,
@@ -1571,7 +1571,7 @@ class PaymentTest extends AggregateRootTestCase
             $this->amount,
             $this->gateway,
             $this->description,
-            $this->appliedTo,
+            $this->donationId,
             $this->email,
             null,
         ))

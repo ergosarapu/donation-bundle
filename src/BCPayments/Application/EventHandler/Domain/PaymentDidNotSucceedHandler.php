@@ -20,7 +20,7 @@ class PaymentDidNotSucceedHandler implements EventHandlerInterface
     {
         $this->eventBus->dispatch(new PaymentDidNotSucceedIntegrationEvent(
             new EntityId($event->paymentId->toString()),
-            $event->appliedTo !== null ? new EntityId($event->appliedTo) : null,
+            $event->donationId !== null ? new EntityId($event->donationId) : null,
         ));
     }
 }

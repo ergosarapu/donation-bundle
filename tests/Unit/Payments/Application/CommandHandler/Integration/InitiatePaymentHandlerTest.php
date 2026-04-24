@@ -38,7 +38,7 @@ class InitiatePaymentHandlerTest extends TestCase
         $amount = new Money(5000, new Currency('EUR'));
         $gateway = new Gateway('test-gateway');
         $description = new ShortDescription('Test donation');
-        $appliedTo = Uuid::uuid7()->toString();
+        $donationId = Uuid::uuid7()->toString();
         $email = new Email('donor@example.com');
         $usePaymentMethodId = Uuid::uuid7()->toString();
 
@@ -46,14 +46,14 @@ class InitiatePaymentHandlerTest extends TestCase
             $amount,
             $gateway,
             $description,
-            new EntityId($appliedTo),
+            new EntityId($donationId),
             $email,
             new EntityId($usePaymentMethodId),
         );
 
         $this->commandBus->expects($this->once())
             ->method('dispatch')
-            ->with($this->callback(function ($command) use ($amount, $gateway, $description, $appliedTo, $email, $usePaymentMethodId) {
+            ->with($this->callback(function ($command) use ($amount, $gateway, $description, $donationId, $email, $usePaymentMethodId) {
                 if (!$command instanceof InitiatePayment) {
                     return false;
                 }
@@ -61,7 +61,7 @@ class InitiatePaymentHandlerTest extends TestCase
                 return $request->amount === $amount
                     && $request->gateway === $gateway
                     && $request->description === $description
-                    && $request->appliedTo === $appliedTo
+                    && $request->donationId === $donationId
                     && $request->email === $email
                     && $request->paymentMethodAction !== null
                     && $request->paymentMethodAction->paymentMethodId->toString() === $usePaymentMethodId;
@@ -76,20 +76,20 @@ class InitiatePaymentHandlerTest extends TestCase
         $amount = new Money(5000, new Currency('EUR'));
         $gateway = new Gateway('test-gateway');
         $description = new ShortDescription('Test donation');
-        $appliedTo = Uuid::uuid7()->toString();
+        $donationId = Uuid::uuid7()->toString();
         $email = new Email('donor@example.com');
 
         $integrationCommand = new InitiatePaymentIntegrationCommand(
             $amount,
             $gateway,
             $description,
-            new EntityId($appliedTo),
+            new EntityId($donationId),
             $email
         );
 
         $this->commandBus->expects($this->once())
             ->method('dispatch')
-            ->with($this->callback(function ($command) use ($amount, $gateway, $description, $appliedTo, $email) {
+            ->with($this->callback(function ($command) use ($amount, $gateway, $description, $donationId, $email) {
                 if (!$command instanceof InitiatePayment) {
                     return false;
                 }
@@ -97,7 +97,7 @@ class InitiatePaymentHandlerTest extends TestCase
                 return $request->amount === $amount
                     && $request->gateway === $gateway
                     && $request->description === $description
-                    && $request->appliedTo === $appliedTo
+                    && $request->donationId === $donationId
                     && $request->email === $email
                     && $request->paymentMethodAction === null;
             }))
@@ -111,14 +111,14 @@ class InitiatePaymentHandlerTest extends TestCase
         $amount = new Money(5000, new Currency('EUR'));
         $gateway = new Gateway('test-gateway');
         $description = new ShortDescription('Test donation');
-        $appliedTo = Uuid::uuid7()->toString();
+        $donationId = Uuid::uuid7()->toString();
         $email = new Email('donor@example.com');
 
         $integrationCommand = new InitiatePaymentIntegrationCommand(
             $amount,
             $gateway,
             $description,
-            new EntityId($appliedTo),
+            new EntityId($donationId),
             $email,
             null,
             new EntityId(Uuid::uuid7()->toString()),
@@ -126,7 +126,7 @@ class InitiatePaymentHandlerTest extends TestCase
 
         $this->commandBus->expects($this->once())
             ->method('dispatch')
-            ->with($this->callback(function ($command) use ($amount, $gateway, $description, $appliedTo, $email) {
+            ->with($this->callback(function ($command) use ($amount, $gateway, $description, $donationId, $email) {
                 if (!$command instanceof InitiatePayment) {
                     return false;
                 }
@@ -134,7 +134,7 @@ class InitiatePaymentHandlerTest extends TestCase
                 return $request->amount === $amount
                     && $request->gateway === $gateway
                     && $request->description === $description
-                    && $request->appliedTo === $appliedTo
+                    && $request->donationId === $donationId
                     && $request->email === $email
                     && $request->paymentMethodAction !== null
                     && $request->paymentMethodAction->intent === PaymentMethodActionIntent::Request;

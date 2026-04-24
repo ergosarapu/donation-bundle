@@ -19,7 +19,7 @@ class Payment
     private ?string $redirectUrl;
     private ?PaymentImportStatus $importStatus = null;
     private ?string $reconciledWith = null;
-    private ?string $appliedTo = null;
+    private ?string $donationId = null;
     private ?string $description = null;
 
     private ?string $givenName = null;
@@ -150,14 +150,14 @@ class Payment
         $this->reconciledWith = $reconciledWith;
     }
 
-    public function getAppliedTo(): ?string
+    public function getDonationId(): ?string
     {
-        return $this->appliedTo;
+        return $this->donationId;
     }
 
-    public function setAppliedTo(?string $appliedTo): void
+    public function setDonationId(?string $donationId): void
     {
-        $this->appliedTo = $appliedTo;
+        $this->donationId = $donationId;
     }
 
     public function getDescription(): ?string

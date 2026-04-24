@@ -129,7 +129,7 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         $payment->setCurrency($event->amount->currency()->code());
         $payment->setStatus($event->status);
         $payment->setGateway($event->gateway->id());
-        $payment->setAppliedTo($event->appliedTo);
+        $payment->setDonationId($event->donationId);
         $payment->setDescription($event->description->toString());
         $this->persist($payment);
         $trackingId = $this->getTrackingId($message);
@@ -155,7 +155,7 @@ class PaymentProjector implements PaymentProjectionRepositoryInterface
         $payment->setCurrency($event->amount->currency()->code());
         $payment->setStatus($event->status);
         $payment->setGateway($event->gateway?->id());
-        $payment->setAppliedTo($event->appliedTo);
+        $payment->setDonationId($event->donationId);
         $payment->setDescription($event->description?->toString());
         $payment->setGivenName($event->name?->givenName);
         $payment->setFamilyName($event->name?->familyName);

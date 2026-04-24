@@ -20,7 +20,7 @@ class PaymentFailed extends AbstractTimestampedEvent implements DomainEventInter
         DateTimeImmutable $occuredOn,
         #[DataSubjectId]
         public readonly PaymentId $paymentId,
-        public readonly ?string $appliedTo = null,
+        public readonly ?string $donationId = null,
         public readonly ?PaymentMethodAction $paymentMethodAction = null,
         #[PersonalData]
         public readonly ?PaymentMethodResult $paymentMethodResult = null,

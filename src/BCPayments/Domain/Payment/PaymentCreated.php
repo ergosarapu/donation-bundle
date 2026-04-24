@@ -32,7 +32,7 @@ class PaymentCreated extends AbstractTimestampedEvent implements DomainEventInte
         #[PersonalData]
         public readonly ?ShortDescription $description,
         public readonly ?Gateway $gateway,
-        public readonly ?string $appliedTo,
+        public readonly ?string $donationId,
         #[PersonalData]
         public readonly ?Email $email,
         #[PersonalData]

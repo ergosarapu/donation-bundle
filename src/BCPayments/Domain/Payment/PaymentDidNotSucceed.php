@@ -15,7 +15,7 @@ class PaymentDidNotSucceed extends AbstractTimestampedEvent implements DomainEve
     public function __construct(
         DateTimeImmutable $occuredOn,
         public readonly PaymentId $paymentId,
-        public readonly ?string $appliedTo = null,
+        public readonly ?string $donationId = null,
     ) {
         parent::__construct($occuredOn);
 

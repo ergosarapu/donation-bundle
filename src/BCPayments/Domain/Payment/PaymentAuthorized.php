@@ -22,7 +22,7 @@ class PaymentAuthorized extends AbstractTimestampedEvent implements DomainEventI
         #[DataSubjectId]
         public readonly PaymentId $paymentId,
         public readonly Money $authorizedAmount,
-        public readonly ?string $appliedTo = null,
+        public readonly ?string $donationId = null,
         public readonly ?PaymentMethodAction $paymentMethodAction = null,
         #[PersonalData]
         public readonly ?PaymentMethodResult $paymentMethodResult = null,

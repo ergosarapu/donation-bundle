@@ -103,8 +103,7 @@ class Donation extends BasicAggregateRoot
         Money $acceptedAmount,
         string $paymentId,
         ?DateTimeImmutable $acceptedAt,
-    ): void
-    {
+    ): void {
         if ($this->status === DonationStatus::Accepted) {
             return;
         }

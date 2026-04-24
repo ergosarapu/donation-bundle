@@ -49,7 +49,7 @@ final class PaymentSucceededHandlerTest extends TestCase
         ($this->handler)($event);
     }
 
-    public function testIgnoresEventWhenAppliedToMissing(): void
+    public function testIgnoresEventWhenDonationIdMissing(): void
     {
         $event = new PaymentSucceededIntegrationEvent(
             new EntityId('018f4d99-6e26-7d76-8f3a-261fbf547502'),

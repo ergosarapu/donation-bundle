@@ -22,7 +22,7 @@ class InitiatePaymentIntegrationCommand implements IntegrationCommandInterface
         public readonly Money $amount,
         public readonly Gateway $gateway,
         public readonly ShortDescription $description,
-        public readonly EntityId $appliedTo,
+        public readonly EntityId $donationId,
         public readonly ?Email $email = null,
         public readonly ?EntityId $paymentMethodId = null,
         public readonly ?EntityId $requestPaymentMethodFor = null,

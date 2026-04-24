@@ -29,7 +29,7 @@ class InitiatePaymentHandler implements CommandHandlerInterface
             $command->amount,
             $command->gateway,
             $command->description,
-            $command->appliedTo->toString(),
+            $command->donationId->toString(),
             $command->email,
             $paymentMethodAction,
         );

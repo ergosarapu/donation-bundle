@@ -13,7 +13,7 @@ class PaymentSucceededIntegrationEvent implements IntegrationEventInterface
     public function __construct(
         public readonly EntityId $paymentId,
         public readonly Money $amount,
-        public readonly ?EntityId $appliedTo,
+        public readonly ?EntityId $donationId,
     ) {
     }
 }
