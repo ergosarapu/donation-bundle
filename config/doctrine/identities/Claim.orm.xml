@@ -4,28 +4,45 @@
                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
                   https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
     <entity name="ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model\Claim" table="projection_claim">
-        <id name="claimId" type="string" column="claim_id" length="36">
-            <generator strategy="NONE"/>
-        </id>
-        <field name="paymentId" type="string" column="payment_id" length="36" nullable="true"/>
-        <field name="donationId" type="string" column="donation_id" length="36" nullable="true"/>
-        <field name="givenName" type="string" column="given_name" length="100" nullable="true"/>
-        <field name="familyName" type="string" column="family_name" length="100" nullable="true"/>
-        <field name="rawName" type="string" column="raw_name" length="255" nullable="true"/>
-        <field name="email" type="string" column="email" length="255" nullable="true"/>
-        <field name="iban" type="string" column="iban" length="50" nullable="true"/>
-        <field name="legalIdentifier" type="string" column="legal_identifier" length="20" nullable="true"/>
-        <field name="inReview" type="boolean" column="in_review" nullable="false"/>
-        <field name="resolved" type="boolean" column="resolved" nullable="false"/>
-        <field name="reviewReason" type="string" column="review_reason" length="100" nullable="true"/>
-        <field name="identityId" type="string" column="identity_id" length="36" nullable="true"/>
-        <field name="createdAt" type="datetime_immutable" column="created_at" nullable="false"/>
-        <field name="updatedAt" type="datetime_immutable" column="updated_at" nullable="false"/>
+        <id name="claimId" type="string" column="claim_id" length="36" />
+        <one-to-many field="correlatedSources" target-entity="ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model\ClaimCorrelatedSource" mapped-by="claim" orphan-removal="true">
+            <cascade>
+                <cascade-persist />
+                <cascade-remove />
+            </cascade>
+            <order-by>
+                <order-by-field name="id" direction="ASC" />
+            </order-by>
+        </one-to-many>
+        <one-to-many field="linkedClaims" target-entity="ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model\ClaimLinkedClaim" mapped-by="claim" orphan-removal="true">
+            <cascade>
+                <cascade-persist />
+                <cascade-remove />
+            </cascade>
+            <order-by>
+                <order-by-field name="id" direction="ASC" />
+            </order-by>
+        </one-to-many>
+        <one-to-many field="presentations" target-entity="ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model\ClaimPresentation" mapped-by="claim" orphan-removal="true">
+            <cascade>
+                <cascade-persist />
+                <cascade-remove />
+            </cascade>
+            <order-by>
+                <order-by-field name="id" direction="ASC" />
+            </order-by>
+        </one-to-many>
+
+        <field name="sourceContext" type="string" column="source_context" length="100" />
+        <field name="sourceId" type="string" column="source_id" length="36" nullable="false" />
+        <field name="sourceType" type="string" column="source_type" length="100" nullable="true" />
+
+        <field name="identityId" type="string" column="identity_id" length="36" nullable="true" />
 
         <indexes>
-            <index name="idx_projection_claim_in_review" columns="in_review,updated_at" />
-            <index name="idx_projection_claim_payment_id" columns="payment_id" />
-            <index name="idx_projection_claim_donation_id" columns="donation_id" />
+            <index name="idx_projection_claim_source_context" columns="source_context" />
+            <index name="idx_projection_claim_source_id" columns="source_id" />
+            <index name="idx_projection_claim_identity_id" columns="identity_id" />
         </indexes>
     </entity>
 </doctrine-mapping>
