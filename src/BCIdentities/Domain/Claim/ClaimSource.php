@@ -5,48 +5,44 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim;
 
 use Patchlevel\Hydrator\Normalizer\ObjectNormalizer;
+use RuntimeException;
 
 #[ObjectNormalizer]
 final class ClaimSource
 {
     private function __construct(
-        private readonly ClaimContext $context,
-        private readonly string $id,
+        public readonly ClaimSourceContext $context,
+        public readonly string $id,
+        public readonly ?string $type = null,
+        public readonly ?ClaimId $claimId = null,
     ) {
     }
 
-    public function isPaymentContext(): bool
+    public static function create(
+        ClaimSourceContext $context,
+        string $id,
+        ?string $type = null,
+        ?ClaimId $claimId = null,
+    ): self
     {
-        return $this->context === ClaimContext::Payment;
+        return new self($context, $id, $type, $claimId);
     }
 
-    public function isDonationContext(): bool
+    public function resolve(ClaimId $claimId): self
     {
-        return $this->context === ClaimContext::Donation;
+        return new self($this->context, $this->id, $this->type, $claimId);
     }
 
-    public function getId(): string
+    public function claimId(): ClaimId
     {
-        return $this->id;
-    }
+        if ($this->claimId === null) {
+            throw new RuntimeException(sprintf(
+                'Claim source "%s:%s" is not resolved.',
+                $this->context->value,
+                $this->id,
+            ));
+        }
 
-    public function getContext(): ClaimContext
-    {
-        return $this->context;
-    }
-
-    public function deterministicKey(): string
-    {
-        return $this->context->value . '|' . $this->id;
-    }
-
-    public static function forPayment(string $paymentId): self
-    {
-        return new self(ClaimContext::Payment, $paymentId);
-    }
-
-    public static function forDonation(string $donationId): self
-    {
-        return new self(ClaimContext::Donation, $donationId);
+        return $this->claimId;
     }
 }
