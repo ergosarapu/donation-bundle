@@ -4,25 +4,40 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model;
 
-use DateTimeImmutable;
-
 class Claim
 {
     private string $claimId;
-    private ?string $paymentId = null;
-    private ?string $donationId = null;
-    private ?string $givenName = null;
-    private ?string $familyName = null;
-    private ?string $rawName = null;
-    private ?string $email = null;
-    private ?string $iban = null;
-    private ?string $legalIdentifier = null;
-    private bool $inReview = false;
-    private bool $resolved = false;
-    private ?string $reviewReason = null;
+    private string $sourceContext;
+    private string $sourceId;
+    private ?string $sourceType = null;
+    /** @var iterable<int, ClaimCorrelatedSource> */
+    private iterable $correlatedSources = [];
+    /** @var iterable<int, ClaimLinkedClaim> */
+    private iterable $linkedClaims = [];
+    /** @var iterable<int, ClaimPresentation> */
+    private iterable $presentations = [];
+
     private ?string $identityId = null;
-    private DateTimeImmutable $createdAt;
-    private DateTimeImmutable $updatedAt;
+
+    public function getSourceContext(): string
+    {
+        return $this->sourceContext;
+    }
+
+    public function setSourceContext(string $sourceContext): void
+    {
+        $this->sourceContext = $sourceContext;
+    }
+
+    public function getSourceType(): ?string
+    {
+        return $this->sourceType;
+    }
+
+    public function setSourceType(?string $sourceType): void
+    {
+        $this->sourceType = $sourceType;
+    }
 
     public function getClaimId(): string
     {
@@ -32,116 +47,6 @@ class Claim
     public function setClaimId(string $claimId): void
     {
         $this->claimId = $claimId;
-    }
-
-    public function getPaymentId(): ?string
-    {
-        return $this->paymentId;
-    }
-
-    public function setPaymentId(?string $paymentId): void
-    {
-        $this->paymentId = $paymentId;
-    }
-
-    public function getDonationId(): ?string
-    {
-        return $this->donationId;
-    }
-
-    public function setDonationId(?string $donationId): void
-    {
-        $this->donationId = $donationId;
-    }
-
-    public function getGivenName(): ?string
-    {
-        return $this->givenName;
-    }
-
-    public function setGivenName(?string $givenName): void
-    {
-        $this->givenName = $givenName;
-    }
-
-    public function getFamilyName(): ?string
-    {
-        return $this->familyName;
-    }
-
-    public function setFamilyName(?string $familyName): void
-    {
-        $this->familyName = $familyName;
-    }
-
-    public function getRawName(): ?string
-    {
-        return $this->rawName;
-    }
-
-    public function setRawName(?string $rawName): void
-    {
-        $this->rawName = $rawName;
-    }
-
-    public function getEmail(): ?string
-    {
-        return $this->email;
-    }
-
-    public function setEmail(?string $email): void
-    {
-        $this->email = $email;
-    }
-
-    public function getIban(): ?string
-    {
-        return $this->iban;
-    }
-
-    public function setIban(?string $iban): void
-    {
-        $this->iban = $iban;
-    }
-
-    public function getLegalIdentifier(): ?string
-    {
-        return $this->legalIdentifier;
-    }
-
-    public function setLegalIdentifier(?string $legalIdentifier): void
-    {
-        $this->legalIdentifier = $legalIdentifier;
-    }
-
-    public function isInReview(): bool
-    {
-        return $this->inReview;
-    }
-
-    public function setInReview(bool $inReview): void
-    {
-        $this->inReview = $inReview;
-    }
-
-    public function isResolved(): bool
-    {
-        return $this->resolved;
-    }
-
-    public function setResolved(bool $resolved): void
-    {
-        $this->resolved = $resolved;
-    }
-
-    public function getReviewReason(): ?string
-    {
-        return $this->reviewReason;
-    }
-
-    public function setReviewReason(?string $reviewReason): void
-    {
-        $this->reviewReason = $reviewReason;
     }
 
     public function getIdentityId(): ?string
@@ -154,23 +59,196 @@ class Claim
         $this->identityId = $identityId;
     }
 
-    public function getCreatedAt(): DateTimeImmutable
+    /**
+     * @return array<string>
+     */
+    public function getCorrelatedSourceIds(): array
     {
-        return $this->createdAt;
+        $result = [];
+        foreach ($this->correlatedSources as $correlatedSource) {
+            $result[] = $correlatedSource->getCorrelatedSourceId();
+        }
+
+        return $result;
     }
 
-    public function setCreatedAt(DateTimeImmutable $createdAt): void
+    public function addCorrelatedSource(string $correlatedSourceId): void
     {
-        $this->createdAt = $createdAt;
+        foreach ($this->correlatedSources as $correlatedSource) {
+            if ($correlatedSource->getCorrelatedSourceId() === $correlatedSourceId) {
+                return;
+            }
+        }
+
+        $this->appendToCollection($this->correlatedSources, new ClaimCorrelatedSource($this, $correlatedSourceId));
     }
 
-    public function getUpdatedAt(): DateTimeImmutable
+    /**
+     * @return list<string>
+     */
+    public function getLinkedClaimIds(): array
     {
-        return $this->updatedAt;
+        $result = [];
+        foreach ($this->linkedClaims as $correlatedClaim) {
+            $result[$correlatedClaim->getLinkedClaimId()] = $correlatedClaim->getLinkedClaimId();
+        }
+
+        return array_values($result);
     }
 
-    public function setUpdatedAt(DateTimeImmutable $updatedAt): void
+    public function addLinkedClaim(string $linkedClaimId): void
     {
-        $this->updatedAt = $updatedAt;
+        foreach ($this->linkedClaims as $correlatedClaim) {
+            if ($correlatedClaim->getLinkedClaimId() === $linkedClaimId) {
+                return;
+            }
+        }
+
+        $this->appendToCollection($this->linkedClaims, new ClaimLinkedClaim($this, $linkedClaimId));
+    }
+
+    public function removeLinkedClaim(string $linkedClaimId): void
+    {
+        if (is_array($this->linkedClaims)) {
+            $this->linkedClaims = array_values(array_filter(
+                $this->linkedClaims,
+                static fn (ClaimLinkedClaim $correlatedClaim): bool => $correlatedClaim->getLinkedClaimId() !== $linkedClaimId,
+            ));
+
+            return;
+        }
+
+        foreach ($this->linkedClaims as $correlatedClaim) {
+            if ($correlatedClaim->getLinkedClaimId() !== $linkedClaimId) {
+                continue;
+            }
+
+            if (method_exists($this->linkedClaims, 'removeElement')) {
+                $this->linkedClaims->removeElement($correlatedClaim);
+            }
+
+            return;
+        }
+    }
+
+    public function removeCorrelatedSourceId(string $correlatedSourceId): void
+    {
+        if (is_array($this->correlatedSources)) {
+            $this->correlatedSources = array_values(array_filter(
+                $this->correlatedSources,
+                static fn (ClaimCorrelatedSource $correlatedSource): bool => $correlatedSource->getCorrelatedSourceId() !== $correlatedSourceId,
+            ));
+
+            return;
+        }
+
+        foreach ($this->correlatedSources as $correlatedSource) {
+            if ($correlatedSource->getCorrelatedSourceId() !== $correlatedSourceId) {
+                continue;
+            }
+
+            if (method_exists($this->correlatedSources, 'removeElement')) {
+                $this->correlatedSources->removeElement($correlatedSource);
+            }
+
+            return;
+        }
+    }
+
+    public function getSourceId(): string
+    {
+        return $this->sourceId;
+    }
+
+    public function setSourceId(string $sourceId): void
+    {
+        $this->sourceId = $sourceId;
+    }
+
+    public function getPresentationForEvidenceLevel(?string $evidenceLevel): ?ClaimPresentation
+    {
+        foreach ($this->presentations as $presentation) {
+            if ($presentation->getEvidenceLevel() === $evidenceLevel) {
+                return $presentation;
+            }
+        }
+
+        return null;
+    }
+
+    public function addPresentation(?string $evidenceLevel): ClaimPresentation
+    {
+        $presentation = new ClaimPresentation($this, $evidenceLevel);
+        $this->appendToCollection($this->presentations, $presentation);
+
+        return $presentation;
+    }
+
+    public function clearPresentations(): void
+    {
+        if (is_array($this->presentations)) {
+            $this->presentations = [];
+
+            return;
+        }
+
+        if (method_exists($this->presentations, 'clear')) {
+            $this->presentations->clear();
+        }
+    }
+
+    /**
+     * @return list<ClaimPresentation>
+     */
+    public function getPresentations(): array
+    {
+        $result = [];
+        foreach ($this->presentations as $presentation) {
+            $result[] = $presentation;
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function getPresentationsSummary(): array
+    {
+        return array_map(
+            static function (ClaimPresentation $presentation): string {
+                $parts = array_filter([
+                    $presentation->getEvidenceLevel(),
+                    $presentation->getGivenName() !== null || $presentation->getFamilyName() !== null
+                        ? trim(sprintf('%s %s', $presentation->getGivenName() ?? '', $presentation->getFamilyName() ?? ''))
+                        : null,
+                    $presentation->getRawName(),
+                    $presentation->getEmail(),
+                    $presentation->getIban(),
+                    $presentation->getLegalIdentifier(),
+                ]);
+
+                return implode(' | ', $parts);
+            },
+            $this->getPresentations(),
+        );
+    }
+
+    /**
+     * @template T of object
+     * @param iterable<int, T> $items
+     * @param T $item
+     */
+    private function appendToCollection(iterable &$items, object $item): void
+    {
+        if (is_array($items)) {
+            $items[] = $item;
+
+            return;
+        }
+
+        if (method_exists($items, 'add')) {
+            $items->add($item);
+        }
     }
 }

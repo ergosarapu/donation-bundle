@@ -1,56 +1,36 @@
-Feature: Resolve Identities based on presented Claims
+Feature: Build identities from connected claims
 
-  Identities service accepts Claims and merges to Identity
-  So that identities database is built from the presented Claims
+  An identity consists of claims connected by correlated sources, email, legal identifier, or IBAN.
+  A new claim joins the first matching identity in that order. A claim without a connection creates
+  a new identity.
 
-  Scenario: Claim presented with no matching Identity creates new Identity
-    Given no Identity exists
-    When a Claim with email "donor@example.com" is presented with sufficient evidence
-    Then Claim is resolved
-    And a new Identity is created
-
-  Scenario: Claim presented with single matching Identity is merged into Identity and resolved
-    Given an Identity with email "donor@example.com" exists
-    When a Claim with email "donor@example.com", iban "EE471000001020145685", legal identifier "38001085718", person name "John" "Doe" and raw name "John Doe" is presented with sufficient evidence
-    Then Claim is resolved
-    And Claim is merged into existing Identity
-
-  Scenario: Presenting Claim with same data results in single Identity
-    Given no Identity exists
-    And identity projection is not updating
-    When a Claim with email "donor@example.com" is presented with sufficient evidence
-    Then Claim is resolved
-    And a new Identity is created
-    When a Claim with email "donor@example.com" is presented with sufficient evidence
-    Then Claim is resolved
-    And Claim is merged into existing Identity
-
-  Scenario Outline: Claim presented with single matching Identity results merge conflict and is marked for review
-    Given an Identity with email "donor@example.com" and <identity_attribute> <existing_value> exists
-    When a Claim with email "donor@example.com" and <claim_attribute> <conflicting_value> is presented with sufficient evidence
-    Then Claim is marked for review
-    And Claim review reason is merge conflict
+  Scenario Outline: A claim joins the highest-priority matching identity
+    Given claim "correlated" has source "donation:don1"
+    And claim "email" has email "email@example.com"
+    And claim "legal-identifier" has legal identifier "12345678901"
+    And claim "iban" has iban "EE382200221020145685"
+    When a claim is presented with correlated sources "<correlated_sources>", email "<email>", legal identifier "<legal_identifier>", and iban "<iban>"
+    Then the claim belongs to identity "<component>"
 
     Examples:
-      | identity_attribute | existing_value | claim_attribute  | conflicting_value |
-      | legal identifier   | "38001085718"  | legal identifier | "49002010976"     |
-      | person name        | "John" "Doe"   | person name      | "Jane" "Smith"    |
-      | legal identifier   | "12345678"     | legal identifier | "87654322"        |
+      | case                              | correlated_sources | email               | legal_identifier | iban                   | component        |
+      | correlated source matches         | donation:don1      | email@example.com   | 12345678901      | EE382200221020145685   | correlated       |
+      | email matches without correlation | no                 | email@example.com   | 12345678901      | EE382200221020145685   | email            |
+      | legal identifier matches          | no                 | other@example.com   | 12345678901      | EE382200221020145685   | legal-identifier |
+      | iban matches                      | no                 | other@example.com   | 12345678902      | EE382200221020145685   | iban             |
+      | no value matches                  | no                 | other@example.com   | 12345678902      | DE89370400440532013000 | new              |
 
-  Scenario Outline: Claim with conflicting legal identifier type presented to existing Identity results merge conflict
-    Given an Identity with email "donor@example.com" and legal identifier <existing_legal_identifier> exists
-    When a Claim with email "donor@example.com" and legal identifier <claimed_legal_identifier> is presented with sufficient evidence
-    Then Claim is marked for review
-    And Claim review reason is merge conflict
+  Scenario Outline: Correlated source updates recalculate identities
+    Given claims with sources "<sources>" have correlations "<initial_correlations>"
+    When correlation "<correlation_update>" is applied
+    Then identities contain claim groups "<identity_groups>"
 
+    # d1 is donation:d1 and p1 is payment:p1. In a correlation, p1->d1 means that
+    # claim p1 declares source d1 as correlated. Commas join claims in one identity;
+    # pipes separate identities. A correlation update uses + to add and - to remove a link.
     Examples:
-      | existing_legal_identifier | claimed_legal_identifier |
-      | "38001085718"             | "12345678"               |
-      | "12345678"                | "38001085718"            |
-
-  Scenario: Claim presented with multiple matching Identity is marked for review
-    Given an Identity with email "donor@example.com" exists
-    And another Identity with iban "EE471000001020145685" exists
-    When a Claim with email "donor@example.com" and iban "EE471000001020145685" is presented with sufficient evidence
-    Then Claim is marked for review
-    And Claim review reason is multiple identity matches
+      | case                                           | sources       | initial_correlations        | correlation_update | identity_groups |
+      | added link merges separate identities          | d1,p1,d2,p2   | p1->d1,p2->d2               | +p1->d2            | d1,p1,d2,p2     |
+      | added link within an identity changes nothing  | d1,p1,p2      | p1->d1,p2->p1               | +p2->d1            | d1,p1,p2        |
+      | removed bridge splits an identity              | d1,p1,p2      | p1->d1,p2->p1               | -p1->d1            | d1\|p1,p2       |
+      | removed redundant link changes nothing         | d1,p1,p2      | p1->d1,p2->p1,p2->d1        | -p2->d1            | d1,p1,p2        |

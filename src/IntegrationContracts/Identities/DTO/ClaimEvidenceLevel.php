@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ErgoSarapu\DonationBundle\IntegrationContracts\Identities\ValueObject;
+namespace ErgoSarapu\DonationBundle\IntegrationContracts\Identities\DTO;
 
 enum ClaimEvidenceLevel: string
 {

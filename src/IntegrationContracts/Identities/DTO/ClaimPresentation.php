@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ErgoSarapu\DonationBundle\IntegrationContracts\Identities\ValueObject;
+namespace ErgoSarapu\DonationBundle\IntegrationContracts\Identities\DTO;
 
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
@@ -13,7 +13,7 @@ use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\RawName;
 final class ClaimPresentation
 {
     /**
-     * @param PersonName|RawName|Email|Iban|LegalIdentifier|string $value
+     * @param PersonName|RawName|Email|Iban|LegalIdentifier|class-string $value
      */
     public function __construct(
         public readonly mixed $value,
@@ -30,7 +30,7 @@ final class ClaimPresentation
     }
 
     /**
-     * @param string $className
+     * @param class-string $className
      */
     public static function forType(string $className, ClaimEvidenceLevel $evidenceLevel): self
     {

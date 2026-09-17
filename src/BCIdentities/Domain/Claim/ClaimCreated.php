@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim;
 
 use DateTimeImmutable;
-use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimSource;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityId;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\AbstractTimestampedEvent;
 use ErgoSarapu\DonationBundle\SharedKernel\Event\DomainEventInterface;
 use Patchlevel\EventSourcing\Attribute\Event;
@@ -19,6 +19,7 @@ final class ClaimCreated extends AbstractTimestampedEvent implements DomainEvent
         #[DataSubjectId]
         public readonly ClaimId $claimId,
         public readonly ClaimSource $source,
+        public readonly ?IdentityId $initialIdentityId,
     ) {
         parent::__construct($occuredOn);
     }
