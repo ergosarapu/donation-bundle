@@ -10,8 +10,6 @@ use Behat\Hook\BeforeScenario;
 use Behat\Step\Given;
 use Behat\Step\Then;
 use Behat\Step\When;
-use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\EventBusInterface;
-use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\QueryBusInterface;
 use ErgoSarapu\DonationBundle\BCIdentities\Application\Query\GetClaimBySource;
 use ErgoSarapu\DonationBundle\BCIdentities\Application\Query\GetIdentity;
 use ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model\Claim;
@@ -21,6 +19,8 @@ use ErgoSarapu\DonationBundle\IntegrationContracts\Identities\DTO\ClaimPresentat
 use ErgoSarapu\DonationBundle\IntegrationContracts\Identities\DTO\ClaimSource;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Identities\DTO\SourceContext;
 use ErgoSarapu\DonationBundle\IntegrationContracts\Identities\Event\ClaimPresentedIntegrationEvent;
+use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\EventBusInterface;
+use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\QueryBusInterface;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
 use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\LegalIdentifier;
@@ -31,7 +31,6 @@ use Zenstruck\Messenger\Test\Transport\TestTransport;
 
 final class IdentitiesContext implements Context
 {
-
     public function __construct(
         private readonly SubscriptionEngine $subscriptionEngine,
         private readonly EventBusInterface $eventBus,
