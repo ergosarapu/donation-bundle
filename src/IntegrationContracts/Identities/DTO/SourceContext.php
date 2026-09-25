@@ -6,6 +6,6 @@ namespace ErgoSarapu\DonationBundle\IntegrationContracts\Identities\DTO;
 
 enum SourceContext: string
 {
-    case Donations = 'donations';
-    case Payments = 'payments';
+    case Donation = 'donation';
+    case Payment = 'payment';
 }

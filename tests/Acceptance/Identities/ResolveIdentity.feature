@@ -5,7 +5,7 @@ Feature: Build identities from connected claims
   a new identity.
 
   Scenario Outline: A claim joins the highest-priority matching identity
-    Given claim "correlated" has source "donation:don1"
+    Given claim "correlated" has no data
     And claim "email" has email "email@example.com"
     And claim "legal-identifier" has legal identifier "12345678901"
     And claim "iban" has iban "EE382200221020145685"
@@ -13,12 +13,12 @@ Feature: Build identities from connected claims
     Then the claim belongs to identity "<component>"
 
     Examples:
-      | case                              | correlated_sources | email               | legal_identifier | iban                   | component        |
-      | correlated source matches         | donation:don1      | email@example.com   | 12345678901      | EE382200221020145685   | correlated       |
-      | email matches without correlation | no                 | email@example.com   | 12345678901      | EE382200221020145685   | email            |
-      | legal identifier matches          | no                 | other@example.com   | 12345678901      | EE382200221020145685   | legal-identifier |
-      | iban matches                      | no                 | other@example.com   | 12345678902      | EE382200221020145685   | iban             |
-      | no value matches                  | no                 | other@example.com   | 12345678902      | DE89370400440532013000 | new              |
+      | case                              | correlated_sources  | email               | legal_identifier | iban                   | component        |
+      | correlated source matches         | correlated          | email@example.com   | 12345678901      | EE382200221020145685   | correlated       |
+      | email matches without correlation | no                  | email@example.com   | 12345678901      | EE382200221020145685   | email            |
+      | legal identifier matches          | no                  | other@example.com   | 12345678901      | EE382200221020145685   | legal-identifier |
+      | iban matches                      | no                  | other@example.com   | 12345678902      | EE382200221020145685   | iban             |
+      | no value matches                  | no                  | other@example.com   | 12345678902      | DE89370400440532013000 | new              |
 
   Scenario Outline: Correlated source updates recalculate identities
     Given claims with sources "<sources>" have correlations "<initial_correlations>"

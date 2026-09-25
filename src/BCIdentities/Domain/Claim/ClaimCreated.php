@@ -19,7 +19,7 @@ final class ClaimCreated extends AbstractTimestampedEvent implements DomainEvent
         #[DataSubjectId]
         public readonly ClaimId $claimId,
         public readonly ClaimSource $source,
-        public readonly ?IdentityId $initialIdentityId,
+        public readonly IdentityId $initialIdentityId,
     ) {
         parent::__construct($occuredOn);
     }

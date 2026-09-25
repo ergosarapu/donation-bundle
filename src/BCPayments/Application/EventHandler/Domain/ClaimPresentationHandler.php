@@ -32,8 +32,8 @@ class ClaimPresentationHandler
 
     public function onPaymentInitiated(PaymentInitiated $event): void
     {
-        $claimSource = new ClaimSource(SourceContext::Payments, $event->paymentId->toString(), 'payment.initiated');
-        $correlatedSources = [new ClaimSource(SourceContext::Donations, $event->donationId)];
+        $claimSource = new ClaimSource(SourceContext::Payment, $event->paymentId->toString(), 'payment.initiated');
+        $correlatedSources = [new ClaimSource(SourceContext::Donation, $event->donationId)];
         $presentations = [];
 
         if ($event->email !== null) {
@@ -51,9 +51,9 @@ class ClaimPresentationHandler
 
     public function onPaymentCreated(PaymentCreated $event): void
     {
-        $claimSource = new ClaimSource(SourceContext::Payments, $event->paymentId->toString(), 'payment.created');
+        $claimSource = new ClaimSource(SourceContext::Payment, $event->paymentId->toString(), 'payment.created');
         $correlatedSources = $event->donationId !== null
-            ? [new ClaimSource(SourceContext::Donations, $event->donationId)]
+            ? [new ClaimSource(SourceContext::Donation, $event->donationId)]
             : [];
         $presentations = [];
 
@@ -84,9 +84,9 @@ class ClaimPresentationHandler
 
     public function onPaymentCaptured(PaymentCaptured $event): void
     {
-        $claimSource = new ClaimSource(SourceContext::Payments, $event->paymentId->toString(), 'payment.captured');
+        $claimSource = new ClaimSource(SourceContext::Payment, $event->paymentId->toString(), 'payment.captured');
         $correlatedSources = $event->donationId !== null
-            ? [new ClaimSource(SourceContext::Donations, $event->donationId)]
+            ? [new ClaimSource(SourceContext::Donation, $event->donationId)]
             : [];
         $presentations = [];
 
@@ -103,7 +103,7 @@ class ClaimPresentationHandler
 
     public function onPaymentImportPending(PaymentImportPending $event): void
     {
-        $claimSource = new ClaimSource(SourceContext::Payments, $event->paymentId->toString(), 'payment.import_pending');
+        $claimSource = new ClaimSource(SourceContext::Payment, $event->paymentId->toString(), 'payment.import_pending');
         $presentations = [];
         if ($event->accountHolderName !== null) {
             $presentations[] = ClaimPresentation::forValue(new RawName($event->accountHolderName->value), ClaimEvidenceLevel::Observed);
@@ -125,7 +125,7 @@ class ClaimPresentationHandler
 
     public function onPaymentImportAccepted(PaymentImportAccepted $event): void
     {
-        $claimSource = new ClaimSource(SourceContext::Payments, $event->paymentId->toString(), 'payment.import_accepted');
+        $claimSource = new ClaimSource(SourceContext::Payment, $event->paymentId->toString(), 'payment.import_accepted');
         $presentations = [
             ClaimPresentation::forType(RawName::class, ClaimEvidenceLevel::Verified),
             ClaimPresentation::forType(Iban::class, ClaimEvidenceLevel::Verified),
@@ -136,7 +136,7 @@ class ClaimPresentationHandler
 
     public function onPaymentImportReconciled(PaymentImportReconciled $event): void
     {
-        $claimSource = new ClaimSource(SourceContext::Payments, $event->paymentId->toString(), 'payment.import_reconciled');
+        $claimSource = new ClaimSource(SourceContext::Payment, $event->paymentId->toString(), 'payment.import_reconciled');
         $presentations = [
             ClaimPresentation::forType(RawName::class, ClaimEvidenceLevel::Verified),
             ClaimPresentation::forType(Iban::class, ClaimEvidenceLevel::Verified),
@@ -145,13 +145,13 @@ class ClaimPresentationHandler
         $this->eventBus->dispatch(new ClaimPresentedIntegrationEvent(
             $claimSource,
             $presentations,
-            correlatedSources: [new ClaimSource(SourceContext::Payments, $event->reconciledWith->toString())]
+            correlatedSources: [new ClaimSource(SourceContext::Payment, $event->reconciledWith->toString())]
         ));
     }
 
     public function onPaymentImportRejected(PaymentImportRejected $event): void
     {
-        $claimSource = new ClaimSource(SourceContext::Payments, $event->paymentId->toString(), 'payment.import_rejected');
+        $claimSource = new ClaimSource(SourceContext::Payment, $event->paymentId->toString(), 'payment.import_rejected');
         $this->eventBus->dispatch(new ClaimSourceDataInvalidatedIntegrationEvent($claimSource));
     }
 }

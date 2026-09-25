@@ -7,6 +7,8 @@ namespace ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model;
 class Identity
 {
     private string $identityId;
+    /** @var list<Claim> */
+    private iterable $claims = [];
 
     public function getIdentityId(): string
     {
@@ -54,8 +56,17 @@ class Identity
      */
     public function getEmails(): array
     {
-        // TODO: Load person names from connected component claims
-        return [];
+        $emails = [];
+        foreach ($this->claims as $claim) {
+            foreach ($claim->getPresentations() as $presentation) {
+                $email = $presentation->getEmail();
+                if ($email !== null) {
+                    $emails[$email] = $email;
+                }
+            }
+        }
+
+        return array_values($emails);
     }
 
     /**

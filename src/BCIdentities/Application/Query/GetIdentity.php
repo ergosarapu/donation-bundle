@@ -6,6 +6,10 @@ namespace ErgoSarapu\DonationBundle\BCIdentities\Application\Query;
 
 use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\Query;
 
-final class GetClaimsInReviewCount implements Query
+class GetIdentity implements Query
 {
+    public function __construct(
+        public readonly string $identityId
+    ) {
+    }
 }

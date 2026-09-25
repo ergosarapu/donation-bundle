@@ -29,9 +29,9 @@ class ClaimPresentationHandler
 
     public function onDonationCreated(DonationCreated $event): void
     {
-        $claimSource = new ClaimSource(SourceContext::Donations, $event->donationId->toString(), 'donation.created');
+        $claimSource = new ClaimSource(SourceContext::Donation, $event->donationId->toString(), 'donation.created');
         $correlatedSources = $event->recurringPlanId !== null
-            ? [new ClaimSource(SourceContext::Donations, $event->recurringPlanId->toString())]
+            ? [new ClaimSource(SourceContext::Donation, $event->recurringPlanId->toString())]
             : [];
         $presentations = [];
 
@@ -58,7 +58,7 @@ class ClaimPresentationHandler
 
     public function onRecurringPlanCreated(RecurringPlanCreated $event): void
     {
-        $claimSource = new ClaimSource(SourceContext::Donations, $event->recurringPlanId->toString(), 'recurring_plan.created');
+        $claimSource = new ClaimSource(SourceContext::Donation, $event->recurringPlanId->toString(), 'recurring_plan.created');
         $presentations = [];
 
         if ($event->donorDetails?->name !== null) {
@@ -77,14 +77,14 @@ class ClaimPresentationHandler
             $this->eventBus->dispatch(new ClaimPresentedIntegrationEvent(
                 $claimSource,
                 $presentations,
-                correlatedSources: [new ClaimSource(SourceContext::Donations, $event->initialDonationId->toString())],
+                correlatedSources: [new ClaimSource(SourceContext::Donation, $event->initialDonationId->toString())],
             ));
         }
     }
 
     public function onRecurringPlanInitiated(RecurringPlanInitiated $event): void
     {
-        $claimSource = new ClaimSource(SourceContext::Donations, $event->recurringPlanId->toString(), 'recurring_plan.initiated');
+        $claimSource = new ClaimSource(SourceContext::Donation, $event->recurringPlanId->toString(), 'recurring_plan.initiated');
         $presentations = [];
 
         if ($event->donorDetails?->name !== null) {
@@ -103,14 +103,14 @@ class ClaimPresentationHandler
             $this->eventBus->dispatch(new ClaimPresentedIntegrationEvent(
                 $claimSource,
                 $presentations,
-                correlatedSources: [new ClaimSource(SourceContext::Donations, $event->initialDonationId->toString())],
+                correlatedSources: [new ClaimSource(SourceContext::Donation, $event->initialDonationId->toString())],
             ));
         }
     }
 
     public function onRecurringPlanActivated(RecurringPlanActivated $event): void
     {
-        $claimSource = new ClaimSource(SourceContext::Donations, $event->id->toString(), 'recurring_plan.activated');
+        $claimSource = new ClaimSource(SourceContext::Donation, $event->id->toString(), 'recurring_plan.activated');
         $presentations = [];
 
         $presentations[] = ClaimPresentation::forType(PersonName::class, ClaimEvidenceLevel::VerifiedByUser);
@@ -123,9 +123,9 @@ class ClaimPresentationHandler
     public function onDonationInitiated(DonationInitiated $event): void
     {
 
-        $claimSource = new ClaimSource(SourceContext::Donations, $event->donationId->toString(), 'donation.initiated');
+        $claimSource = new ClaimSource(SourceContext::Donation, $event->donationId->toString(), 'donation.initiated');
         $correlatedSources = $event->recurringPlanId !== null
-            ? [new ClaimSource(SourceContext::Donations, $event->recurringPlanId->toString())]
+            ? [new ClaimSource(SourceContext::Donation, $event->recurringPlanId->toString())]
             : [];
         $presentations = [];
 
@@ -152,7 +152,7 @@ class ClaimPresentationHandler
 
     public function onDonationAccepted(DonationAccepted $event): void
     {
-        $claimSource = new ClaimSource(SourceContext::Donations, $event->donationId->toString(), 'donation.accepted');
+        $claimSource = new ClaimSource(SourceContext::Donation, $event->donationId->toString(), 'donation.accepted');
         $this->eventBus->dispatch(new ClaimPresentedIntegrationEvent(
             $claimSource,
             [
@@ -161,7 +161,7 @@ class ClaimPresentationHandler
                 ClaimPresentation::forType(LegalIdentifier::class, ClaimEvidenceLevel::VerifiedByUser),
             ],
             correlatedSources: $event->recurringPlanId !== null
-                ? [new ClaimSource(SourceContext::Donations, $event->recurringPlanId->toString())]
+                ? [new ClaimSource(SourceContext::Donation, $event->recurringPlanId->toString())]
                 : []
         ));
     }

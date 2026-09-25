@@ -4,20 +4,21 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model;
 
+use LogicException;
+
 class Claim
 {
     private string $claimId;
+    private string $initialIdentityId;
     private string $sourceContext;
     private string $sourceId;
     private ?string $sourceType = null;
-    /** @var iterable<int, ClaimCorrelatedSource> */
-    private iterable $correlatedSources = [];
-    /** @var iterable<int, ClaimLinkedClaim> */
-    private iterable $linkedClaims = [];
+    /** @var iterable<int, ClaimConnection> */
+    private iterable $connections = [];
     /** @var iterable<int, ClaimPresentation> */
     private iterable $presentations = [];
 
-    private ?string $identityId = null;
+    private Identity $identity;
 
     public function getSourceContext(): string
     {
@@ -49,108 +50,73 @@ class Claim
         $this->claimId = $claimId;
     }
 
-    public function getIdentityId(): ?string
+    public function getInitialIdentityId(): string
     {
-        return $this->identityId;
+        return $this->initialIdentityId;
     }
 
-    public function setIdentityId(?string $identityId): void
+    public function setInitialIdentityId(string $initialIdentityId): void
     {
-        $this->identityId = $identityId;
-    }
-
-    /**
-     * @return array<string>
-     */
-    public function getCorrelatedSourceIds(): array
-    {
-        $result = [];
-        foreach ($this->correlatedSources as $correlatedSource) {
-            $result[] = $correlatedSource->getCorrelatedSourceId();
+        if (isset($this->initialIdentityId) && $this->initialIdentityId !== $initialIdentityId) {
+            throw new LogicException('The initial identity ID cannot be changed.');
         }
 
-        return $result;
+        $this->initialIdentityId = $initialIdentityId;
     }
 
-    public function addCorrelatedSource(string $correlatedSourceId): void
+    public function getIdentityId(): string
     {
-        foreach ($this->correlatedSources as $correlatedSource) {
-            if ($correlatedSource->getCorrelatedSourceId() === $correlatedSourceId) {
-                return;
-            }
-        }
+        return $this->identity->getIdentityId();
+    }
 
-        $this->appendToCollection($this->correlatedSources, new ClaimCorrelatedSource($this, $correlatedSourceId));
+    public function getIdentity(): Identity
+    {
+        return $this->identity;
+    }
+
+    public function setIdentity(Identity $identity): void
+    {
+        $this->identity = $identity;
     }
 
     /**
      * @return list<string>
      */
-    public function getLinkedClaimIds(): array
+    public function getConnectedClaimIds(): array
     {
         $result = [];
-        foreach ($this->linkedClaims as $correlatedClaim) {
-            $result[$correlatedClaim->getLinkedClaimId()] = $correlatedClaim->getLinkedClaimId();
+        foreach ($this->connections as $connection) {
+            $result[$connection->getConnectedClaimId()] = $connection->getConnectedClaimId();
         }
 
         return array_values($result);
     }
 
-    public function addLinkedClaim(string $linkedClaimId): void
+    public function addConnection(string $connectedClaimId, string $reason): void
     {
-        foreach ($this->linkedClaims as $correlatedClaim) {
-            if ($correlatedClaim->getLinkedClaimId() === $linkedClaimId) {
+        foreach ($this->connections as $connection) {
+            if (
+                $connection->getConnectedClaimId() === $connectedClaimId
+                && $connection->getReason() === $reason
+            ) {
                 return;
             }
         }
 
-        $this->appendToCollection($this->linkedClaims, new ClaimLinkedClaim($this, $linkedClaimId));
+        $this->appendToCollection($this->connections, new ClaimConnection($this, $connectedClaimId, $reason));
     }
 
-    public function removeLinkedClaim(string $linkedClaimId): void
+    public function removeConnection(string $connectedClaimId, string $reason): void
     {
-        if (is_array($this->linkedClaims)) {
-            $this->linkedClaims = array_values(array_filter(
-                $this->linkedClaims,
-                static fn (ClaimLinkedClaim $correlatedClaim): bool => $correlatedClaim->getLinkedClaimId() !== $linkedClaimId,
-            ));
-
-            return;
-        }
-
-        foreach ($this->linkedClaims as $correlatedClaim) {
-            if ($correlatedClaim->getLinkedClaimId() !== $linkedClaimId) {
+        foreach ($this->connections as $connection) {
+            if (
+                $connection->getConnectedClaimId() !== $connectedClaimId
+                || $connection->getReason() !== $reason
+            ) {
                 continue;
             }
 
-            if (method_exists($this->linkedClaims, 'removeElement')) {
-                $this->linkedClaims->removeElement($correlatedClaim);
-            }
-
-            return;
-        }
-    }
-
-    public function removeCorrelatedSourceId(string $correlatedSourceId): void
-    {
-        if (is_array($this->correlatedSources)) {
-            $this->correlatedSources = array_values(array_filter(
-                $this->correlatedSources,
-                static fn (ClaimCorrelatedSource $correlatedSource): bool => $correlatedSource->getCorrelatedSourceId() !== $correlatedSourceId,
-            ));
-
-            return;
-        }
-
-        foreach ($this->correlatedSources as $correlatedSource) {
-            if ($correlatedSource->getCorrelatedSourceId() !== $correlatedSourceId) {
-                continue;
-            }
-
-            if (method_exists($this->correlatedSources, 'removeElement')) {
-                $this->correlatedSources->removeElement($correlatedSource);
-            }
-
+            $this->removeFromCollection($this->connections, $connection);
             return;
         }
     }
@@ -249,6 +215,27 @@ class Claim
 
         if (method_exists($items, 'add')) {
             $items->add($item);
+        }
+    }
+
+    /**
+     * @template T of object
+     * @param iterable<int, T> $items
+     * @param T $item
+     */
+    private function removeFromCollection(iterable &$items, object $item): void
+    {
+        if (is_array($items)) {
+            $items = array_values(array_filter(
+                $items,
+                static fn (object $existingItem): bool => $existingItem !== $item,
+            ));
+
+            return;
+        }
+
+        if (method_exists($items, 'removeElement')) {
+            $items->removeElement($item);
         }
     }
 }

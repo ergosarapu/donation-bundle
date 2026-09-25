@@ -5,16 +5,8 @@
                   https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
     <entity name="ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model\Claim" table="projection_claim">
         <id name="claimId" type="string" column="claim_id" length="36" />
-        <one-to-many field="correlatedSources" target-entity="ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model\ClaimCorrelatedSource" mapped-by="claim" orphan-removal="true">
-            <cascade>
-                <cascade-persist />
-                <cascade-remove />
-            </cascade>
-            <order-by>
-                <order-by-field name="id" direction="ASC" />
-            </order-by>
-        </one-to-many>
-        <one-to-many field="linkedClaims" target-entity="ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model\ClaimLinkedClaim" mapped-by="claim" orphan-removal="true">
+        <field name="initialIdentityId" type="string" column="initial_identity_id" length="36" />
+        <one-to-many field="connections" target-entity="ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model\ClaimConnection" mapped-by="claim" orphan-removal="true">
             <cascade>
                 <cascade-persist />
                 <cascade-remove />
@@ -37,12 +29,15 @@
         <field name="sourceId" type="string" column="source_id" length="36" nullable="false" />
         <field name="sourceType" type="string" column="source_type" length="100" nullable="true" />
 
-        <field name="identityId" type="string" column="identity_id" length="36" nullable="true" />
+        <many-to-one field="identity" target-entity="ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model\Identity" inversed-by="claims">
+            <join-column name="identity_id" referenced-column-name="identity_id" nullable="false" />
+        </many-to-one>
 
         <indexes>
             <index name="idx_projection_claim_source_context" columns="source_context" />
             <index name="idx_projection_claim_source_id" columns="source_id" />
             <index name="idx_projection_claim_identity_id" columns="identity_id" />
+            <index name="idx_projection_claim_initial_identity_id" columns="initial_identity_id" />
         </indexes>
     </entity>
 </doctrine-mapping>

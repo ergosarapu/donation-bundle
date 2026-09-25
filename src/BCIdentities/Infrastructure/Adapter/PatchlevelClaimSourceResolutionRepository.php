@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\BCIdentities\Infrastructure\Adapter;
 
-use ErgoSarapu\DonationBundle\BCIdentities\Application\Port\IdentityRepositoryInterface;
-use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\Identity;
-use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityId;
+use ErgoSarapu\DonationBundle\BCIdentities\Application\Port\ClaimSourceResolutionRepositoryInterface;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\ClaimSourceResolution\ClaimSourceResolution;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\ClaimSourceResolution\ClaimSourceResolutionId;
 use ErgoSarapu\DonationBundle\SharedInfrastructure\Adapter\PatchlevelRepository;
 
-final class PatchlevelIdentityRepository implements IdentityRepositoryInterface
+final class PatchlevelClaimSourceResolutionRepository implements ClaimSourceResolutionRepositoryInterface
 {
     public function __construct(
         private readonly PatchlevelRepository $repository,
@@ -23,7 +23,7 @@ final class PatchlevelIdentityRepository implements IdentityRepositoryInterface
 
     public function load(mixed $aggregateId): mixed
     {
-        /** @var Identity $aggregate */
+        /** @var ClaimSourceResolution $aggregate */
         $aggregate = $this->repository->load($aggregateId);
 
         return $aggregate;
@@ -40,6 +40,7 @@ final class PatchlevelIdentityRepository implements IdentityRepositoryInterface
         if ($aggregateId === null) {
             return null;
         }
-        return IdentityId::fromString($aggregateId->toString());
+
+        return ClaimSourceResolutionId::fromString($aggregateId->toString());
     }
 }

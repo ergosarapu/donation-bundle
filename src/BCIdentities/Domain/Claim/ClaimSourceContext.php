@@ -6,6 +6,6 @@ namespace ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim;
 
 enum ClaimSourceContext: string
 {
-    case Donations = 'donations';
-    case Payments = 'payments';
+    case Donation = 'donation';
+    case Payment = 'payment';
 }
