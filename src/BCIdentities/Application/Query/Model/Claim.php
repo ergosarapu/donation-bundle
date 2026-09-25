@@ -4,25 +4,41 @@ declare(strict_types=1);
 
 namespace ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model;
 
-use DateTimeImmutable;
+use LogicException;
 
 class Claim
 {
     private string $claimId;
-    private ?string $paymentId = null;
-    private ?string $donationId = null;
-    private ?string $givenName = null;
-    private ?string $familyName = null;
-    private ?string $rawName = null;
-    private ?string $email = null;
-    private ?string $iban = null;
-    private ?string $legalIdentifier = null;
-    private bool $inReview = false;
-    private bool $resolved = false;
-    private ?string $reviewReason = null;
-    private ?string $identityId = null;
-    private DateTimeImmutable $createdAt;
-    private DateTimeImmutable $updatedAt;
+    private string $initialIdentityId;
+    private string $sourceContext;
+    private string $sourceId;
+    private ?string $sourceType = null;
+    /** @var iterable<int, ClaimConnection> */
+    private iterable $connections = [];
+    /** @var iterable<int, ClaimPresentation> */
+    private iterable $presentations = [];
+
+    private Identity $identity;
+
+    public function getSourceContext(): string
+    {
+        return $this->sourceContext;
+    }
+
+    public function setSourceContext(string $sourceContext): void
+    {
+        $this->sourceContext = $sourceContext;
+    }
+
+    public function getSourceType(): ?string
+    {
+        return $this->sourceType;
+    }
+
+    public function setSourceType(?string $sourceType): void
+    {
+        $this->sourceType = $sourceType;
+    }
 
     public function getClaimId(): string
     {
@@ -34,143 +50,192 @@ class Claim
         $this->claimId = $claimId;
     }
 
-    public function getPaymentId(): ?string
+    public function getInitialIdentityId(): string
     {
-        return $this->paymentId;
+        return $this->initialIdentityId;
     }
 
-    public function setPaymentId(?string $paymentId): void
+    public function setInitialIdentityId(string $initialIdentityId): void
     {
-        $this->paymentId = $paymentId;
+        if (isset($this->initialIdentityId) && $this->initialIdentityId !== $initialIdentityId) {
+            throw new LogicException('The initial identity ID cannot be changed.');
+        }
+
+        $this->initialIdentityId = $initialIdentityId;
     }
 
-    public function getDonationId(): ?string
+    public function getIdentityId(): string
     {
-        return $this->donationId;
+        return $this->identity->getIdentityId();
     }
 
-    public function setDonationId(?string $donationId): void
+    public function getIdentity(): Identity
     {
-        $this->donationId = $donationId;
+        return $this->identity;
     }
 
-    public function getGivenName(): ?string
+    public function setIdentity(Identity $identity): void
     {
-        return $this->givenName;
+        $this->identity = $identity;
     }
 
-    public function setGivenName(?string $givenName): void
+    /**
+     * @return list<string>
+     */
+    public function getConnectedClaimIds(): array
     {
-        $this->givenName = $givenName;
+        $result = [];
+        foreach ($this->connections as $connection) {
+            $result[$connection->getConnectedClaimId()] = $connection->getConnectedClaimId();
+        }
+
+        return array_values($result);
     }
 
-    public function getFamilyName(): ?string
+    public function addConnection(string $connectedClaimId, string $reason): void
     {
-        return $this->familyName;
+        foreach ($this->connections as $connection) {
+            if (
+                $connection->getConnectedClaimId() === $connectedClaimId
+                && $connection->getReason() === $reason
+            ) {
+                return;
+            }
+        }
+
+        $this->appendToCollection($this->connections, new ClaimConnection($this, $connectedClaimId, $reason));
     }
 
-    public function setFamilyName(?string $familyName): void
+    public function removeConnection(string $connectedClaimId, string $reason): void
     {
-        $this->familyName = $familyName;
+        foreach ($this->connections as $connection) {
+            if (
+                $connection->getConnectedClaimId() !== $connectedClaimId
+                || $connection->getReason() !== $reason
+            ) {
+                continue;
+            }
+
+            $this->removeFromCollection($this->connections, $connection);
+            return;
+        }
     }
 
-    public function getRawName(): ?string
+    public function getSourceId(): string
     {
-        return $this->rawName;
+        return $this->sourceId;
     }
 
-    public function setRawName(?string $rawName): void
+    public function setSourceId(string $sourceId): void
     {
-        $this->rawName = $rawName;
+        $this->sourceId = $sourceId;
     }
 
-    public function getEmail(): ?string
+    public function getPresentationForEvidenceLevel(?string $evidenceLevel): ?ClaimPresentation
     {
-        return $this->email;
+        foreach ($this->presentations as $presentation) {
+            if ($presentation->getEvidenceLevel() === $evidenceLevel) {
+                return $presentation;
+            }
+        }
+
+        return null;
     }
 
-    public function setEmail(?string $email): void
+    public function addPresentation(?string $evidenceLevel): ClaimPresentation
     {
-        $this->email = $email;
+        $presentation = new ClaimPresentation($this, $evidenceLevel);
+        $this->appendToCollection($this->presentations, $presentation);
+
+        return $presentation;
     }
 
-    public function getIban(): ?string
+    public function clearPresentations(): void
     {
-        return $this->iban;
+        if (is_array($this->presentations)) {
+            $this->presentations = [];
+
+            return;
+        }
+
+        if (method_exists($this->presentations, 'clear')) {
+            $this->presentations->clear();
+        }
     }
 
-    public function setIban(?string $iban): void
+    /**
+     * @return list<ClaimPresentation>
+     */
+    public function getPresentations(): array
     {
-        $this->iban = $iban;
+        $result = [];
+        foreach ($this->presentations as $presentation) {
+            $result[] = $presentation;
+        }
+
+        return $result;
     }
 
-    public function getLegalIdentifier(): ?string
+    /**
+     * @return list<string>
+     */
+    public function getPresentationsSummary(): array
     {
-        return $this->legalIdentifier;
+        return array_map(
+            static function (ClaimPresentation $presentation): string {
+                $parts = array_filter([
+                    $presentation->getEvidenceLevel(),
+                    $presentation->getGivenName() !== null || $presentation->getFamilyName() !== null
+                        ? trim(sprintf('%s %s', $presentation->getGivenName() ?? '', $presentation->getFamilyName() ?? ''))
+                        : null,
+                    $presentation->getRawName(),
+                    $presentation->getEmail(),
+                    $presentation->getIban(),
+                    $presentation->getLegalIdentifier(),
+                ]);
+
+                return implode(' | ', $parts);
+            },
+            $this->getPresentations(),
+        );
     }
 
-    public function setLegalIdentifier(?string $legalIdentifier): void
+    /**
+     * @template T of object
+     * @param iterable<int, T> $items
+     * @param T $item
+     */
+    private function appendToCollection(iterable &$items, object $item): void
     {
-        $this->legalIdentifier = $legalIdentifier;
+        if (is_array($items)) {
+            $items[] = $item;
+
+            return;
+        }
+
+        if (method_exists($items, 'add')) {
+            $items->add($item);
+        }
     }
 
-    public function isInReview(): bool
+    /**
+     * @template T of object
+     * @param iterable<int, T> $items
+     * @param T $item
+     */
+    private function removeFromCollection(iterable &$items, object $item): void
     {
-        return $this->inReview;
-    }
+        if (is_array($items)) {
+            $items = array_values(array_filter(
+                $items,
+                static fn (object $existingItem): bool => $existingItem !== $item,
+            ));
 
-    public function setInReview(bool $inReview): void
-    {
-        $this->inReview = $inReview;
-    }
+            return;
+        }
 
-    public function isResolved(): bool
-    {
-        return $this->resolved;
-    }
-
-    public function setResolved(bool $resolved): void
-    {
-        $this->resolved = $resolved;
-    }
-
-    public function getReviewReason(): ?string
-    {
-        return $this->reviewReason;
-    }
-
-    public function setReviewReason(?string $reviewReason): void
-    {
-        $this->reviewReason = $reviewReason;
-    }
-
-    public function getIdentityId(): ?string
-    {
-        return $this->identityId;
-    }
-
-    public function setIdentityId(?string $identityId): void
-    {
-        $this->identityId = $identityId;
-    }
-
-    public function getCreatedAt(): DateTimeImmutable
-    {
-        return $this->createdAt;
-    }
-
-    public function setCreatedAt(DateTimeImmutable $createdAt): void
-    {
-        $this->createdAt = $createdAt;
-    }
-
-    public function getUpdatedAt(): DateTimeImmutable
-    {
-        return $this->updatedAt;
-    }
-
-    public function setUpdatedAt(DateTimeImmutable $updatedAt): void
-    {
-        $this->updatedAt = $updatedAt;
+        if (method_exists($items, 'removeElement')) {
+            $items->removeElement($item);
+        }
     }
 }

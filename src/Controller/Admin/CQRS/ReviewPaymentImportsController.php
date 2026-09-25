@@ -6,7 +6,6 @@ namespace ErgoSarapu\DonationBundle\Controller\Admin\CQRS;
 
 use Doctrine\ORM\Event\PreUpdateEventArgs;
 use Doctrine\ORM\QueryBuilder;
-use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminAction;
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminRoute;
 use EasyCorp\Bundle\EasyAdminBundle\Collection\FieldCollection;
 use EasyCorp\Bundle\EasyAdminBundle\Collection\FilterCollection;
@@ -126,8 +125,7 @@ class ReviewPaymentImportsController extends AbstractPaymentController
     /**
      * @param AdminContext<Payment> $context
      */
-    #[AdminAction(methods: ['POST'])]
-    #[AdminRoute(path: '/accept')]
+    #[AdminRoute(path: '/accept', options: ['methods' => ['POST']])]
     public function accept(AdminContext $context): Response
     {
         /** @var Payment $payment */
@@ -139,8 +137,7 @@ class ReviewPaymentImportsController extends AbstractPaymentController
     /**
      * @param AdminContext<Payment> $context
      */
-    #[AdminAction(methods: ['POST'])]
-    #[AdminRoute(path: '/reject')]
+    #[AdminRoute(path: '/reject', options: ['methods' => ['POST']])]
     public function reject(AdminContext $context): Response
     {
         /** @var Payment $payment */
@@ -152,8 +149,7 @@ class ReviewPaymentImportsController extends AbstractPaymentController
     /**
     * @param AdminContext<Payment> $context
     */
-    #[AdminAction(methods: ['POST'])]
-    #[AdminRoute(path: '/reconcile')]
+    #[AdminRoute(path: '/reconcile', options: ['methods' => ['POST']])]
     public function reconcile(AdminContext $context): Response
     {
         /** @var Payment $payment */

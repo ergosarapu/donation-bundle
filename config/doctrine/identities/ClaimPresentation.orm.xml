@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                  https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <entity name="ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model\ClaimPresentation" table="projection_claim_presentation">
+        <id name="id" type="integer" column="id">
+            <generator strategy="AUTO" />
+        </id>
+        <many-to-one field="claim" target-entity="ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model\Claim" inversed-by="presentations">
+            <join-column name="claim_id" referenced-column-name="claim_id" nullable="false" on-delete="CASCADE" />
+        </many-to-one>
+        <field name="evidenceLevel" type="string" column="evidence_level" length="20" nullable="true" />
+        <field name="givenName" type="string" column="given_name" length="100" nullable="true" />
+        <field name="familyName" type="string" column="family_name" length="100" nullable="true" />
+        <field name="legalIdentifier" type="string" column="legal_identifier" length="20" nullable="true" />
+        <field name="rawName" type="string" column="raw_name" length="100" nullable="true" />
+        <field name="email" type="string" column="email" length="255" nullable="true" />
+        <field name="iban" type="string" column="iban" length="34" nullable="true" />
+
+        <unique-constraints>
+            <unique-constraint name="uniq_projection_claim_presentation_claim_and_evidence" columns="claim_id,evidence_level" />
+        </unique-constraints>
+        <indexes>
+            <index name="idx_projection_claim_presentation_evidence_level" columns="evidence_level" />
+            <index name="idx_projection_claim_presentation_legal_identifier" columns="legal_identifier" />
+            <index name="idx_projection_claim_presentation_email" columns="email" />
+            <index name="idx_projection_claim_presentation_iban" columns="iban" />
+        </indexes>
+    </entity>
+</doctrine-mapping>

@@ -20,134 +20,36 @@ use Patchlevel\EventSourcing\Attribute\Id;
 #[Aggregate(name: 'claim')]
 final class Claim extends BasicAggregateRoot
 {
-    /** @var array<string, array<string, int>> */
-    private const SCORE_LOOKUP = [
-        LegalIdentifier::class => [
-            ClaimEvidenceLevel::Observed->value => 9,
-            ClaimEvidenceLevel::VerifiedByUser->value => 80,
-            ClaimEvidenceLevel::Verified->value => 100,
-        ],
-        Iban::class => [
-            ClaimEvidenceLevel::Observed->value => 8,
-            ClaimEvidenceLevel::VerifiedByUser->value => 80,
-            ClaimEvidenceLevel::Verified->value => 100,
-        ],
-        Email::class => [
-            ClaimEvidenceLevel::Observed->value => 7,
-            ClaimEvidenceLevel::VerifiedByUser->value => 80,
-            ClaimEvidenceLevel::Verified->value => 100,
-        ],
-        PersonName::class => [
-            ClaimEvidenceLevel::Observed->value => 6,
-            ClaimEvidenceLevel::VerifiedByUser->value => 80,
-            ClaimEvidenceLevel::Verified->value => 100,
-        ],
-        RawName::class => [
-            ClaimEvidenceLevel::Observed->value => 5,
-            ClaimEvidenceLevel::VerifiedByUser->value => 80,
-            ClaimEvidenceLevel::Verified->value => 100,
-        ],
-    ];
-
-    private const RESOLUTION_THRESHOLD = 80;
-
+    
     #[Id]
     private ClaimId $id;
-    private ClaimSource $source;
-    private bool $inReview = false;
+    /** @var array<string, ClaimSource> */
+    private array $correlations = [];
     /** @var array<string, Email|Iban|LegalIdentifier|PersonName|RawName|null> */
     private array $presentedValues = [];
     /** @var array<string, ClaimEvidenceLevel> */
     private array $presentedEvidenceLevels = [];
-    private ?IdentityId $identityId = null;
 
     public static function create(
         DateTimeImmutable $currentTime,
         ClaimId $claimId,
         ClaimSource $source,
-    ): self {
+        IdentityId $initialIdentityId,
+    ): self
+    {
         $claim = new self();
-        $claim->recordThat(new ClaimCreated(
-            $currentTime,
-            $claimId,
-            $source,
-        ));
+        $claim->recordThat(new ClaimCreated($currentTime, $claimId, $source, $initialIdentityId));
 
         return $claim;
-    }
-
-    public function resolve(DateTimeImmutable $currentTime, IdentityId $identityId): void
-    {
-        // Idempotency check
-        if ($this->identityId?->toString() === $identityId->toString()) {
-            return;
-        }
-
-        if ($this->identityId !== null) {
-            throw new LogicException('Claim is already resolved to another identity.');
-        }
-
-        if (!$this->isResolvable()) {
-            throw new LogicException('Claim is not resolvable.');
-        }
-
-        $this->recordThat(new ClaimResolved($currentTime, $this->id, $this->source, $identityId));
-    }
-
-    public function markInReview(DateTimeImmutable $currentTime, ClaimReviewReason $reason): void
-    {
-        if ($this->inReview) {
-            return;
-        }
-
-        if ($this->identityId !== null) {
-            throw new LogicException('Cannot mark claim in review when it is already resolved.');
-        }
-
-        $this->recordThat(new ClaimInReview($currentTime, $this->id, $this->source, $reason));
-    }
-
-    public function personName(): ?PersonName
-    {
-        $value = $this->resolvableValue(PersonName::class);
-
-        return $value instanceof PersonName ? $value : null;
-    }
-
-    public function rawName(): ?RawName
-    {
-        $value = $this->resolvableValue(RawName::class);
-
-        return $value instanceof RawName ? $value : null;
-    }
-
-    public function email(): ?Email
-    {
-        $value = $this->resolvableValue(Email::class);
-
-        return $value instanceof Email ? $value : null;
-    }
-
-    public function iban(): ?Iban
-    {
-        $value = $this->resolvableValue(Iban::class);
-
-        return $value instanceof Iban ? $value : null;
-    }
-
-    public function legalIdentifier(): ?LegalIdentifier
-    {
-        $value = $this->resolvableValue(LegalIdentifier::class);
-
-        return $value instanceof LegalIdentifier ? $value : null;
     }
 
     #[Apply]
     protected function applyClaimCreated(ClaimCreated $event): void
     {
         $this->id = $event->claimId;
-        $this->source = $event->source;
+        $this->correlations = [];
     }
+
 
     #[Apply]
     protected function applyClaimPresentedForPersonName(ClaimPresentedForPersonName $event): void
@@ -185,16 +87,20 @@ final class Claim extends BasicAggregateRoot
     }
 
     #[Apply]
-    protected function applyClaimResolved(ClaimResolved $event): void
+    protected function applyClaimCorrelated(ClaimCorrelated $event): void
     {
-        $this->inReview = false;
-        $this->identityId = $event->identityId;
+        $this->correlations[$this->correlatedSourceKey($event->correlatedSource)] = $event->correlatedSource;
     }
 
     #[Apply]
-    protected function applyClaimInReview(ClaimInReview $event): void
+    protected function applyClaimCorrelationRemoved(ClaimCorrelationRemoved $event): void
     {
-        $this->inReview = true;
+        unset($this->correlations[$this->correlatedSourceKey($event->correlatedSource)]);
+    }
+
+    private function correlatedSourceKey(ClaimSource $source): string
+    {
+        return $source->context->value . ':' . $source->id;
     }
 
     private function shouldPresent(
@@ -215,43 +121,6 @@ final class Claim extends BasicAggregateRoot
         return false;
     }
 
-    private function scoreFor(string $className, ClaimEvidenceLevel $level): int
-    {
-        return self::SCORE_LOOKUP[$className][$level->value]
-            ?? throw new LogicException(sprintf('Unsupported claim value class "%s".', $className));
-    }
-
-    private function meetsThreshold(string $className, int $threshold): bool
-    {
-        return $this->scoreFor($className, $this->evidenceLevelFor($className)) >= $threshold;
-    }
-
-    public function isResolvable(): bool
-    {
-        return [] === array_filter(
-            $this->presentedValues,
-            // The value may be null in case of personal data deletion
-            fn (?object $value, string $className): bool => $value === null
-                || !$this->meetsThreshold($className, self::RESOLUTION_THRESHOLD),
-            ARRAY_FILTER_USE_BOTH,
-        );
-    }
-
-    /**
-     * @return LegalIdentifier|PersonName|RawName|Email|Iban|null
-     */
-    private function resolvableValue(string $key): ?object
-    {
-        $value = $this->value($key);
-        if ($value === null) {
-            return null;
-        }
-        if (!$this->meetsThreshold($key, self::RESOLUTION_THRESHOLD)) {
-            return null;
-        }
-        return $value;
-    }
-
     /**
      * @param PersonName|RawName|Email|Iban|LegalIdentifier|string $value
      */
@@ -266,6 +135,28 @@ final class Claim extends BasicAggregateRoot
         $this->presentValue($currentTime, $value, $evidenceLevel);
     }
 
+    public function correlate(
+        DateTimeImmutable $currentTime,
+        ClaimSource $correlatedSource,
+        ClaimId $correlatedClaimId,
+    ): void
+    {
+        if ($correlatedClaimId->toString() === $this->id->toString()) {
+            return;
+        }
+
+        if ($this->correlations[$this->correlatedSourceKey($correlatedSource)] ?? false) {
+            return;
+        }
+
+        $this->recordThat(new ClaimCorrelated(
+            $currentTime,
+            $this->id,
+            $correlatedSource,
+            $correlatedClaimId,
+        ));
+    }
+    
     /**
      * @param string $className
      */
@@ -279,7 +170,6 @@ final class Claim extends BasicAggregateRoot
 
         $this->presentValue($currentTime, $value, $evidenceLevel);
     }
-
 
     private function presentValue(DateTimeImmutable $currentTime, Email|Iban|LegalIdentifier|PersonName|RawName $value, ClaimEvidenceLevel $evidenceLevel): void
     {
@@ -306,10 +196,4 @@ final class Claim extends BasicAggregateRoot
     {
         return $this->presentedValues[$className] ?? null;
     }
-
-    private function evidenceLevelFor(string $className): ClaimEvidenceLevel
-    {
-        return $this->presentedEvidenceLevels[$className];
-    }
-
 }

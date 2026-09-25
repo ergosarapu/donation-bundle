@@ -7,15 +7,8 @@ namespace ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model;
 class Identity
 {
     private string $identityId;
-    private ?string $givenName = null;
-    private ?string $familyName = null;
-    private ?string $legalIdentifier = null;
-    /** @var iterable<int, IdentityRawName> */
-    private iterable $rawNames = [];
-    /** @var iterable<int, IdentityEmail> */
-    private iterable $emails = [];
-    /** @var iterable<int, IdentityIban> */
-    private iterable $ibans = [];
+    /** @var list<Claim> */
+    private iterable $claims = [];
 
     public function getIdentityId(): string
     {
@@ -27,24 +20,26 @@ class Identity
         $this->identityId = $identityId;
     }
 
-    public function getGivenName(): ?string
+    /**
+     * @return list<array{givenName: string, familyName: string}>
+     */
+    public function getPersonNames(): array
     {
-        return $this->givenName;
+        // TODO: Load person names from connected component claims
+        return [];
     }
 
-    public function setGivenName(?string $givenName): void
+    /**
+     * @return list<string>
+     */
+    public function getPersonNamesSummary(): array
     {
-        $this->givenName = $givenName;
-    }
+        $result = [];
+        foreach ($this->getPersonNames() as $personName) {
+            $result[] = trim(sprintf('%s %s', $personName['givenName'], $personName['familyName']));
+        }
 
-    public function getFamilyName(): ?string
-    {
-        return $this->familyName;
-    }
-
-    public function setFamilyName(?string $familyName): void
-    {
-        $this->familyName = $familyName;
+        return $result;
     }
 
     /**
@@ -52,16 +47,8 @@ class Identity
      */
     public function getRawNames(): array
     {
-        $result = [];
-        foreach ($this->rawNames as $rawName) {
-            $result[] = $rawName->getRawName();
-        }
-        return $result;
-    }
-
-    public function addRawName(string $rawName): void
-    {
-        $this->appendToCollection($this->rawNames, new IdentityRawName($this, $rawName));
+        // TODO: Load person names from connected component claims
+        return [];
     }
 
     /**
@@ -69,16 +56,17 @@ class Identity
      */
     public function getEmails(): array
     {
-        $result = [];
-        foreach ($this->emails as $email) {
-            $result[] = $email->getEmail();
+        $emails = [];
+        foreach ($this->claims as $claim) {
+            foreach ($claim->getPresentations() as $presentation) {
+                $email = $presentation->getEmail();
+                if ($email !== null) {
+                    $emails[$email] = $email;
+                }
+            }
         }
-        return $result;
-    }
 
-    public function addEmail(string $email): void
-    {
-        $this->appendToCollection($this->emails, new IdentityEmail($this, $email));
+        return array_values($emails);
     }
 
     /**
@@ -86,46 +74,16 @@ class Identity
      */
     public function getIbans(): array
     {
-        $result = [];
-        foreach ($this->ibans as $iban) {
-            $result[] = $iban->getIban();
-        }
-        return $result;
-    }
-
-    public function addIban(string $iban): void
-    {
-        $this->appendToCollection($this->ibans, new IdentityIban($this, $iban));
-    }
-
-    public function getLegalIdentifier(): ?string
-    {
-        return $this->legalIdentifier;
-    }
-
-    public function setLegalIdentifier(?string $legalIdentifier): void
-    {
-        $this->legalIdentifier = $legalIdentifier;
+        // TODO: Load person names from connected component claims
+        return [];
     }
 
     /**
-     * @template T of object
-     * @param iterable<int, T> $items
-     * @param T $item
+     * @return list<string>
      */
-    private function appendToCollection(iterable &$items, object $item): void
+    public function getLegalIdentifiers(): array
     {
-        if (is_array($items)) {
-            $items[] = $item;
-
-            return;
-        }
-
-        if (method_exists($items, 'add')) {
-            $items->add($item);
-
-            return;
-        }
+        // TODO: Load person names from connected component claims
+        return [];
     }
-
 }
