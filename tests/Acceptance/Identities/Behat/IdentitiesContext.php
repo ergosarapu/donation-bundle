@@ -132,7 +132,6 @@ final class IdentitiesContext implements Context
     {
         $presentedClaim = $this->claimBySource($this->presentedClaimSource);
         $identityId = $presentedClaim->getIdentityId();
-        Assert::notNull($identityId, 'A claim should belong to an identity.');
         Assert::notNull(
             $this->queryBus->ask(new GetIdentity($identityId)),
             sprintf('Identity "%s" should exist.', $identityId),
