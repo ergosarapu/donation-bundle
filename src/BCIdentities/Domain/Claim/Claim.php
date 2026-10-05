@@ -23,6 +23,7 @@ final class Claim extends BasicAggregateRoot
     
     #[Id]
     private ClaimId $id;
+    private ClaimSource $source;
     /** @var array<string, ClaimSource> */
     private array $correlations = [];
     /** @var array<string, Email|Iban|LegalIdentifier|PersonName|RawName|null> */
@@ -47,7 +48,18 @@ final class Claim extends BasicAggregateRoot
     protected function applyClaimCreated(ClaimCreated $event): void
     {
         $this->id = $event->claimId;
+        $this->source = $event->source;
         $this->correlations = [];
+    }
+
+    #[Apply]
+    protected function applyClaimSourceTypeUpdated(ClaimSourceTypeUpdated $event): void
+    {
+        $this->source = ClaimSource::create(
+            $this->source->context,
+            $this->source->id,
+            $event->sourceType,
+        );
     }
 
 
@@ -155,6 +167,23 @@ final class Claim extends BasicAggregateRoot
             $correlatedSource,
             $correlatedClaimId,
         ));
+    }
+
+    public function updateSourceType(DateTimeImmutable $currentTime, ?string $sourceType): void
+    {
+        if ($this->source->type === $sourceType) {
+            return;
+        }
+
+        if ($this->source->type !== null) {
+            throw new LogicException('The claim source type cannot be changed.');
+        }
+
+        if ($sourceType === null) {
+            return;
+        }
+
+        $this->recordThat(new ClaimSourceTypeUpdated($currentTime, $this->id, $sourceType));
     }
     
     /**

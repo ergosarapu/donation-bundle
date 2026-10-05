@@ -9,9 +9,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Option\SortOrder;
-use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model\Claim;
 
@@ -53,21 +51,20 @@ class ClaimController extends AbstractCQRSController
     public function configureFields(string $pageName): iterable
     {
         return [
-            IdField::new('claimId')->setDisabled(),
-            TextField::new('paymentId')->setDisabled()->setLabel('Payment ID'),
-            TextField::new('donationId')->setDisabled()->setLabel('Donation ID'),
+            TextField::new('claimId')->setDisabled(),
+            TextField::new('sourceContext')->setDisabled(),
+            TextField::new('sourceType')->setDisabled(),
+            TextField::new('sourceId')->setDisabled(),
+            TextField::new('identityId')->setDisabled()->setLabel('Identity ID'),
             TextField::new('rawName')->setDisabled(),
             TextField::new('givenName')->setDisabled(),
             TextField::new('familyName')->setDisabled(),
             TextField::new('email')->setDisabled(),
             TextField::new('legalIdentifier')->setDisabled()->setLabel('Legal ID'),
             TextField::new('iban')->setLabel('IBAN')->setDisabled(),
-            TextField::new('reviewReason')->setDisabled()->setLabel('Review reason'),
-            IdField::new('identityId')->setDisabled()->hideOnIndex(),
-            BooleanField::new('inReview')->setDisabled()->renderAsSwitch(false),
-            BooleanField::new('resolved')->setDisabled()->renderAsSwitch(false),
-            DateTimeField::new('updatedAt')->setDisabled()->setFormat('yyyy-MM-dd HH:mm')->hideOnIndex(),
-            DateTimeField::new('createdAt')->setDisabled()->setFormat('yyyy-MM-dd HH:mm')->hideOnIndex(),
+            TextField::new('evidenceLevel')->setDisabled()->hideOnIndex(),
+            ArrayField::new('correlatedSourceIds')->setDisabled()->hideOnIndex(),
+            ArrayField::new('presentationsSummary')->setDisabled()->onlyOnDetail(),
         ];
     }
 
@@ -76,8 +73,21 @@ class ClaimController extends AbstractCQRSController
         return $crud
             ->showEntityActionsInlined()
             ->setDefaultSort([
-                'updatedAt' => SortOrder::ASC,
-                'createdAt' => SortOrder::ASC,
+                'claimId' => SortOrder::ASC,
+            ])
+            ->setSearchFields([
+                'claimId',
+                'sourceContext',
+                'sourceType',
+                'sourceId',
+                'identityId',
+                'presentations.givenName',
+                'presentations.familyName',
+                'presentations.rawName',
+                'presentations.email',
+                'presentations.iban',
+                'presentations.legalIdentifier',
+                'connections.connectedClaimId',
             ])
             ->setPageTitle(Crud::PAGE_INDEX, 'Identity Claims')
         ;

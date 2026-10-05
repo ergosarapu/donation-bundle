@@ -10,22 +10,16 @@
         <many-to-one field="claim" target-entity="ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model\Claim" inversed-by="presentations">
             <join-column name="claim_id" referenced-column-name="claim_id" nullable="false" on-delete="CASCADE" />
         </many-to-one>
-        <field name="evidenceLevel" type="string" column="evidence_level" length="20" nullable="true" />
-        <field name="givenName" type="string" column="given_name" length="100" nullable="true" />
-        <field name="familyName" type="string" column="family_name" length="100" nullable="true" />
-        <field name="legalIdentifier" type="string" column="legal_identifier" length="20" nullable="true" />
-        <field name="rawName" type="string" column="raw_name" length="100" nullable="true" />
-        <field name="email" type="string" column="email" length="255" nullable="true" />
-        <field name="iban" type="string" column="iban" length="34" nullable="true" />
+        <field name="attributeType" type="string" column="attribute_type" length="64" />
+        <field name="value" type="string" column="attribute_value" length="255" nullable="true" />
+        <field name="evidenceLevel" type="string" column="evidence_level" length="20" />
 
         <unique-constraints>
-            <unique-constraint name="uniq_projection_claim_presentation_claim_and_evidence" columns="claim_id,evidence_level" />
+            <unique-constraint name="uniq_projection_claim_presentation_claim_and_attribute_type" columns="claim_id,attribute_type" />
         </unique-constraints>
         <indexes>
+            <index name="idx_projection_claim_presentation_attribute_value" columns="attribute_type,attribute_value" />
             <index name="idx_projection_claim_presentation_evidence_level" columns="evidence_level" />
-            <index name="idx_projection_claim_presentation_legal_identifier" columns="legal_identifier" />
-            <index name="idx_projection_claim_presentation_email" columns="email" />
-            <index name="idx_projection_claim_presentation_iban" columns="iban" />
         </indexes>
     </entity>
 </doctrine-mapping>

@@ -29,7 +29,7 @@ class ClaimPresentationHandler
 
     public function onDonationCreated(DonationCreated $event): void
     {
-        $claimSource = new ClaimSource(SourceContext::Donation, $event->donationId->toString(), 'donation.created');
+        $claimSource = new ClaimSource(SourceContext::Donation, $event->donationId->toString(), 'donation');
         $correlatedSources = $event->recurringPlanId !== null
             ? [new ClaimSource(SourceContext::Donation, $event->recurringPlanId->toString())]
             : [];
@@ -58,7 +58,7 @@ class ClaimPresentationHandler
 
     public function onRecurringPlanCreated(RecurringPlanCreated $event): void
     {
-        $claimSource = new ClaimSource(SourceContext::Donation, $event->recurringPlanId->toString(), 'recurring_plan.created');
+        $claimSource = new ClaimSource(SourceContext::Donation, $event->recurringPlanId->toString(), 'recurring_plan');
         $presentations = [];
 
         if ($event->donorDetails?->name !== null) {
@@ -84,7 +84,7 @@ class ClaimPresentationHandler
 
     public function onRecurringPlanInitiated(RecurringPlanInitiated $event): void
     {
-        $claimSource = new ClaimSource(SourceContext::Donation, $event->recurringPlanId->toString(), 'recurring_plan.initiated');
+        $claimSource = new ClaimSource(SourceContext::Donation, $event->recurringPlanId->toString(), 'recurring_plan');
         $presentations = [];
 
         if ($event->donorDetails?->name !== null) {
@@ -110,7 +110,7 @@ class ClaimPresentationHandler
 
     public function onRecurringPlanActivated(RecurringPlanActivated $event): void
     {
-        $claimSource = new ClaimSource(SourceContext::Donation, $event->id->toString(), 'recurring_plan.activated');
+        $claimSource = new ClaimSource(SourceContext::Donation, $event->id->toString(), 'recurring_plan');
         $presentations = [];
 
         $presentations[] = ClaimPresentation::forType(PersonName::class, ClaimEvidenceLevel::VerifiedByUser);
@@ -123,7 +123,7 @@ class ClaimPresentationHandler
     public function onDonationInitiated(DonationInitiated $event): void
     {
 
-        $claimSource = new ClaimSource(SourceContext::Donation, $event->donationId->toString(), 'donation.initiated');
+        $claimSource = new ClaimSource(SourceContext::Donation, $event->donationId->toString(), 'donation');
         $correlatedSources = $event->recurringPlanId !== null
             ? [new ClaimSource(SourceContext::Donation, $event->recurringPlanId->toString())]
             : [];
@@ -152,7 +152,7 @@ class ClaimPresentationHandler
 
     public function onDonationAccepted(DonationAccepted $event): void
     {
-        $claimSource = new ClaimSource(SourceContext::Donation, $event->donationId->toString(), 'donation.accepted');
+        $claimSource = new ClaimSource(SourceContext::Donation, $event->donationId->toString(), 'donation');
         $this->eventBus->dispatch(new ClaimPresentedIntegrationEvent(
             $claimSource,
             [

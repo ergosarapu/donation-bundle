@@ -54,6 +54,8 @@ final class ClaimSourceCommandHandler
     ): Claim {
         if ($this->claimRepository->has($claimId)) {
             $claim = $this->claimRepository->load($claimId);
+            $claim->updateSourceType($currentTime, $claimSource->type);
+
             return $claim;
         }
 

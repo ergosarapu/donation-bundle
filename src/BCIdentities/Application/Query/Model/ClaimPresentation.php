@@ -8,18 +8,26 @@ class ClaimPresentation
 {
     use IdTrait;
 
-    private Claim $claim;
-    private ?string $evidenceLevel;
-    private ?string $givenName = null;
-    private ?string $familyName = null;
-    private ?string $legalIdentifier = null;
-    private ?string $rawName = null;
-    private ?string $email = null;
-    private ?string $iban = null;
+    public const ATTRIBUTE_PERSON_NAME = 'person_name';
+    public const ATTRIBUTE_RAW_NAME = 'raw_name';
+    public const ATTRIBUTE_EMAIL = 'email';
+    public const ATTRIBUTE_IBAN = 'iban';
+    public const ATTRIBUTE_LEGAL_IDENTIFIER = 'legal_identifier';
 
-    public function __construct(Claim $claim, ?string $evidenceLevel)
-    {
+    private Claim $claim;
+    private string $attributeType;
+    private ?string $value;
+    private string $evidenceLevel;
+
+    public function __construct(
+        Claim $claim,
+        string $attributeType,
+        ?string $value,
+        string $evidenceLevel,
+    ) {
         $this->claim = $claim;
+        $this->attributeType = $attributeType;
+        $this->value = $value;
         $this->evidenceLevel = $evidenceLevel;
     }
 
@@ -28,73 +36,28 @@ class ClaimPresentation
         return $this->claim;
     }
 
-    public function getEvidenceLevel(): ?string
+    public function getAttributeType(): string
+    {
+        return $this->attributeType;
+    }
+
+    public function getValue(): ?string
+    {
+        return $this->value;
+    }
+
+    public function setValue(?string $value): void
+    {
+        $this->value = $value;
+    }
+
+    public function getEvidenceLevel(): string
     {
         return $this->evidenceLevel;
     }
 
-    public function setEvidenceLevel(?string $evidenceLevel): void
+    public function setEvidenceLevel(string $evidenceLevel): void
     {
         $this->evidenceLevel = $evidenceLevel;
-    }
-
-    public function getGivenName(): ?string
-    {
-        return $this->givenName;
-    }
-
-    public function setGivenName(?string $givenName): void
-    {
-        $this->givenName = $givenName;
-    }
-
-    public function getFamilyName(): ?string
-    {
-        return $this->familyName;
-    }
-
-    public function setFamilyName(?string $familyName): void
-    {
-        $this->familyName = $familyName;
-    }
-
-    public function getLegalIdentifier(): ?string
-    {
-        return $this->legalIdentifier;
-    }
-
-    public function setLegalIdentifier(?string $legalIdentifier): void
-    {
-        $this->legalIdentifier = $legalIdentifier;
-    }
-
-    public function getRawName(): ?string
-    {
-        return $this->rawName;
-    }
-
-    public function setRawName(?string $rawName): void
-    {
-        $this->rawName = $rawName;
-    }
-
-    public function getEmail(): ?string
-    {
-        return $this->email;
-    }
-
-    public function setEmail(?string $email): void
-    {
-        $this->email = $email;
-    }
-
-    public function getIban(): ?string
-    {
-        return $this->iban;
-    }
-
-    public function setIban(?string $iban): void
-    {
-        $this->iban = $iban;
     }
 }

@@ -9,7 +9,6 @@ use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model\Identity;
 
@@ -50,23 +49,25 @@ class DonorController extends AbstractCQRSController
     public function configureFields(string $pageName): iterable
     {
         return [
-            IdField::new('identityId')->setDisabled()->hideOnIndex(),
-            TextField::new('givenName')->setDisabled(),
-            TextField::new('familyName')->setDisabled(),
-            ArrayField::new('rawNames'),
-            ArrayField::new('emails'),
-            ArrayField::new('ibans')->setLabel('IBANs'),
-            TextField::new('legalIdentifier')->setDisabled()->setLabel('Legal ID'),
-            ];
+            TextField::new('identityId')->setDisabled()->hideOnIndex(),
+            ArrayField::new('personNamesSummary')->setDisabled()->setLabel('Person Names'),
+            ArrayField::new('legalIdentifiers')->setDisabled()->setLabel('Legal IDs'),
+            ArrayField::new('rawNames')->setDisabled(),
+            ArrayField::new('emails')->setDisabled(),
+            ArrayField::new('ibans')->setDisabled()->setLabel('IBANs'),
+        ];
     }
 
     public function configureCrud(Crud $crud): Crud
     {
-        return $crud->setSearchFields([
+        return $crud->setDefaultSort([
+            'identityId' => 'ASC',
+        ])
+            ->setSearchFields([
             'identityId',
-            'givenName',
-            'familyName',
-            'legalIdentifier',
+            'personNames.givenName',
+            'personNames.familyName',
+            'legalIdentifiers.legalIdentifier',
             'rawNames.rawName',
             'emails.email',
             'ibans.iban'])

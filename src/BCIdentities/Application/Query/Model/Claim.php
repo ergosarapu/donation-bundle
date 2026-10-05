@@ -131,10 +131,10 @@ class Claim
         $this->sourceId = $sourceId;
     }
 
-    public function getPresentationForEvidenceLevel(?string $evidenceLevel): ?ClaimPresentation
+    public function getPresentationForAttributeType(string $attributeType): ?ClaimPresentation
     {
         foreach ($this->presentations as $presentation) {
-            if ($presentation->getEvidenceLevel() === $evidenceLevel) {
+            if ($presentation->getAttributeType() === $attributeType) {
                 return $presentation;
             }
         }
@@ -142,9 +142,9 @@ class Claim
         return null;
     }
 
-    public function addPresentation(?string $evidenceLevel): ClaimPresentation
+    public function addPresentation(string $attributeType, ?string $value, string $evidenceLevel): ClaimPresentation
     {
-        $presentation = new ClaimPresentation($this, $evidenceLevel);
+        $presentation = new ClaimPresentation($this, $attributeType, $value, $evidenceLevel);
         $this->appendToCollection($this->presentations, $presentation);
 
         return $presentation;
@@ -184,14 +184,9 @@ class Claim
         return array_map(
             static function (ClaimPresentation $presentation): string {
                 $parts = array_filter([
+                    $presentation->getAttributeType(),
+                    $presentation->getValue(),
                     $presentation->getEvidenceLevel(),
-                    $presentation->getGivenName() !== null || $presentation->getFamilyName() !== null
-                        ? trim(sprintf('%s %s', $presentation->getGivenName() ?? '', $presentation->getFamilyName() ?? ''))
-                        : null,
-                    $presentation->getRawName(),
-                    $presentation->getEmail(),
-                    $presentation->getIban(),
-                    $presentation->getLegalIdentifier(),
                 ]);
 
                 return implode(' | ', $parts);
