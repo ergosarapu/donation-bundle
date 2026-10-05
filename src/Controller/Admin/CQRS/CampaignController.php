@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\Controller\Admin\CQRS;
 
 use Doctrine\ORM\Event\PreUpdateEventArgs;
-use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminAction;
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminRoute;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
@@ -148,8 +147,7 @@ class CampaignController extends AbstractCQRSController
     /**
      * @param AdminContext<Campaign> $context
      */
-    #[AdminAction(methods: ['POST'])]
-    #[AdminRoute(path: '/reject-campaign')]
+    #[AdminRoute(path: '/reject-campaign', options: ['methods' => ['POST']])]
     public function activateCampaign(AdminContext $context): Response
     {
         /** @var Campaign $campaign */
@@ -163,8 +161,7 @@ class CampaignController extends AbstractCQRSController
     /**
      * @param AdminContext<Campaign> $context
      */
-    #[AdminAction(methods: ['POST'])]
-    #[AdminRoute(path: '/archive-campaign')]
+    #[AdminRoute(path: '/archive-campaign', options: ['methods' => ['POST']])]
     public function archiveCampaign(AdminContext $context): Response
     {
         /** @var Campaign $campaign */

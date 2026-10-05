@@ -5,178 +5,131 @@ declare(strict_types=1);
 namespace ErgoSarapu\DonationBundle\Tests\Unit\Identity\Application\CommandHandler;
 
 use DateTimeImmutable;
+use ErgoSarapu\DonationBundle\BCIdentities\Application\ClaimSourceResolver;
 use ErgoSarapu\DonationBundle\BCIdentities\Application\Command\PresentClaimEvidence;
-use ErgoSarapu\DonationBundle\BCIdentities\Application\Command\ResolveClaim;
-use ErgoSarapu\DonationBundle\BCIdentities\Application\CommandHandler\PresentClaimEvidenceHandler;
+use ErgoSarapu\DonationBundle\BCIdentities\Application\CommandHandler\ClaimSourceCommandHandler;
 use ErgoSarapu\DonationBundle\BCIdentities\Application\Port\ClaimRepositoryInterface;
+use ErgoSarapu\DonationBundle\BCIdentities\Application\Port\ClaimSourceResolutionRepositoryInterface;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\Claim;
-use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimEvidenceLevel as DomainClaimEvidenceLevel;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimCorrelated;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimCreated;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimId;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimSource;
-use ErgoSarapu\DonationBundle\IntegrationContracts\Identities\ValueObject\ClaimEvidenceLevel;
-use ErgoSarapu\DonationBundle\IntegrationContracts\Identities\ValueObject\ClaimPresentation;
-use ErgoSarapu\DonationBundle\SharedApplication\Port\Bus\CommandBusInterface;
-use ErgoSarapu\DonationBundle\SharedApplication\Port\Command\CommandResult;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
-use PHPUnit\Framework\MockObject\MockObject;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimSourceContext;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimSourceTypeUpdated;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityId;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\ClaimSourceResolution\ClaimSourceResolution;
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
 
 final class PresentClaimEvidenceHandlerTest extends TestCase
 {
-    private ClaimRepositoryInterface&MockObject $claimRepository;
-    private CommandBusInterface&MockObject $commandBus;
-    private PresentClaimEvidenceHandler $handler;
-    private DateTimeImmutable $now;
-
-    protected function setUp(): void
+    public function testCreatesAndSavesReferencedClaimBeforeSavingCorrelation(): void
     {
-        parent::setUp();
-
-        $this->claimRepository = $this->createMock(ClaimRepositoryInterface::class);
-        $this->commandBus = $this->createMock(CommandBusInterface::class);
-        $this->now = new DateTimeImmutable('2026-01-01 10:00:00');
-
-        $clock = $this->createMock(ClockInterface::class);
-        $clock->method('now')->willReturn($this->now);
-
-        $this->handler = new PresentClaimEvidenceHandler($this->claimRepository, $this->commandBus, $clock);
-    }
-
-    public function testCreatesClaimAndDispatchesResolve(): void
-    {
-        $source = ClaimSource::forPayment('018e1234-0000-7000-8000-000000000001');
-        $claimId = ClaimId::generate($source);
-        $command = new PresentClaimEvidence(
-            source: $source,
-            presentations: [ClaimPresentation::forValue(new Iban('EE471000001020145685'), ClaimEvidenceLevel::Verified)],
-        );
-
-        $this->claimRepository->expects($this->once())
-            ->method('has')
-            ->with($claimId)
-            ->willReturn(false);
-
-        /** @var ?Claim $savedClaim */
-        $savedClaim = null;
-        $this->claimRepository->expects($this->once())
+        $claimRepository = $this->createMock(ClaimRepositoryInterface::class);
+        $claimRepository->expects(self::exactly(2))->method('has')->willReturn(false);
+        $savedEvents = [];
+        $claimRepository->expects(self::exactly(2))
             ->method('save')
-            ->willReturnCallback(static function (Claim $claim) use (&$savedClaim): void {
-                $savedClaim = $claim;
+            ->willReturnCallback(static function (Claim $claim) use (&$savedEvents): void {
+                $savedEvents[] = $claim->releaseEvents();
             });
-
-        $this->commandBus->expects($this->once())
-            ->method('dispatch')
-            ->with(new ResolveClaim($claimId))
-            ->willReturn(new CommandResult(null, 'correlation-id'));
-
-        ($this->handler)($command);
-
-        self::assertInstanceOf(Claim::class, $savedClaim);
-        self::assertEquals(new Iban('EE471000001020145685'), $savedClaim->iban());
-    }
-
-    public function testLoadsClaimAndDispatchesResolve(): void
-    {
-        $source = ClaimSource::forPayment('018e1234-0000-7000-8000-000000000002');
-        $claimId = ClaimId::generate($source);
-        $claim = Claim::create($this->now, $claimId, $source);
-        $claim->releaseEvents();
+        $sourceResolutionRepository = $this->createMock(ClaimSourceResolutionRepositoryInterface::class);
+        $sourceResolutionRepository->method('has')->willReturn(false);
+        $sourceResolutionRepository->expects(self::exactly(2))->method('save');
+        $clock = $this->createMock(ClockInterface::class);
+        $handler = new ClaimSourceCommandHandler(
+            $claimRepository,
+            new ClaimSourceResolver($sourceResolutionRepository),
+            $clock,
+        );
+        $now = new DateTimeImmutable('2026-01-01 10:00:00');
+        $source = ClaimSource::create(ClaimSourceContext::Donation, 'source-1', 'donation');
+        $correlatedSource = ClaimSource::create(ClaimSourceContext::Payment, 'source-2', 'payment');
         $command = new PresentClaimEvidence(
-            source: $source,
-            presentations: [ClaimPresentation::forValue(new Iban('EE471000001020145685'), ClaimEvidenceLevel::Verified)],
+            $source,
+            [],
+            [$correlatedSource],
         );
 
-        $this->claimRepository->expects($this->once())
+        $clock->expects(self::once())->method('now')->willReturn($now);
+
+        $handler->presentClaimEvidence($command);
+
+        self::assertCount(1, $savedEvents[0]);
+        self::assertInstanceOf(ClaimCreated::class, $savedEvents[0][0]);
+        self::assertSame($correlatedSource, $savedEvents[0][0]->source);
+        self::assertSame(
+            $savedEvents[0][0]->claimId->toString(),
+            $savedEvents[0][0]->initialIdentityId->toString(),
+        );
+        self::assertInstanceOf(ClaimCreated::class, $savedEvents[1][0]);
+        self::assertInstanceOf(ClaimCorrelated::class, $savedEvents[1][1]);
+        self::assertSame($savedEvents[0][0]->claimId, $savedEvents[1][1]->correlatedClaimId);
+    }
+
+    public function testReusesExistingReferencedClaim(): void
+    {
+        $claimRepository = $this->createMock(ClaimRepositoryInterface::class);
+        $claimRepository->expects(self::exactly(2))
             ->method('has')
-            ->with($claimId)
-            ->willReturn(true);
+            ->willReturnOnConsecutiveCalls(false, true);
+        $claimRepository->expects(self::once())->method('save');
+        $sourceResolutionRepository = $this->createMock(ClaimSourceResolutionRepositoryInterface::class);
+        $sourceResolutionRepository->method('has')->willReturn(false);
+        $sourceResolutionRepository->expects(self::exactly(2))->method('save');
+        $clock = $this->createMock(ClockInterface::class);
+        $handler = new ClaimSourceCommandHandler(
+            $claimRepository,
+            new ClaimSourceResolver($sourceResolutionRepository),
+            $clock,
+        );
 
-        $this->claimRepository->expects($this->once())
-            ->method('load')
-            ->with($claimId)
-            ->willReturn($claim);
+        $clock->expects(self::once())->method('now')->willReturn(new DateTimeImmutable('2026-01-01 10:00:00'));
+        $handler->presentClaimEvidence(new PresentClaimEvidence(
+            ClaimSource::create(ClaimSourceContext::Donation, 'source-1', 'donation'),
+            [],
+            [ClaimSource::create(ClaimSourceContext::Payment, 'source-2', 'payment')],
+        ));
+    }
 
-        /** @var ?Claim $savedClaim */
-        $savedClaim = null;
-        $this->claimRepository->expects($this->once())
+    public function testUpdatesAnExistingClaimSourceType(): void
+    {
+        $now = new DateTimeImmutable('2026-01-01 10:00:00');
+        $claimId = ClaimId::generate();
+        $sourceWithoutType = ClaimSource::create(ClaimSourceContext::Donation, 'source-1');
+        $source = ClaimSource::create(ClaimSourceContext::Donation, 'source-1', 'donation');
+        $claim = Claim::create(
+            $now,
+            $claimId,
+            $sourceWithoutType,
+            IdentityId::fromString($claimId->toString()),
+        );
+        $claim->releaseEvents();
+        $resolution = ClaimSourceResolution::create($now, $sourceWithoutType, $claimId);
+        $claimRepository = $this->createMock(ClaimRepositoryInterface::class);
+        $claimRepository->method('has')->with($claimId)->willReturn(true);
+        $claimRepository->expects(self::once())->method('load')->with($claimId)->willReturn($claim);
+        $savedEvents = [];
+        $claimRepository->expects(self::once())
             ->method('save')
             ->with($claim)
-            ->willReturnCallback(static function (Claim $claim) use (&$savedClaim): void {
-                $savedClaim = $claim;
+            ->willReturnCallback(static function (Claim $savedClaim) use (&$savedEvents): void {
+                $savedEvents = $savedClaim->releaseEvents();
             });
-
-        $this->commandBus->expects($this->once())
-            ->method('dispatch')
-            ->with(new ResolveClaim($claimId))
-            ->willReturn(new CommandResult(null, 'correlation-id'));
-
-        ($this->handler)($command);
-
-        self::assertSame($claim, $savedClaim);
-        self::assertEquals(new Iban('EE471000001020145685'), $savedClaim->iban());
-    }
-
-    public function testClaimAggregateNotSavedWhenEvidenceDoesNotChangeState(): void
-    {
-        $source = ClaimSource::forPayment('018e1234-0000-7000-8000-000000000003');
-        $claimId = ClaimId::generate($source);
-        $claim = Claim::create($this->now, $claimId, $source);
-        $claim->present($this->now, new Iban('EE471000001020145685'), DomainClaimEvidenceLevel::Verified);
-        $claim->releaseEvents();
-        $command = new PresentClaimEvidence(
-            source: $source,
-            presentations: [ClaimPresentation::forValue(new Iban('EE471000001020145685'), ClaimEvidenceLevel::Verified)],
+        $sourceResolutionRepository = $this->createMock(ClaimSourceResolutionRepositoryInterface::class);
+        $sourceResolutionRepository->method('has')->willReturn(true);
+        $sourceResolutionRepository->method('load')->willReturn($resolution);
+        $clock = $this->createMock(ClockInterface::class);
+        $clock->expects(self::once())->method('now')->willReturn($now);
+        $handler = new ClaimSourceCommandHandler(
+            $claimRepository,
+            new ClaimSourceResolver($sourceResolutionRepository),
+            $clock,
         );
 
-        $this->claimRepository->expects($this->once())
-            ->method('has')
-            ->with($claimId)
-            ->willReturn(true);
+        $handler->presentClaimEvidence(new PresentClaimEvidence($source, [], []));
 
-        $this->claimRepository->expects($this->once())
-            ->method('load')
-            ->with($claimId)
-            ->willReturn($claim);
-
-        $this->claimRepository->expects($this->never())->method('save');
-        $this->commandBus->expects($this->never())->method('dispatch');
-
-        ($this->handler)($command);
-    }
-
-    public function testResolveClaimNotDispatchedWhenClaimIsNotResolvable(): void
-    {
-        $source = ClaimSource::forPayment('018e1234-0000-7000-8000-000000000004');
-        $claimId = ClaimId::generate($source);
-        $command = new PresentClaimEvidence(
-            source: $source,
-            presentations: [
-                ClaimPresentation::forValue(new Email('jane@example.com'), ClaimEvidenceLevel::Observed),
-            ],
-        );
-
-        $this->claimRepository->expects($this->once())
-            ->method('has')
-            ->with($claimId)
-            ->willReturn(false);
-
-        /** @var ?Claim $savedClaim */
-        $savedClaim = null;
-        $this->claimRepository->expects($this->once())
-            ->method('save')
-            ->willReturnCallback(static function (Claim $claim) use (&$savedClaim): void {
-                $savedClaim = $claim;
-            });
-
-        $this->commandBus->expects($this->never())
-            ->method('dispatch');
-
-        ($this->handler)($command);
-
-        self::assertInstanceOf(Claim::class, $savedClaim);
-        self::assertNull($savedClaim->email());
-        self::assertFalse($savedClaim->isResolvable());
+        self::assertEquals([new ClaimSourceTypeUpdated($now, $claimId, 'donation')], $savedEvents);
     }
 }

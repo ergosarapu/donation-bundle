@@ -6,15 +6,12 @@ namespace ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Port;
 
 use ErgoSarapu\DonationBundle\BCIdentities\Application\Query\Model\Claim;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimId;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimSourceContext;
 
 interface ClaimProjectionRepositoryInterface
 {
     public function find(ClaimId $claimId): ?Claim;
 
-    /**
-     * @return list<Claim>
-     */
-    public function findInReview(): array;
+    public function findBySource(ClaimSourceContext $sourceContext, string $sourceId): ?Claim;
 
-    public function countInReview(): int;
 }

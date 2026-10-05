@@ -43,9 +43,9 @@ use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanFail
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanInitiated;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanRenewalCompleted;
 use ErgoSarapu\DonationBundle\BCDonations\Domain\RecurringPlan\RecurringPlanRenewalInitiated;
-use ErgoSarapu\DonationBundle\BCIdentities\Application\Command\CreateIdentity;
 use ErgoSarapu\DonationBundle\BCIdentities\Application\Command\PresentClaimEvidence;
-use ErgoSarapu\DonationBundle\BCIdentities\Application\Command\ResolveClaim;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimCorrelated;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimCorrelationRemoved;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimCreated;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimInReview;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForEmail;
@@ -53,14 +53,7 @@ use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForIban;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForLegalIdentifier;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForPersonName;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForRawName;
-use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimResolved;
-use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\ClaimMerged;
-use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityCreated;
-use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityEmailAdded;
-use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityIbanAdded;
-use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityLegalIdentifierChanged;
-use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityPersonNameChanged;
-use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityRawNameAdded;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\ClaimSourceResolution\ClaimSourceResolutionCreated;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\AcceptPaymentImport;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\CapturePayment;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Command\CreatePayment;
@@ -491,9 +484,7 @@ class DonationBundle extends AbstractBundle
                 UpdateCampaignName::class,
                 UpdateCampaignPublicTitle::class,
                 // BCIdentities
-                CreateIdentity::class,
                 PresentClaimEvidence::class,
-                ResolveClaim::class,
                 // BCPayments
                 AcceptPaymentImport::class,
                 CapturePayment::class,
@@ -566,14 +557,9 @@ class DonationBundle extends AbstractBundle
                 ClaimPresentedForLegalIdentifier::class,
                 ClaimPresentedForPersonName::class,
                 ClaimPresentedForRawName::class,
-                ClaimResolved::class,
-                ClaimMerged::class,
-                IdentityCreated::class,
-                IdentityEmailAdded::class,
-                IdentityIbanAdded::class,
-                IdentityRawNameAdded::class,
-                IdentityLegalIdentifierChanged::class,
-                IdentityPersonNameChanged::class,
+                ClaimCorrelated::class,
+                ClaimCorrelationRemoved::class,
+                ClaimSourceResolutionCreated::class,
                 // BCPayments
                 PaymentAuthorized::class,
                 PaymentCanceled::class,

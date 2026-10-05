@@ -10,43 +10,18 @@ use Patchlevel\Hydrator\Normalizer\ObjectNormalizer;
 final class ClaimSource
 {
     private function __construct(
-        private readonly ClaimContext $context,
-        private readonly string $id,
+        public readonly ClaimSourceContext $context,
+        public readonly string $id,
+        public readonly ?string $type = null,
     ) {
     }
 
-    public function isPaymentContext(): bool
+    public static function create(
+        ClaimSourceContext $context,
+        string $id,
+        ?string $type = null,
+    ): self
     {
-        return $this->context === ClaimContext::Payment;
-    }
-
-    public function isDonationContext(): bool
-    {
-        return $this->context === ClaimContext::Donation;
-    }
-
-    public function getId(): string
-    {
-        return $this->id;
-    }
-
-    public function getContext(): ClaimContext
-    {
-        return $this->context;
-    }
-
-    public function deterministicKey(): string
-    {
-        return $this->context->value . '|' . $this->id;
-    }
-
-    public static function forPayment(string $paymentId): self
-    {
-        return new self(ClaimContext::Payment, $paymentId);
-    }
-
-    public static function forDonation(string $donationId): self
-    {
-        return new self(ClaimContext::Donation, $donationId);
+        return new self($context, $id, $type);
     }
 }

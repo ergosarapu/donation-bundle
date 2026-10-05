@@ -10,7 +10,6 @@ use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\MenuItem;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractDashboardController;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
-use ErgoSarapu\DonationBundle\BCIdentities\Application\Query\GetClaimsInReviewCount;
 use ErgoSarapu\DonationBundle\BCPayments\Application\Query\GetPaymentsCount;
 use ErgoSarapu\DonationBundle\BCPayments\Domain\Payment\PaymentImportStatus;
 use ErgoSarapu\DonationBundle\Controller\Admin\CQRS\CampaignController;
@@ -53,8 +52,7 @@ class AdminDashboardController extends AbstractDashboardController
 
         yield MenuItem::section('Identities');
         yield MenuItem::linkTo(DonorController::class, 'Donors', 'fa fa-users');
-        $reviewClaimsCount = (int)$this->queryBus->ask(new GetClaimsInReviewCount());
-        yield MenuItem::linkTo(ClaimController::class, 'Claims', 'fa fa-id-card')->setBadge(sprintf('(%d In Review)', $reviewClaimsCount));
+        yield MenuItem::linkTo(ClaimController::class, 'Claims', 'fa fa-id-card');
 
         yield MenuItem::section('Payments');
         yield MenuItem::linkTo(PaymentsController::class, 'Payments', 'fa fa-money-bill');
