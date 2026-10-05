@@ -23,12 +23,8 @@ use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForPersonN
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimPresentedForRawName;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimSource;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimSourceContext;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimSourceTypeUpdated;
 use ErgoSarapu\DonationBundle\SharedInfrastructure\Patchlevel\ProjectorTrait;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Email;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\Iban;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\LegalIdentifier;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\PersonName;
-use ErgoSarapu\DonationBundle\SharedKernel\ValueObject\RawName;
 use Override;
 use Patchlevel\EventSourcing\Attribute\Projector;
 use Patchlevel\EventSourcing\Attribute\Subscribe;
@@ -78,6 +74,16 @@ final class ClaimProjector implements ClaimProjectionRepositoryInterface
         $this->flush($message);
     }
 
+    #[Subscribe(ClaimSourceTypeUpdated::class)]
+    public function onClaimSourceTypeUpdated(Message $message): void
+    {
+        $event = $this->getEvent($message, ClaimSourceTypeUpdated::class);
+        $claim = $this->findOrThrow($event->claimId);
+        $claim->setSourceType($event->sourceType);
+
+        $this->flush($message);
+    }
+
     #[Subscribe(ClaimCorrelated::class)]
     public function onClaimCorrelated(Message $message): void
     {
@@ -113,35 +119,65 @@ final class ClaimProjector implements ClaimProjectionRepositoryInterface
     public function onClaimPresentedForPersonName(Message $message): void
     {
         $event = $this->getEvent($message, ClaimPresentedForPersonName::class);
-        $this->updateClaimValue($message, $event->claimId, $event->value, $event->evidenceLevel);
+        $this->updateClaimValue(
+            $message,
+            $event->claimId,
+            ClaimPresentation::ATTRIBUTE_PERSON_NAME,
+            $event->value === null ? null : trim(sprintf('%s %s', $event->value->givenName, $event->value->familyName)),
+            $event->evidenceLevel,
+        );
     }
 
     #[Subscribe(ClaimPresentedForRawName::class)]
     public function onClaimPresentedForRawName(Message $message): void
     {
         $event = $this->getEvent($message, ClaimPresentedForRawName::class);
-        $this->updateClaimValue($message, $event->claimId, $event->value, $event->evidenceLevel);
+        $this->updateClaimValue(
+            $message,
+            $event->claimId,
+            ClaimPresentation::ATTRIBUTE_RAW_NAME,
+            $event->value?->toString(),
+            $event->evidenceLevel,
+        );
     }
 
     #[Subscribe(ClaimPresentedForEmail::class)]
     public function onClaimPresentedForEmail(Message $message): void
     {
         $event = $this->getEvent($message, ClaimPresentedForEmail::class);
-        $this->updateClaimValue($message, $event->claimId, $event->value, $event->evidenceLevel);
+        $this->updateClaimValue(
+            $message,
+            $event->claimId,
+            ClaimPresentation::ATTRIBUTE_EMAIL,
+            $event->value?->toString(),
+            $event->evidenceLevel,
+        );
     }
 
     #[Subscribe(ClaimPresentedForIban::class)]
     public function onClaimPresentedForIban(Message $message): void
     {
         $event = $this->getEvent($message, ClaimPresentedForIban::class);
-        $this->updateClaimValue($message, $event->claimId, $event->value, $event->evidenceLevel);
+        $this->updateClaimValue(
+            $message,
+            $event->claimId,
+            ClaimPresentation::ATTRIBUTE_IBAN,
+            $event->value?->value,
+            $event->evidenceLevel,
+        );
     }
 
     #[Subscribe(ClaimPresentedForLegalIdentifier::class)]
     public function onClaimPresentedForLegalIdentifier(Message $message): void
     {
         $event = $this->getEvent($message, ClaimPresentedForLegalIdentifier::class);
-        $this->updateClaimValue($message, $event->claimId, $event->value, $event->evidenceLevel);
+        $this->updateClaimValue(
+            $message,
+            $event->claimId,
+            ClaimPresentation::ATTRIBUTE_LEGAL_IDENTIFIER,
+            $event->value?->value,
+            $event->evidenceLevel,
+        );
     }
 
     #[Subscribe(ClaimDataInvalidated::class)]
@@ -157,83 +193,68 @@ final class ClaimProjector implements ClaimProjectionRepositoryInterface
     private function updateClaimValue(
         Message $message,
         ClaimId $claimId,
-        PersonName|RawName|Email|Iban|LegalIdentifier|null $value,
+        string $attributeType,
+        ?string $value,
         ClaimEvidenceLevel $evidenceLevel,
     ): void {
         $claim = $this->findOrThrow($claimId);
-        $presentation = $claim->getPresentationForEvidenceLevel($evidenceLevel->value) ?? $claim->addPresentation($evidenceLevel->value);
-        $this->setClaimValue($presentation, $value);
+        $presentation = $claim->getPresentationForAttributeType($attributeType)
+            ?? $claim->addPresentation($attributeType, $value, $evidenceLevel->value);
+        $presentation->setValue($value);
+        $presentation->setEvidenceLevel($evidenceLevel->value);
 
         $this->flush($message);
-        $this->connectClaimToMatchingValue($claim, $value);
+        $this->connectClaimToMatchingValue($claim, $attributeType, $value, $evidenceLevel);
         $this->flush($message);
-    }
-
-    private function setClaimValue(ClaimPresentation $presentation, PersonName|RawName|Email|Iban|LegalIdentifier|null $value): void
-    {
-        if ($value instanceof PersonName) {
-            $presentation->setGivenName($value->givenName);
-            $presentation->setFamilyName($value->familyName);
-        }
-        if ($value instanceof RawName) {
-            $presentation->setRawName($value->toString());
-        }
-        if ($value instanceof Email) {
-            $presentation->setEmail($value->toString());
-        }
-        if ($value instanceof Iban) {
-            $presentation->setIban($value->value);
-        }
-        if ($value instanceof LegalIdentifier) {
-            $presentation->setLegalIdentifier($value->value);
-        }
     }
 
     private function connectClaimToMatchingValue(
         Claim $claim,
-        PersonName|RawName|Email|Iban|LegalIdentifier|null $value,
+        string $attributeType,
+        ?string $value,
+        ClaimEvidenceLevel $evidenceLevel,
     ): void {
-        if ($claim->getConnectedClaimIds() !== []) {
+        if ($value === null || !$this->isMatchableEvidenceLevel($evidenceLevel)) {
             return;
         }
 
-        if ($value instanceof Email) {
+        if ($attributeType === ClaimPresentation::ATTRIBUTE_EMAIL) {
             $this->connectClaimToMatchingPresentation(
                 $claim,
-                'email',
-                $value->toString(),
+                $attributeType,
+                $value,
                 ClaimConnection::REASON_EMAIL,
             );
 
             return;
         }
 
-        if ($value instanceof LegalIdentifier) {
+        if ($attributeType === ClaimPresentation::ATTRIBUTE_LEGAL_IDENTIFIER) {
             $this->connectClaimToMatchingPresentation(
                 $claim,
-                'legalIdentifier',
-                $value->value,
+                $attributeType,
+                $value,
                 ClaimConnection::REASON_LEGAL_IDENTIFIER,
             );
 
             return;
         }
 
-        if (!$value instanceof Iban) {
+        if ($attributeType !== ClaimPresentation::ATTRIBUTE_IBAN) {
             return;
         }
 
         $this->connectClaimToMatchingPresentation(
             $claim,
-            'iban',
-            $value->value,
+            $attributeType,
+            $value,
             ClaimConnection::REASON_IBAN,
         );
     }
 
     private function connectClaimToMatchingPresentation(
         Claim $claim,
-        string $field,
+        string $attributeType,
         string $value,
         string $reason,
     ): void {
@@ -242,9 +263,16 @@ final class ClaimProjector implements ClaimProjectionRepositoryInterface
             ->createQueryBuilder('claim')
             ->innerJoin('claim.presentations', 'presentation')
             ->where('claim.claimId != :claimId')
-            ->andWhere(sprintf('presentation.%s = :value', $field))
+            ->andWhere('presentation.attributeType = :attributeType')
+            ->andWhere('presentation.value = :value')
+            ->andWhere('presentation.evidenceLevel IN (:evidenceLevels)')
             ->setParameter('claimId', $claim->getClaimId())
+            ->setParameter('attributeType', $attributeType)
             ->setParameter('value', $value)
+            ->setParameter('evidenceLevels', [
+                ClaimEvidenceLevel::Verified->value,
+                ClaimEvidenceLevel::VerifiedByUser->value,
+            ])
             ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult();
@@ -252,6 +280,12 @@ final class ClaimProjector implements ClaimProjectionRepositoryInterface
         if ($matchingClaim !== null) {
             $this->connectClaims($claim, $matchingClaim, $reason);
         }
+    }
+
+    private function isMatchableEvidenceLevel(ClaimEvidenceLevel $evidenceLevel): bool
+    {
+        return $evidenceLevel === ClaimEvidenceLevel::Verified
+            || $evidenceLevel === ClaimEvidenceLevel::VerifiedByUser;
     }
 
     private function findOrThrow(ClaimId $claimId): Claim

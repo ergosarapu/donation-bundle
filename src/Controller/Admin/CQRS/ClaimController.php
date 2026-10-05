@@ -56,15 +56,7 @@ class ClaimController extends AbstractCQRSController
             TextField::new('sourceType')->setDisabled(),
             TextField::new('sourceId')->setDisabled(),
             TextField::new('identityId')->setDisabled()->setLabel('Identity ID'),
-            TextField::new('rawName')->setDisabled(),
-            TextField::new('givenName')->setDisabled(),
-            TextField::new('familyName')->setDisabled(),
-            TextField::new('email')->setDisabled(),
-            TextField::new('legalIdentifier')->setDisabled()->setLabel('Legal ID'),
-            TextField::new('iban')->setLabel('IBAN')->setDisabled(),
-            TextField::new('evidenceLevel')->setDisabled()->hideOnIndex(),
-            ArrayField::new('correlatedSourceIds')->setDisabled()->hideOnIndex(),
-            ArrayField::new('presentationsSummary')->setDisabled()->onlyOnDetail(),
+            ArrayField::new('presentationsSummary')->setDisabled(),
         ];
     }
 
@@ -81,12 +73,7 @@ class ClaimController extends AbstractCQRSController
                 'sourceType',
                 'sourceId',
                 'identityId',
-                'presentations.givenName',
-                'presentations.familyName',
-                'presentations.rawName',
-                'presentations.email',
-                'presentations.iban',
-                'presentations.legalIdentifier',
+                'presentations.value',
                 'connections.connectedClaimId',
             ])
             ->setPageTitle(Crud::PAGE_INDEX, 'Identity Claims')

@@ -13,8 +13,12 @@ use ErgoSarapu\DonationBundle\BCIdentities\Application\Port\ClaimSourceResolutio
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\Claim;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimCorrelated;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimCreated;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimId;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimSource;
 use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimSourceContext;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Claim\ClaimSourceTypeUpdated;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\Identity\IdentityId;
+use ErgoSarapu\DonationBundle\BCIdentities\Domain\ClaimSourceResolution\ClaimSourceResolution;
 use PHPUnit\Framework\TestCase;
 use Psr\Clock\ClockInterface;
 
@@ -87,5 +91,45 @@ final class PresentClaimEvidenceHandlerTest extends TestCase
             [],
             [ClaimSource::create(ClaimSourceContext::Payment, 'source-2', 'payment')],
         ));
+    }
+
+    public function testUpdatesAnExistingClaimSourceType(): void
+    {
+        $now = new DateTimeImmutable('2026-01-01 10:00:00');
+        $claimId = ClaimId::generate();
+        $sourceWithoutType = ClaimSource::create(ClaimSourceContext::Donation, 'source-1');
+        $source = ClaimSource::create(ClaimSourceContext::Donation, 'source-1', 'donation');
+        $claim = Claim::create(
+            $now,
+            $claimId,
+            $sourceWithoutType,
+            IdentityId::fromString($claimId->toString()),
+        );
+        $claim->releaseEvents();
+        $resolution = ClaimSourceResolution::create($now, $sourceWithoutType, $claimId);
+        $claimRepository = $this->createMock(ClaimRepositoryInterface::class);
+        $claimRepository->method('has')->with($claimId)->willReturn(true);
+        $claimRepository->expects(self::once())->method('load')->with($claimId)->willReturn($claim);
+        $savedEvents = [];
+        $claimRepository->expects(self::once())
+            ->method('save')
+            ->with($claim)
+            ->willReturnCallback(static function (Claim $savedClaim) use (&$savedEvents): void {
+                $savedEvents = $savedClaim->releaseEvents();
+            });
+        $sourceResolutionRepository = $this->createMock(ClaimSourceResolutionRepositoryInterface::class);
+        $sourceResolutionRepository->method('has')->willReturn(true);
+        $sourceResolutionRepository->method('load')->willReturn($resolution);
+        $clock = $this->createMock(ClockInterface::class);
+        $clock->expects(self::once())->method('now')->willReturn($now);
+        $handler = new ClaimSourceCommandHandler(
+            $claimRepository,
+            new ClaimSourceResolver($sourceResolutionRepository),
+            $clock,
+        );
+
+        $handler->presentClaimEvidence(new PresentClaimEvidence($source, [], []));
+
+        self::assertEquals([new ClaimSourceTypeUpdated($now, $claimId, 'donation')], $savedEvents);
     }
 }
